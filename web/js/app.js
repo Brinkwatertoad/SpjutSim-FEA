@@ -11,14 +11,18 @@
   root.addEventListener('pagehide', function () { viewport.dispose(); }, { once: true });
   ui.start();
 
+  var repeatedMesherCheck = api.exerciseMesherRuntime().then(function (firstResult) {
+    return api.exerciseMesherRuntime().then(function () { return firstResult; });
+  });
   Promise.all([
-    api.exerciseWorker('mesher'),
+    repeatedMesherCheck,
     api.exerciseWorker('solver'),
     WebAssembly.instantiate(wasmBytes)
-  ]).then(function () {
-    setText('worker-status', 'Mesher and solver worker shells responded');
+  ]).then(function (checks) {
+    var mesher = checks[0];
+    setText('worker-status', 'Gmsh ' + mesher.diagnostics.gmshVersion + '; box ' + mesher.smoke.volume + ' m³ / ' + mesher.smoke.surfaceCount + ' faces');
     setText('wasm-status', 'Embedded module ready');
-    setText('app-status', 'Framework ready');
+    setText('app-status', 'Local runtime ready');
   }).catch(function (error) {
     setText('app-status', 'Compatibility check failed');
     setText('worker-status', error.diagnostic ? error.diagnostic.code : error.message);

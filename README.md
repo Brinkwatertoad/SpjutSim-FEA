@@ -1,10 +1,10 @@
 # SpjutSim FEA
 
-SpjutSim FEA is a local-first browser application for simple static finite element analysis of a single STEP solid. This repository currently contains the initial, dependency-free framework described by `spec.md`; meshing, rendering, and FEM implementation follow in later milestones.
+SpjutSim FEA is a local-first browser application for simple static finite element analysis of a single STEP solid. The browser application has no runtime network or server dependency; geometry and analysis execute on the user's machine.
 
 ## Run locally
 
-Open `web/index.html` directly in a current Chromium desktop browser. The shell renders a repository-local Three.js reference scene, starts the real mesher and solver worker shells through Blob URLs, and instantiates an embedded minimal WebAssembly module without a server.
+Open `web/index.html` directly in a current Chromium desktop browser. The startup check renders the repository-local Three.js scene, initializes serial Gmsh/OpenCASCADE in two fresh disposable workers, creates a unit box in each, and starts the solver worker shell. No network requests or local server are required.
 
 For optional cross-origin-isolated HTTP mode:
 
@@ -29,10 +29,16 @@ After changing either file in `workers/`, regenerate the checked-in local-file w
 python3 tools/build-local-runtime.py
 ```
 
+Rebuilding the pinned Gmsh/OpenCASCADE artifact is an infrequent dependency-update operation. It downloads and compiles the toolchain and third-party sources under ignored `build/` paths:
+
+```sh
+tools/build-gmsh-local-runtime.sh
+```
+
 No npm, Node runtime, frontend framework, transpiler, or application bundler is required.
 
 ## Current boundary
 
-The current foundation provides app state/controller seams, the internalized SpjutSim UI sources, a repository-local Three.js reference viewport, worker protocols and lifecycle shells, reproducible local-file worker wrappers, an optional static server, and native solver build/test scaffolding. It does not yet claim STEP import, Gmsh integration, or a functioning FEM solve.
+The current foundation provides app state/controller seams, the internalized SpjutSim UI sources, a repository-local Three.js viewport, a pinned serial Gmsh/OpenCASCADE local runtime with diagnostics and an OCC box smoke operation, worker lifecycle shells, an optional static server, and native solver build/test scaffolding. The public STEP import, meshing contract, and functioning FEM solve follow in later plans.
 
 See `spec.md` for the product specification and `UI_FOUNDATION.md` for the UI-kit provenance pin.

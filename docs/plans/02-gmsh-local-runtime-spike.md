@@ -9,7 +9,10 @@ not the public mesher API or polished import workflow.
 ## Implementation
 
 - Select and pin one Gmsh/OpenCASCADE build. Prefer a reproducible upstream
-  source build; a prebuilt browser package is acceptable only for this spike.
+  source build. The required `serial-local` target embeds its WASM bytes and
+  must work without pthreads or response headers. A separately packaged
+  `threaded-hosted` target may be added later for cross-origin-isolated hosts;
+  it is optional acceleration and may not replace the local baseline.
   Record versions, source, licenses, Emscripten version/flags, checksums, and
   local wrapper changes in `THIRD_PARTY.md`.
 - Extend the runtime generator from Task 1 so the mesher worker can initialize
@@ -33,12 +36,13 @@ not the public mesher API or polished import workflow.
 - Run the full existing Python and native suites.
 - From `file://`, initialize the mesher, execute the box smoke request twice in
   fresh workers, and verify the UI remains responsive.
-- Repeat in portable and cross-origin-isolated HTTP modes. The single-threaded
-  result must be identical; threaded acceleration remains out of scope.
+- Repeat in portable and cross-origin-isolated HTTP modes. The `serial-local`
+  result must be identical. A future `threaded-hosted` target must be selected
+  only when `crossOriginIsolated === true`; implementing it remains out of
+  scope for this spike.
 
 ## Done when
 
 The checked-in distribution can start Gmsh and perform an OpenCASCADE operation
 entirely inside a disposable worker without any runtime network access. Update
 `web/wasm/gmsh/README.md` with exact regeneration and troubleshooting steps.
-

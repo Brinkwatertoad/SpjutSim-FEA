@@ -4,7 +4,7 @@ Execute these plans in order. They complete Milestone 0 and then deliver the
 geometry/meshing portion of the first vertical slice from `spec.md`.
 
 1. [x] [Complete the portable runtime foundation](01-portable-runtime-foundation.md)
-2. [Prove the Gmsh local-runtime path](02-gmsh-local-runtime-spike.md)
+2. [x] [Prove the Gmsh local-runtime path](02-gmsh-local-runtime-spike.md)
 3. [Implement STEP import and the geometry contract](03-step-import-and-geometry.md)
 4. [Render geometry and select CAD faces](04-preview-rendering-and-face-selection.md)
 5. [Generate and extract a Tet4 mesh](05-tet4-mesh-extraction.md)

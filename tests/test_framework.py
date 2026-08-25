@@ -1,4 +1,5 @@
 import hashlib
+import json
 import pathlib
 import subprocess
 import tempfile
@@ -69,6 +70,92 @@ class FrameworkTests(unittest.TestCase):
             )
             self.assertNotEqual(result.returncode, 0)
             self.assertIn('protocol is 2, expected 1', result.stderr)
+
+    def test_gmsh_runtime_packaging_embeds_serial_inputs(self):
+        generator = ROOT / 'tools/build-local-runtime.py'
+        with tempfile.TemporaryDirectory() as directory:
+            temporary = pathlib.Path(directory)
+            core = temporary / 'core.js'
+            runtime = temporary / 'runtime.mjs'
+            descriptor = temporary / 'descriptor.json'
+            output = temporary / 'output'
+            core.write_text('var createGmshModule = function () { return Promise.resolve({}); };\n')
+            runtime.write_text('export function buildApi(Module, descriptor) { return { Module, descriptor }; }\n')
+            descriptor.write_text(json.dumps({'version': 'test', 'functions': []}))
+
+            subprocess.run(
+                [
+                    'python3', str(generator), '--output-dir', str(output),
+                    '--gmsh-core', str(core), '--gmsh-runtime', str(runtime),
+                    '--gmsh-descriptor', str(descriptor),
+                ],
+                check=True,
+                cwd=ROOT,
+            )
+            generated = (output / 'gmsh-runtime-source.js').read_text()
+            self.assertIn('initializeSpjutsimGmsh', generated)
+            self.assertIn('"threaded": false', generated)
+            self.assertIn('"networkRequired": false', generated)
+            self.assertNotIn('export function buildApi', generated)
+
+    def test_gmsh_runtime_packaging_rejects_threaded_core(self):
+        generator = ROOT / 'tools/build-local-runtime.py'
+        with tempfile.TemporaryDirectory() as directory:
+            temporary = pathlib.Path(directory)
+            core = temporary / 'core.js'
+            runtime = temporary / 'runtime.mjs'
+            descriptor = temporary / 'descriptor.json'
+            core.write_text('var createGmshModule = SharedArrayBuffer;\n')
+            runtime.write_text('export function buildApi() {}\n')
+            descriptor.write_text('{"version":"test","functions":[]}')
+            result = subprocess.run(
+                [
+                    'python3', str(generator),
+                    '--output-dir', str(temporary / 'output'),
+                    '--gmsh-core', str(core), '--gmsh-runtime', str(runtime),
+                    '--gmsh-descriptor', str(descriptor),
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('not a serial WASM build', result.stderr)
+
+    def test_mesher_spike_protocol_and_normalized_errors(self):
+        worker = (ROOT / 'workers/mesher-worker.js').read_text()
+        for request_type in ('initialize', 'diagnostics', 'box-smoke'):
+            self.assertIn("message.type !== '" + request_type + "'", worker)
+        for error_code in (
+            'INVALID_WORKER_REQUEST', 'WORKER_PROTOCOL_MISMATCH',
+            'MESHER_INITIALIZATION_FAILED', 'MESHER_OPERATION_FAILED',
+        ):
+            self.assertIn(error_code, worker)
+        self.assertIn("runtimeMode: 'serial-local-embedded'", worker)
+        self.assertIn('gmsh.clear();', worker)
+
+    def test_gmsh_build_is_serial_and_embedded(self):
+        build_script = (ROOT / 'tools/build-gmsh-local-runtime.sh').read_text()
+        self.assertIn('-DENABLE_OPENMP=OFF', build_script)
+        self.assertIn('-sSINGLE_FILE=1', build_script)
+        self.assertIn('-sENVIRONMENT=worker', build_script)
+        self.assertNotIn('-pthread', build_script)
+
+    def test_pinned_gmsh_runtime_artifact(self):
+        artifact = ROOT / 'web/generated/local-runtime/gmsh-runtime-source.js'
+        content = artifact.read_bytes()
+        self.assertEqual(len(content), 59054731)
+        self.assertEqual(
+            hashlib.sha256(content).hexdigest(),
+            '0c84578c3be1e51064fb6f74c68661e32d5e33286797c3dacb2e85ff3700d7c6',
+        )
+        self.assertNotIn(b'SharedArrayBuffer', content)
+        self.assertNotIn(b'PThread', content)
+        for filename in (
+            'GMSH-JS-LICENSE.txt', 'GMSH-LICENSE.txt',
+            'OCCT-LGPL-2.1.txt', 'OCCT-LGPL-EXCEPTION.txt',
+        ):
+            self.assertTrue((ROOT / 'web/wasm/gmsh/licenses' / filename).is_file())
 
 if __name__ == '__main__':
     unittest.main()

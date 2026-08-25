@@ -355,7 +355,7 @@ This mode must:
 - avoid making native ES modules/import maps a requirement;
 - keep expensive meshing and solving off the UI thread using a file-safe worker-loading strategy.
 
-WASM payloads intended for this mode should be packaged self-contained where practical. For the first-party FEM module, prefer a generated artifact that embeds the WASM payload in its loader or otherwise permits instantiation from locally available bytes without HTTP fetch. Gmsh should likewise have a pinned single-threaded local-file-compatible packaging path.
+WASM payloads intended for this mode should be packaged self-contained where practical. For the first-party FEM module, prefer a generated artifact that embeds the WASM payload in its loader or otherwise permits instantiation from locally available bytes without HTTP fetch. Gmsh should likewise have a pinned single-threaded local-file-compatible packaging path. The selected baseline target is `serial-local`: Gmsh and OpenCASCADE are compiled without OpenMP/pthreads and the WASM bytes are embedded into the generated mesher-worker payload. Its larger artifact is an intentional distribution tradeoff for serverless, offline startup.
 
 Worker loading under `file://` is browser-sensitive. Do not assume `new Worker('./worker.js')` is portable. The project should provide a file-safe worker bootstrap, such as a generated Blob-worker payload or equivalent self-contained worker artifact. Keep human-maintained worker source separate from generated embedded payloads so the worker logic remains readable and testable.
 
@@ -375,6 +375,8 @@ Cross-Origin-Embedder-Policy: require-corp
 ```
 
 The application should detect `crossOriginIsolated` and expose threaded acceleration only when the environment supports it. Lack of cross-origin isolation is **not** a startup failure; it selects the portable single-threaded path.
+
+Any future threaded Gmsh target is a separate `threaded-hosted` artifact. It may reuse a pinned upstream browser package, but it must never be loaded or feature-detected by attempting to start pthreads in portable mode.
 
 Provide an optional repository-local Python server, e.g. `tools/serve.py`, for developers/users who want the HTTP/threaded mode. It should:
 
@@ -2017,10 +2019,9 @@ These do not block implementation and should be decided using benchmark data:
 6. Exact practical WASM heap cap for supported browsers.
 7. Calibration factor in the memory estimator.
 8. Exact browser support matrix beyond current Chromium desktop.
-9. Exact file-safe packaging mechanism for the pinned Gmsh build after the initial direct-local feasibility spike (embedded loader, generated Blob-worker wrapper, or equivalent).
-10. Whether to provide a downloadable/local desktop wrapper after the browser v1 is stable; it is not required to achieve direct-local browser execution.
-11. Whether the copied SpjutSim UI helpers should eventually be converted from global/IIFE scripts to ES modules; this is cleanup and must not remove the baseline direct-local path.
-12. Whether the solver should gain a threaded build after single-threaded WASM performance has been benchmarked; threaded acceleration is optional for v1 correctness.
+9. Whether to provide a downloadable/local desktop wrapper after the browser v1 is stable; it is not required to achieve direct-local browser execution.
+10. Whether the copied SpjutSim UI helpers should eventually be converted from global/IIFE scripts to ES modules; this is cleanup and must not remove the baseline direct-local path.
+11. Whether the solver should gain a threaded build after single-threaded WASM performance has been benchmarked; threaded acceleration is optional for v1 correctness.
 
 Each should be resolved by a benchmark, compatibility test, or licensing/product requirement rather than by prematurely coupling the architecture.
 
@@ -2148,4 +2149,3 @@ Reference documentation consulted while preparing this specification:
 | v1 release bar | Milestone 4: post-processing + convergence complete |
 | Onshape API | Post-v1.0 |
 | Orthotropic printed-part model | Post-v1.0 |
-

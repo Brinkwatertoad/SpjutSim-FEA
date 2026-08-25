@@ -26,6 +26,16 @@
         { worker: kind }
       );
     }
+    if (kind === 'mesher') {
+      if (typeof runtime.gmsh !== 'string') {
+        throw startupFailure(
+          'GMSH_RUNTIME_SOURCE_MISSING',
+          'The local geometry runtime is unavailable. Regenerate the Gmsh local runtime artifact.',
+          { worker: kind }
+        );
+      }
+      return runtime.gmsh + '\n' + runtime[kind];
+    }
     return runtime[kind];
   }
 
@@ -54,7 +64,7 @@
           'The ' + kind + ' worker did not report that it loaded.',
           { worker: kind }
         ));
-      }, 10000);
+      }, kind === 'mesher' ? 30000 : 10000);
       function finish(error) {
         if (settled) { return; }
         settled = true;
@@ -98,10 +108,13 @@
   }
 
   function exerciseWorker(kind) {
+    if (kind === 'mesher') {
+      return exerciseMesherRuntime();
+    }
     return startLocalWorker(kind).then(function (worker) {
       return new Promise(function (resolve, reject) {
         var requestId = kind + '-startup-check';
-        var expectedCode = kind === 'mesher' ? 'MESHER_NOT_IMPLEMENTED' : 'SOLVER_NOT_IMPLEMENTED';
+        var expectedCode = 'SOLVER_NOT_IMPLEMENTED';
         worker.onmessage = function (event) {
           var message = event.data;
           worker.terminate();
@@ -132,7 +145,70 @@
     });
   }
 
+  function requestWorker(worker, type, timeoutMilliseconds) {
+    return new Promise(function (resolve, reject) {
+      var requestId = type + '-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+      var timeout = root.setTimeout(function () {
+        reject(startupFailure(
+          'LOCAL_WORKER_RESPONSE_TIMEOUT',
+          'The mesher did not complete its ' + type + ' request.',
+          { worker: 'mesher', request: type }
+        ));
+      }, timeoutMilliseconds || 120000);
+      worker.onmessage = function (event) {
+        var message = event.data;
+        if (!root.SpjutsimFEA.isWorkerMessage(message) || message.requestId !== requestId) {
+          return;
+        }
+        root.clearTimeout(timeout);
+        if (message.type === 'error') {
+          var failure = new Error(message.error && message.error.userMessage || 'The mesher request failed.');
+          failure.diagnostic = message.error;
+          reject(failure);
+          return;
+        }
+        resolve(message);
+      };
+      worker.onerror = function (event) {
+        root.clearTimeout(timeout);
+        reject(startupFailure(
+          'LOCAL_WORKER_EXECUTION_FAILED',
+          'The mesher failed while processing ' + type + '.',
+          { worker: 'mesher', request: type, message: event.message || null }
+        ));
+      };
+      worker.postMessage({
+        protocol: root.SpjutsimFEA.WORKER_PROTOCOL_VERSION,
+        type: type,
+        requestId: requestId
+      });
+    });
+  }
+
+  function exerciseMesherRuntime() {
+    var worker;
+    return startLocalWorker('mesher').then(function (startedWorker) {
+      worker = startedWorker;
+      return requestWorker(worker, 'diagnostics');
+    }).then(function (diagnosticsMessage) {
+      return requestWorker(worker, 'box-smoke').then(function (smokeMessage) {
+        var smoke = smokeMessage.result;
+        if (!smoke || Math.abs(smoke.volume - 1) > 1e-9 || smoke.surfaceCount !== 6 || smoke.solidCount !== 1) {
+          throw startupFailure(
+            'GMSH_BOX_SMOKE_INVALID',
+            'The local geometry engine returned an invalid box result.',
+            { worker: 'mesher', result: smoke || null }
+          );
+        }
+        return { diagnostics: diagnosticsMessage.result, smoke: smokeMessage.result };
+      });
+    }).finally(function () {
+      if (worker) { worker.terminate(); }
+    });
+  }
+
   root.SpjutsimFEA = root.SpjutsimFEA || {};
   root.SpjutsimFEA.startLocalWorker = startLocalWorker;
   root.SpjutsimFEA.exerciseWorker = exerciseWorker;
+  root.SpjutsimFEA.exerciseMesherRuntime = exerciseMesherRuntime;
 }(globalThis));
