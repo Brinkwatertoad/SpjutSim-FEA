@@ -1,0 +1,75 @@
+<!--
+  Phase-1 reference fragment. Adapt into the host document; do not load it as a second shell.
+  Keep host IDs on the elements inserted into each data-ui-slot.
+-->
+<div class="ui-app" data-ui-root data-tools-visible="true">
+  <header class="ui-title-bar" data-ui-slot="title-menu">
+    <div class="ui-title-group">
+      <h1><!-- Host app title --></h1>
+      <span class="ui-file-status" aria-live="polite"><!-- Host status --></span>
+    </div>
+
+    <nav class="ui-menu-bar" aria-label="Application menus">
+      <div class="ui-menu-group" data-ui-menu-group data-open="false">
+        <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">File</button>
+        <div class="ui-menu-list" role="menu"><!-- Host menu items --></div>
+      </div>
+    </nav>
+
+    <div class="ui-primary-actions"><!-- Keep Solve or equivalent host action here. --></div>
+  </header>
+
+  <main class="ui-workspace">
+    <aside class="ui-tools-pane" data-ui-slot="tools" aria-label="Tools">
+      <!-- Existing host tool and property content. -->
+    </aside>
+
+    <div class="ui-tools-divider" role="separator" aria-orientation="vertical" aria-label="Resize Tools panel"></div>
+
+    <section class="ui-results-layout" data-results-mode="split" data-results-stacked="false">
+      <div class="ui-canvas-pane" data-ui-slot="canvas">
+        <!-- Existing host canvas wrapper. -->
+      </div>
+
+      <div class="ui-results-divider" role="separator" aria-orientation="vertical" aria-label="Resize canvas and Results panels"></div>
+
+      <aside class="ui-results-pane" data-ui-slot="results" aria-label="Results">
+        <div class="ui-results-tabs" role="tablist" aria-label="Results views">
+          <button type="button" role="tab" aria-selected="true" aria-controls="host-results-panel">Results</button>
+          <button type="button" role="tab" aria-selected="false" aria-controls="host-secondary-results-panel">Secondary</button>
+        </div>
+        <div id="host-results-panel" role="tabpanel"><!-- Host results --></div>
+        <div id="host-secondary-results-panel" role="tabpanel" hidden><!-- Host secondary results --></div>
+      </aside>
+    </section>
+  </main>
+
+  <div class="ui-modal-backdrop" data-ui-slot="settings" hidden>
+    <section class="ui-settings-dialog" role="dialog" aria-modal="true" aria-labelledby="host-settings-title">
+      <header class="ui-settings-header">
+        <h2 id="host-settings-title">Settings</h2>
+        <div class="ui-settings-header-actions">
+          <button type="button" class="ui-button-secondary">Reset Settings</button>
+          <button type="button" class="ui-button-strong" aria-label="Close Settings">Close</button>
+        </div>
+      </header>
+      <div class="ui-settings-hub">
+        <div class="ui-settings-hub-nav" role="tablist" aria-label="Settings categories">
+          <button id="host-settings-tab-general" type="button" role="tab" aria-selected="true" aria-controls="host-settings-panel-general" tabindex="0">General</button>
+          <button id="host-settings-tab-appearance" type="button" role="tab" aria-selected="false" aria-controls="host-settings-panel-appearance" tabindex="-1">Appearance</button>
+        </div>
+        <div class="ui-settings-hub-content">
+          <div id="host-settings-panel-general" role="tabpanel" aria-labelledby="host-settings-tab-general">
+            <section class="ui-settings-section"><!-- Host General settings. --></section>
+          </div>
+          <div id="host-settings-panel-appearance" role="tabpanel" aria-labelledby="host-settings-tab-appearance" hidden>
+            <section class="ui-settings-section">
+              <label class="ui-settings-row"><span><!-- Host label --></span><input class="ui-switch-input" type="checkbox" role="switch"></label>
+            </section>
+            <section class="ui-color-scheme-editor"><!-- PortableUIColorSchemeEditor mounts host-bound controls here. --></section>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
