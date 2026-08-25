@@ -23,6 +23,10 @@ cmake --build build/native-fem
 ctest --test-dir build/native-fem
 ```
 
+Open `tests/browser/worker-runtime-tests.html` directly in Chromium to run the
+worker protocol-validation and lifecycle regression checks; it should report
+`Passed` without a server.
+
 After changing either file in `workers/`, regenerate the checked-in local-file worker wrappers:
 
 ```sh

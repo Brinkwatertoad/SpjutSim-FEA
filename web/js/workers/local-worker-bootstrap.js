@@ -107,82 +107,177 @@
     });
   }
 
-  function exerciseWorker(kind) {
+  function exerciseWorker(kind, timeoutMilliseconds) {
+    var worker;
     if (kind === 'mesher') {
       return exerciseMesherRuntime();
     }
-    return startLocalWorker(kind).then(function (worker) {
+    return startLocalWorker(kind).then(function (startedWorker) {
+      worker = startedWorker;
       return new Promise(function (resolve, reject) {
         var requestId = kind + '-startup-check';
         var expectedCode = 'SOLVER_NOT_IMPLEMENTED';
-        worker.onmessage = function (event) {
-          var message = event.data;
-          worker.terminate();
-          if (!root.SpjutsimFEA.isWorkerMessage(message) || message.requestId !== requestId || message.type !== 'error' || !message.error || message.error.code !== expectedCode) {
-            reject(startupFailure(
-              'LOCAL_WORKER_INVALID_RESPONSE',
-              'The ' + kind + ' worker returned an invalid startup response.',
-              { worker: kind }
-            ));
+        var settled = false;
+        var timeout = root.setTimeout(function () {
+          finish(startupFailure(
+            'LOCAL_WORKER_RESPONSE_TIMEOUT',
+            'The ' + kind + ' worker did not complete its startup check.',
+            { worker: kind, request: 'startup-check' }
+          ));
+        }, timeoutMilliseconds || 10000);
+
+        function finish(error, message) {
+          if (settled) { return; }
+          settled = true;
+          root.clearTimeout(timeout);
+          if (error) {
+            reject(error);
             return;
           }
           resolve(message);
+        }
+
+        worker.onmessage = function (event) {
+          var message = event.data;
+          var validation;
+          if (message && typeof message.requestId === 'string' && message.requestId !== requestId) {
+            return;
+          }
+          validation = root.SpjutsimFEA.validateWorkerResponse(message, requestId, 'error');
+          if (!validation.valid || !validation.error || message.error.code !== expectedCode) {
+            finish(startupFailure(
+              'LOCAL_WORKER_INVALID_RESPONSE',
+              'The ' + kind + ' worker returned an invalid startup response.',
+              { worker: kind, reason: validation.reason || 'unexpected-error-code' }
+            ));
+            return;
+          }
+          finish(null, message);
         };
         worker.onerror = function (event) {
-          worker.terminate();
-          reject(startupFailure(
+          finish(startupFailure(
             'LOCAL_WORKER_EXECUTION_FAILED',
             'The ' + kind + ' worker failed during its startup check.',
             { worker: kind, message: event.message || null }
           ));
         };
-        worker.postMessage({
-          protocol: root.SpjutsimFEA.WORKER_PROTOCOL_VERSION,
-          type: 'startup-check',
-          requestId: requestId
-        });
+        worker.onmessageerror = function () {
+          finish(startupFailure(
+            'LOCAL_WORKER_MESSAGE_FAILED',
+            'The ' + kind + ' worker could not exchange its startup response.',
+            { worker: kind, request: 'startup-check' }
+          ));
+        };
+        try {
+          worker.postMessage({
+            protocol: root.SpjutsimFEA.WORKER_PROTOCOL_VERSION,
+            type: 'startup-check',
+            requestId: requestId
+          });
+        } catch (error) {
+          finish(startupFailure(
+            'LOCAL_WORKER_MESSAGE_FAILED',
+            'The ' + kind + ' worker could not receive its startup request.',
+            { worker: kind, message: error && error.message }
+          ));
+        }
       });
+    }).finally(function () {
+      if (worker) { worker.terminate(); }
     });
+  }
+
+  function expectedMesherResponseType(requestType) {
+    return requestType === 'box-smoke' ? 'box-smoke-result' : 'diagnostics-result';
   }
 
   function requestWorker(worker, type, timeoutMilliseconds) {
     return new Promise(function (resolve, reject) {
       var requestId = type + '-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+      var settled = false;
       var timeout = root.setTimeout(function () {
-        reject(startupFailure(
+        finish(startupFailure(
           'LOCAL_WORKER_RESPONSE_TIMEOUT',
           'The mesher did not complete its ' + type + ' request.',
           { worker: 'mesher', request: type }
         ));
       }, timeoutMilliseconds || 120000);
-      worker.onmessage = function (event) {
-        var message = event.data;
-        if (!root.SpjutsimFEA.isWorkerMessage(message) || message.requestId !== requestId) {
-          return;
-        }
+
+      function finish(error, message) {
+        if (settled) { return; }
+        settled = true;
         root.clearTimeout(timeout);
-        if (message.type === 'error') {
-          var failure = new Error(message.error && message.error.userMessage || 'The mesher request failed.');
-          failure.diagnostic = message.error;
-          reject(failure);
+        if (error) {
+          reject(error);
           return;
         }
         resolve(message);
+      }
+
+      worker.onmessage = function (event) {
+        var message = event.data;
+        var validation;
+        if (message && typeof message.requestId === 'string' && message.requestId !== requestId) {
+          return;
+        }
+        validation = root.SpjutsimFEA.validateWorkerResponse(
+          message,
+          requestId,
+          expectedMesherResponseType(type)
+        );
+        if (!validation.valid) {
+          finish(startupFailure(
+            'LOCAL_WORKER_INVALID_RESPONSE',
+            'The mesher returned an invalid ' + type + ' response.',
+            { worker: 'mesher', request: type, reason: validation.reason }
+          ));
+          return;
+        }
+        if (validation.error) {
+          var failure = new Error(message.error.userMessage);
+          failure.diagnostic = message.error;
+          finish(failure);
+          return;
+        }
+        finish(null, message);
       };
       worker.onerror = function (event) {
-        root.clearTimeout(timeout);
-        reject(startupFailure(
+        finish(startupFailure(
           'LOCAL_WORKER_EXECUTION_FAILED',
           'The mesher failed while processing ' + type + '.',
           { worker: 'mesher', request: type, message: event.message || null }
         ));
       };
-      worker.postMessage({
-        protocol: root.SpjutsimFEA.WORKER_PROTOCOL_VERSION,
-        type: type,
-        requestId: requestId
-      });
+      worker.onmessageerror = function () {
+        finish(startupFailure(
+          'LOCAL_WORKER_MESSAGE_FAILED',
+          'The mesher could not exchange its ' + type + ' response.',
+          { worker: 'mesher', request: type }
+        ));
+      };
+      try {
+        worker.postMessage({
+          protocol: root.SpjutsimFEA.WORKER_PROTOCOL_VERSION,
+          type: type,
+          requestId: requestId
+        });
+      } catch (error) {
+        finish(startupFailure(
+          'LOCAL_WORKER_MESSAGE_FAILED',
+          'The mesher could not receive its ' + type + ' request.',
+          { worker: 'mesher', request: type, message: error && error.message }
+        ));
+      }
     });
+  }
+
+  function validMesherDiagnostics(result) {
+    return Boolean(
+      result && typeof result.gmshVersion === 'string' && result.gmshVersion.length > 0 &&
+      result.runtimeMode === 'serial-local-embedded' &&
+      result.capabilities && typeof result.capabilities === 'object' &&
+      Number.isFinite(result.wasmMemoryBytes) && result.wasmMemoryBytes > 0
+    );
   }
 
   function exerciseMesherRuntime() {
@@ -191,6 +286,13 @@
       worker = startedWorker;
       return requestWorker(worker, 'diagnostics');
     }).then(function (diagnosticsMessage) {
+      if (!validMesherDiagnostics(diagnosticsMessage.result)) {
+        throw startupFailure(
+          'GMSH_DIAGNOSTICS_INVALID',
+          'The local geometry engine returned invalid diagnostics.',
+          { worker: 'mesher', result: diagnosticsMessage.result || null }
+        );
+      }
       return requestWorker(worker, 'box-smoke').then(function (smokeMessage) {
         var smoke = smokeMessage.result;
         if (!smoke || Math.abs(smoke.volume - 1) > 1e-9 || smoke.surfaceCount !== 6 || smoke.solidCount !== 1) {

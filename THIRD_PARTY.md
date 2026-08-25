@@ -26,8 +26,12 @@
   `29726e7237db13ff77ef3f2db2d7fb9499c4e65c`, from
   <https://gitlab.onelab.info/gmsh/gmsh>
 - OpenCASCADE Technology: `7.8.1`, tag `V7_8_1`, from
-  <https://github.com/Open-Cascade-SAS/OCCT>
-- Emscripten SDK: `3.1.74`
+  <https://github.com/Open-Cascade-SAS/OCCT>. The GitHub source archive SHA-256
+  is `7321af48c34dc253bf8aae3f0430e8cb10976961d534d8509e72516978aa82f5`;
+  the deterministic extracted-source manifest SHA-256 is
+  `8a8c83a681b95d7741e70d429d9427072cf75c599ef663614772c97c67cef9af`.
+- Emscripten SDK: `3.1.74`, emsdk commit
+  `3d6d8ee910466516a53e665b86458faa81dae9ba`
 - Input SHA-256 values:
   - Emscripten core: `f201b21416981573349cb42db1e07b051a89e69e4d7a2fe6262e391ebb3507ed`
   - GMSH-JS marshaller: `1b8f9edaf63f1440d6d1d0e048c382488faae96dd886ce7e60b09e68a5a12a06`

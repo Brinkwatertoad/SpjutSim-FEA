@@ -36,6 +36,9 @@ in `THIRD_PARTY.md`.
 
 - `Unexpected ... revision`: the build directory contains a different checkout;
   use a new `SPJUTSIM_GMSH_BUILD_ROOT` or remove that specific ignored build tree.
+- `Checksum mismatch` or `Source-tree checksum mismatch`: the downloaded OCCT
+  archive or extracted source does not match the pinned release. Use a new build
+  root; do not package the mismatched source under the recorded version.
 - `Missing required OCCT toolkit`: inspect the preceding OCCT build/install error
   and rerun after correcting it; the build is incremental.
 - `OpenMP unexpectedly enabled`: do not bypass the check. The resulting shared

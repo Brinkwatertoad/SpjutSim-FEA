@@ -124,6 +124,8 @@ class FrameworkTests(unittest.TestCase):
 
     def test_mesher_spike_protocol_and_normalized_errors(self):
         worker = (ROOT / 'workers/mesher-worker.js').read_text()
+        bootstrap = (ROOT / 'web/js/workers/local-worker-bootstrap.js').read_text()
+        protocol = (ROOT / 'web/js/workers/worker-protocol.js').read_text()
         for request_type in ('initialize', 'diagnostics', 'box-smoke'):
             self.assertIn("message.type !== '" + request_type + "'", worker)
         for error_code in (
@@ -133,13 +135,35 @@ class FrameworkTests(unittest.TestCase):
             self.assertIn(error_code, worker)
         self.assertIn("runtimeMode: 'serial-local-embedded'", worker)
         self.assertIn('gmsh.clear();', worker)
+        self.assertIn('validateWorkerResponse', protocol)
+        self.assertIn('LOCAL_WORKER_INVALID_RESPONSE', bootstrap)
+        self.assertIn("'diagnostics-result'", bootstrap)
+        self.assertIn("'box-smoke-result'", bootstrap)
+
+    def test_worker_browser_regressions_are_covered(self):
+        harness = ROOT / 'tests/browser/worker-runtime-tests.html'
+        script = ROOT / 'tests/browser/worker-runtime-tests.js'
+        self.assertTrue(harness.is_file())
+        content = script.read_text()
+        self.assertIn('wrong response type', content)
+        self.assertIn('version-mismatched response', content)
+        self.assertIn('malformed structured error', content)
+        self.assertIn('LOCAL_WORKER_RESPONSE_TIMEOUT', content)
+        self.assertIn('worker.terminated', content)
 
     def test_gmsh_build_is_serial_and_embedded(self):
         build_script = (ROOT / 'tools/build-gmsh-local-runtime.sh').read_text()
         self.assertIn('-DENABLE_OPENMP=OFF', build_script)
+        self.assertIn('-DBUILD_MODULE_DETools=OFF', build_script)
         self.assertIn('-sSINGLE_FILE=1', build_script)
         self.assertIn('-sENVIRONMENT=worker', build_script)
         self.assertNotIn('-pthread', build_script)
+        self.assertIn('EMSDK_COMMIT=', build_script)
+        self.assertIn('OCCT_ARCHIVE_SHA256=', build_script)
+        self.assertIn('OCCT_SOURCE_SHA256=', build_script)
+        self.assertIn('verify_file_sha256 "$archive"', build_script)
+        self.assertIn('verify_source_tree "$OCCT_SOURCE"', build_script)
+        self.assertNotIn('cmake --install "$OCCT_BUILD" || true', build_script)
 
     def test_pinned_gmsh_runtime_artifact(self):
         artifact = ROOT / 'web/generated/local-runtime/gmsh-runtime-source.js'

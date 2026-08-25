@@ -9,7 +9,7 @@ SOURCE_ROOT="$BUILD_ROOT/gmsh-js"
 EMSDK_ROOT="$BUILD_ROOT/emsdk"
 OCCT_SOURCE="$BUILD_ROOT/occt-source"
 OCCT_BUILD="$BUILD_ROOT/occt-build"
-OCCT_PREFIX="$BUILD_ROOT/occt-install"
+OCCT_PREFIX="$BUILD_ROOT/occt-install-serial"
 GMSH_BUILD="$BUILD_ROOT/gmsh-build"
 DIST="$BUILD_ROOT/dist"
 
@@ -18,9 +18,37 @@ GMSH_JS_COMMIT="3fdabeeb1dac2417446cefb9f75ecb6645315cd6"
 GMSH_COMMIT="29726e7237db13ff77ef3f2db2d7fb9499c4e65c"
 OCCT_VERSION="7.8.1"
 OCCT_TAG="V7_8_1"
+OCCT_ARCHIVE_SHA256="7321af48c34dc253bf8aae3f0430e8cb10976961d534d8509e72516978aa82f5"
+OCCT_SOURCE_SHA256="8a8c83a681b95d7741e70d429d9427072cf75c599ef663614772c97c67cef9af"
 EMSDK_VERSION="3.1.74"
+EMSDK_COMMIT="3d6d8ee910466516a53e665b86458faa81dae9ba"
 JOBS="${JOBS:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)}"
 OPT="${OPT:--O3}"
+
+verify_file_sha256() {
+  local path="$1"
+  local expected="$2"
+  local actual
+  actual="$(shasum -a 256 "$path" | awk '{print $1}')"
+  test "$actual" = "$expected" || {
+    echo "Checksum mismatch for $path: got $actual, expected $expected" >&2
+    exit 1
+  }
+}
+
+verify_source_tree() {
+  local directory="$1"
+  local expected="$2"
+  local actual
+  actual="$(
+    cd "$directory"
+    find . -type f -print0 | LC_ALL=C sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}'
+  )"
+  test "$actual" = "$expected" || {
+    echo "Source-tree checksum mismatch for $directory: got $actual, expected $expected" >&2
+    exit 1
+  }
+}
 
 mkdir -p "$BUILD_ROOT" "$DIST"
 
@@ -42,18 +70,28 @@ if [ ! -d "$EMSDK_ROOT/.git" ]; then
   git clone --branch "$EMSDK_VERSION" --depth 1 \
     https://github.com/emscripten-core/emsdk.git "$EMSDK_ROOT"
 fi
+test "$(git -C "$EMSDK_ROOT" rev-parse HEAD)" = "$EMSDK_COMMIT" || {
+  echo "Unexpected emsdk revision in $EMSDK_ROOT" >&2
+  exit 1
+}
 "$EMSDK_ROOT/emsdk" install "$EMSDK_VERSION"
 "$EMSDK_ROOT/emsdk" activate "$EMSDK_VERSION"
 # shellcheck disable=SC1091
 source "$EMSDK_ROOT/emsdk_env.sh" >/dev/null
 
-if [ ! -f "$OCCT_SOURCE/CMakeLists.txt" ]; then
-  archive="$BUILD_ROOT/occt-$OCCT_TAG.tar.gz"
-  curl --fail --location --output "$archive" \
+archive="$BUILD_ROOT/occt-$OCCT_TAG.tar.gz"
+if [ ! -f "$archive" ]; then
+  curl --fail --location --output "$archive.partial" \
     "https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/$OCCT_TAG.tar.gz"
+  mv "$archive.partial" "$archive"
+fi
+verify_file_sha256 "$archive" "$OCCT_ARCHIVE_SHA256"
+
+if [ ! -f "$OCCT_SOURCE/CMakeLists.txt" ]; then
   mkdir -p "$OCCT_SOURCE"
   tar -xzf "$archive" -C "$OCCT_SOURCE" --strip-components=1
 fi
+verify_source_tree "$OCCT_SOURCE" "$OCCT_SOURCE_SHA256"
 
 emcmake cmake -S "$OCCT_SOURCE" -B "$OCCT_BUILD" \
   -DCMAKE_BUILD_TYPE=Release \
@@ -66,6 +104,7 @@ emcmake cmake -S "$OCCT_SOURCE" -B "$OCCT_BUILD" \
   -DBUILD_MODULE_Visualization=OFF \
   -DBUILD_MODULE_ApplicationFramework=ON \
   -DBUILD_MODULE_DataExchange=ON \
+  -DBUILD_MODULE_DETools=OFF \
   -DBUILD_MODULE_ModelingAlgorithms=ON \
   -DBUILD_MODULE_ModelingData=ON \
   -DBUILD_MODULE_FoundationClasses=ON \
@@ -84,7 +123,7 @@ emcmake cmake -S "$OCCT_SOURCE" -B "$OCCT_BUILD" \
   -DINSTALL_TEST_CASES=OFF
 
 cmake --build "$OCCT_BUILD" --parallel "$JOBS"
-cmake --install "$OCCT_BUILD" || true
+cmake --install "$OCCT_BUILD"
 
 required_occt="TKDESTEP TKDEIGES TKXSBase TKOffset TKFeat TKFillet TKBool TKMesh TKHLR TKBO TKPrim TKShHealing TKTopAlgo TKGeomAlgo TKBRep TKGeomBase TKG3d TKG2d TKMath TKernel"
 for toolkit in $required_occt; do
