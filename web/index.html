@@ -27,7 +27,21 @@
         </section>
         <section><h2>Material</h2><p>No material defined.</p></section>
         <section><h2>Supports &amp; loads</h2><p>Import geometry to begin.</p></section>
-        <section><h2>Mesh</h2><p>Not generated.</p></section>
+        <section>
+          <h2>Mesh</h2>
+          <label for="mesh-preset">Density</label>
+          <select id="mesh-preset">
+            <option value="coarse">Coarse</option><option value="normal" selected>Normal</option>
+            <option value="fine">Fine</option><option value="custom">Custom</option>
+          </select>
+          <div id="mesh-custom-sizes" hidden>
+            <label for="mesh-min-size">Minimum size (m)</label><input id="mesh-min-size" type="number" min="0" step="any">
+            <label for="mesh-max-size">Maximum size (m)</label><input id="mesh-max-size" type="number" min="0" step="any">
+          </div>
+          <button id="generate-mesh-button" type="button" disabled>Generate mesh</button>
+          <button id="cancel-mesh-button" type="button" hidden>Cancel</button>
+          <p id="mesh-status" role="status" aria-live="polite">Import geometry to generate a mesh.</p>
+        </section>
       </aside>
       <section class="fea-canvas" aria-label="3D viewport">
         <canvas id="viewport"></canvas>
@@ -55,6 +69,7 @@
   <script src="vendor/three/three.min.js"></script>
   <script src="js/workers/worker-protocol.js"></script>
   <script src="js/geometry/geometry-model.js"></script>
+  <script src="js/mesh/volume-mesh.js"></script>
   <script src="js/analysis/analysis-document.js"></script>
   <script src="js/analysis/app-controller.js"></script>
   <script src="js/render/viewport-controller.js"></script>

@@ -1,19 +1,15 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Worker runtime tests</title>
-</head>
+<head><meta charset="utf-8"><title>Tet4 mesh tests</title></head>
 <body>
   <p id="test-status" role="status">Running…</p>
   <script src="../../web/js/workers/worker-protocol.js"></script>
   <script src="../../web/js/geometry/geometry-model.js"></script>
   <script src="../../web/js/mesh/volume-mesh.js"></script>
-  <script src="../../web/js/analysis/analysis-document.js"></script>
-  <script src="../../web/js/analysis/app-controller.js"></script>
-  <script src="../../web/js/ui/ui-controller.js"></script>
+  <script src="../../web/generated/local-runtime/gmsh-runtime-source.js"></script>
+  <script src="../../web/generated/local-runtime/mesher-worker-source.js"></script>
   <script src="../../web/js/workers/local-worker-bootstrap.js"></script>
   <script src="../../web/js/workers/mesher-client.js"></script>
-  <script src="worker-runtime-tests.js"></script>
+  <script src="tet4-mesh-tests.js"></script>
 </body>
 </html>

@@ -6,6 +6,7 @@
   var viewport = new api.ViewportController(document.getElementById('viewport'));
   var wasmBytes = new Uint8Array([0,97,115,109,1,0,0,0]);
   var activeImport = null;
+  var activeMesh = null;
   var displayedGeometry = null;
 
   function importFailure(code, userMessage, developerMessage) {
@@ -24,6 +25,7 @@
     var client;
     var geometryId;
     if (activeImport) { activeImport.cancel(); }
+    if (activeMesh) { activeMesh.cancel(); }
     if (!api.isStepFilename(file.name)) {
       app.beginGeometryImport(file.name);
       app.failGeometryImport(importFailure('INVALID_STEP_EXTENSION', 'Choose a file with a .step or .stp extension.'));
@@ -52,9 +54,28 @@
     });
   }
 
+  function generateMesh() {
+    var client;
+    if (!app.document.geometry || !app.stepSource) { return; }
+    if (activeMesh) { activeMesh.cancel(); }
+    app.beginMeshGeneration();
+    client = new api.MesherClient({ onProgress: function (progress) { app.reportMeshProgress(progress); } });
+    activeMesh = client;
+    client.generateMesh({
+      geometry: app.document.geometry, settings: app.document.meshSettings, stepBytes: app.stepSource.stepBytes
+    }).then(function (mesh) {
+      if (activeMesh === client) { app.completeMeshGeneration(mesh); }
+    }).catch(function (error) {
+      if (activeMesh === client) { app.failMeshGeneration(error); }
+    }).finally(function () {
+      client.dispose();
+      if (activeMesh === client) { activeMesh = null; }
+    });
+  }
+
   function setText(id, value) { document.getElementById(id).textContent = value; }
   setText('launch-mode', location.protocol === 'file:' ? 'Direct local file' : (root.crossOriginIsolated ? 'HTTP, isolated' : 'HTTP, portable'));
-  root.addEventListener('pagehide', function () { viewport.dispose(); }, { once: true });
+  root.addEventListener('pagehide', function () { if (activeMesh) { activeMesh.cancel(); } viewport.dispose(); }, { once: true });
   viewport.setFacePickHandler(function (faceId, additive) {
     if (additive) {
       app.toggleSelectedFace(faceId);
@@ -76,6 +97,7 @@
     viewport.setSelectedFaceIds(documentState.selectedFaceIds || []);
   });
   ui.setImportHandler(importStepFile);
+  ui.setMeshHandlers(generateMesh, function () { if (activeMesh) { activeMesh.cancel(); } });
   ui.start();
 
   var repeatedMesherCheck = api.exerciseMesherRuntime().then(function (firstResult) {

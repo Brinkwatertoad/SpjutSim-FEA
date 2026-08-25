@@ -32,6 +32,11 @@ run the Gmsh-backed STEP cube import check. In the tested direct-local browser
 configuration it can also be opened with local-file access enabled; it should
 report `Passed` after the worker starts.
 
+Open `tests/browser/tet4-mesh-tests.html` from the optional HTTP server to run
+the cube Tet4 extraction checks across the coarse, normal, fine, and custom
+presets. It should report `Passed`; this verifies boundary FaceId stability,
+positive volumes, surface area, and increasing preset resolution.
+
 Open `tests/browser/preview-selection-tests.html` from the optional HTTP server
 to run the imported STEP-cube face-picking checks across canvas sizes. It should
 report `Passed`; the pointer conversion check also covers a simulated 2× device

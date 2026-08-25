@@ -12,6 +12,8 @@
       loads: [],
       gravity: { enabled: false, accelerationMS2: [0, 0, -9.80665] },
       meshSettings: { preset: 'normal', elementType: 'tet4' },
+      meshGeneration: { status: 'idle', error: null, progress: null },
+      mesh: null,
       meshMetadata: null,
       solveSettings: { relativeTolerance: 1e-8 },
       results: null,

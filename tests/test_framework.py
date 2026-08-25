@@ -126,7 +126,7 @@ class FrameworkTests(unittest.TestCase):
         worker = (ROOT / 'workers/mesher-worker.js').read_text()
         bootstrap = (ROOT / 'web/js/workers/local-worker-bootstrap.js').read_text()
         protocol = (ROOT / 'web/js/workers/worker-protocol.js').read_text()
-        for request_type in ('initialize', 'diagnostics', 'box-smoke', 'import'):
+        for request_type in ('initialize', 'diagnostics', 'box-smoke', 'import', 'mesh'):
             self.assertIn("message.type !== '" + request_type + "'", worker)
         for error_code in (
             'INVALID_WORKER_REQUEST', 'WORKER_PROTOCOL_MISMATCH',
@@ -182,6 +182,30 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn('generated-unit-cube-m.step', import_script.read_text())
         self.assertIn('MULTIPLE_SOLIDS_UNSUPPORTED', import_script.read_text())
         self.assertIn('expected six opaque CAD face IDs', import_script.read_text())
+
+    def test_tet4_mesh_contract_and_browser_coverage_exist(self):
+        contract = (ROOT / 'web/js/mesh/volume-mesh.js').read_text()
+        client = (ROOT / 'web/js/workers/mesher-client.js').read_text()
+        worker = (ROOT / 'workers/mesher-worker.js').read_text()
+        controller = (ROOT / 'web/js/analysis/app-controller.js').read_text()
+        harness = ROOT / 'tests/browser/tet4-mesh-tests.html'
+        script = ROOT / 'tests/browser/tet4-mesh-tests.js'
+        self.assertIn('validateVolumeMeshResult', contract)
+        self.assertIn('resolveMeshSettings', contract)
+        self.assertIn("metric: 'gamma'", worker)
+        self.assertIn('getElementQualities', worker)
+        self.assertIn('generateMesh', client)
+        self.assertIn('stepBytes.slice(0)', client)
+        self.assertIn('replaceMeshSettings', controller)
+        self.assertIn('completeMeshGeneration', controller)
+        self.assertTrue(harness.is_file())
+        coverage = script.read_text()
+        self.assertIn("preset: 'coarse'", coverage)
+        self.assertIn("preset: 'normal'", coverage)
+        self.assertIn("preset: 'fine'", coverage)
+        self.assertIn("preset: 'custom'", coverage)
+        self.assertIn('surface area was not preserved', coverage)
+        self.assertIn('FaceId set changed after remeshing', coverage)
 
     def test_preview_face_selection_coverage_exists(self):
         viewport = (ROOT / 'web/js/render/viewport-controller.js').read_text()

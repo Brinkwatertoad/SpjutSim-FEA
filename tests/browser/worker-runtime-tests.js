@@ -72,6 +72,19 @@
     };
   }
 
+  function validVolumeMesh() {
+    return {
+      elementType: 'tet4',
+      nodePositionsM: new Float64Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]),
+      elementConnectivity: new Uint32Array([0, 1, 2, 3]),
+      boundaryFaces: { triangleConnectivity: new Uint32Array([0, 2, 1]), faceRanges: [{ faceId: 'opaque-face', start: 0, count: 3 }] },
+      geometryFaceMap: { 'opaque-face': { faceId: 'opaque-face', start: 0, count: 3 } },
+      statistics: { nodeCount: 4, elementCount: 1, boundaryTriangleCount: 1, minCharacteristicSizeM: 1, maxCharacteristicSizeM: Math.sqrt(2) },
+      quality: { metric: 'gamma', minimum: 0.7, p05: 0.7, median: 0.7, poorElementCount: 0, invertedElementCount: 0, nearZeroJacobianCount: 0, warning: null },
+      memoryInputs: { nodeCount: 4, elementCount: 1, degreeOfFreedomCount: 12, connectivityEntries: 4, boundaryConnectivityEntries: 3 }
+    };
+  }
+
   function testGeometryContractAndInvalidation() {
     var geometry = validGeometry();
     var controller = new api.AppController({ document: api.createAnalysisDocument() });
@@ -85,6 +98,12 @@
     assert(controller.document.meshMetadata === null && controller.document.results === null, 'geometry replacement retained derived state');
     assert(controller.stepSource.stepBytes.byteLength === 1, 'canonical STEP source was not retained');
     controller.replaceSelectedFaces(['opaque-face']);
+    controller.beginMeshGeneration();
+    controller.completeMeshGeneration(validVolumeMesh());
+    assert(controller.document.mesh && controller.document.meshMetadata.statistics.elementCount === 1, 'valid volume mesh was not stored');
+    controller.replaceMeshSettings({ preset: 'coarse', elementType: 'tet4' });
+    assert(controller.document.mesh === null && controller.document.meshMetadata === null && controller.document.results === null, 'mesh setting change did not invalidate derived state');
+    assert(controller.document.selectedFaceIds.length === 1, 'mesh setting change cleared selected faces');
     assert(controller.document.selectedFaceIds.length === 1, 'face selection was not stored in application state');
     controller.toggleSelectedFace('opaque-face');
     assert(controller.document.selectedFaceIds.length === 0, 'face selection did not toggle off');
@@ -129,6 +148,32 @@
     }).finally(function () { api.startLocalWorker = originalStartWorker; });
   }
 
+  function testMeshContractAndDedicatedTransferCopy() {
+    var originalStartWorker = api.startLocalWorker;
+    var original = new Uint8Array([1, 2, 3]).buffer;
+    var posted;
+    var geometry = validGeometry();
+    var worker = {
+      postMessage: function (message) {
+        posted = message;
+        root.setTimeout(function () {
+          worker.onmessage({ data: { protocol: 1, requestId: message.requestId, type: 'mesh-result', result: validVolumeMesh() } });
+        }, 0);
+      },
+      terminate: function () {}
+    };
+    api.startLocalWorker = function () { return Promise.resolve(worker); };
+    return new api.MesherClient().generateMesh({
+      geometry: geometry, settings: { preset: 'normal', elementType: 'tet4' }, stepBytes: original
+    }).then(function (mesh) {
+      assert(api.validateVolumeMeshResult(mesh, geometry.faceIds).valid, 'valid volume mesh contract was rejected');
+      assert(posted.stepBytes !== original, 'canonical STEP bytes were transferred directly for meshing');
+      assert(original.byteLength === 3, 'canonical STEP bytes were detached by meshing');
+      mesh.boundaryFaces.triangleConnectivity[2] = 4;
+      assert(!api.validateVolumeMeshResult(mesh, geometry.faceIds).valid, 'out-of-range boundary connectivity was accepted');
+    }).finally(function () { api.startLocalWorker = originalStartWorker; });
+  }
+
   function testEscapeClearsFaceSelection() {
     var controller = new api.AppController({ document: api.createAnalysisDocument() });
     var ui = new api.UIController(controller);
@@ -145,7 +190,7 @@
     testResponseValidation();
     testGeometryContractAndInvalidation();
     testEscapeClearsFaceSelection();
-    return testSolverTimeoutTerminatesWorker().then(testMesherClientUsesDedicatedTransferCopy);
+    return testSolverTimeoutTerminatesWorker().then(testMesherClientUsesDedicatedTransferCopy).then(testMeshContractAndDedicatedTransferCopy);
   }).then(function () {
     status.textContent = 'Passed';
     status.dataset.result = 'passed';
