@@ -6,6 +6,7 @@
   var viewport = new api.ViewportController(document.getElementById('viewport'));
   var wasmBytes = new Uint8Array([0,97,115,109,1,0,0,0]);
   var activeImport = null;
+  var displayedGeometry = null;
 
   function importFailure(code, userMessage, developerMessage) {
     var error = new Error(userMessage);
@@ -42,8 +43,6 @@
         stepBytes: stepBytes
       }).then(function (geometry) {
         app.replaceGeometry(geometry, { sourceName: file.name, stepBytes: stepBytes });
-        viewport.setGeometryPreview(geometry);
-        document.getElementById('viewport-empty-state').hidden = true;
       });
     }).catch(function (error) {
       if (activeImport === client) { app.failGeometryImport(error); }
@@ -56,6 +55,26 @@
   function setText(id, value) { document.getElementById(id).textContent = value; }
   setText('launch-mode', location.protocol === 'file:' ? 'Direct local file' : (root.crossOriginIsolated ? 'HTTP, isolated' : 'HTTP, portable'));
   root.addEventListener('pagehide', function () { viewport.dispose(); }, { once: true });
+  viewport.setFacePickHandler(function (faceId, additive) {
+    if (additive) {
+      app.toggleSelectedFace(faceId);
+    } else {
+      app.replaceSelectedFaces([faceId]);
+    }
+  });
+  app.subscribe(function (documentState) {
+    if (documentState.geometry !== displayedGeometry) {
+      displayedGeometry = documentState.geometry;
+      if (displayedGeometry) {
+        viewport.setGeometryPreview(displayedGeometry);
+        document.getElementById('viewport-empty-state').hidden = true;
+      } else {
+        viewport.clearGeometryPreview();
+        document.getElementById('viewport-empty-state').hidden = false;
+      }
+    }
+    viewport.setSelectedFaceIds(documentState.selectedFaceIds || []);
+  });
   ui.setImportHandler(importStepFile);
   ui.start();
 

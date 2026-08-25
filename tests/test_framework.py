@@ -183,6 +183,24 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn('MULTIPLE_SOLIDS_UNSUPPORTED', import_script.read_text())
         self.assertIn('expected six opaque CAD face IDs', import_script.read_text())
 
+    def test_preview_face_selection_coverage_exists(self):
+        viewport = (ROOT / 'web/js/render/viewport-controller.js').read_text()
+        controller = (ROOT / 'web/js/analysis/app-controller.js').read_text()
+        ui = (ROOT / 'web/js/ui/ui-controller.js').read_text()
+        harness = ROOT / 'tests/browser/preview-selection-tests.html'
+        script = ROOT / 'tests/browser/preview-selection-tests.js'
+        self.assertIn('pointerToCanvasCoordinates', viewport)
+        self.assertIn('triangleFaceIndices', viewport)
+        self.assertIn('pickFaceAtPointer', viewport)
+        self.assertIn('replaceSelectedFaces', controller)
+        self.assertIn('toggleSelectedFace', controller)
+        self.assertIn('clearSelectedFaces', controller)
+        self.assertIn('face-selection-status', ui)
+        self.assertIn("event.key !== 'Escape'", ui)
+        self.assertTrue(harness.is_file())
+        self.assertIn('selectEveryFace', script.read_text())
+        self.assertIn('device-pixel-ratio conversion', script.read_text())
+
     def test_gmsh_build_is_serial_and_embedded(self):
         build_script = (ROOT / 'tools/build-gmsh-local-runtime.sh').read_text()
         self.assertIn('-DENABLE_OPENMP=OFF', build_script)

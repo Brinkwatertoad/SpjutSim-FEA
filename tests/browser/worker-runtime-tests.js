@@ -84,6 +84,22 @@
     assert(controller.document.boundaryConditions.length === 0 && controller.document.loads.length === 0, 'geometry replacement retained boundary state');
     assert(controller.document.meshMetadata === null && controller.document.results === null, 'geometry replacement retained derived state');
     assert(controller.stepSource.stepBytes.byteLength === 1, 'canonical STEP source was not retained');
+    controller.replaceSelectedFaces(['opaque-face']);
+    assert(controller.document.selectedFaceIds.length === 1, 'face selection was not stored in application state');
+    controller.toggleSelectedFace('opaque-face');
+    assert(controller.document.selectedFaceIds.length === 0, 'face selection did not toggle off');
+    controller.toggleSelectedFace('opaque-face');
+    controller.clearSelectedFaces();
+    assert(controller.document.selectedFaceIds.length === 0, 'face selection did not clear');
+    try {
+      controller.replaceSelectedFaces(['unknown-face']);
+      throw new Error('unknown FaceId was accepted');
+    } catch (error) {
+      assert(error.message === 'Unknown CAD face identifier.', 'unknown FaceId did not report a stable error');
+    }
+    controller.replaceSelectedFaces(['opaque-face']);
+    controller.replaceGeometry(validGeometry(), { sourceName: 'cube.step', stepBytes: new Uint8Array([2]).buffer });
+    assert(controller.document.selectedFaceIds.length === 0, 'geometry replacement retained selected faces');
     geometry.preview.indices[2] = 3;
     assert(!api.validateGeometryModel(geometry).valid, 'out-of-range preview index was accepted');
     assert(api.isStepFilename('MODEL.STP') && !api.isStepFilename('model.iges'), 'STEP extension filtering is incorrect');
@@ -113,9 +129,22 @@
     }).finally(function () { api.startLocalWorker = originalStartWorker; });
   }
 
+  function testEscapeClearsFaceSelection() {
+    var controller = new api.AppController({ document: api.createAnalysisDocument() });
+    var ui = new api.UIController(controller);
+    var event = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+    controller.replaceGeometry(validGeometry(), { sourceName: 'cube.step', stepBytes: new Uint8Array([1]).buffer });
+    controller.replaceSelectedFaces(['opaque-face']);
+    ui.start();
+    document.dispatchEvent(event);
+    assert(controller.document.selectedFaceIds.length === 0, 'Escape did not clear selected faces');
+    assert(event.defaultPrevented, 'Escape did not consume the selection-clear shortcut');
+  }
+
   root.SpjutsimWorkerRuntimeTests = Promise.resolve().then(function () {
     testResponseValidation();
     testGeometryContractAndInvalidation();
+    testEscapeClearsFaceSelection();
     return testSolverTimeoutTerminatesWorker().then(testMesherClientUsesDedicatedTransferCopy);
   }).then(function () {
     status.textContent = 'Passed';

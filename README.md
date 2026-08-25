@@ -32,6 +32,11 @@ run the Gmsh-backed STEP cube import check. In the tested direct-local browser
 configuration it can also be opened with local-file access enabled; it should
 report `Passed` after the worker starts.
 
+Open `tests/browser/preview-selection-tests.html` from the optional HTTP server
+to run the imported STEP-cube face-picking checks across canvas sizes. It should
+report `Passed`; the pointer conversion check also covers a simulated 2× device
+pixel ratio.
+
 After changing either file in `workers/`, regenerate the checked-in local-file worker wrappers:
 
 ```sh

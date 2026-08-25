@@ -2,17 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Worker runtime tests</title>
+  <title>Preview face-selection tests</title>
+  <style>canvas { display: block; width: 480px; height: 320px; }</style>
 </head>
 <body>
   <p id="test-status" role="status">Running…</p>
+  <canvas id="viewport" aria-label="Preview test viewport"></canvas>
+  <script src="../../web/vendor/three/three.min.js"></script>
   <script src="../../web/js/workers/worker-protocol.js"></script>
   <script src="../../web/js/geometry/geometry-model.js"></script>
   <script src="../../web/js/analysis/analysis-document.js"></script>
   <script src="../../web/js/analysis/app-controller.js"></script>
-  <script src="../../web/js/ui/ui-controller.js"></script>
+  <script src="../../web/js/render/viewport-controller.js"></script>
+  <script src="../../web/generated/local-runtime/gmsh-runtime-source.js"></script>
+  <script src="../../web/generated/local-runtime/mesher-worker-source.js"></script>
   <script src="../../web/js/workers/local-worker-bootstrap.js"></script>
   <script src="../../web/js/workers/mesher-client.js"></script>
-  <script src="worker-runtime-tests.js"></script>
+  <script src="preview-selection-tests.js"></script>
 </body>
 </html>

@@ -5,6 +5,7 @@
     return {
       schemaVersion: 1,
       geometry: null,
+      selectedFaceIds: [],
       geometryImport: { status: 'idle', sourceName: null, error: null },
       material: null,
       boundaryConditions: [],

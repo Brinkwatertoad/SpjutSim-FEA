@@ -7,6 +7,27 @@
     this.stepSource = null;
   }
 
+  function validatedFaceIds(geometry, faceIds) {
+    var knownFaceIds;
+    var uniqueFaceIds;
+    if (!Array.isArray(faceIds)) {
+      throw new Error('Selected faces must be an array of FaceId values.');
+    }
+    if (!geometry) {
+      if (faceIds.length === 0) { return []; }
+      throw new Error('Cannot select faces before geometry is available.');
+    }
+    knownFaceIds = new Set(geometry.faceIds);
+    uniqueFaceIds = [];
+    faceIds.forEach(function (faceId) {
+      if (typeof faceId !== 'string' || !knownFaceIds.has(faceId)) {
+        throw new Error('Unknown CAD face identifier.');
+      }
+      if (uniqueFaceIds.indexOf(faceId) === -1) { uniqueFaceIds.push(faceId); }
+    });
+    return uniqueFaceIds;
+  }
+
   AppController.prototype.subscribe = function (listener) {
     this.listeners.push(listener);
     listener(this.document);
@@ -50,6 +71,7 @@
     }
     this.stepSource = { sourceName: source.sourceName, stepBytes: source.stepBytes };
     this.document.geometry = geometry;
+    this.document.selectedFaceIds = [];
     this.document.boundaryConditions = [];
     this.document.loads = [];
     this.document.meshMetadata = null;
@@ -62,12 +84,39 @@
   AppController.prototype.clearGeometry = function () {
     this.stepSource = null;
     this.document.geometry = null;
+    this.document.selectedFaceIds = [];
     this.document.boundaryConditions = [];
     this.document.loads = [];
     this.document.meshMetadata = null;
     this.document.results = null;
     this.document.convergenceStudy = null;
     this.document.geometryImport = { status: 'idle', sourceName: null, error: null };
+    this.notify();
+  };
+
+  /** Replace the UI-only set of selected CAD faces. */
+  AppController.prototype.replaceSelectedFaces = function (faceIds) {
+    this.document.selectedFaceIds = validatedFaceIds(this.document.geometry, faceIds);
+    this.notify();
+  };
+
+  /** Toggle a single known CAD face without creating a boundary condition. */
+  AppController.prototype.toggleSelectedFace = function (faceId) {
+    var selectedFaceIds = validatedFaceIds(this.document.geometry, [faceId]);
+    var selectedFaceId = selectedFaceIds[0];
+    var nextSelectedFaceIds = this.document.selectedFaceIds.slice();
+    var index = nextSelectedFaceIds.indexOf(selectedFaceId);
+    if (index === -1) {
+      nextSelectedFaceIds.push(selectedFaceId);
+    } else {
+      nextSelectedFaceIds.splice(index, 1);
+    }
+    this.document.selectedFaceIds = nextSelectedFaceIds;
+    this.notify();
+  };
+
+  AppController.prototype.clearSelectedFaces = function () {
+    this.document.selectedFaceIds = [];
     this.notify();
   };
 
