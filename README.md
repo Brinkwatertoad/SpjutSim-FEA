@@ -4,7 +4,7 @@ SpjutSim FEA is a local-first browser application for simple static finite eleme
 
 ## Run locally
 
-Open `web/index.html` directly in a current Chromium desktop browser. The initial shell verifies classic-script startup, a Blob-backed worker path, and an embedded minimal WebAssembly module without a server.
+Open `web/index.html` directly in a current Chromium desktop browser. The shell renders a repository-local Three.js reference scene, starts the real mesher and solver worker shells through Blob URLs, and instantiates an embedded minimal WebAssembly module without a server.
 
 For optional cross-origin-isolated HTTP mode:
 
@@ -23,10 +23,16 @@ cmake --build build/native-fem
 ctest --test-dir build/native-fem
 ```
 
+After changing either file in `workers/`, regenerate the checked-in local-file worker wrappers:
+
+```sh
+python3 tools/build-local-runtime.py
+```
+
 No npm, Node runtime, frontend framework, transpiler, or application bundler is required.
 
 ## Current boundary
 
-This first commit establishes only the framework: app state/controller seams, internalized SpjutSim UI sources, worker protocols and lifecycle shells, local-file bootstrap proof, optional static server, and native solver build/test scaffolding. It does not yet claim STEP import, Three.js rendering, Gmsh integration, or a functioning FEM solve.
+The current foundation provides app state/controller seams, the internalized SpjutSim UI sources, a repository-local Three.js reference viewport, worker protocols and lifecycle shells, reproducible local-file worker wrappers, an optional static server, and native solver build/test scaffolding. It does not yet claim STEP import, Gmsh integration, or a functioning FEM solve.
 
 See `spec.md` for the product specification and `UI_FOUNDATION.md` for the UI-kit provenance pin.

@@ -1,3 +1,7 @@
-# Three.js placeholder
+# Vendored Three.js
 
-No Three.js artifact is committed yet. The geometry milestone must vendor a pinned, licensed, classic/global browser build here and record its provenance in `THIRD_PARTY.md` before the viewport claims Three.js support.
+`three.min.js` is the pinned Three.js `0.149.0` classic/global browser build.
+It exposes `globalThis.THREE` and is intentionally loaded with a normal script
+tag so the local `file://` runtime does not require native ES modules or an
+import map. Its provenance, checksum, and license are recorded in
+[`THIRD_PARTY.md`](../../../THIRD_PARTY.md).

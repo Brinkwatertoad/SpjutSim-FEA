@@ -8,20 +8,19 @@
 
   function setText(id, value) { document.getElementById(id).textContent = value; }
   setText('launch-mode', location.protocol === 'file:' ? 'Direct local file' : (root.crossOriginIsolated ? 'HTTP, isolated' : 'HTTP, portable'));
-  viewport.resize();
-  root.addEventListener('resize', function () { viewport.resize(); });
+  root.addEventListener('pagehide', function () { viewport.dispose(); }, { once: true });
   ui.start();
 
   Promise.all([
-    api.startProbeWorker('mesher'),
-    api.startProbeWorker('solver'),
+    api.exerciseWorker('mesher'),
+    api.exerciseWorker('solver'),
     WebAssembly.instantiate(wasmBytes)
   ]).then(function () {
-    setText('worker-status', 'Mesher and solver paths ready');
+    setText('worker-status', 'Mesher and solver worker shells responded');
     setText('wasm-status', 'Embedded module ready');
     setText('app-status', 'Framework ready');
   }).catch(function (error) {
     setText('app-status', 'Compatibility check failed');
-    setText('worker-status', error.message);
+    setText('worker-status', error.diagnostic ? error.diagnostic.code : error.message);
   });
 }(globalThis));

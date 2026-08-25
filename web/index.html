@@ -24,7 +24,7 @@
       </aside>
       <section class="fea-canvas" aria-label="3D viewport">
         <canvas id="viewport"></canvas>
-        <div class="fea-empty-state"><strong>Viewport framework ready</strong><span>Three.js will be vendored in the geometry milestone.</span></div>
+        <div class="fea-empty-state"><strong>Viewport ready</strong><span>Local Three.js reference scene</span></div>
       </section>
       <aside class="fea-results" aria-label="Analysis output">
         <div role="tablist" aria-label="Output views">
@@ -45,11 +45,14 @@
   <script src="ui/action-controls.js"></script>
   <script src="ui/tooltips.js"></script>
   <script src="ui/shell-behaviors.js"></script>
+  <script src="vendor/three/three.min.js"></script>
   <script src="js/workers/worker-protocol.js"></script>
   <script src="js/analysis/analysis-document.js"></script>
   <script src="js/analysis/app-controller.js"></script>
   <script src="js/render/viewport-controller.js"></script>
   <script src="js/ui/ui-controller.js"></script>
+  <script src="generated/local-runtime/mesher-worker-source.js"></script>
+  <script src="generated/local-runtime/solver-worker-source.js"></script>
   <script src="js/workers/local-worker-bootstrap.js"></script>
   <script src="js/app.js"></script>
 </body>
