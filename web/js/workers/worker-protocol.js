@@ -14,6 +14,15 @@
       typeof error.recoverable === 'boolean'
     );
   };
+  root.SpjutsimFEA.validateWorkerProgress = function (message, requestId) {
+    if (!root.SpjutsimFEA.isWorkerMessage(message) || message.requestId !== requestId || message.type !== 'progress' ||
+        !message.progress || typeof message.progress !== 'object' || Array.isArray(message.progress) ||
+        typeof message.progress.stage !== 'string' || message.progress.stage.length === 0 ||
+        typeof message.progress.userMessage !== 'string' || message.progress.userMessage.length === 0) {
+      return { valid: false, reason: 'invalid-progress' };
+    }
+    return { valid: true };
+  };
   root.SpjutsimFEA.validateWorkerResponse = function (message, requestId, expectedType) {
     if (!root.SpjutsimFEA.isWorkerMessage(message)) {
       return { valid: false, reason: 'invalid-envelope' };

@@ -126,7 +126,7 @@ class FrameworkTests(unittest.TestCase):
         worker = (ROOT / 'workers/mesher-worker.js').read_text()
         bootstrap = (ROOT / 'web/js/workers/local-worker-bootstrap.js').read_text()
         protocol = (ROOT / 'web/js/workers/worker-protocol.js').read_text()
-        for request_type in ('initialize', 'diagnostics', 'box-smoke'):
+        for request_type in ('initialize', 'diagnostics', 'box-smoke', 'import'):
             self.assertIn("message.type !== '" + request_type + "'", worker)
         for error_code in (
             'INVALID_WORKER_REQUEST', 'WORKER_PROTOCOL_MISMATCH',
@@ -140,9 +140,35 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn("'diagnostics-result'", bootstrap)
         self.assertIn("'box-smoke-result'", bootstrap)
 
+    def test_step_import_contract_and_fixtures(self):
+        geometry = (ROOT / 'web/js/geometry/geometry-model.js').read_text()
+        client = (ROOT / 'web/js/workers/mesher-client.js').read_text()
+        worker = (ROOT / 'workers/mesher-worker.js').read_text()
+        controller = (ROOT / 'web/js/analysis/app-controller.js').read_text()
+        cube = ROOT / 'tests/fixtures/generated-unit-cube-m.step'
+        two_solids = ROOT / 'tests/fixtures/generated-two-unit-cubes-m.step'
+        invalid = ROOT / 'tests/fixtures/invalid-step-text.step'
+        self.assertTrue(cube.is_file())
+        self.assertTrue(two_solids.is_file())
+        self.assertTrue(invalid.is_file())
+        self.assertIn('FACETED_BREP', cube.read_text())
+        self.assertIn('validateGeometryModel', geometry)
+        self.assertIn('validateImportRequest', geometry)
+        self.assertIn('stepBytes.slice(0)', client)
+        self.assertIn("'Geometry.OCCTargetUnit', 'M'", worker)
+        self.assertIn('gmsh.FS.writeFile', worker)
+        self.assertIn('gmsh.model.occ.importShapes', worker)
+        for code in ('GEOMETRY_IMPORT_FAILED', 'GEOMETRY_NO_SOLID', 'MULTIPLE_SOLIDS_UNSUPPORTED', 'GEOMETRY_NOT_CLOSED'):
+            self.assertIn(code, worker)
+        self.assertIn('replaceGeometry', controller)
+        self.assertIn('this.document.boundaryConditions = []', controller)
+        self.assertIn('this.document.meshMetadata = null', controller)
+
     def test_worker_browser_regressions_are_covered(self):
         harness = ROOT / 'tests/browser/worker-runtime-tests.html'
         script = ROOT / 'tests/browser/worker-runtime-tests.js'
+        import_harness = ROOT / 'tests/browser/step-import-tests.html'
+        import_script = ROOT / 'tests/browser/step-import-tests.js'
         self.assertTrue(harness.is_file())
         content = script.read_text()
         self.assertIn('wrong response type', content)
@@ -150,6 +176,12 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn('malformed structured error', content)
         self.assertIn('LOCAL_WORKER_RESPONSE_TIMEOUT', content)
         self.assertIn('worker.terminated', content)
+        self.assertIn('canonical STEP bytes', content)
+        self.assertIn('geometry replacement retained', content)
+        self.assertTrue(import_harness.is_file())
+        self.assertIn('generated-unit-cube-m.step', import_script.read_text())
+        self.assertIn('MULTIPLE_SOLIDS_UNSUPPORTED', import_script.read_text())
+        self.assertIn('expected six opaque CAD face IDs', import_script.read_text())
 
     def test_gmsh_build_is_serial_and_embedded(self):
         build_script = (ROOT / 'tools/build-gmsh-local-runtime.sh').read_text()

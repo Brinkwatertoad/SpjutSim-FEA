@@ -33,6 +33,7 @@
     this.camera.lookAt(0, 0, 0);
     this.resizeObserver = null;
     this.resizeListener = null;
+    this.importedGeometry = null;
 
     this.addReferenceObjects();
     this.addLights();
@@ -62,8 +63,65 @@
       metalness: 0.04
     });
     var referenceObject = new root.THREE.Mesh(geometry, material);
+    referenceObject.name = 'reference-solid';
     referenceObject.position.y = 0.36;
     this.scene.add(grid, axes, referenceObject);
+  };
+
+  ViewportController.prototype.clearGeometryPreview = function () {
+    if (!this.importedGeometry) { return; }
+    this.scene.remove(this.importedGeometry);
+    if (this.importedGeometry.geometry) { this.importedGeometry.geometry.dispose(); }
+    disposeMaterial(this.importedGeometry.material);
+    this.importedGeometry = null;
+  };
+
+  ViewportController.prototype.setGeometryPreview = function (geometryModel) {
+    var validation = root.SpjutsimFEA.validateGeometryModel(geometryModel);
+    var preview;
+    var geometry;
+    var material;
+    var mesh;
+    var centerX;
+    var centerY;
+    var centerZ;
+    var extent;
+    var rangeIndex;
+    if (!validation.valid) { throw new Error('Invalid geometry preview: ' + validation.reason); }
+    this.clearGeometryPreview();
+    preview = geometryModel.preview;
+    geometry = new root.THREE.BufferGeometry();
+    geometry.setAttribute('position', new root.THREE.BufferAttribute(new Float32Array(preview.positionsM), 3));
+    geometry.setIndex(new root.THREE.BufferAttribute(preview.indices, 1));
+    geometry.clearGroups();
+    for (rangeIndex = 0; rangeIndex < preview.faceRanges.length; rangeIndex += 1) {
+      geometry.addGroup(preview.faceRanges[rangeIndex].start, preview.faceRanges[rangeIndex].count, 0);
+    }
+    geometry.computeVertexNormals();
+    material = new root.THREE.MeshStandardMaterial({
+      color: themeColor('--ui-color-geometry', '#f4f1ea'),
+      roughness: 0.72,
+      metalness: 0.04,
+      side: root.THREE.DoubleSide
+    });
+    mesh = new root.THREE.Mesh(geometry, material);
+    mesh.name = 'imported-geometry';
+    mesh.userData.faceRanges = preview.faceRanges.slice();
+    mesh.userData.geometryId = geometryModel.geometryId;
+    this.scene.add(mesh);
+    this.importedGeometry = mesh;
+    this.scene.getObjectByName('reference-solid').visible = false;
+    centerX = (geometryModel.boundingBoxM.minM[0] + geometryModel.boundingBoxM.maxM[0]) / 2;
+    centerY = (geometryModel.boundingBoxM.minM[1] + geometryModel.boundingBoxM.maxM[1]) / 2;
+    centerZ = (geometryModel.boundingBoxM.minM[2] + geometryModel.boundingBoxM.maxM[2]) / 2;
+    extent = Math.max(
+      geometryModel.boundingBoxM.maxM[0] - geometryModel.boundingBoxM.minM[0],
+      geometryModel.boundingBoxM.maxM[1] - geometryModel.boundingBoxM.minM[1],
+      geometryModel.boundingBoxM.maxM[2] - geometryModel.boundingBoxM.minM[2]
+    );
+    this.camera.position.set(centerX + extent * 2.8, centerY + extent * 2.1, centerZ + extent * 3.4);
+    this.camera.lookAt(centerX, centerY, centerZ);
+    this.render();
   };
 
   ViewportController.prototype.observeResize = function () {

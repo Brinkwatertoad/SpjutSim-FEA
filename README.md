@@ -27,6 +27,11 @@ Open `tests/browser/worker-runtime-tests.html` directly in Chromium to run the
 worker protocol-validation and lifecycle regression checks; it should report
 `Passed` without a server.
 
+Open `tests/browser/step-import-tests.html` from the optional HTTP server to
+run the Gmsh-backed STEP cube import check. In the tested direct-local browser
+configuration it can also be opened with local-file access enabled; it should
+report `Passed` after the worker starts.
+
 After changing either file in `workers/`, regenerate the checked-in local-file worker wrappers:
 
 ```sh
@@ -43,6 +48,6 @@ No npm, Node runtime, frontend framework, transpiler, or application bundler is 
 
 ## Current boundary
 
-The current foundation provides app state/controller seams, the internalized SpjutSim UI sources, a repository-local Three.js viewport, a pinned serial Gmsh/OpenCASCADE local runtime with diagnostics and an OCC box smoke operation, worker lifecycle shells, an optional static server, and native solver build/test scaffolding. The public STEP import, meshing contract, and functioning FEM solve follow in later plans.
+The current foundation provides app state/controller seams, the internalized SpjutSim UI sources, a repository-local Three.js viewport, a pinned serial Gmsh/OpenCASCADE local runtime, and local STEP import for exactly one closed solid. Import normalizes STEP units to meters, retains canonical source bytes for later disposable-worker remeshes, exposes opaque CAD face identities, and renders a grouped surface preview. The volume-mesh contract and functioning FEM solve follow in later plans.
 
 See `spec.md` for the product specification and `UI_FOUNDATION.md` for the UI-kit provenance pin.

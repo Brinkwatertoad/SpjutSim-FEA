@@ -60,9 +60,63 @@
     });
   }
 
+  function validGeometry() {
+    return {
+      geometryId: 'geometry-test', sourceName: 'cube.step', sourceFormat: 'step',
+      faceIds: ['opaque-face'], boundingBoxM: { minM: [0, 0, 0], maxM: [1, 1, 1] }, volumeM3: 1,
+      preview: {
+        positionsM: new Float64Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+        indices: new Uint32Array([0, 1, 2]),
+        faceRanges: [{ faceId: 'opaque-face', start: 0, count: 3 }]
+      }
+    };
+  }
+
+  function testGeometryContractAndInvalidation() {
+    var geometry = validGeometry();
+    var controller = new api.AppController({ document: api.createAnalysisDocument() });
+    controller.document.boundaryConditions = [{ type: 'fixed' }];
+    controller.document.loads = [{ type: 'pressure' }];
+    controller.document.meshMetadata = { nodeCount: 4 };
+    controller.document.results = { displacement: 1 };
+    controller.replaceGeometry(geometry, { sourceName: 'cube.step', stepBytes: new Uint8Array([1]).buffer });
+    assert(api.validateGeometryModel(geometry).valid, 'valid geometry contract was rejected');
+    assert(controller.document.boundaryConditions.length === 0 && controller.document.loads.length === 0, 'geometry replacement retained boundary state');
+    assert(controller.document.meshMetadata === null && controller.document.results === null, 'geometry replacement retained derived state');
+    assert(controller.stepSource.stepBytes.byteLength === 1, 'canonical STEP source was not retained');
+    geometry.preview.indices[2] = 3;
+    assert(!api.validateGeometryModel(geometry).valid, 'out-of-range preview index was accepted');
+    assert(api.isStepFilename('MODEL.STP') && !api.isStepFilename('model.iges'), 'STEP extension filtering is incorrect');
+  }
+
+  function testMesherClientUsesDedicatedTransferCopy() {
+    var originalStartWorker = api.startLocalWorker;
+    var original = new Uint8Array([1, 2, 3]).buffer;
+    var posted;
+    var worker = {
+      postMessage: function (message) {
+        posted = message;
+        root.setTimeout(function () {
+          worker.onmessage({ data: {
+            protocol: 1, requestId: message.requestId, type: 'import-result', result: validGeometry()
+          } });
+        }, 0);
+      },
+      terminate: function () {}
+    };
+    api.startLocalWorker = function () { return Promise.resolve(worker); };
+    return new api.MesherClient().importGeometry({
+      geometryId: 'geometry-test', sourceName: 'cube.step', stepBytes: original
+    }).then(function () {
+      assert(posted.stepBytes !== original, 'canonical STEP bytes were transferred directly');
+      assert(original.byteLength === 3, 'canonical STEP bytes were detached');
+    }).finally(function () { api.startLocalWorker = originalStartWorker; });
+  }
+
   root.SpjutsimWorkerRuntimeTests = Promise.resolve().then(function () {
     testResponseValidation();
-    return testSolverTimeoutTerminatesWorker();
+    testGeometryContractAndInvalidation();
+    return testSolverTimeoutTerminatesWorker().then(testMesherClientUsesDedicatedTransferCopy);
   }).then(function () {
     status.textContent = 'Passed';
     status.dataset.result = 'passed';
