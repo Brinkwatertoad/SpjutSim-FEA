@@ -4,6 +4,7 @@
   var app = new api.AppController({ document: api.createAnalysisDocument() });
   var ui = new api.UIController(app);
   var viewport = new api.ViewportController(document.getElementById('viewport'));
+  ui.setViewportController(viewport);
   var wasmBytes = new Uint8Array([0,97,115,109,1,0,0,0]);
   var activeImport = null;
   var activeMesh = null;

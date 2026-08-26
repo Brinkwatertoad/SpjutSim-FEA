@@ -11,7 +11,20 @@
   <div class="fea-app" id="app-shell">
     <header class="fea-topbar">
       <div><strong>SpjutSim FEA</strong> <span id="app-status" role="status">Starting…</span></div>
-      <nav aria-label="Application menus"><button type="button" disabled>File</button><button type="button" disabled>View</button></nav>
+      <nav class="ui-menu-bar" id="application-menu" aria-label="Application menus">
+        <div class="ui-menu-group" data-ui-menu-group data-open="false">
+          <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">File</button>
+          <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="import-step">Import STEP…</button></div>
+        </div>
+        <div class="ui-menu-group" data-ui-menu-group data-open="false">
+          <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">View</button>
+          <div class="ui-menu-list" role="menu">
+            <button type="button" role="menuitem" data-ui-menu-action="fit-view">Fit model</button>
+            <button type="button" role="menuitem" data-ui-menu-action="reset-view">Reset view</button>
+            <button type="button" role="menuitem" data-ui-menu-action="settings" aria-keyshortcuts="Control+, Meta+,">Settings… <span aria-hidden="true">Ctrl/⌘,</span></button>
+          </div>
+        </div>
+      </nav>
       <button class="fea-primary" type="button" disabled title="Available after model preflight">Solve</button>
     </header>
     <main class="fea-workspace">
@@ -44,7 +57,12 @@
         </section>
       </aside>
       <section class="fea-canvas" aria-label="3D viewport">
-        <canvas id="viewport" aria-label="3D viewport. Drag to orbit and scroll to zoom."></canvas>
+        <canvas id="viewport" tabindex="0" aria-describedby="viewport-help" aria-label="3D viewport. Left drag rotates, right drag pans, wheel or pinch zooms, and arrow keys rotate."></canvas>
+        <div class="fea-viewport-actions" aria-label="Viewport actions">
+          <button id="fit-view-button" type="button">Fit model</button>
+          <button id="reset-view-button" type="button">Reset view</button>
+        </div>
+        <p class="fea-viewport-help" id="viewport-help">Left drag rotates · Right drag pans · Wheel or pinch zooms · Arrow keys rotate</p>
         <div class="fea-empty-state" id="viewport-empty-state"><strong>Viewport ready</strong><span>Local Three.js reference scene</span></div>
       </section>
       <aside class="fea-results" aria-label="Analysis output">
@@ -57,6 +75,36 @@
         <dl class="fea-diagnostics"><dt>Launch mode</dt><dd id="launch-mode">Detecting…</dd><dt>Worker</dt><dd id="worker-status">Pending</dd><dt>WebAssembly</dt><dd id="wasm-status">Pending</dd></dl>
       </aside>
     </main>
+  </div>
+  <div class="ui-modal-backdrop" id="settings-backdrop" hidden>
+    <section class="ui-settings-dialog" id="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabindex="-1">
+      <header class="ui-settings-header">
+        <h2 id="settings-title">Settings</h2>
+        <div class="ui-settings-header-actions">
+          <button id="reset-navigation-settings-button" type="button" class="ui-button-secondary">Reset Controls</button>
+          <button id="close-settings-button" type="button" class="ui-button-strong">Close</button>
+        </div>
+      </header>
+      <div class="ui-settings-hub">
+        <div class="ui-settings-hub-nav" role="tablist" aria-label="Settings categories">
+          <button id="settings-tab-controls" type="button" role="tab" aria-selected="true" aria-controls="settings-panel-controls" tabindex="0">Controls</button>
+        </div>
+        <div class="ui-settings-hub-content">
+          <div id="settings-panel-controls" role="tabpanel" aria-labelledby="settings-tab-controls">
+            <section class="ui-settings-section fea-controls-settings">
+              <p>These preferences affect only viewport navigation. They never change geometry, mesh, or analysis data.</p>
+              <label class="ui-settings-row" for="navigation-rotate-button"><span>Rotate mouse button</span><select id="navigation-rotate-button"><option value="0">Left button</option><option value="2">Right button</option></select></label>
+              <label class="ui-settings-row" for="navigation-pan-button"><span>Pan mouse button</span><select id="navigation-pan-button"><option value="2">Right button</option><option value="0">Left button</option></select></label>
+              <label class="ui-settings-row" for="navigation-reverse-zoom"><span>Reverse zoom direction</span><input id="navigation-reverse-zoom" type="checkbox" role="switch"></label>
+              <label class="ui-settings-row" for="navigation-rotate-sensitivity"><span>Rotate sensitivity</span><input id="navigation-rotate-sensitivity" type="number" min="0.001" max="0.03" step="0.001"></label>
+              <label class="ui-settings-row" for="navigation-pan-sensitivity"><span>Pan sensitivity</span><input id="navigation-pan-sensitivity" type="number" min="0.1" max="4" step="0.1"></label>
+              <label class="ui-settings-row" for="navigation-zoom-sensitivity"><span>Zoom sensitivity</span><input id="navigation-zoom-sensitivity" type="number" min="0.0001" max="0.01" step="0.0001"></label>
+              <label class="ui-settings-row" for="navigation-arrow-step"><span>Arrow rotation step (radians)</span><input id="navigation-arrow-step" type="number" min="0.02" max="1" step="0.01"></label>
+            </section>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
   <script src="ui/color-schemes.js"></script>
   <script src="ui/custom-select.js"></script>
@@ -72,6 +120,7 @@
   <script src="js/mesh/volume-mesh.js"></script>
   <script src="js/analysis/analysis-document.js"></script>
   <script src="js/analysis/app-controller.js"></script>
+  <script src="js/render/viewport-navigation.js"></script>
   <script src="js/render/viewport-controller.js"></script>
   <script src="js/ui/ui-controller.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source.js"></script>

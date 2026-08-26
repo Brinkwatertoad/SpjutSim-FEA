@@ -230,6 +230,28 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn('device-pixel-ratio conversion', script.read_text())
         self.assertIn('orbit input did not move the camera', script.read_text())
 
+    def test_viewport_navigation_contract_and_browser_coverage_exist(self):
+        navigation = (ROOT / 'web/js/render/viewport-navigation.js').read_text()
+        viewport = (ROOT / 'web/js/render/viewport-controller.js').read_text()
+        ui = (ROOT / 'web/js/ui/ui-controller.js').read_text()
+        index = (ROOT / 'web/index.html').read_text()
+        harness = ROOT / 'tests/browser/viewport-navigation-tests.html'
+        script = ROOT / 'tests/browser/viewport-navigation-tests.js'
+        self.assertIn('normalizeNavigationPreferences', navigation)
+        self.assertIn('zoomViewportDistance', navigation)
+        self.assertIn('shouldHandleViewportArrowKey', navigation)
+        self.assertIn('panByPixels', viewport)
+        self.assertIn('fitCurrentModel', viewport)
+        self.assertIn('lostpointercapture', viewport)
+        self.assertIn('openSettings', ui)
+        self.assertIn("event.key === ','", ui)
+        self.assertIn('settings-backdrop', index)
+        self.assertTrue(harness.is_file())
+        coverage = script.read_text()
+        self.assertIn('pinch-out did not zoom in', coverage)
+        self.assertIn('changed mouse bindings were not applied', coverage)
+        self.assertIn('pointer cancellation left active navigation state', coverage)
+
     def test_gmsh_build_is_serial_and_embedded(self):
         build_script = (ROOT / 'tools/build-gmsh-local-runtime.sh').read_text()
         self.assertIn('-DENABLE_OPENMP=OFF', build_script)

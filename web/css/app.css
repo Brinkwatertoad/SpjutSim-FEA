@@ -22,7 +22,11 @@ h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing
 .fea-tools section { padding: 12px 0; border-top: 1px solid var(--border, #3a3e46); }
 .fea-tools p, .fea-results p { margin: 6px 0; color: var(--secondary-text, #aeb4bf); font-size: 13px; }
 .fea-canvas { position: relative; min-width: 0; background: var(--canvas-background, #111318); }
-#viewport { width: 100%; height: 100%; display: block; }
+#viewport { width: 100%; height: 100%; display: block; outline: none; }
+#viewport:focus-visible { outline: 2px solid var(--ui-color-accent, #4387f5); outline-offset: -3px; }
+.fea-viewport-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
+.fea-viewport-actions button { background: color-mix(in srgb, var(--ui-color-surface, #202329) 90%, transparent); }
+.fea-viewport-help { position: absolute; right: 12px; bottom: 4px; max-width: calc(100% - 24px); margin: 0; color: var(--ui-color-canvas-text, #dbeafe); font-size: 12px; opacity: 0.82; pointer-events: none; text-align: right; }
 .fea-empty-state { position: absolute; inset: 0; display: grid; place-content: start center; padding-top: 24px; gap: 6px; text-align: center; pointer-events: none; color: var(--ui-color-canvas-text, #dbeafe); }
 .fea-empty-state span { color: var(--secondary-text, #aeb4bf); font-size: 13px; }
 [role="tablist"] { display: flex; gap: 4px; border-bottom: 1px solid var(--border, #3a3e46); padding-bottom: 8px; }
@@ -31,4 +35,7 @@ h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing
 .fea-diagnostics { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin-top: 18px; font-size: 12px; }
 .fea-diagnostics dt { color: var(--secondary-text, #aeb4bf); }
 .fea-diagnostics dd { margin: 0; }
+.fea-controls-settings { display: grid; gap: 12px; }
+.fea-controls-settings > p { margin: 0 0 4px; color: var(--ui-color-text-muted, #aeb4bf); font-size: 13px; }
+.fea-controls-settings input[type="number"], .fea-controls-settings select { width: 100%; max-width: 180px; }
 @media (max-width: 900px) { .fea-workspace { grid-template-columns: 220px minmax(0, 1fr); } .fea-results { display: none; } }

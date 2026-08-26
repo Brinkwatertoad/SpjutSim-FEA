@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Viewport navigation tests</title>
+  <style>canvas { display: block; width: 480px; height: 320px; }</style>
+</head>
+<body>
+  <p id="test-status" role="status">Running…</p>
+  <button id="opener" type="button">Settings</button>
+  <canvas id="viewport" aria-label="Navigation test viewport"></canvas>
+  <div id="settings-backdrop" hidden><section id="settings-dialog" role="dialog" aria-modal="true">
+    <button id="close-settings-button" type="button">Close</button>
+    <button id="reset-navigation-settings-button" type="button">Reset</button>
+    <button id="settings-tab-controls" type="button" role="tab">Controls</button>
+    <div id="settings-panel-controls" role="tabpanel"><select id="navigation-rotate-button"><option value="0">Left</option><option value="2">Right</option></select></div>
+  </section></div>
+  <script src="../../web/ui/settings-hub.js"></script>
+  <script src="../../web/vendor/three/three.min.js"></script>
+  <script src="../../web/js/render/viewport-navigation.js"></script>
+  <script src="../../web/js/render/viewport-controller.js"></script>
+  <script src="../../web/js/ui/ui-controller.js"></script>
+  <script src="viewport-navigation-tests.js"></script>
+</body>
+</html>

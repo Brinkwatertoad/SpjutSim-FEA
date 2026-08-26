@@ -70,20 +70,32 @@
     this.pointerDownListener = null;
     this.pointerMoveListener = null;
     this.pointerUpListener = null;
+    this.pointerLostCaptureListener = null;
     this.wheelListener = null;
+    this.contextMenuListener = null;
+    this.keyDownListener = null;
     this.importedGeometry = null;
     this.previewMesh = null;
     this.selectedFaceIds = new Set();
     this.facePickHandler = null;
     this.viewTarget = new root.THREE.Vector3(0, 0, 0);
+    this.modelCenter = new root.THREE.Vector3(0, 0, 0);
     this.orbitAzimuth = 0;
     this.orbitPolar = Math.PI / 2;
     this.orbitDistance = 1;
     this.minimumOrbitDistance = 0.01;
     this.maximumOrbitDistance = 1000;
+    this.modelExtent = 1;
     this.pointerInteraction = null;
+    this.activePointers = new Map();
+    this.pinchDistance = null;
+    this.suppressContextMenu = false;
     this.suppressNextClick = false;
+    this.navigationPreferences = root.SpjutsimFEA.normalizeViewportNavigationPreferences();
+    this.resetViewState = null;
 
+    if (this.canvas.tabIndex < 0) { this.canvas.tabIndex = 0; }
+    this.canvas.setAttribute('aria-keyshortcuts', 'ArrowLeft ArrowRight ArrowUp ArrowDown');
     this.addReferenceObjects();
     this.addLights();
     this.observeResize();
@@ -91,6 +103,7 @@
     this.observeCameraInteraction();
     this.observePointerPicking();
     this.resize();
+    this.resetViewState = this.captureViewState();
   }
 
   ViewportController.prototype.addLights = function () {
@@ -156,66 +169,215 @@
     this.render();
   };
 
-  ViewportController.prototype.orbitByPixels = function (deltaX, deltaY) {
-    this.orbitAzimuth -= deltaX * 0.008;
-    this.orbitPolar = Math.max(0.05, Math.min(Math.PI - 0.05, this.orbitPolar - deltaY * 0.008));
+  ViewportController.prototype.captureViewState = function () {
+    return {
+      target: [this.viewTarget.x, this.viewTarget.y, this.viewTarget.z],
+      azimuth: this.orbitAzimuth,
+      polar: this.orbitPolar,
+      distance: this.orbitDistance
+    };
+  };
+
+  ViewportController.prototype.restoreViewState = function (state) {
+    if (!state || !Array.isArray(state.target) || state.target.length !== 3) { return; }
+    this.viewTarget.set(Number(state.target[0]), Number(state.target[1]), Number(state.target[2]));
+    this.orbitAzimuth = Number(state.azimuth) || 0;
+    this.orbitPolar = root.SpjutsimFEA.clampViewportOrbitPolar(state.polar);
+    this.orbitDistance = root.SpjutsimFEA.clampViewportOrbitDistance(state.distance, this.minimumOrbitDistance, this.maximumOrbitDistance);
     this.applyOrbitCamera();
   };
 
-  ViewportController.prototype.zoomByWheelDelta = function (deltaY) {
-    this.orbitDistance = Math.max(
-      this.minimumOrbitDistance,
-      Math.min(this.maximumOrbitDistance, this.orbitDistance * Math.exp(deltaY * 0.001))
+  ViewportController.prototype.resetView = function () {
+    this.restoreViewState(this.resetViewState);
+  };
+
+  ViewportController.prototype.setNavigationPreferences = function (preferences) {
+    this.navigationPreferences = root.SpjutsimFEA.normalizeViewportNavigationPreferences(preferences);
+    return this.navigationPreferences;
+  };
+
+  ViewportController.prototype.getNavigationPreferences = function () {
+    return Object.assign({}, this.navigationPreferences);
+  };
+
+  ViewportController.prototype.orbitByPixels = function (deltaX, deltaY) {
+    this.orbitAzimuth -= deltaX * this.navigationPreferences.rotateSensitivity;
+    this.orbitPolar = root.SpjutsimFEA.clampViewportOrbitPolar(
+      this.orbitPolar - deltaY * this.navigationPreferences.rotateSensitivity
     );
     this.applyOrbitCamera();
+  };
+
+  ViewportController.prototype.orbitByRadians = function (azimuth, polar) {
+    this.orbitAzimuth += Number(azimuth) || 0;
+    this.orbitPolar = root.SpjutsimFEA.clampViewportOrbitPolar(this.orbitPolar + (Number(polar) || 0));
+    this.applyOrbitCamera();
+  };
+
+  ViewportController.prototype.panByPixels = function (deltaX, deltaY) {
+    var cameraDirection = new root.THREE.Vector3();
+    var right = new root.THREE.Vector3();
+    var up = new root.THREE.Vector3();
+    var movement;
+    var dimensions = root.SpjutsimFEA.viewportPanPixelsToWorld(
+      deltaX, deltaY, this.orbitDistance, this.camera.fov * Math.PI / 180, this.camera.aspect,
+      this.canvas.clientHeight, this.navigationPreferences.panSensitivity
+    );
+    this.camera.getWorldDirection(cameraDirection);
+    right.crossVectors(cameraDirection, this.camera.up).normalize();
+    up.crossVectors(right, cameraDirection).normalize();
+    movement = right.multiplyScalar(dimensions.x).add(up.multiplyScalar(dimensions.y));
+    this.viewTarget.add(movement);
+    this.camera.position.add(movement);
+    this.camera.lookAt(this.viewTarget);
+    this.camera.updateMatrixWorld();
+    this.render();
+  };
+
+  ViewportController.prototype.zoomByWheelDelta = function (deltaY) {
+    this.orbitDistance = root.SpjutsimFEA.zoomViewportDistance(
+      this.orbitDistance, deltaY, this.navigationPreferences, this.minimumOrbitDistance, this.maximumOrbitDistance
+    );
+    this.applyOrbitCamera();
+  };
+
+  ViewportController.prototype.fitModel = function (center, extent, makeResetView) {
+    var safeExtent = Math.max(Number(extent) || 0, 0.000001);
+    var verticalFov = this.camera.fov * Math.PI / 180;
+    var horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * Math.max(this.camera.aspect, 0.01));
+    var limitingFov = Math.min(verticalFov, horizontalFov);
+    this.modelCenter.copy(center || new root.THREE.Vector3());
+    this.viewTarget.copy(this.modelCenter);
+    this.modelExtent = safeExtent;
+    this.minimumOrbitDistance = Math.max(safeExtent * 0.02, 0.000001);
+    this.maximumOrbitDistance = Math.max(safeExtent * 100, 10);
+    this.orbitDistance = root.SpjutsimFEA.clampViewportOrbitDistance(
+      safeExtent * 0.95 / Math.sin(limitingFov / 2), this.minimumOrbitDistance, this.maximumOrbitDistance
+    );
+    this.orbitAzimuth = Math.atan2(2.8, 3.4);
+    this.orbitPolar = Math.acos(2.1 / Math.sqrt(2.8 * 2.8 + 2.1 * 2.1 + 3.4 * 3.4));
+    this.camera.near = Math.max(safeExtent * 0.001, 0.000001);
+    this.camera.far = Math.max(safeExtent * 100, 10);
+    this.camera.updateProjectionMatrix();
+    if (makeResetView !== false) { this.resetViewState = this.captureViewState(); }
+    this.applyOrbitCamera();
+  };
+
+  ViewportController.prototype.fitCurrentModel = function () {
+    this.fitModel(this.modelCenter, this.modelExtent, false);
   };
 
   ViewportController.prototype.observeCameraInteraction = function () {
     var self = this;
     this.canvas.style.touchAction = 'none';
     this.pointerDownListener = function (event) {
-      if (event.button !== 0) { return; }
+      var isTouch = event.pointerType === 'touch';
+      var isNavigationButton = isTouch || event.button === self.navigationPreferences.rotateButton || event.button === self.navigationPreferences.panButton;
+      if (!isNavigationButton) { return; }
+      self.canvas.focus({ preventScroll: true });
+      self.activePointers.set(event.pointerId, {
+        pointerId: event.pointerId, pointerType: event.pointerType, button: event.button,
+        startX: event.clientX, startY: event.clientY, previousX: event.clientX, previousY: event.clientY,
+        clientX: event.clientX, clientY: event.clientY, moved: false
+      });
+      if (event.button === 2) { self.suppressContextMenu = true; }
+      if (isTouch && self.activePointers.size >= 2) {
+        var touches = Array.from(self.activePointers.values()).filter(function (point) { return point.pointerType === 'touch'; });
+        if (touches.length < 2) { return; }
+        self.pointerInteraction = null;
+        self.pinchDistance = root.SpjutsimFEA.viewportPinchDistance(touches[0], touches[1]);
+      } else {
       self.pointerInteraction = {
         pointerId: event.pointerId,
-        previousX: event.clientX,
-        previousY: event.clientY,
-        totalMovement: 0
+        button: event.button,
+        mode: isTouch || event.button === self.navigationPreferences.rotateButton ? 'rotate' : 'pan'
       };
+      }
       if (typeof self.canvas.setPointerCapture === 'function') {
-        self.canvas.setPointerCapture(event.pointerId);
+        try { self.canvas.setPointerCapture(event.pointerId); } catch (error) { /* Synthetic or already-cancelled pointers have no capture. */ }
       }
     };
     this.pointerMoveListener = function (event) {
-      var interaction = self.pointerInteraction;
+      var point = self.activePointers.get(event.pointerId);
+      var interaction;
       var deltaX;
       var deltaY;
+      if (!point) { return; }
+      deltaX = event.clientX - point.previousX;
+      deltaY = event.clientY - point.previousY;
+      point.previousX = event.clientX;
+      point.previousY = event.clientY;
+      point.clientX = event.clientX;
+      point.clientY = event.clientY;
+      var activeTouches = Array.from(self.activePointers.values()).filter(function (entry) { return entry.pointerType === 'touch'; });
+      if (activeTouches.length >= 2) {
+        var touches = activeTouches;
+        var nextPinchDistance = root.SpjutsimFEA.viewportPinchDistance(touches[0], touches[1]);
+        if (self.pinchDistance && nextPinchDistance > 0) {
+          self.orbitDistance = root.SpjutsimFEA.clampViewportOrbitDistance(
+            self.orbitDistance * (self.navigationPreferences.reverseZoom
+              ? nextPinchDistance / self.pinchDistance
+              : self.pinchDistance / nextPinchDistance),
+            self.minimumOrbitDistance, self.maximumOrbitDistance
+          );
+          self.applyOrbitCamera();
+          self.suppressNextClick = true;
+        }
+        self.pinchDistance = nextPinchDistance;
+        return;
+      }
+      interaction = self.pointerInteraction;
       if (!interaction || interaction.pointerId !== event.pointerId) { return; }
-      deltaX = event.clientX - interaction.previousX;
-      deltaY = event.clientY - interaction.previousY;
-      interaction.previousX = event.clientX;
-      interaction.previousY = event.clientY;
-      interaction.totalMovement += Math.abs(deltaX) + Math.abs(deltaY);
-      if (interaction.totalMovement >= 3) {
-        self.suppressNextClick = true;
-        self.orbitByPixels(deltaX, deltaY);
+      if (root.SpjutsimFEA.didExceedViewportDragThreshold(point.startX, point.startY, event.clientX, event.clientY, 3)) {
+        point.moved = true;
+        if (interaction.button === 0 || point.pointerType === 'touch') { self.suppressNextClick = true; }
+        if (interaction.mode === 'rotate') { self.orbitByPixels(deltaX, deltaY); }
+        else { self.panByPixels(deltaX, deltaY); }
       }
     };
     this.pointerUpListener = function (event) {
-      if (!self.pointerInteraction || self.pointerInteraction.pointerId !== event.pointerId) { return; }
-      self.pointerInteraction = null;
+      var remaining;
+      self.activePointers.delete(event.pointerId);
+      if (self.pointerInteraction && self.pointerInteraction.pointerId === event.pointerId) { self.pointerInteraction = null; }
+      self.pinchDistance = null;
+      remaining = Array.from(self.activePointers.values());
+      if (remaining.length === 1 && remaining[0].pointerType === 'touch') {
+        remaining[0].startX = remaining[0].previousX;
+        remaining[0].startY = remaining[0].previousY;
+        self.pointerInteraction = { pointerId: remaining[0].pointerId, button: 0, mode: 'rotate' };
+      }
       if (typeof self.canvas.releasePointerCapture === 'function' && self.canvas.hasPointerCapture(event.pointerId)) {
-        self.canvas.releasePointerCapture(event.pointerId);
+        try { self.canvas.releasePointerCapture(event.pointerId); } catch (error) { /* Capture can disappear before cancellation is delivered. */ }
       }
     };
+    this.pointerLostCaptureListener = function (event) { self.pointerUpListener(event); };
     this.wheelListener = function (event) {
       event.preventDefault();
       self.zoomByWheelDelta(event.deltaY);
+    };
+    this.contextMenuListener = function (event) {
+      if (!self.suppressContextMenu) { return; }
+      event.preventDefault();
+      self.suppressContextMenu = false;
+    };
+    this.keyDownListener = function (event) {
+      var step;
+      if (!root.SpjutsimFEA.shouldHandleViewportArrowKey(event, self.canvas, document)) { return; }
+      step = self.navigationPreferences.arrowStep;
+      event.preventDefault();
+      if (event.key === 'ArrowLeft') { self.orbitByRadians(step, 0); }
+      if (event.key === 'ArrowRight') { self.orbitByRadians(-step, 0); }
+      if (event.key === 'ArrowUp') { self.orbitByRadians(0, -step); }
+      if (event.key === 'ArrowDown') { self.orbitByRadians(0, step); }
     };
     this.canvas.addEventListener('pointerdown', this.pointerDownListener);
     this.canvas.addEventListener('pointermove', this.pointerMoveListener);
     this.canvas.addEventListener('pointerup', this.pointerUpListener);
     this.canvas.addEventListener('pointercancel', this.pointerUpListener);
+    this.canvas.addEventListener('lostpointercapture', this.pointerLostCaptureListener);
     this.canvas.addEventListener('wheel', this.wheelListener, { passive: false });
+    this.canvas.addEventListener('contextmenu', this.contextMenuListener);
+    document.addEventListener('keydown', this.keyDownListener);
   };
 
   ViewportController.prototype.setFacePickHandler = function (handler) {
@@ -308,18 +470,8 @@
       geometryModel.boundingBoxM.maxM[1] - geometryModel.boundingBoxM.minM[1],
       geometryModel.boundingBoxM.maxM[2] - geometryModel.boundingBoxM.minM[2]
     );
-    this.camera.near = Math.max(extent * 0.001, 0.000001);
-    this.camera.far = Math.max(extent * 100, 10);
-    this.camera.position.set(centerX + extent * 2.8, centerY + extent * 2.1, centerZ + extent * 3.4);
-    this.camera.lookAt(centerX, centerY, centerZ);
-    this.viewTarget.set(centerX, centerY, centerZ);
-    this.minimumOrbitDistance = Math.max(extent * 0.2, 0.000001);
-    this.maximumOrbitDistance = Math.max(extent * 100, 10);
+    this.fitModel(new root.THREE.Vector3(centerX, centerY, centerZ), extent, true);
     this.suppressNextClick = false;
-    this.synchronizeOrbitFromCamera();
-    this.camera.updateProjectionMatrix();
-    this.camera.updateMatrixWorld();
-    this.render();
   };
 
   ViewportController.prototype.setSelectedFaceIds = function (faceIds) {
@@ -400,7 +552,11 @@
       this.canvas.removeEventListener('pointerup', this.pointerUpListener);
       this.canvas.removeEventListener('pointercancel', this.pointerUpListener);
     }
+    if (this.pointerLostCaptureListener) { this.canvas.removeEventListener('lostpointercapture', this.pointerLostCaptureListener); }
     if (this.wheelListener) { this.canvas.removeEventListener('wheel', this.wheelListener); }
+    if (this.contextMenuListener) { this.canvas.removeEventListener('contextmenu', this.contextMenuListener); }
+    if (this.keyDownListener) { document.removeEventListener('keydown', this.keyDownListener); }
+    this.activePointers.clear();
     this.scene.traverse(function (object) {
       if (object.geometry && typeof object.geometry.dispose === 'function') { object.geometry.dispose(); }
       disposeMaterial(object.material);

@@ -42,6 +42,10 @@ to run the imported STEP-cube face-picking checks across canvas sizes. It should
 report `Passed`; the pointer conversion check also covers a simulated 2× device
 pixel ratio.
 
+Open `tests/browser/viewport-navigation-tests.html` directly in Chromium to run
+the camera navigation, preference validation, and pointer-cancellation checks.
+It should report `Passed`.
+
 After changing either file in `workers/`, regenerate the checked-in local-file worker wrappers:
 
 ```sh
