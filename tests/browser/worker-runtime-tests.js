@@ -124,6 +124,55 @@
     assert(api.isStepFilename('MODEL.STP') && !api.isStepFilename('model.iges'), 'STEP extension filtering is incorrect');
   }
 
+  function testPreviewRequiresOneRangePerFace() {
+    var geometry = validGeometry();
+    geometry.faceIds = ['face-a', 'face-b'];
+    geometry.preview.positionsM = new Float64Array([
+      0, 0, 0, 1, 0, 0, 0, 1, 0,
+      0, 0, 0, 0, 1, 0, 0, 0, 1
+    ]);
+    geometry.preview.indices = new Uint32Array([0, 1, 2, 3, 4, 5]);
+    geometry.preview.faceRanges = [
+      { faceId: 'face-a', start: 0, count: 3 },
+      { faceId: 'face-a', start: 3, count: 3 }
+    ];
+    assert(!api.validateGeometryModel(geometry).valid, 'duplicate preview FaceId ranges were accepted');
+  }
+
+  function testCustomMeshPresetCanBeEntered() {
+    var controller = new api.AppController({ document: api.createAnalysisDocument() });
+    var ui = new api.UIController(controller);
+    controller.replaceGeometry(validGeometry(), { sourceName: 'cube.step', stepBytes: new Uint8Array([1]).buffer });
+    ui.render(controller.document);
+    ui.meshPreset.value = 'custom';
+    ui.meshMinSize.value = '';
+    ui.meshMaxSize.value = '';
+    ui.updateMeshSettingsFromControls();
+    assert(controller.document.meshSettings.preset === 'custom', 'custom preset reverted before sizes could be entered');
+    assert(controller.document.meshSettings.minSizeM > 0 &&
+      controller.document.meshSettings.minSizeM <= controller.document.meshSettings.maxSizeM,
+      'custom preset did not receive a valid initial size range');
+  }
+
+  function testViewportCameraNavigation() {
+    var viewport = new api.ViewportController(document.getElementById('viewport'));
+    var faceId = validGeometry().faceIds[0];
+    var cameraBefore;
+    var distanceBefore;
+    viewport.setGeometryPreview(validGeometry());
+    viewport.setSelectedFaceIds([faceId]);
+    cameraBefore = viewport.camera.position.clone();
+    viewport.orbitByPixels(0, 24);
+    assert(viewport.camera.position.distanceTo(cameraBefore) > 0.01, 'orbit input did not move the camera');
+    assert(viewport.camera.position.y > cameraBefore.y, 'vertical orbit input used the unswapped pointer Y axis');
+    assert(viewport.selectedFaceIds.has(faceId), 'orbit input changed the selected faces');
+    distanceBefore = viewport.camera.position.distanceTo(viewport.viewTarget);
+    viewport.zoomByWheelDelta(-120);
+    assert(viewport.camera.position.distanceTo(viewport.viewTarget) < distanceBefore, 'wheel input did not zoom the camera');
+    assert(viewport.selectedFaceIds.has(faceId), 'zoom input changed the selected faces');
+    viewport.dispose();
+  }
+
   function testMesherClientUsesDedicatedTransferCopy() {
     var originalStartWorker = api.startLocalWorker;
     var original = new Uint8Array([1, 2, 3]).buffer;
@@ -171,6 +220,9 @@
       assert(original.byteLength === 3, 'canonical STEP bytes were detached by meshing');
       mesh.boundaryFaces.triangleConnectivity[2] = 4;
       assert(!api.validateVolumeMeshResult(mesh, geometry.faceIds).valid, 'out-of-range boundary connectivity was accepted');
+      mesh = validVolumeMesh();
+      mesh.quality.nearZeroJacobianCount = 1;
+      assert(!api.validateVolumeMeshResult(mesh, geometry.faceIds).valid, 'near-zero-Jacobian mesh was accepted as solver-ready');
     }).finally(function () { api.startLocalWorker = originalStartWorker; });
   }
 
@@ -189,6 +241,9 @@
   root.SpjutsimWorkerRuntimeTests = Promise.resolve().then(function () {
     testResponseValidation();
     testGeometryContractAndInvalidation();
+    testPreviewRequiresOneRangePerFace();
+    testCustomMeshPresetCanBeEntered();
+    testViewportCameraNavigation();
     testEscapeClearsFaceSelection();
     return testSolverTimeoutTerminatesWorker().then(testMesherClientUsesDedicatedTransferCopy).then(testMeshContractAndDedicatedTransferCopy);
   }).then(function () {

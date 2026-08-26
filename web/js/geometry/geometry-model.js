@@ -79,6 +79,7 @@
     var index;
     var previousEnd = 0;
     var vertexCount;
+    var rangedFaceIds = new Set();
     if (!preview || typeof preview !== 'object' ||
         !(preview.positionsM instanceof Float64Array) ||
         !(preview.indices instanceof Uint32Array) || !Array.isArray(preview.faceRanges)) {
@@ -105,11 +106,13 @@
     for (index = 0; index < preview.faceRanges.length; index += 1) {
       var range = preview.faceRanges[index];
       if (!range || typeof range.faceId !== 'string' || faceIds.indexOf(range.faceId) === -1 ||
+          rangedFaceIds.has(range.faceId) ||
           !Number.isInteger(range.start) || !Number.isInteger(range.count) ||
           range.start !== previousEnd || range.count <= 0 || range.count % 3 !== 0 ||
           range.start + range.count > preview.indices.length) {
         return validation(false, 'invalid-face-range');
       }
+      rangedFaceIds.add(range.faceId);
       previousEnd = range.start + range.count;
     }
     return previousEnd === preview.indices.length ? validation(true) : validation(false, 'incomplete-face-ranges');

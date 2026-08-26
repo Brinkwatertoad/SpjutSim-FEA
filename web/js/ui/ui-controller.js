@@ -15,6 +15,7 @@
     this.generateMeshButton = document.getElementById('generate-mesh-button');
     this.cancelMeshButton = document.getElementById('cancel-mesh-button');
     this.meshStatus = document.getElementById('mesh-status');
+    this.customMeshSizes = null;
     this.generateMeshHandler = null;
     this.cancelMeshHandler = null;
   }
@@ -77,10 +78,27 @@
     var preset = this.meshPreset.value;
     var settings = { preset: preset, elementType: 'tet4' };
     if (preset === 'custom') {
-      settings.minSizeM = Number(this.meshMinSize.value);
-      settings.maxSizeM = Number(this.meshMaxSize.value);
+      var minimum = Number(this.meshMinSize.value);
+      var maximum = Number(this.meshMaxSize.value);
+      if (!(minimum > 0) || !(maximum > 0)) {
+        var defaults = this.customMeshSizes || root.SpjutsimFEA.resolveMeshSettings(
+          this.controller.document.meshSettings,
+          this.controller.document.geometry && this.controller.document.geometry.boundingBoxM
+        );
+        minimum = defaults.minSizeM;
+        maximum = defaults.maxSizeM;
+      }
+      settings.minSizeM = minimum;
+      settings.maxSizeM = maximum;
     }
-    try { this.controller.replaceMeshSettings(settings); } catch (error) { this.renderMesh(this.controller.document); }
+    try {
+      this.controller.replaceMeshSettings(settings);
+      if (preset === 'custom') {
+        this.customMeshSizes = { minSizeM: settings.minSizeM, maxSizeM: settings.maxSizeM };
+      }
+    } catch (error) {
+      this.renderMesh(this.controller.document);
+    }
   };
   UIController.prototype.renderMesh = function (documentState) {
     var settings = documentState.meshSettings || { preset: 'normal', elementType: 'tet4' };

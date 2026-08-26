@@ -72,6 +72,15 @@
     viewport.setSelectedFaceIds(controller.document.selectedFaceIds);
     assert(viewport.selectedFaceIds.has(selectedFaceId), 'viewport did not render controller selection');
     assert(viewport.previewMesh.material[1].emissiveIntensity > 0, 'selected faces have no visible highlight material');
+    var cameraBeforeOrbit = viewport.camera.position.clone();
+    viewport.orbitByPixels(0, 24);
+    assert(viewport.camera.position.distanceTo(cameraBeforeOrbit) > 0.01, 'orbit input did not move the camera');
+    assert(viewport.camera.position.y > cameraBeforeOrbit.y, 'vertical orbit input used the unswapped pointer Y axis');
+    assert(viewport.selectedFaceIds.has(selectedFaceId), 'orbit input changed the selected faces');
+    var distanceBeforeZoom = viewport.camera.position.distanceTo(viewport.viewTarget);
+    viewport.zoomByWheelDelta(-120);
+    assert(viewport.camera.position.distanceTo(viewport.viewTarget) < distanceBeforeZoom, 'wheel input did not zoom the camera');
+    assert(viewport.selectedFaceIds.has(selectedFaceId), 'zoom input changed the selected faces');
     canvas.style.width = '360px';
     canvas.style.height = '240px';
     viewport.resize();

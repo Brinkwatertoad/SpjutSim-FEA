@@ -67,14 +67,28 @@
     this.resizeObserver = null;
     this.resizeListener = null;
     this.pointerClickListener = null;
+    this.pointerDownListener = null;
+    this.pointerMoveListener = null;
+    this.pointerUpListener = null;
+    this.wheelListener = null;
     this.importedGeometry = null;
     this.previewMesh = null;
     this.selectedFaceIds = new Set();
     this.facePickHandler = null;
+    this.viewTarget = new root.THREE.Vector3(0, 0, 0);
+    this.orbitAzimuth = 0;
+    this.orbitPolar = Math.PI / 2;
+    this.orbitDistance = 1;
+    this.minimumOrbitDistance = 0.01;
+    this.maximumOrbitDistance = 1000;
+    this.pointerInteraction = null;
+    this.suppressNextClick = false;
 
     this.addReferenceObjects();
     this.addLights();
     this.observeResize();
+    this.synchronizeOrbitFromCamera();
+    this.observeCameraInteraction();
     this.observePointerPicking();
     this.resize();
   }
@@ -111,12 +125,97 @@
     this.pointerClickListener = function (event) {
       var faceId;
       if (event.button !== 0) { return; }
+      if (self.suppressNextClick) {
+        self.suppressNextClick = false;
+        return;
+      }
       faceId = self.pickFaceAtPointer(event);
       if (faceId && self.facePickHandler) {
         self.facePickHandler(faceId, Boolean(event.shiftKey));
       }
     };
     this.canvas.addEventListener('click', this.pointerClickListener);
+  };
+
+  ViewportController.prototype.synchronizeOrbitFromCamera = function () {
+    var offset = new root.THREE.Vector3().subVectors(this.camera.position, this.viewTarget);
+    this.orbitDistance = Math.max(offset.length(), this.minimumOrbitDistance);
+    this.orbitPolar = Math.acos(Math.max(-1, Math.min(1, offset.y / this.orbitDistance)));
+    this.orbitAzimuth = Math.atan2(offset.x, offset.z);
+  };
+
+  ViewportController.prototype.applyOrbitCamera = function () {
+    var sinPolar = Math.sin(this.orbitPolar);
+    this.camera.position.set(
+      this.viewTarget.x + this.orbitDistance * sinPolar * Math.sin(this.orbitAzimuth),
+      this.viewTarget.y + this.orbitDistance * Math.cos(this.orbitPolar),
+      this.viewTarget.z + this.orbitDistance * sinPolar * Math.cos(this.orbitAzimuth)
+    );
+    this.camera.lookAt(this.viewTarget);
+    this.camera.updateMatrixWorld();
+    this.render();
+  };
+
+  ViewportController.prototype.orbitByPixels = function (deltaX, deltaY) {
+    this.orbitAzimuth -= deltaX * 0.008;
+    this.orbitPolar = Math.max(0.05, Math.min(Math.PI - 0.05, this.orbitPolar - deltaY * 0.008));
+    this.applyOrbitCamera();
+  };
+
+  ViewportController.prototype.zoomByWheelDelta = function (deltaY) {
+    this.orbitDistance = Math.max(
+      this.minimumOrbitDistance,
+      Math.min(this.maximumOrbitDistance, this.orbitDistance * Math.exp(deltaY * 0.001))
+    );
+    this.applyOrbitCamera();
+  };
+
+  ViewportController.prototype.observeCameraInteraction = function () {
+    var self = this;
+    this.canvas.style.touchAction = 'none';
+    this.pointerDownListener = function (event) {
+      if (event.button !== 0) { return; }
+      self.pointerInteraction = {
+        pointerId: event.pointerId,
+        previousX: event.clientX,
+        previousY: event.clientY,
+        totalMovement: 0
+      };
+      if (typeof self.canvas.setPointerCapture === 'function') {
+        self.canvas.setPointerCapture(event.pointerId);
+      }
+    };
+    this.pointerMoveListener = function (event) {
+      var interaction = self.pointerInteraction;
+      var deltaX;
+      var deltaY;
+      if (!interaction || interaction.pointerId !== event.pointerId) { return; }
+      deltaX = event.clientX - interaction.previousX;
+      deltaY = event.clientY - interaction.previousY;
+      interaction.previousX = event.clientX;
+      interaction.previousY = event.clientY;
+      interaction.totalMovement += Math.abs(deltaX) + Math.abs(deltaY);
+      if (interaction.totalMovement >= 3) {
+        self.suppressNextClick = true;
+        self.orbitByPixels(deltaX, deltaY);
+      }
+    };
+    this.pointerUpListener = function (event) {
+      if (!self.pointerInteraction || self.pointerInteraction.pointerId !== event.pointerId) { return; }
+      self.pointerInteraction = null;
+      if (typeof self.canvas.releasePointerCapture === 'function' && self.canvas.hasPointerCapture(event.pointerId)) {
+        self.canvas.releasePointerCapture(event.pointerId);
+      }
+    };
+    this.wheelListener = function (event) {
+      event.preventDefault();
+      self.zoomByWheelDelta(event.deltaY);
+    };
+    this.canvas.addEventListener('pointerdown', this.pointerDownListener);
+    this.canvas.addEventListener('pointermove', this.pointerMoveListener);
+    this.canvas.addEventListener('pointerup', this.pointerUpListener);
+    this.canvas.addEventListener('pointercancel', this.pointerUpListener);
+    this.canvas.addEventListener('wheel', this.wheelListener, { passive: false });
   };
 
   ViewportController.prototype.setFacePickHandler = function (handler) {
@@ -213,6 +312,11 @@
     this.camera.far = Math.max(extent * 100, 10);
     this.camera.position.set(centerX + extent * 2.8, centerY + extent * 2.1, centerZ + extent * 3.4);
     this.camera.lookAt(centerX, centerY, centerZ);
+    this.viewTarget.set(centerX, centerY, centerZ);
+    this.minimumOrbitDistance = Math.max(extent * 0.2, 0.000001);
+    this.maximumOrbitDistance = Math.max(extent * 100, 10);
+    this.suppressNextClick = false;
+    this.synchronizeOrbitFromCamera();
     this.camera.updateProjectionMatrix();
     this.camera.updateMatrixWorld();
     this.render();
@@ -290,6 +394,13 @@
     if (this.resizeObserver) { this.resizeObserver.disconnect(); }
     if (this.resizeListener) { root.removeEventListener('resize', this.resizeListener); }
     if (this.pointerClickListener) { this.canvas.removeEventListener('click', this.pointerClickListener); }
+    if (this.pointerDownListener) { this.canvas.removeEventListener('pointerdown', this.pointerDownListener); }
+    if (this.pointerMoveListener) { this.canvas.removeEventListener('pointermove', this.pointerMoveListener); }
+    if (this.pointerUpListener) {
+      this.canvas.removeEventListener('pointerup', this.pointerUpListener);
+      this.canvas.removeEventListener('pointercancel', this.pointerUpListener);
+    }
+    if (this.wheelListener) { this.canvas.removeEventListener('wheel', this.wheelListener); }
     this.scene.traverse(function (object) {
       if (object.geometry && typeof object.geometry.dispose === 'function') { object.geometry.dispose(); }
       disposeMaterial(object.material);

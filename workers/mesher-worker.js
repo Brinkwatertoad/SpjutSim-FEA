@@ -338,7 +338,10 @@ function extractBoundaryFaces(gmsh, surfaceTags, faceIds, indexByNodeTag) {
     );
     var faceId = faceIds[surfaceIndex];
     var range;
-    Array.prototype.push.apply(connectivity, extracted.connectivity);
+    var connectivityIndex;
+    for (connectivityIndex = 0; connectivityIndex < extracted.connectivity.length; connectivityIndex += 1) {
+      connectivity.push(extracted.connectivity[connectivityIndex]);
+    }
     range = { faceId: faceId, start: start, count: connectivity.length - start };
     faceRanges.push(range);
     geometryFaceMap[faceId] = { faceId: faceId, start: range.start, count: range.count };
@@ -422,6 +425,7 @@ function generateMesh(gmsh, message) {
     gmsh.option.setNumber('Mesh.MeshSizeMax', message.settings.maxSizeM);
     gmsh.option.setNumber('Mesh.MeshSizeFromCurvature', 1);
     gmsh.option.setNumber('Mesh.MeshSizeExtendFromBoundary', 1);
+    gmsh.model.mesh.setOutwardOrientation(restored.solidTag);
     progress(message.requestId, 'mesh-generate', 'Generating Tet4 volume mesh…');
     gmsh.model.mesh.generate(3);
     progress(message.requestId, 'mesh-extract', 'Extracting solver-ready mesh data…');
@@ -436,6 +440,9 @@ function generateMesh(gmsh, message) {
     summary = meshStatistics(nodes.positions, tetrahedra.connectivity, gammaQualities, diagonalM);
     if (summary.invertedElementCount > 0) {
       throw knownMeshError('INVERTED_ELEMENTS', 'The generated mesh contains inverted elements.', 'Found ' + summary.invertedElementCount + ' non-positive Tet4 Jacobians.');
+    }
+    if (summary.nearZeroJacobianCount > 0) {
+      throw knownMeshError('DEGENERATE_ELEMENTS', 'The generated mesh contains degenerate elements.', 'Found ' + summary.nearZeroJacobianCount + ' near-zero Tet4 Jacobians.');
     }
     return {
       elementType: 'tet4', nodePositionsM: nodes.positions, elementConnectivity: new Uint32Array(tetrahedra.connectivity),

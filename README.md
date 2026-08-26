@@ -58,6 +58,6 @@ No npm, Node runtime, frontend framework, transpiler, or application bundler is 
 
 ## Current boundary
 
-The current foundation provides app state/controller seams, the internalized SpjutSim UI sources, a repository-local Three.js viewport, a pinned serial Gmsh/OpenCASCADE local runtime, and local STEP import for exactly one closed solid. Import normalizes STEP units to meters, retains canonical source bytes for later disposable-worker remeshes, exposes opaque CAD face identities, and renders a grouped surface preview. The volume-mesh contract and functioning FEM solve follow in later plans.
+The current foundation provides app state/controller seams, the internalized SpjutSim UI sources, a repository-local Three.js viewport, a pinned serial Gmsh/OpenCASCADE local runtime, and local STEP import for exactly one closed solid. Import normalizes STEP units to meters, retains canonical source bytes for later disposable-worker remeshes, exposes opaque CAD face identities, and renders a grouped surface preview with orbit/zoom face selection. Coarse, normal, fine, and custom settings produce validated Tet4 volume meshes with CAD-face boundary mapping. The functioning FEM solve follows in later plans.
 
 See `spec.md` for the product specification and `UI_FOUNDATION.md` for the UI-kit provenance pin.

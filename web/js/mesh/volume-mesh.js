@@ -125,7 +125,7 @@
         result.statistics.minCharacteristicSizeM <= 0 || result.statistics.minCharacteristicSizeM > result.statistics.maxCharacteristicSizeM ||
         result.quality.metric !== 'gamma' || !Number.isFinite(result.quality.minimum) ||
         !Number.isInteger(result.quality.invertedElementCount) || !Number.isInteger(result.quality.nearZeroJacobianCount) ||
-        result.quality.invertedElementCount < 0 || result.quality.nearZeroJacobianCount < 0 ||
+        result.quality.invertedElementCount !== 0 || result.quality.nearZeroJacobianCount !== 0 ||
         result.memoryInputs.nodeCount !== nodeCount || result.memoryInputs.elementCount !== result.elementConnectivity.length / 4) {
       return validation(false, 'invalid-volume-mesh-metadata');
     }

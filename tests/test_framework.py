@@ -194,6 +194,9 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn('resolveMeshSettings', contract)
         self.assertIn("metric: 'gamma'", worker)
         self.assertIn('getElementQualities', worker)
+        self.assertIn('setOutwardOrientation', worker)
+        self.assertNotIn('Array.prototype.push.apply(connectivity', worker)
+        self.assertIn('DEGENERATE_ELEMENTS', worker)
         self.assertIn('generateMesh', client)
         self.assertIn('stepBytes.slice(0)', client)
         self.assertIn('replaceMeshSettings', controller)
@@ -205,6 +208,7 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn("preset: 'fine'", coverage)
         self.assertIn("preset: 'custom'", coverage)
         self.assertIn('surface area was not preserved', coverage)
+        self.assertIn('boundary triangle was not oriented outward', coverage)
         self.assertIn('FaceId set changed after remeshing', coverage)
 
     def test_preview_face_selection_coverage_exists(self):
@@ -224,6 +228,7 @@ class FrameworkTests(unittest.TestCase):
         self.assertTrue(harness.is_file())
         self.assertIn('selectEveryFace', script.read_text())
         self.assertIn('device-pixel-ratio conversion', script.read_text())
+        self.assertIn('orbit input did not move the camera', script.read_text())
 
     def test_gmsh_build_is_serial_and_embedded(self):
         build_script = (ROOT / 'tools/build-gmsh-local-runtime.sh').read_text()

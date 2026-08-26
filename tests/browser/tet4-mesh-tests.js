@@ -27,12 +27,29 @@
     }
     return total;
   }
+  function verifyOutwardBoundaryWinding(mesh) {
+    var positions = mesh.nodePositionsM;
+    var indices = mesh.boundaryFaces.triangleConnectivity;
+    var index;
+    for (index = 0; index < indices.length; index += 3) {
+      var a = indices[index] * 3; var b = indices[index + 1] * 3; var c = indices[index + 2] * 3;
+      var abx = positions[b] - positions[a]; var aby = positions[b + 1] - positions[a + 1]; var abz = positions[b + 2] - positions[a + 2];
+      var acx = positions[c] - positions[a]; var acy = positions[c + 1] - positions[a + 1]; var acz = positions[c + 2] - positions[a + 2];
+      var nx = aby * acz - abz * acy; var ny = abz * acx - abx * acz; var nz = abx * acy - aby * acx;
+      var centerX = (positions[a] + positions[b] + positions[c]) / 3 - 0.5;
+      var centerY = (positions[a + 1] + positions[b + 1] + positions[c + 1]) / 3 - 0.5;
+      var centerZ = (positions[a + 2] + positions[b + 2] + positions[c + 2]) / 3 - 0.5;
+      assert(nx * centerX + ny * centerY + nz * centerZ > 0, 'boundary triangle was not oriented outward');
+    }
+  }
   function verifyMesh(mesh, faceIds) {
     var index;
     assert(api.validateVolumeMeshResult(mesh, faceIds).valid, 'mesh did not satisfy the public contract');
     assert(mesh.quality.invertedElementCount === 0, 'mesh reported inverted tetrahedra');
+    assert(mesh.quality.nearZeroJacobianCount === 0, 'mesh returned near-zero-Jacobian tetrahedra');
     assert(mesh.boundaryFaces.faceRanges.length === 6, 'cube boundary did not retain all six CAD faces');
     assert(Math.abs(surfaceArea(mesh) - 6) < 2e-6, 'cube surface area was not preserved');
+    verifyOutwardBoundaryWinding(mesh);
     for (index = 0; index < mesh.elementConnectivity.length; index += 4) {
       assert(signedSixVolume(mesh.nodePositionsM, mesh.elementConnectivity[index], mesh.elementConnectivity[index + 1], mesh.elementConnectivity[index + 2], mesh.elementConnectivity[index + 3]) > 0, 'inverted Tet4 connectivity was returned');
     }
