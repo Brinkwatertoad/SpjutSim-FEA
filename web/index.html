@@ -38,8 +38,69 @@
           <p id="face-selection-status" role="status" aria-live="polite">Import geometry to select faces.</p>
           <button id="clear-face-selection-button" type="button" disabled>Clear selected faces</button>
         </section>
-        <section><h2>Material</h2><p>No material defined.</p></section>
-        <section><h2>Supports &amp; loads</h2><p>Import geometry to begin.</p></section>
+        <section id="material-tool">
+          <h2>Material</h2>
+          <form id="material-form" novalidate>
+            <label for="material-name">Name</label><input id="material-name" autocomplete="off" placeholder="e.g. Structural steel">
+            <label for="material-youngs">Young's modulus (GPa)</label><input id="material-youngs" type="number" min="0" step="any" required>
+            <label for="material-poisson">Poisson's ratio</label><input id="material-poisson" type="number" min="-0.999" max="0.499" step="any" required aria-describedby="material-poisson-help">
+            <small id="material-poisson-help">Valid between −1 and 0.5. Negative values are unusual for ordinary solids.</small>
+            <label for="material-density">Density (kg/m³, optional)</label><input id="material-density" type="number" min="0" step="any">
+            <details><summary>Optional strengths</summary>
+              <label for="material-tensile-yield">Tensile yield (MPa)</label><input id="material-tensile-yield" type="number" min="0" step="any">
+              <label for="material-compressive-yield">Compressive yield (MPa)</label><input id="material-compressive-yield" type="number" min="0" step="any">
+              <label for="material-ultimate-tensile">Ultimate tensile (MPa)</label><input id="material-ultimate-tensile" type="number" min="0" step="any">
+              <label for="material-ultimate-compressive">Ultimate compressive (MPa)</label><input id="material-ultimate-compressive" type="number" min="0" step="any">
+            </details>
+            <button class="ui-button-primary" type="submit">Save material</button>
+            <button id="remove-material-button" type="button" data-action-intent="danger">Remove</button>
+          </form>
+          <p id="material-status" role="status" aria-live="polite">No material defined.</p>
+        </section>
+        <section id="supports-tool">
+          <h2>Supports</h2>
+          <p class="fea-help">Supports attach to the currently selected CAD faces.</p>
+          <ul id="support-list" class="fea-analysis-list" aria-label="Defined supports"></ul>
+          <form id="support-form" novalidate>
+            <label for="support-name">Name</label><input id="support-name" autocomplete="off" placeholder="e.g. Fixed base" required>
+            <label for="support-type">Type</label><select id="support-type"><option value="fixed">Fixed</option><option value="prescribed-displacement">Prescribed displacement</option></select>
+            <fieldset id="prescribed-displacement-fields" hidden>
+              <legend>Constrained components (mm)</legend>
+              <label class="fea-component"><input id="support-ux-enabled" type="checkbox"><span>Ux</span><input id="support-ux" type="number" step="any" aria-label="Ux displacement in millimeters"></label>
+              <label class="fea-component"><input id="support-uy-enabled" type="checkbox"><span>Uy</span><input id="support-uy" type="number" step="any" aria-label="Uy displacement in millimeters"></label>
+              <label class="fea-component"><input id="support-uz-enabled" type="checkbox"><span>Uz</span><input id="support-uz" type="number" step="any" aria-label="Uz displacement in millimeters"></label>
+            </fieldset>
+            <button class="ui-button-primary" type="submit">Add support</button><button id="cancel-support-edit" type="button" hidden>Cancel edit</button>
+          </form>
+          <p id="support-status" role="status" aria-live="polite">Import geometry and select faces to add a support.</p>
+        </section>
+        <section id="loads-tool">
+          <h2>Loads</h2>
+          <p class="fea-help">Positive pressure acts inward. Total force is distributed by face area.</p>
+          <ul id="load-list" class="fea-analysis-list" aria-label="Defined loads"></ul>
+          <form id="load-form" novalidate>
+            <label for="load-name">Name</label><input id="load-name" autocomplete="off" placeholder="e.g. Axial load" required>
+            <label for="load-type">Type</label><select id="load-type"><option value="pressure">Pressure</option><option value="total-force">Total force</option></select>
+            <div id="pressure-fields"><label for="load-pressure">Pressure (MPa)</label><input id="load-pressure" type="number" step="any"></div>
+            <fieldset id="force-fields" hidden><legend>Total force vector (N)</legend>
+              <label for="load-fx">Fx</label><input id="load-fx" type="number" step="any">
+              <label for="load-fy">Fy</label><input id="load-fy" type="number" step="any">
+              <label for="load-fz">Fz</label><input id="load-fz" type="number" step="any">
+            </fieldset>
+            <button class="ui-button-primary" type="submit">Add load</button><button id="cancel-load-edit" type="button" hidden>Cancel edit</button>
+          </form>
+          <p id="load-status" role="status" aria-live="polite">Import geometry and select faces to add a load.</p>
+          <form id="gravity-form" class="fea-gravity-form" novalidate>
+            <label class="fea-inline-check" for="gravity-enabled"><input id="gravity-enabled" type="checkbox"><span>Enable gravity</span></label>
+            <fieldset><legend>Acceleration (m/s²)</legend>
+              <label for="gravity-x">X</label><input id="gravity-x" type="number" step="any" value="0">
+              <label for="gravity-y">Y</label><input id="gravity-y" type="number" step="any" value="0">
+              <label for="gravity-z">Z</label><input id="gravity-z" type="number" step="any" value="-9.80665">
+            </fieldset>
+            <button type="submit">Apply gravity</button>
+          </form>
+          <p id="gravity-status" role="status" aria-live="polite">Gravity is off.</p>
+        </section>
         <section>
           <h2>Mesh</h2>
           <label for="mesh-preset">Density</label>
@@ -122,10 +183,14 @@
   <script src="js/geometry/geometry-model.js"></script>
   <script src="js/mesh/volume-mesh.js"></script>
   <script src="js/mesh/mesh-display.js"></script>
+  <script src="js/analysis/analysis-contracts.js"></script>
+  <script src="js/analysis/solver-input.js"></script>
   <script src="js/analysis/analysis-document.js"></script>
   <script src="js/analysis/app-controller.js"></script>
   <script src="js/render/viewport-navigation.js"></script>
+  <script src="js/render/analysis-glyphs.js"></script>
   <script src="js/render/viewport-controller.js"></script>
+  <script src="js/ui/analysis-authoring-ui.js"></script>
   <script src="js/ui/ui-controller.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source.js"></script>
   <script src="generated/local-runtime/mesher-worker-source.js"></script>

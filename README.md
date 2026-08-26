@@ -46,6 +46,11 @@ Open `tests/browser/viewport-navigation-tests.html` directly in Chromium to run
 the camera navigation, preference validation, and pointer-cancellation checks.
 It should report `Passed`.
 
+Open `tests/browser/analysis-authoring-tests.html` directly in Chromium to run
+the material/load contract, controller invalidation, boundary projection,
+surface-integration, and six-face glyph-orientation checks. It should report
+`Passed` without a server.
+
 After changing either file in `workers/`, regenerate the checked-in local-file worker wrappers:
 
 ```sh
@@ -62,6 +67,6 @@ No npm, Node runtime, frontend framework, transpiler, or application bundler is 
 
 ## Current boundary
 
-The current foundation provides app state/controller seams, the internalized SpjutSim UI sources, a repository-local Three.js viewport, a pinned serial Gmsh/OpenCASCADE local runtime, and local STEP import for exactly one closed solid. Import normalizes STEP units to meters, retains canonical source bytes for later disposable-worker remeshes, exposes opaque CAD face identities, and renders a grouped surface preview with orbit/zoom face selection. Coarse, normal, fine, and custom settings produce validated Tet4 volume meshes with CAD-face boundary mapping. The functioning FEM solve follows in later plans.
+The current foundation provides app state/controller seams, the internalized SpjutSim UI sources, a repository-local Three.js viewport, a pinned serial Gmsh/OpenCASCADE local runtime, and local STEP import for exactly one closed solid. Import normalizes STEP units to meters, retains canonical source bytes for later disposable-worker remeshes, exposes opaque CAD face identities, and renders a grouped surface preview with orbit/zoom face selection. Coarse, normal, fine, and custom settings produce validated Tet4 volume meshes with CAD-face boundary mapping. Users can author an SI-backed isotropic material, fixed or prescribed supports, pressure, integrated total face force, and gravity; these are projected into mesher-independent Tet4 boundary/node data for a later solver. The functioning FEM solve follows in later plans.
 
 See `spec.md` for the product specification and `UI_FOUNDATION.md` for the UI-kit provenance pin.

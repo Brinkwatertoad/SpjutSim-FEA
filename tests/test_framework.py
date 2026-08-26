@@ -277,6 +277,36 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn('changed mouse bindings were not applied', coverage)
         self.assertIn('pointer cancellation left active navigation state', coverage)
 
+    def test_material_support_and_load_authoring_contracts_exist(self):
+        contracts = (ROOT / 'web/js/analysis/analysis-contracts.js').read_text()
+        controller = (ROOT / 'web/js/analysis/app-controller.js').read_text()
+        projection = (ROOT / 'web/js/analysis/solver-input.js').read_text()
+        glyphs = (ROOT / 'web/js/render/analysis-glyphs.js').read_text()
+        viewport = (ROOT / 'web/js/render/viewport-controller.js').read_text()
+        index = (ROOT / 'web/index.html').read_text()
+        harness = ROOT / 'tests/browser/analysis-authoring-tests.html'
+        coverage = (ROOT / 'tests/browser/analysis-authoring-tests.js').read_text()
+        for name in ('validateIsotropicMaterial', 'validateBoundaryCondition', 'validateLoad', 'validateGravity', 'displayToSI', 'siToDisplay'):
+            self.assertIn(name, contracts)
+        for command in ('replaceMaterial', 'createBoundaryCondition', 'replaceBoundaryCondition', 'selectBoundaryCondition',
+                        'removeBoundaryCondition', 'createLoad', 'replaceLoad', 'selectLoad', 'removeLoad', 'replaceGravity'):
+            self.assertIn(command, controller)
+        self.assertIn('equivalentTotalForce', projection)
+        self.assertIn('triangleAreasM2', projection)
+        self.assertIn('buildAnalysisGlyphDescriptors', glyphs)
+        self.assertIn('analysis-overlay', viewport)
+        self.assertIn("--ui-color-load", viewport)
+        self.assertIn("--ui-color-support", viewport)
+        for element_id in ('material-form', 'support-form', 'load-form', 'gravity-form'):
+            self.assertIn(element_id, index)
+        self.assertTrue(harness.is_file())
+        self.assertIn('positive pressure did not integrate inward', coverage)
+        self.assertIn('total force was divided by nodes instead of integrated by area', coverage)
+        self.assertIn('glyphs were not stable across remeshes', coverage)
+        preview_coverage = (ROOT / 'tests/browser/preview-selection-tests.js').read_text()
+        self.assertIn('repeated item edits leaked the previous Three.js glyph geometry', preview_coverage)
+        self.assertIn('load glyph did not resolve its color from the active theme token', preview_coverage)
+
     def test_gmsh_build_is_serial_and_embedded(self):
         build_script = (ROOT / 'tools/build-gmsh-local-runtime.sh').read_text()
         self.assertIn('-DENABLE_OPENMP=OFF', build_script)

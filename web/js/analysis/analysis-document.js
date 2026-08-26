@@ -18,7 +18,9 @@
       viewportPresentation: { mode: 'model', displayStyle: 'lines' },
       solveSettings: { relativeTolerance: 1e-8 },
       results: null,
-      convergenceStudy: null
+      convergenceStudy: null,
+      analysisRevision: 0,
+      resultInvalidation: null
     };
   }
 

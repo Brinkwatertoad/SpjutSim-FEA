@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Analysis authoring tests</title></head>
+<body>
+  <p id="test-status" role="status">Running…</p>
+  <div hidden>
+    <form id="material-form" novalidate>
+      <input id="material-name"><input id="material-youngs"><input id="material-poisson"><input id="material-density">
+      <input id="material-tensile-yield"><input id="material-compressive-yield"><input id="material-ultimate-tensile"><input id="material-ultimate-compressive">
+      <button type="submit">Save material</button><button id="remove-material-button" type="button">Remove</button>
+    </form><p id="material-status"></p>
+    <ul id="support-list"></ul><form id="support-form" novalidate>
+      <input id="support-name"><select id="support-type"><option value="fixed">Fixed</option><option value="prescribed-displacement">Prescribed</option></select>
+      <fieldset id="prescribed-displacement-fields"><input id="support-ux-enabled" type="checkbox"><input id="support-ux"><input id="support-uy-enabled" type="checkbox"><input id="support-uy"><input id="support-uz-enabled" type="checkbox"><input id="support-uz"></fieldset>
+      <button type="submit">Add support</button><button id="cancel-support-edit" type="button">Cancel</button>
+    </form><p id="support-status"></p>
+    <ul id="load-list"></ul><form id="load-form" novalidate>
+      <input id="load-name"><select id="load-type"><option value="pressure">Pressure</option><option value="total-force">Force</option></select>
+      <div id="pressure-fields"><input id="load-pressure"></div><fieldset id="force-fields"><input id="load-fx"><input id="load-fy"><input id="load-fz"></fieldset>
+      <button type="submit">Add load</button><button id="cancel-load-edit" type="button">Cancel</button>
+    </form><p id="load-status"></p>
+    <form id="gravity-form"><input id="gravity-enabled" type="checkbox"><input id="gravity-x" value="0"><input id="gravity-y" value="0"><input id="gravity-z" value="-9.80665"><button type="submit">Apply gravity</button></form>
+    <p id="gravity-status"></p>
+  </div>
+  <script src="../../web/js/geometry/geometry-model.js"></script>
+  <script src="../../web/js/mesh/volume-mesh.js"></script>
+  <script src="../../web/js/analysis/analysis-contracts.js"></script>
+  <script src="../../web/js/analysis/solver-input.js"></script>
+  <script src="../../web/js/analysis/analysis-document.js"></script>
+  <script src="../../web/js/analysis/app-controller.js"></script>
+  <script src="../../web/js/render/analysis-glyphs.js"></script>
+  <script src="../../web/js/ui/analysis-authoring-ui.js"></script>
+  <script src="analysis-authoring-tests.js"></script>
+</body>
+</html>

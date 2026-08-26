@@ -112,6 +112,10 @@
     }).then(function (mesh) {
       var lineGeometry;
       var disposed = false;
+      var overlayGeometryDisposed = false;
+      var overlayState;
+      var oldLoadGlyph;
+      var newLoadGlyph;
       viewport.setGeometryPreview(geometry);
       viewport.setMeshDisplay(mesh);
       viewport.setPresentation({ mode: 'mesh', displayStyle: 'lines' });
@@ -136,6 +140,24 @@
       assert(!viewport.previewMesh.material[0].wireframe &&
         viewport.importedGeometry.getObjectByName('imported-geometry-feature-edges').visible,
         'shaded-with-edges display style was not restored in Model view');
+      overlayState = {
+        geometry: geometry, mesh: mesh,
+        boundaryConditions: [{ id: 'support', name: 'Fixed', type: 'fixed', faceIds: [geometry.faceIds[0]] }],
+        loads: [{ id: 'load', name: 'Force', type: 'total-force', faceIds: [geometry.faceIds[1]], forceN: [1, 0, 0] }],
+        gravity: { enabled: true, accelerationMS2: [0, 0, -9.80665] }
+      };
+      viewport.setAnalysisOverlay(overlayState);
+      assert(viewport.analysisOverlay.children.length === 3, 'analysis overlay did not create support, load, and gravity glyphs');
+      oldLoadGlyph = viewport.analysisOverlay.getObjectByName('analysis-glyph-total-force');
+      oldLoadGlyph.line.geometry.addEventListener('dispose', function () { overlayGeometryDisposed = true; });
+      document.documentElement.style.setProperty('--ui-color-load', '#123456');
+      overlayState.loads[0].forceN = [1e9, 0, 0];
+      viewport.setAnalysisOverlay(overlayState);
+      newLoadGlyph = viewport.analysisOverlay.getObjectByName('analysis-glyph-total-force');
+      assert(overlayGeometryDisposed, 'repeated item edits leaked the previous Three.js glyph geometry');
+      assert(newLoadGlyph.line.material.color.getHexString() === '123456', 'load glyph did not resolve its color from the active theme token');
+      assert(newLoadGlyph.line.scale.y === oldLoadGlyph.line.scale.y, 'glyph visual scale changed with numeric load magnitude');
+      document.documentElement.style.removeProperty('--ui-color-load');
     });
   }
 

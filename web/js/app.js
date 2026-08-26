@@ -100,6 +100,7 @@
     }
     viewport.setPresentation(documentState.viewportPresentation || { mode: 'model', displayStyle: 'lines' });
     viewport.setSelectedFaceIds(documentState.selectedFaceIds || []);
+    viewport.setAnalysisOverlay(documentState);
   });
   ui.setImportHandler(importStepFile);
   ui.setMeshHandlers(generateMesh, function () { if (activeMesh) { activeMesh.cancel(); } });

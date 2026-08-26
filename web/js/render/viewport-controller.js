@@ -78,6 +78,9 @@
     this.previewMesh = null;
     this.meshDisplay = null;
     this.meshSurface = null;
+    this.analysisOverlay = null;
+    this.analysisOverlayState = null;
+    this.themeObserver = null;
     this.presentation = { mode: 'model', displayStyle: 'lines' };
     this.selectedFaceIds = new Set();
     this.facePickHandler = null;
@@ -101,6 +104,7 @@
     this.canvas.setAttribute('aria-keyshortcuts', 'ArrowLeft ArrowRight ArrowUp ArrowDown');
     this.addReferenceObjects();
     this.addLights();
+    this.observeTheme();
     this.observeResize();
     this.synchronizeOrbitFromCamera();
     this.observeCameraInteraction();
@@ -134,6 +138,17 @@
     referenceObject.name = 'reference-solid';
     referenceObject.position.y = 0.36;
     this.scene.add(grid, axes, referenceObject);
+  };
+
+  ViewportController.prototype.observeTheme = function () {
+    var self = this;
+    if (typeof root.MutationObserver !== 'function') { return; }
+    this.themeObserver = new root.MutationObserver(function () {
+      self.scene.background.set(themeColor('--ui-color-canvas', '#111827'));
+      self.rebuildAnalysisOverlay();
+      self.render();
+    });
+    this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style', 'data-color-scheme', 'data-theme'] });
   };
 
   ViewportController.prototype.observePointerPicking = function () {
@@ -398,6 +413,7 @@
     this.importedGeometry = null;
     this.previewMesh = null;
     this.clearMeshDisplay();
+    this.clearAnalysisOverlay();
     this.selectedFaceIds.clear();
     this.scene.getObjectByName('reference-solid').visible = true;
     this.render();
@@ -544,6 +560,61 @@
     this.render();
   };
 
+  ViewportController.prototype.clearAnalysisOverlay = function () {
+    if (!this.analysisOverlay) { return; }
+    this.scene.remove(this.analysisOverlay);
+    disposeObjectResources(this.analysisOverlay);
+    this.analysisOverlay = null;
+  };
+
+  ViewportController.prototype.rebuildAnalysisOverlay = function () {
+    var descriptors;
+    var group;
+    var glyphLength = Math.max(this.modelExtent * 0.14, 0.000001);
+    var loadColor = themeColor('--ui-color-load', '#fbbf24');
+    var supportColor = themeColor('--ui-color-support', '#c4b5fd');
+    this.clearAnalysisOverlay();
+    if (!this.analysisOverlayState) { return; }
+    descriptors = root.SpjutsimFEA.buildAnalysisGlyphDescriptors(this.analysisOverlayState);
+    group = new root.THREE.Group();
+    group.name = 'analysis-overlay';
+    descriptors.forEach(function (descriptor) {
+      var direction = new root.THREE.Vector3().fromArray(descriptor.direction).normalize();
+      var position = new root.THREE.Vector3().fromArray(descriptor.positionM);
+      var object;
+      if (descriptor.type === 'fixed') {
+        object = new root.THREE.Mesh(
+          new root.THREE.ConeGeometry(glyphLength * 0.22, glyphLength * 0.5, 10),
+          new root.THREE.MeshBasicMaterial({ color: supportColor, depthTest: false })
+        );
+        object.quaternion.setFromUnitVectors(new root.THREE.Vector3(0, 1, 0), direction);
+        object.position.copy(position).addScaledVector(direction, glyphLength * 0.24);
+      } else {
+        if (descriptor.type === 'pressure') { position.addScaledVector(direction, -glyphLength * 0.8); }
+        object = new root.THREE.ArrowHelper(
+          direction, position, glyphLength,
+          descriptor.type === 'prescribed-displacement' ? supportColor : loadColor,
+          glyphLength * 0.32, glyphLength * 0.16
+        );
+        object.line.material.depthTest = false;
+        object.cone.material.depthTest = false;
+      }
+      object.name = 'analysis-glyph-' + descriptor.type;
+      object.userData.descriptor = descriptor;
+      object.renderOrder = 10;
+      group.add(object);
+    });
+    this.scene.add(group);
+    this.analysisOverlay = group;
+  };
+
+  /** Replace load/support glyphs without altering geometry, mesh, or numeric analysis data. */
+  ViewportController.prototype.setAnalysisOverlay = function (documentState) {
+    this.analysisOverlayState = documentState || null;
+    this.rebuildAnalysisOverlay();
+    this.render();
+  };
+
   ViewportController.prototype.setPresentation = function (presentation) {
     if (!presentation || (presentation.mode !== 'model' && presentation.mode !== 'mesh') ||
         (presentation.displayStyle !== 'lines' && presentation.displayStyle !== 'wireframe')) {
@@ -656,6 +727,7 @@
     if (this.wheelListener) { this.canvas.removeEventListener('wheel', this.wheelListener); }
     if (this.contextMenuListener) { this.canvas.removeEventListener('contextmenu', this.contextMenuListener); }
     if (this.keyDownListener) { document.removeEventListener('keydown', this.keyDownListener); }
+    if (this.themeObserver) { this.themeObserver.disconnect(); }
     this.activePointers.clear();
     this.scene.traverse(function (object) {
       if (object.geometry && typeof object.geometry.dispose === 'function') { object.geometry.dispose(); }

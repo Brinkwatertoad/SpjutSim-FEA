@@ -42,6 +42,7 @@
     this.settingsOpen = false;
     this.settingsShortcut = this.resolveSettingsShortcut();
     this.settingsMenuShortcut = document.querySelector('[data-ui-menu-action="settings"] .ui-menu-shortcut');
+    this.analysisAuthoring = root.SpjutsimFEA.AnalysisAuthoringUI ? new root.SpjutsimFEA.AnalysisAuthoringUI(controller) : null;
   }
 
   UIController.prototype.loadNavigationPreferences = function () {
@@ -156,6 +157,7 @@
   UIController.prototype.start = function () {
     var self = this;
     this.applySettingsShortcutPresentation();
+    if (this.analysisAuthoring) { this.analysisAuthoring.start(); }
     if (this.importButton && this.importInput) {
       this.importButton.addEventListener('click', function () { self.importInput.click(); });
       this.importInput.addEventListener('change', function () {
@@ -259,6 +261,7 @@
     this.renderFaceSelection(documentState);
     this.renderMesh(documentState);
     this.renderViewportPresentation(documentState);
+    if (this.analysisAuthoring) { this.analysisAuthoring.render(documentState); }
   };
   UIController.prototype.updateMeshSettingsFromControls = function () {
     var preset = this.meshPreset.value;
