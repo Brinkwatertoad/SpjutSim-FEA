@@ -85,6 +85,9 @@ The product should favor **useful, defensible engineering feedback over solver f
 - GPU/WebGPU sparse solver.
 - Parasolid import.
 - IGES support in the UI, even though the selected meshing stack may technically support it.
+- STL and other non-STEP import formats. They are post-v1 candidates, but the
+  geometry/import boundary must not require downstream UI, meshing, or solver
+  code to understand STEP-specific details.
 - Mobile-device support.
 
 ### 2.3 v1 analysis assumptions
@@ -604,6 +607,13 @@ Use Gmsh's OpenCASCADE geometry kernel for import.
 
 The implementation should set OpenCASCADE's target unit so the imported model is normalized to meters before meshing. Do not infer units from filename or UI assumptions.
 
+Future import adapters may add STL and other formats behind the same geometry
+contract. Downstream consumers must treat `sourceFormat` as metadata rather
+than branching on STEP behavior. Before STL is enabled for analysis, define
+watertight-solid validation and a replacement for CAD `FaceId` semantics, such
+as persistent surface-patch identities; raw STL triangles do not provide CAD
+faces suitable for durable load/support attachment.
+
 ### 6.2 Geometry validation
 
 After import:
@@ -614,6 +624,11 @@ After import:
 4. Check that a closed volume mesh can in principle be generated.
 5. Record all geometric surfaces and their IDs.
 6. Generate a lightweight preview triangulation associated with those surface IDs.
+
+Preview tessellation must be validated on curved as well as planar CAD. Its
+scale-aware chordal/angular quality must be sufficient for selection and visual
+inspection, normals/winding must be consistent, and visible CAD feature edges
+must not be inferred from incidental preview-triangle edges.
 
 ### 6.3 Healing
 
@@ -1456,6 +1471,7 @@ Appropriate settings include:
 
 - display units;
 - appearance/color scheme;
+- viewport navigation bindings, direction, and sensitivity;
 - help/tooltips enabled;
 - tools auto-collapse behavior;
 - developer/diagnostic options when enabled.
@@ -1481,7 +1497,36 @@ Three.js materials/glyphs should obtain these colors from resolved application t
 
 Result contour colormaps are separate from UI theme roles; they must remain numerically meaningful and include a legend.
 
-### 15.5 Face selection
+### 15.5 Viewport navigation and presentation
+
+The default viewport controls are:
+
+- left-button drag rotates/orbits the camera; a click without a drag remains
+  available for face selection;
+- right-button drag pans in the camera plane and suppresses the browser context
+  menu only over the viewport;
+- mouse wheel and touchpad/touch pinch zoom toward or away from the model;
+- arrow keys rotate the camera while the viewport has interaction focus and no
+  editable control or modal dialog owns the key event.
+
+Camera navigation must preserve the current face selection. Provide fit/reset
+view, bounded zoom, pole-safe orbiting, pointer-capture cleanup, and usable
+mouse, trackpad, and touch behavior. Open Settings with `Control+,` or
+`Command+,` and use the SpjutSim settings hub pattern. At minimum, Controls
+settings must allow rotate/pan mouse bindings to be swapped without conflicts,
+zoom direction to be reversed, and navigation sensitivity to be adjusted or
+reset.
+
+The main viewport exposes explicit presentation modes for **Model**, **Mesh**,
+**Stress**, and **Deformation** as their data becomes available. Mesh mode must
+show the boundary mesh either as wireframe or as lines over a shaded surface;
+an optional mesh overlay may also be used in compatible result modes. After a
+successful mesh, default to Mesh mode. After a successful solve, default to a
+color-coded von Mises Stress mode. Stress and deformation views must clearly
+identify the active scalar field, units, contour range, and deformation scale;
+switching views must not mutate engineering results.
+
+### 15.6 Face selection
 
 The viewport must support:
 
@@ -1493,7 +1538,7 @@ The viewport must support:
 
 The preview mesh must preserve a face-to-triangle map for picking.
 
-### 15.6 Loads/support glyphs
+### 15.7 Loads/support glyphs
 
 Display:
 
@@ -1504,7 +1549,7 @@ Display:
 
 Glyph scaling is visual only and must not imply magnitude without a numeric label.
 
-### 15.7 Units
+### 15.8 Units
 
 Provide a small unit-display preference, while storing SI internally.
 
@@ -1518,13 +1563,13 @@ Recommended defaults for mechanical CAD:
 
 Input controls must show units adjacent to values.
 
-### 15.8 Help, tooltips, and accessibility
+### 15.9 Help, tooltips, and accessibility
 
 Use the internal tooltip/help primitives for concise control explanations and optional expanded engineering definitions. This is particularly useful for terms such as Poisson's ratio, mesh quality, von Mises stress, convergence, and memory estimates.
 
 Maintain semantic roles/ARIA state for menus, tabs, switches, dialogs, and listboxes as the UI foundation currently does. Keyboard interaction must remain usable after simulation-specific controls are added.
 
-### 15.9 No silent solver actions
+### 15.10 No silent solver actions
 
 Changing geometry, material, BCs, loads, or mesh settings invalidates dependent results.
 
