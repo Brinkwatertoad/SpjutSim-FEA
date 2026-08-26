@@ -22,6 +22,13 @@
     };
   }
 
+  function arrowEvent(target, overrides) {
+    return Object.assign({
+      key: 'ArrowRight', target: target, preventDefault: function () {},
+      defaultPrevented: false, ctrlKey: false, metaKey: false, altKey: false
+    }, overrides || {});
+  }
+
   function testPreferenceValidation() {
     var fallback = api.normalizeViewportNavigationPreferences({ rotateButton: 0, panButton: 0, zoomSensitivity: 99 });
     var storage = { value: '{not json', getItem: function () { return this.value; }, setItem: function (key, value) { this.value = value; } };
@@ -63,8 +70,17 @@
     viewport.pointerUpListener(eventFor(3, 'touch', 0, 100, 100));
     document.getElementById('opener').focus();
     var beforeArrow = viewport.camera.position.clone();
-    viewport.keyDownListener({ key: 'ArrowRight', target: document.getElementById('opener'), preventDefault: function () {}, ctrlKey: false, metaKey: false, altKey: false });
-    assert(viewport.camera.position.distanceTo(beforeArrow) > 0.01, 'arrow key did not rotate without viewport focus');
+    viewport.keyDownListener(arrowEvent(document.getElementById('opener')));
+    assert(viewport.camera.position.distanceTo(beforeArrow) > 0.01, 'ordinary button focus disabled application-wide arrow rotation');
+    var beforeOwnedArrow = viewport.camera.position.clone();
+    viewport.keyDownListener(arrowEvent(document.getElementById('settings-tab-controls')));
+    assert(viewport.camera.position.distanceTo(beforeOwnedArrow) < 0.000001, 'viewport consumed an arrow owned by a tab widget');
+    viewport.keyDownListener(arrowEvent(document.getElementById('opener'), { defaultPrevented: true }));
+    assert(viewport.camera.position.distanceTo(beforeOwnedArrow) < 0.000001, 'viewport ignored defaultPrevented on an arrow event');
+    document.getElementById('opener').setAttribute('aria-haspopup', 'menu');
+    document.getElementById('opener').setAttribute('aria-expanded', 'true');
+    assert(!api.shouldHandleViewportArrowKey(arrowEvent(document.body), canvas, document), 'open menu did not retain arrow-key ownership');
+    document.getElementById('opener').setAttribute('aria-expanded', 'false');
     var beforeFit = viewport.orbitDistance;
     viewport.fitCurrentModel();
     assert(viewport.orbitDistance !== beforeFit, 'fit view did not reframe the model');
@@ -76,9 +92,15 @@
     viewport.pointerMoveListener(eventFor(5, 'mouse', 0, 130, 100));
     viewport.pointerUpListener(eventFor(5, 'mouse', 0, 130, 100));
     assert(viewport.viewTarget.distanceTo(beforeSwappedPan) > 0.001, 'changed mouse bindings were not applied');
-    viewport.pointerDownListener(eventFor(6, 'mouse', 2, 100, 100));
-    viewport.pointerLostCaptureListener(eventFor(6, 'mouse', 2, 100, 100));
+    viewport.suppressNextClick = false;
+    viewport.pointerDownListener(eventFor(6, 'mouse', 0, 100, 100));
+    viewport.pointerMoveListener(eventFor(6, 'mouse', 0, 130, 100));
+    viewport.pointerCancelListener(eventFor(6, 'mouse', 0, 130, 100));
     assert(viewport.activePointers.size === 0, 'pointer cancellation left active navigation state');
+    assert(viewport.suppressNextClick === false, 'pointer cancellation consumed the next legitimate face click');
+    viewport.pointerDownListener(eventFor(7, 'mouse', 2, 100, 100));
+    viewport.pointerLostCaptureListener(eventFor(7, 'mouse', 2, 100, 100));
+    assert(viewport.suppressContextMenu === false, 'capture loss suppressed a later unrelated context menu');
   }
 
   function testSettingsFocus() {

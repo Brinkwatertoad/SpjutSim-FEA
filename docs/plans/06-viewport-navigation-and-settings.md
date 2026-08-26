@@ -20,8 +20,9 @@ be changed without affecting analysis data.
   resize, multiple touch contacts, poles, very small/large models, and disposal.
   Do not add a runtime dependency on Three.js add-on controls.
 - Give the canvas an accessible interaction target and concise control help.
-  Arrow keys act only when the viewport owns focus and no editable control,
-  menu, or modal owns the event; camera input must never change face selection.
+  Arrow keys rotate application-wide unless an editable control, menu, modal,
+  or arrow-navigated widget owns the event; camera input must never change face
+  selection.
 - Adapt the checked-in SpjutSim settings dialog/hub into `web/index.html` with a
   Controls category. Open it from the application menu and with `Control+,` or
   `Command+,`; trap/restore focus and support Escape/Close.

@@ -79,6 +79,25 @@
     assert(!api.validateGravity({ enabled: true, accelerationMS2: [0, 0, -9.8] }, null).valid, 'gravity did not require density');
   }
 
+  function testSymmetricCurvedFaceGlyph() {
+    var positions = new Float64Array([
+      1, 0, 0, -1, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 1, 0, 0, -1
+    ]);
+    var indices = new Uint32Array([
+      0, 2, 4, 2, 1, 4, 1, 3, 4, 3, 0, 4,
+      2, 0, 5, 1, 2, 5, 3, 1, 5, 0, 3, 5
+    ]);
+    var face = api.faceCentroidNormal({
+      positionsM: positions, indices: indices,
+      faceMap: { curved: { faceId: 'curved', start: 0, count: indices.length } }
+    }, 'curved');
+    assert(face !== null, 'symmetric curved face cancelled its representative glyph normal');
+    assert(Math.hypot(face.positionM[0], face.positionM[1], face.positionM[2]) > 0.4,
+      'symmetric curved-face glyph was placed inside the solid');
+    assert(Math.hypot(face.outwardNormal[0], face.outwardNormal[1], face.outwardNormal[2]) > 0.999,
+      'symmetric curved-face glyph did not retain a finite local normal');
+  }
+
   function testControllerAndProjection() {
     var geometry = cubeGeometry('cube-a');
     var documentState = api.createAnalysisDocument();
@@ -188,6 +207,7 @@
 
   try {
     testContractsAndConversions();
+    testSymmetricCurvedFaceGlyph();
     expectError(testControllerAndProjection, 'only once');
     runCompleteControllerProjectionTest();
     testKeyboardSemanticAuthoring();

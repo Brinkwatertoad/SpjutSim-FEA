@@ -70,6 +70,7 @@
     this.pointerDownListener = null;
     this.pointerMoveListener = null;
     this.pointerUpListener = null;
+    this.pointerCancelListener = null;
     this.pointerLostCaptureListener = null;
     this.wheelListener = null;
     this.contextMenuListener = null;
@@ -368,7 +369,21 @@
         try { self.canvas.releasePointerCapture(event.pointerId); } catch (error) { /* Capture can disappear before cancellation is delivered. */ }
       }
     };
-    this.pointerLostCaptureListener = function (event) { self.pointerUpListener(event); };
+    this.pointerCancelListener = function (event) {
+      self.pointerUpListener(event);
+      if (self.activePointers.size === 0) {
+        self.suppressNextClick = false;
+        self.suppressContextMenu = false;
+      }
+    };
+    this.pointerLostCaptureListener = function (event) {
+      var interrupted = self.activePointers.has(event.pointerId);
+      self.pointerUpListener(event);
+      if (interrupted && self.activePointers.size === 0) {
+        self.suppressNextClick = false;
+        self.suppressContextMenu = false;
+      }
+    };
     this.wheelListener = function (event) {
       event.preventDefault();
       self.zoomByWheelDelta(event.deltaY);
@@ -391,7 +406,7 @@
     this.canvas.addEventListener('pointerdown', this.pointerDownListener);
     this.canvas.addEventListener('pointermove', this.pointerMoveListener);
     this.canvas.addEventListener('pointerup', this.pointerUpListener);
-    this.canvas.addEventListener('pointercancel', this.pointerUpListener);
+    this.canvas.addEventListener('pointercancel', this.pointerCancelListener);
     this.canvas.addEventListener('lostpointercapture', this.pointerLostCaptureListener);
     this.canvas.addEventListener('wheel', this.wheelListener, { passive: false });
     this.canvas.addEventListener('contextmenu', this.contextMenuListener);
@@ -721,8 +736,8 @@
     if (this.pointerMoveListener) { this.canvas.removeEventListener('pointermove', this.pointerMoveListener); }
     if (this.pointerUpListener) {
       this.canvas.removeEventListener('pointerup', this.pointerUpListener);
-      this.canvas.removeEventListener('pointercancel', this.pointerUpListener);
     }
+    if (this.pointerCancelListener) { this.canvas.removeEventListener('pointercancel', this.pointerCancelListener); }
     if (this.pointerLostCaptureListener) { this.canvas.removeEventListener('lostpointercapture', this.pointerLostCaptureListener); }
     if (this.wheelListener) { this.canvas.removeEventListener('wheel', this.wheelListener); }
     if (this.contextMenuListener) { this.canvas.removeEventListener('contextmenu', this.contextMenuListener); }

@@ -7,6 +7,7 @@ var requestQueue = Promise.resolve();
 // This maximum surface edge length is a scale-aware, benchmark-adjustable tessellation tolerance.
 var PREVIEW_MAX_SURFACE_EDGE_LENGTH_FRACTION = 0.025;
 var PREVIEW_CURVATURE_SEGMENTS_PER_2PI = 48;
+var PREVIEW_RELATIVE_TRIANGLE_AREA_SQUARED = 1e-28;
 
 function workerError(code, stage, userMessage, developerMessage, recoverable) {
   return {
@@ -153,9 +154,10 @@ function configurePreviewTessellation(gmsh, boundingBox) {
   gmsh.option.setNumber('Mesh.MeshSizeMax', diagonalM * PREVIEW_MAX_SURFACE_EDGE_LENGTH_FRACTION);
   gmsh.option.setNumber('Mesh.MeshSizeFromCurvature', PREVIEW_CURVATURE_SEGMENTS_PER_2PI);
   gmsh.option.setNumber('Mesh.MeshSizeExtendFromBoundary', 0);
+  return diagonalM;
 }
 
-function smoothFaceNormals(positions, indices, faceRanges) {
+function smoothFaceNormals(positions, indices, faceRanges, modelScaleM) {
   var normals = new Float32Array(positions.length);
   var rangeIndex;
   for (rangeIndex = 0; rangeIndex < faceRanges.length; rangeIndex += 1) {
@@ -165,8 +167,8 @@ function smoothFaceNormals(positions, indices, faceRanges) {
       var a = indices[index] * 3;
       var b = indices[index + 1] * 3;
       var c = indices[index + 2] * 3;
-      var abx = positions[b] - positions[a]; var aby = positions[b + 1] - positions[a + 1]; var abz = positions[b + 2] - positions[a + 2];
-      var acx = positions[c] - positions[a]; var acy = positions[c + 1] - positions[a + 1]; var acz = positions[c + 2] - positions[a + 2];
+      var abx = (positions[b] - positions[a]) / modelScaleM; var aby = (positions[b + 1] - positions[a + 1]) / modelScaleM; var abz = (positions[b + 2] - positions[a + 2]) / modelScaleM;
+      var acx = (positions[c] - positions[a]) / modelScaleM; var acy = (positions[c + 1] - positions[a + 1]) / modelScaleM; var acz = (positions[c + 2] - positions[a + 2]) / modelScaleM;
       var nx = aby * acz - abz * acy; var ny = abz * acx - abx * acz; var nz = abx * acy - aby * acx;
       normals[a] += nx; normals[a + 1] += ny; normals[a + 2] += nz;
       normals[b] += nx; normals[b + 1] += ny; normals[b + 2] += nz;
@@ -183,11 +185,11 @@ function smoothFaceNormals(positions, indices, faceRanges) {
   return normals;
 }
 
-function triangleHasArea(positions, a, b, c) {
-  var abx = positions[b * 3] - positions[a * 3]; var aby = positions[b * 3 + 1] - positions[a * 3 + 1]; var abz = positions[b * 3 + 2] - positions[a * 3 + 2];
-  var acx = positions[c * 3] - positions[a * 3]; var acy = positions[c * 3 + 1] - positions[a * 3 + 1]; var acz = positions[c * 3 + 2] - positions[a * 3 + 2];
+function triangleHasArea(positions, a, b, c, modelScaleM) {
+  var abx = (positions[b * 3] - positions[a * 3]) / modelScaleM; var aby = (positions[b * 3 + 1] - positions[a * 3 + 1]) / modelScaleM; var abz = (positions[b * 3 + 2] - positions[a * 3 + 2]) / modelScaleM;
+  var acx = (positions[c * 3] - positions[a * 3]) / modelScaleM; var acy = (positions[c * 3 + 1] - positions[a * 3 + 1]) / modelScaleM; var acz = (positions[c * 3 + 2] - positions[a * 3 + 2]) / modelScaleM;
   var nx = aby * acz - abz * acy; var ny = abz * acx - abx * acz; var nz = abx * acy - aby * acx;
-  return nx * nx + ny * ny + nz * nz > 1e-28;
+  return nx * nx + ny * ny + nz * nz > PREVIEW_RELATIVE_TRIANGLE_AREA_SQUARED;
 }
 
 function extractFeatureEdges(gmsh) {
@@ -230,7 +232,7 @@ function extractFeatureEdges(gmsh) {
   return { positionsM: new Float64Array(positions), indices: new Uint32Array(indices) };
 }
 
-function extractPreview(gmsh, surfaceTags, geometryId) {
+function extractPreview(gmsh, surfaceTags, geometryId, modelScaleM) {
   var positions = [];
   var indices = [];
   var faceIds = [];
@@ -269,7 +271,7 @@ function extractPreview(gmsh, surfaceTags, geometryId) {
         if (a === undefined || b === undefined || c === undefined) {
           throw knownImportError('GEOMETRY_NOT_CLOSED', 'The STEP file could not be converted into a usable surface preview.', 'Triangle references a node outside its surface.');
         }
-        if (triangleHasArea(positions, a, b, c)) { indices.push(a, b, c); }
+        if (triangleHasArea(positions, a, b, c, modelScaleM)) { indices.push(a, b, c); }
       }
     }
     if (indices.length === start) {
@@ -282,7 +284,7 @@ function extractPreview(gmsh, surfaceTags, geometryId) {
     faceIds: faceIds,
     preview: {
       positionsM: new Float64Array(positions),
-      normals: smoothFaceNormals(positions, indices, faceRanges),
+      normals: smoothFaceNormals(positions, indices, faceRanges, modelScaleM),
       indices: new Uint32Array(indices),
       faceRanges: faceRanges,
       featureEdges: extractFeatureEdges(gmsh)
@@ -297,6 +299,7 @@ function importGeometry(gmsh, message) {
   var preview;
   var volume;
   var box;
+  var previewScaleM;
   try {
     progress(message.requestId, 'import', 'Reading STEP geometry…');
     gmsh.clear();
@@ -323,10 +326,10 @@ function importGeometry(gmsh, message) {
     box = boundingBoxM(gmsh, solids[0]);
     progress(message.requestId, 'preview', 'Creating surface preview…');
     try {
-      configurePreviewTessellation(gmsh, box);
+      previewScaleM = configurePreviewTessellation(gmsh, box);
       gmsh.model.mesh.setOutwardOrientation(solids[0]);
       gmsh.model.mesh.generate(2);
-      preview = extractPreview(gmsh, surfaces, message.geometryId);
+      preview = extractPreview(gmsh, surfaces, message.geometryId, previewScaleM);
     } catch (error) {
       throw importErrorFor(error, 'GEOMETRY_NOT_CLOSED', 'The STEP file could not be converted into a closed surface.');
     }

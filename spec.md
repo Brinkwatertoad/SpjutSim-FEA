@@ -1506,8 +1506,8 @@ The default viewport controls are:
 - right-button drag pans in the camera plane and suppresses the browser context
   menu only over the viewport;
 - mouse wheel and touchpad/touch pinch zoom toward or away from the model;
-- arrow keys rotate the camera while the viewport has interaction focus and no
-  editable control or modal dialog owns the key event.
+- arrow keys rotate the camera application-wide unless an editable control,
+  modal, menu, or arrow-navigated widget owns the event.
 
 Camera navigation must preserve the current face selection. Provide fit/reset
 view, bounded zoom, pole-safe orbiting, pointer-capture cleanup, and usable
@@ -1515,7 +1515,8 @@ mouse, trackpad, and touch behavior. Open Settings with `Control+,` or
 `Command+,` and use the SpjutSim settings hub pattern. At minimum, Controls
 settings must allow rotate/pan mouse bindings to be swapped without conflicts,
 zoom direction to be reversed, and navigation sensitivity to be adjusted or
-reset.
+reset. Arrow handling must respect cancelled events and standard widget
+keyboard conventions; ordinary command-button focus does not disable rotation.
 
 The main viewport exposes explicit presentation modes for **Model**, **Mesh**,
 **Stress**, and **Deformation** as their data becomes available. A separate

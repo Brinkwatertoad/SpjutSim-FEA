@@ -246,6 +246,8 @@ class FrameworkTests(unittest.TestCase):
         self.assertNotIn('EdgesGeometry', viewport)
         self.assertIn('replaceViewportPresentation', controller)
         self.assertIn('PREVIEW_MAX_SURFACE_EDGE_LENGTH_FRACTION', worker)
+        self.assertIn('PREVIEW_RELATIVE_TRIANGLE_AREA_SQUARED', worker)
+        self.assertIn('/ modelScaleM', worker)
         self.assertIn('extractFeatureEdges', worker)
         self.assertIn('viewport-mode', index)
         self.assertIn('display-style', index)

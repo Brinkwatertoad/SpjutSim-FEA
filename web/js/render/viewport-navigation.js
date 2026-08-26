@@ -3,6 +3,11 @@
 
   var PREFERENCE_SCHEMA_VERSION = 1;
   var PREFERENCE_STORAGE_KEY = 'spjutsim-fea.viewport-navigation';
+  var ARROW_NAVIGATION_ROLES = new Set([
+    'application', 'combobox', 'grid', 'gridcell', 'listbox', 'menu', 'menubar', 'menuitem', 'menuitemcheckbox',
+    'menuitemradio', 'option', 'radio', 'radiogroup', 'scrollbar', 'slider', 'spinbutton', 'tab',
+    'tablist', 'textbox', 'searchbox', 'toolbar', 'tree', 'treegrid', 'treeitem'
+  ]);
   var DEFAULT_PREFERENCES = Object.freeze({
     rotateButton: 0,
     panButton: 2,
@@ -103,18 +108,20 @@
 
   function isEditableOrModalTarget(target, documentRef) {
     var node = target;
-    var modal = documentRef && documentRef.querySelectorAll
-      ? Array.from(documentRef.querySelectorAll('[role="dialog"][aria-modal="true"]')).find(function (candidate) {
+    var exclusiveInteraction = documentRef && documentRef.querySelectorAll
+      ? Array.from(documentRef.querySelectorAll(
+        '[role="dialog"][aria-modal="true"], [aria-haspopup][aria-expanded="true"], [data-ui-menu-group][data-open="true"]'
+      )).find(function (candidate) {
         return !candidate.closest || !candidate.closest('[hidden]');
       })
       : null;
-    if (modal) { return true; }
+    if (exclusiveInteraction) { return true; }
     while (node) {
       var tag = String(node.tagName || '').toUpperCase();
-      var role = node.getAttribute && node.getAttribute('role');
+      var role = node.getAttribute && String(node.getAttribute('role') || '').toLowerCase();
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || node.isContentEditable === true ||
           (node.getAttribute && String(node.getAttribute('contenteditable')).toLowerCase() === 'true') ||
-          role === 'menu' || role === 'menuitem' || role === 'dialog') {
+          tag === 'AUDIO' || tag === 'VIDEO' || role === 'dialog' || ARROW_NAVIGATION_ROLES.has(role)) {
         return true;
       }
       node = node.parentElement;
@@ -125,7 +132,8 @@
   function shouldHandleViewportArrowKey(event, canvas, documentRef) {
     var key = String(event && event.key || '');
     var documentObject = documentRef || root.document;
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].indexOf(key) < 0 || event.ctrlKey || event.metaKey || event.altKey) { return false; }
+    if (!event || event.defaultPrevented || ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].indexOf(key) < 0 ||
+        event.ctrlKey || event.metaKey || event.altKey) { return false; }
     if (!canvas || !documentObject) { return false; }
     return !isEditableOrModalTarget(event.target, documentObject);
   }

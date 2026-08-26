@@ -22,6 +22,7 @@
     var weightedCenter = [0, 0, 0];
     var weightedNormal = [0, 0, 0];
     var totalArea = 0;
+    var representative = null;
     var offset;
     if (!range) { return null; }
     for (offset = range.start; offset < range.start + range.count; offset += 3) {
@@ -33,15 +34,34 @@
       var cross = [ab[1] * ac[2] - ab[2] * ac[1], ab[2] * ac[0] - ab[0] * ac[2], ab[0] * ac[1] - ab[1] * ac[0]];
       var twiceArea = Math.hypot(cross[0], cross[1], cross[2]);
       var area = twiceArea / 2;
+      var center;
       if (!(area > 0)) { continue; }
-      weightedCenter[0] += (surface.positionsM[ia] + surface.positionsM[ib] + surface.positionsM[ic]) / 3 * area;
-      weightedCenter[1] += (surface.positionsM[ia + 1] + surface.positionsM[ib + 1] + surface.positionsM[ic + 1]) / 3 * area;
-      weightedCenter[2] += (surface.positionsM[ia + 2] + surface.positionsM[ib + 2] + surface.positionsM[ic + 2]) / 3 * area;
+      center = [
+        (surface.positionsM[ia] + surface.positionsM[ib] + surface.positionsM[ic]) / 3,
+        (surface.positionsM[ia + 1] + surface.positionsM[ib + 1] + surface.positionsM[ic + 1]) / 3,
+        (surface.positionsM[ia + 2] + surface.positionsM[ib + 2] + surface.positionsM[ic + 2]) / 3
+      ];
+      weightedCenter[0] += center[0] * area;
+      weightedCenter[1] += center[1] * area;
+      weightedCenter[2] += center[2] * area;
       weightedNormal[0] += cross[0] / 2; weightedNormal[1] += cross[1] / 2; weightedNormal[2] += cross[2] / 2;
       totalArea += area;
+      if (!representative || area > representative.area * (1 + 1e-12) ||
+          (Math.abs(area - representative.area) <= Math.max(area, representative.area) * 1e-12 &&
+           (center[0] > representative.positionM[0] ||
+            (center[0] === representative.positionM[0] && center[1] > representative.positionM[1]) ||
+            (center[0] === representative.positionM[0] && center[1] === representative.positionM[1] && center[2] > representative.positionM[2])))) {
+        representative = {
+          area: area, positionM: center,
+          outwardNormal: [cross[0] / twiceArea, cross[1] / twiceArea, cross[2] / twiceArea]
+        };
+      }
     }
     var normalLength = Math.hypot(weightedNormal[0], weightedNormal[1], weightedNormal[2]);
-    if (!(totalArea > 0) || !(normalLength > 0)) { return null; }
+    if (!(totalArea > 0) || !representative) { return null; }
+    if (!(normalLength / totalArea > 0.98)) {
+      return { positionM: representative.positionM, outwardNormal: representative.outwardNormal };
+    }
     return {
       positionM: [weightedCenter[0] / totalArea, weightedCenter[1] / totalArea, weightedCenter[2] / totalArea],
       outwardNormal: [weightedNormal[0] / normalLength, weightedNormal[1] / normalLength, weightedNormal[2] / normalLength]
