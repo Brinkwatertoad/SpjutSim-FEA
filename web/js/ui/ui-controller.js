@@ -15,6 +15,8 @@
     this.generateMeshButton = document.getElementById('generate-mesh-button');
     this.cancelMeshButton = document.getElementById('cancel-mesh-button');
     this.meshStatus = document.getElementById('mesh-status');
+    this.viewportMode = document.getElementById('viewport-mode');
+    this.meshStyle = document.getElementById('mesh-style');
     this.customMeshSizes = null;
     this.generateMeshHandler = null;
     this.cancelMeshHandler = null;
@@ -178,6 +180,12 @@
     if (this.cancelMeshButton) {
       this.cancelMeshButton.addEventListener('click', function () { if (self.cancelMeshHandler) { self.cancelMeshHandler(); } });
     }
+    if (this.viewportMode) {
+      this.viewportMode.addEventListener('change', function () { self.updateViewportPresentation(); });
+    }
+    if (this.meshStyle) {
+      this.meshStyle.addEventListener('change', function () { self.updateViewportPresentation(); });
+    }
     if (this.fitViewButton) { this.fitViewButton.addEventListener('click', function () { if (self.viewport) { self.viewport.fitCurrentModel(); } }); }
     if (this.resetViewButton) { this.resetViewButton.addEventListener('click', function () { if (self.viewport) { self.viewport.resetView(); } }); }
     if (this.applicationMenu && root.PortableUIShellBehaviors) {
@@ -250,6 +258,7 @@
     if (this.importButton) { this.importButton.disabled = state.status === 'importing'; }
     this.renderFaceSelection(documentState);
     this.renderMesh(documentState);
+    this.renderViewportPresentation(documentState);
   };
   UIController.prototype.updateMeshSettingsFromControls = function () {
     var preset = this.meshPreset.value;
@@ -300,6 +309,28 @@
     if (this.meshStatus) { this.meshStatus.textContent = message; }
     if (this.generateMeshButton) { this.generateMeshButton.disabled = !hasGeometry || isGenerating; }
     if (this.cancelMeshButton) { this.cancelMeshButton.hidden = !isGenerating; }
+  };
+  UIController.prototype.updateViewportPresentation = function () {
+    try {
+      this.controller.replaceViewportPresentation({
+        mode: this.viewportMode ? this.viewportMode.value : 'model',
+        meshStyle: this.meshStyle ? this.meshStyle.value : 'lines'
+      });
+    } catch (error) {
+      this.renderViewportPresentation(this.controller.document);
+    }
+  };
+  UIController.prototype.renderViewportPresentation = function (documentState) {
+    var presentation = documentState.viewportPresentation || { mode: 'model', meshStyle: 'lines' };
+    var meshAvailable = Boolean(documentState.mesh);
+    if (this.viewportMode) {
+      this.viewportMode.value = presentation.mode;
+      this.viewportMode.querySelector('option[value="mesh"]').disabled = !meshAvailable;
+    }
+    if (this.meshStyle) {
+      this.meshStyle.value = presentation.meshStyle;
+      this.meshStyle.disabled = !meshAvailable || presentation.mode !== 'mesh';
+    }
   };
   UIController.prototype.renderFaceSelection = function (documentState) {
     var selectedFaceIds = Array.isArray(documentState.selectedFaceIds) ? documentState.selectedFaceIds : [];

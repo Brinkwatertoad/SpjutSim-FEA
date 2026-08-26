@@ -59,6 +59,10 @@
       <section class="fea-canvas" aria-label="3D viewport">
         <canvas id="viewport" tabindex="0" aria-describedby="viewport-help" aria-label="3D viewport. Left drag rotates, right drag pans, wheel or pinch zooms, and arrow keys rotate."></canvas>
         <div class="fea-viewport-actions" aria-label="Viewport actions">
+          <label for="viewport-mode">View</label>
+          <select id="viewport-mode" aria-label="Viewport presentation mode"><option value="model">Model</option><option value="mesh">Mesh</option></select>
+          <label for="mesh-style">Mesh style</label>
+          <select id="mesh-style" aria-label="Mesh display style"><option value="lines">Shaded with lines</option><option value="wireframe">Wireframe</option></select>
           <button id="fit-view-button" type="button">Fit model</button>
           <button id="reset-view-button" type="button">Reset view</button>
         </div>
@@ -118,6 +122,7 @@
   <script src="js/workers/worker-protocol.js"></script>
   <script src="js/geometry/geometry-model.js"></script>
   <script src="js/mesh/volume-mesh.js"></script>
+  <script src="js/mesh/mesh-display.js"></script>
   <script src="js/analysis/analysis-document.js"></script>
   <script src="js/analysis/app-controller.js"></script>
   <script src="js/render/viewport-navigation.js"></script>

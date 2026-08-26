@@ -9,6 +9,7 @@
   var activeImport = null;
   var activeMesh = null;
   var displayedGeometry = null;
+  var displayedMesh = null;
 
   function importFailure(code, userMessage, developerMessage) {
     var error = new Error(userMessage);
@@ -95,6 +96,11 @@
         document.getElementById('viewport-empty-state').hidden = false;
       }
     }
+    if (documentState.mesh !== displayedMesh) {
+      displayedMesh = documentState.mesh;
+      viewport.setMeshDisplay(displayedMesh);
+    }
+    viewport.setPresentation(documentState.viewportPresentation || { mode: 'model', meshStyle: 'lines' });
     viewport.setSelectedFaceIds(documentState.selectedFaceIds || []);
   });
   ui.setImportHandler(importStepFile);

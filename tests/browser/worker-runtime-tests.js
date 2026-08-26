@@ -66,8 +66,10 @@
       faceIds: ['opaque-face'], boundingBoxM: { minM: [0, 0, 0], maxM: [1, 1, 1] }, volumeM3: 1,
       preview: {
         positionsM: new Float64Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+        normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
         indices: new Uint32Array([0, 1, 2]),
-        faceRanges: [{ faceId: 'opaque-face', start: 0, count: 3 }]
+        faceRanges: [{ faceId: 'opaque-face', start: 0, count: 3 }],
+        featureEdges: { positionsM: new Float64Array([0, 0, 0, 1, 0, 0]), indices: new Uint32Array([0, 1]) }
       }
     };
   }
@@ -99,8 +101,12 @@
     assert(controller.stepSource.stepBytes.byteLength === 1, 'canonical STEP source was not retained');
     controller.replaceSelectedFaces(['opaque-face']);
     controller.beginMeshGeneration();
-    controller.completeMeshGeneration(validVolumeMesh());
+    var mesh = validVolumeMesh();
+    controller.completeMeshGeneration(mesh);
     assert(controller.document.mesh && controller.document.meshMetadata.statistics.elementCount === 1, 'valid volume mesh was not stored');
+    assert(controller.document.viewportPresentation.mode === 'mesh', 'successful mesh did not activate Mesh view');
+    controller.replaceViewportPresentation({ mode: 'model', meshStyle: 'wireframe' });
+    assert(controller.document.mesh === mesh, 'presentation change invalidated mesh data');
     controller.replaceMeshSettings({ preset: 'coarse', elementType: 'tet4' });
     assert(controller.document.mesh === null && controller.document.meshMetadata === null && controller.document.results === null, 'mesh setting change did not invalidate derived state');
     assert(controller.document.selectedFaceIds.length === 1, 'mesh setting change cleared selected faces');

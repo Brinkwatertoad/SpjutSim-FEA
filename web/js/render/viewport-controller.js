@@ -76,6 +76,9 @@
     this.keyDownListener = null;
     this.importedGeometry = null;
     this.previewMesh = null;
+    this.meshDisplay = null;
+    this.meshSurface = null;
+    this.presentation = { mode: 'model', meshStyle: 'lines' };
     this.selectedFaceIds = new Set();
     this.facePickHandler = null;
     this.viewTarget = new root.THREE.Vector3(0, 0, 0);
@@ -388,11 +391,13 @@
   };
 
   ViewportController.prototype.clearGeometryPreview = function () {
-    if (!this.importedGeometry) { return; }
-    this.scene.remove(this.importedGeometry);
-    disposeObjectResources(this.importedGeometry);
+    if (this.importedGeometry) {
+      this.scene.remove(this.importedGeometry);
+      disposeObjectResources(this.importedGeometry);
+    }
     this.importedGeometry = null;
     this.previewMesh = null;
+    this.clearMeshDisplay();
     this.selectedFaceIds.clear();
     this.scene.getObjectByName('reference-solid').visible = true;
     this.render();
@@ -404,7 +409,7 @@
     var geometry;
     var surfaceMaterials;
     var surfaceMesh;
-    var edges;
+    var featureEdges;
     var edgeMaterial;
     var importedGeometry;
     var triangleFaceIndices;
@@ -421,6 +426,7 @@
     geometry = new root.THREE.BufferGeometry();
     geometry.setAttribute('position', new root.THREE.BufferAttribute(new Float32Array(preview.positionsM), 3));
     geometry.setIndex(new root.THREE.BufferAttribute(new Uint32Array(preview.indices), 1));
+    geometry.setAttribute('normal', new root.THREE.BufferAttribute(new Float32Array(preview.normals), 3));
     geometry.clearGroups();
     triangleFaceIndices = new Uint32Array(preview.indices.length / 3);
     faceIdsByRange = new Array(preview.faceRanges.length);
@@ -433,16 +439,15 @@
         triangleFaceIndices[triangleIndex] = rangeIndex;
       }
     }
-    geometry.computeVertexNormals();
     surfaceMaterials = [
       new root.THREE.MeshStandardMaterial({
         color: themeColor('--ui-color-geometry', '#f4f1ea'), roughness: 0.72, metalness: 0.04,
-        flatShading: true, side: root.THREE.DoubleSide
+        flatShading: false, side: root.THREE.DoubleSide
       }),
       new root.THREE.MeshStandardMaterial({
         color: themeColor('--ui-color-selection', '#93c5fd'), roughness: 0.58, metalness: 0.02,
         emissive: themeColor('--ui-color-selection', '#93c5fd'), emissiveIntensity: 0.42,
-        flatShading: true, side: root.THREE.DoubleSide
+        flatShading: false, side: root.THREE.DoubleSide
       })
     ];
     surfaceMesh = new root.THREE.Mesh(geometry, surfaceMaterials);
@@ -453,14 +458,18 @@
     edgeMaterial = new root.THREE.LineBasicMaterial({
       color: themeColor('--ui-color-grid-major', '#334155'), transparent: true, opacity: 0.9
     });
-    edges = new root.THREE.LineSegments(new root.THREE.EdgesGeometry(geometry, 1), edgeMaterial);
-    edges.name = 'imported-geometry-edges';
+    featureEdges = new root.THREE.BufferGeometry();
+    featureEdges.setAttribute('position', new root.THREE.BufferAttribute(new Float32Array(preview.featureEdges.positionsM), 3));
+    featureEdges.setIndex(new root.THREE.BufferAttribute(new Uint32Array(preview.featureEdges.indices), 1));
+    featureEdges = new root.THREE.LineSegments(featureEdges, edgeMaterial);
+    featureEdges.name = 'imported-geometry-feature-edges';
     importedGeometry = new root.THREE.Group();
     importedGeometry.name = 'imported-geometry';
-    importedGeometry.add(surfaceMesh, edges);
+    importedGeometry.add(surfaceMesh, featureEdges);
     this.scene.add(importedGeometry);
     this.importedGeometry = importedGeometry;
     this.previewMesh = surfaceMesh;
+    this.applyPresentation();
     this.scene.getObjectByName('reference-solid').visible = false;
     centerX = (geometryModel.boundingBoxM.minM[0] + geometryModel.boundingBoxM.maxM[0]) / 2;
     centerY = (geometryModel.boundingBoxM.minM[1] + geometryModel.boundingBoxM.maxM[1]) / 2;
@@ -472,6 +481,87 @@
     );
     this.fitModel(new root.THREE.Vector3(centerX, centerY, centerZ), extent, true);
     this.suppressNextClick = false;
+  };
+
+  ViewportController.prototype.clearMeshDisplay = function () {
+    if (!this.meshDisplay) { return; }
+    this.scene.remove(this.meshDisplay);
+    disposeObjectResources(this.meshDisplay);
+    this.meshDisplay = null;
+    this.meshSurface = null;
+  };
+
+  ViewportController.prototype.setMeshDisplay = function (mesh) {
+    var display;
+    var geometry;
+    var surface;
+    var lines;
+    var materials;
+    var lineMaterial;
+    var group;
+    var rangeIndex;
+    if (!mesh) { this.clearMeshDisplay(); this.applyPresentation(); this.render(); return; }
+    display = root.SpjutsimFEA.buildBoundaryMeshDisplay(mesh);
+    this.clearMeshDisplay();
+    geometry = new root.THREE.BufferGeometry();
+    geometry.setAttribute('position', new root.THREE.BufferAttribute(new Float32Array(display.positionsM), 3));
+    geometry.setIndex(new root.THREE.BufferAttribute(new Uint32Array(display.triangleIndices), 1));
+    geometry.computeVertexNormals();
+    geometry.clearGroups();
+    for (rangeIndex = 0; rangeIndex < display.faceRanges.length; rangeIndex += 1) {
+      geometry.addGroup(display.faceRanges[rangeIndex].start, display.faceRanges[rangeIndex].count, 0);
+    }
+    materials = [
+      new root.THREE.MeshStandardMaterial({ color: themeColor('--ui-color-geometry', '#f4f1ea'), roughness: 0.72, metalness: 0.04, side: root.THREE.DoubleSide }),
+      new root.THREE.MeshStandardMaterial({ color: themeColor('--ui-color-selection', '#93c5fd'), roughness: 0.58, metalness: 0.02, emissive: themeColor('--ui-color-selection', '#93c5fd'), emissiveIntensity: 0.42, side: root.THREE.DoubleSide })
+    ];
+    surface = new root.THREE.Mesh(geometry, materials);
+    surface.name = 'mesh-boundary-surface';
+    surface.userData.faceIdsByRange = display.faceRanges.map(function (range) { return range.faceId; });
+    surface.userData.triangleFaceIndices = new Uint32Array(display.triangleIndices.length / 3);
+    for (rangeIndex = 0; rangeIndex < display.faceRanges.length; rangeIndex += 1) {
+      for (var triangleIndex = display.faceRanges[rangeIndex].start / 3;
+           triangleIndex < (display.faceRanges[rangeIndex].start + display.faceRanges[rangeIndex].count) / 3;
+           triangleIndex += 1) {
+        surface.userData.triangleFaceIndices[triangleIndex] = rangeIndex;
+      }
+    }
+    lines = new root.THREE.BufferGeometry();
+    lines.setAttribute('position', new root.THREE.BufferAttribute(new Float32Array(display.positionsM), 3));
+    lines.setIndex(new root.THREE.BufferAttribute(display.lineIndices, 1));
+    lineMaterial = new root.THREE.LineBasicMaterial({ color: themeColor('--ui-color-grid-major', '#334155'), transparent: true, opacity: 0.9 });
+    lines = new root.THREE.LineSegments(lines, lineMaterial);
+    lines.name = 'mesh-boundary-lines';
+    group = new root.THREE.Group();
+    group.name = 'mesh-display';
+    group.add(surface, lines);
+    group.userData.lines = lines;
+    this.scene.add(group);
+    this.meshDisplay = group;
+    this.meshSurface = surface;
+    this.setSelectedFaceIds(Array.from(this.selectedFaceIds));
+    this.applyPresentation();
+    this.render();
+  };
+
+  ViewportController.prototype.setPresentation = function (presentation) {
+    if (!presentation || (presentation.mode !== 'model' && presentation.mode !== 'mesh') ||
+        (presentation.meshStyle !== 'lines' && presentation.meshStyle !== 'wireframe')) {
+      throw new Error('Invalid viewport presentation.');
+    }
+    this.presentation = { mode: presentation.mode, meshStyle: presentation.meshStyle };
+    this.applyPresentation();
+    this.render();
+  };
+
+  ViewportController.prototype.applyPresentation = function () {
+    var meshMaterials;
+    if (this.previewMesh) { this.previewMesh.visible = this.presentation.mode === 'model' || !this.meshSurface; }
+    if (!this.meshDisplay) { return; }
+    this.meshDisplay.visible = this.presentation.mode === 'mesh';
+    meshMaterials = this.meshSurface.material;
+    meshMaterials.forEach(function (material) { material.wireframe = this.presentation.meshStyle === 'wireframe'; }, this);
+    this.meshDisplay.userData.lines.visible = this.presentation.meshStyle === 'lines';
   };
 
   ViewportController.prototype.setSelectedFaceIds = function (faceIds) {
@@ -489,10 +579,12 @@
       }
     });
     this.selectedFaceIds = new Set(faceIds);
-    for (rangeIndex = 0; rangeIndex < this.previewMesh.geometry.groups.length; rangeIndex += 1) {
-      this.previewMesh.geometry.groups[rangeIndex].materialIndex =
-        this.selectedFaceIds.has(this.previewMesh.userData.faceIdsByRange[rangeIndex]) ? 1 : 0;
-    }
+    [this.previewMesh, this.meshSurface].forEach(function (surface) {
+      if (!surface) { return; }
+      for (rangeIndex = 0; rangeIndex < surface.geometry.groups.length; rangeIndex += 1) {
+        surface.geometry.groups[rangeIndex].materialIndex = this.selectedFaceIds.has(surface.userData.faceIdsByRange[rangeIndex]) ? 1 : 0;
+      }
+    }, this);
     this.render();
   };
 
@@ -502,7 +594,8 @@
     var intersections;
     var intersection;
     var rangeIndex;
-    if (!this.previewMesh) { return null; }
+    var pickMesh = this.presentation.mode === 'mesh' && this.meshSurface ? this.meshSurface : this.previewMesh;
+    if (!pickMesh) { return null; }
     coordinates = pointerToCanvasCoordinates(event, this.canvas);
     if (!coordinates || coordinates.ndcX < -1 || coordinates.ndcX > 1 || coordinates.ndcY < -1 || coordinates.ndcY > 1) {
       return null;
@@ -510,12 +603,12 @@
     this.pointer.set(coordinates.ndcX, coordinates.ndcY);
     this.camera.updateMatrixWorld();
     this.raycaster.setFromCamera(this.pointer, this.camera);
-    intersections = this.raycaster.intersectObject(this.previewMesh, false);
+    intersections = this.raycaster.intersectObject(pickMesh, false);
     if (intersections.length === 0) { return null; }
     intersection = intersections[0];
     if (!Number.isInteger(intersection.faceIndex)) { return null; }
-    rangeIndex = this.previewMesh.userData.triangleFaceIndices[intersection.faceIndex];
-    return this.previewMesh.userData.faceIdsByRange[rangeIndex] || null;
+    rangeIndex = pickMesh.userData.triangleFaceIndices[intersection.faceIndex];
+    return pickMesh.userData.faceIdsByRange[rangeIndex] || null;
   };
 
   ViewportController.prototype.observeResize = function () {

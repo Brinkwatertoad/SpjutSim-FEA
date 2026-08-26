@@ -17,10 +17,18 @@
    */
 
   /**
+   * @typedef {Object} PolylineMesh
+   * @property {Float64Array} positionsM
+   * @property {Uint32Array} indices Line-segment endpoint indices.
+   */
+
+  /**
    * @typedef {Object} SurfaceMesh
    * @property {Float64Array} positionsM
+   * @property {Float32Array} normals Renderer-ready, per-face smooth normals.
    * @property {Uint32Array} indices
    * @property {PreviewFaceRange[]} faceRanges
+   * @property {PolylineMesh} featureEdges Actual CAD feature-edge polylines.
    */
 
   /**
@@ -78,25 +86,39 @@
   function validatePreview(preview, faceIds) {
     var index;
     var previousEnd = 0;
-    var vertexCount;
+    var previewVertexCount;
+    var featureEdgeVertexCount;
     var rangedFaceIds = new Set();
     if (!preview || typeof preview !== 'object' ||
-        !(preview.positionsM instanceof Float64Array) ||
+        !(preview.positionsM instanceof Float64Array) || !(preview.normals instanceof Float32Array) ||
         !(preview.indices instanceof Uint32Array) || !Array.isArray(preview.faceRanges)) {
       return validation(false, 'invalid-preview-buffers');
     }
     if (preview.positionsM.length === 0 || preview.positionsM.length % 3 !== 0 ||
+        preview.normals.length !== preview.positionsM.length ||
         preview.indices.length === 0 || preview.indices.length % 3 !== 0) {
       return validation(false, 'inconsistent-preview-length');
     }
-    vertexCount = preview.positionsM.length / 3;
+    previewVertexCount = preview.positionsM.length / 3;
     for (index = 0; index < preview.positionsM.length; index += 1) {
-      if (!Number.isFinite(preview.positionsM[index])) {
+      if (!Number.isFinite(preview.positionsM[index]) || !Number.isFinite(preview.normals[index])) {
         return validation(false, 'non-finite-preview-position');
       }
     }
+    if (!preview.featureEdges || !(preview.featureEdges.positionsM instanceof Float64Array) ||
+        !(preview.featureEdges.indices instanceof Uint32Array) ||
+        preview.featureEdges.positionsM.length % 3 !== 0 || preview.featureEdges.indices.length % 2 !== 0) {
+      return validation(false, 'invalid-feature-edge-buffers');
+    }
+    featureEdgeVertexCount = preview.featureEdges.positionsM.length / 3;
+    for (index = 0; index < preview.featureEdges.positionsM.length; index += 1) {
+      if (!Number.isFinite(preview.featureEdges.positionsM[index])) { return validation(false, 'non-finite-feature-edge-position'); }
+    }
+    for (index = 0; index < preview.featureEdges.indices.length; index += 1) {
+      if (preview.featureEdges.indices[index] >= featureEdgeVertexCount) { return validation(false, 'feature-edge-index-out-of-range'); }
+    }
     for (index = 0; index < preview.indices.length; index += 1) {
-      if (preview.indices[index] >= vertexCount) {
+      if (preview.indices[index] >= previewVertexCount) {
         return validation(false, 'preview-index-out-of-range');
       }
     }

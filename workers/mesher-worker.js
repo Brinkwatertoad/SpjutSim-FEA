@@ -3,6 +3,11 @@ var WORKER_PROTOCOL_VERSION = 1;
 var gmshPromise = null;
 var requestQueue = Promise.resolve();
 
+// Preview tessellation is intentionally independent of analysis mesh presets.
+// This maximum surface edge length is a scale-aware, benchmark-adjustable tessellation tolerance.
+var PREVIEW_MAX_SURFACE_EDGE_LENGTH_FRACTION = 0.025;
+var PREVIEW_CURVATURE_SEGMENTS_PER_2PI = 48;
+
 function workerError(code, stage, userMessage, developerMessage, recoverable) {
   return {
     code: code,
@@ -139,6 +144,92 @@ function boundingBoxM(gmsh, solidTag) {
   return { minM: minM, maxM: maxM };
 }
 
+function configurePreviewTessellation(gmsh, boundingBox) {
+  var dx = boundingBox.maxM[0] - boundingBox.minM[0];
+  var dy = boundingBox.maxM[1] - boundingBox.minM[1];
+  var dz = boundingBox.maxM[2] - boundingBox.minM[2];
+  var diagonalM = Math.sqrt(dx * dx + dy * dy + dz * dz);
+  gmsh.option.setNumber('Mesh.MeshSizeMin', diagonalM * PREVIEW_MAX_SURFACE_EDGE_LENGTH_FRACTION / 4);
+  gmsh.option.setNumber('Mesh.MeshSizeMax', diagonalM * PREVIEW_MAX_SURFACE_EDGE_LENGTH_FRACTION);
+  gmsh.option.setNumber('Mesh.MeshSizeFromCurvature', PREVIEW_CURVATURE_SEGMENTS_PER_2PI);
+  gmsh.option.setNumber('Mesh.MeshSizeExtendFromBoundary', 0);
+}
+
+function smoothFaceNormals(positions, indices, faceRanges) {
+  var normals = new Float32Array(positions.length);
+  var rangeIndex;
+  for (rangeIndex = 0; rangeIndex < faceRanges.length; rangeIndex += 1) {
+    var range = faceRanges[rangeIndex];
+    var index;
+    for (index = range.start; index < range.start + range.count; index += 3) {
+      var a = indices[index] * 3;
+      var b = indices[index + 1] * 3;
+      var c = indices[index + 2] * 3;
+      var abx = positions[b] - positions[a]; var aby = positions[b + 1] - positions[a + 1]; var abz = positions[b + 2] - positions[a + 2];
+      var acx = positions[c] - positions[a]; var acy = positions[c + 1] - positions[a + 1]; var acz = positions[c + 2] - positions[a + 2];
+      var nx = aby * acz - abz * acy; var ny = abz * acx - abx * acz; var nz = abx * acy - aby * acx;
+      normals[a] += nx; normals[a + 1] += ny; normals[a + 2] += nz;
+      normals[b] += nx; normals[b + 1] += ny; normals[b + 2] += nz;
+      normals[c] += nx; normals[c + 1] += ny; normals[c + 2] += nz;
+    }
+  }
+  for (rangeIndex = 0; rangeIndex < normals.length; rangeIndex += 3) {
+    var length = Math.sqrt(normals[rangeIndex] * normals[rangeIndex] + normals[rangeIndex + 1] * normals[rangeIndex + 1] + normals[rangeIndex + 2] * normals[rangeIndex + 2]);
+    // Surface-node queries can include a periodic seam node that no retained triangle references.
+    // Give it a finite fallback normal; referenced vertices have accumulated a non-zero area normal.
+    if (!(length > 0)) { normals[rangeIndex] = 0; normals[rangeIndex + 1] = 0; normals[rangeIndex + 2] = 1; }
+    else { normals[rangeIndex] /= length; normals[rangeIndex + 1] /= length; normals[rangeIndex + 2] /= length; }
+  }
+  return normals;
+}
+
+function triangleHasArea(positions, a, b, c) {
+  var abx = positions[b * 3] - positions[a * 3]; var aby = positions[b * 3 + 1] - positions[a * 3 + 1]; var abz = positions[b * 3 + 2] - positions[a * 3 + 2];
+  var acx = positions[c * 3] - positions[a * 3]; var acy = positions[c * 3 + 1] - positions[a * 3 + 1]; var acz = positions[c * 3 + 2] - positions[a * 3 + 2];
+  var nx = aby * acz - abz * acy; var ny = abz * acx - abx * acz; var nz = abx * acy - aby * acx;
+  return nx * nx + ny * ny + nz * nz > 1e-28;
+}
+
+function extractFeatureEdges(gmsh) {
+  var positions = [];
+  var indices = [];
+  var curveTags = entityTags(gmsh.model.getEntities(1));
+  var curveIndex;
+  for (curveIndex = 0; curveIndex < curveTags.length; curveIndex += 1) {
+    var adjacencies = gmsh.model.getAdjacencies(1, curveTags[curveIndex]);
+    // A periodic seam is a topological curve on only one face, not a visible CAD feature.
+    if (!adjacencies || !adjacencies.upward || adjacencies.upward.length < 2) { continue; }
+    var nodes = gmsh.model.mesh.getNodes(1, curveTags[curveIndex], true, false);
+    var elements = gmsh.model.mesh.getElements(1, curveTags[curveIndex]);
+    var nodeTags = nodes.nodeTags || [];
+    var coordinates = nodes.coord || [];
+    var indexByNodeTag = Object.create(null);
+    var localIndex;
+    var typeIndex;
+    if (coordinates.length !== nodeTags.length * 3) {
+      throw knownImportError('GEOMETRY_NOT_CLOSED', 'The STEP file could not be converted into a usable surface preview.', 'Feature-edge node coordinate count does not match node tags.');
+    }
+    for (localIndex = 0; localIndex < nodeTags.length; localIndex += 1) {
+      indexByNodeTag[String(nodeTags[localIndex])] = positions.length / 3;
+      positions.push(coordinates[localIndex * 3], coordinates[localIndex * 3 + 1], coordinates[localIndex * 3 + 2]);
+    }
+    for (typeIndex = 0; typeIndex < (elements.elementTypes || []).length; typeIndex += 1) {
+      var connectivity = (elements.nodeTags || [])[typeIndex] || [];
+      var edgeIndex;
+      if (elements.elementTypes[typeIndex] !== 1) { continue; }
+      for (edgeIndex = 0; edgeIndex < connectivity.length; edgeIndex += 2) {
+        var first = indexByNodeTag[String(connectivity[edgeIndex])];
+        var second = indexByNodeTag[String(connectivity[edgeIndex + 1])];
+        if (first === undefined || second === undefined) {
+          throw knownImportError('GEOMETRY_NOT_CLOSED', 'The STEP file could not be converted into a usable surface preview.', 'Feature edge references a missing node.');
+        }
+        indices.push(first, second);
+      }
+    }
+  }
+  return { positionsM: new Float64Array(positions), indices: new Uint32Array(indices) };
+}
+
 function extractPreview(gmsh, surfaceTags, geometryId) {
   var positions = [];
   var indices = [];
@@ -178,7 +269,7 @@ function extractPreview(gmsh, surfaceTags, geometryId) {
         if (a === undefined || b === undefined || c === undefined) {
           throw knownImportError('GEOMETRY_NOT_CLOSED', 'The STEP file could not be converted into a usable surface preview.', 'Triangle references a node outside its surface.');
         }
-        indices.push(a, b, c);
+        if (triangleHasArea(positions, a, b, c)) { indices.push(a, b, c); }
       }
     }
     if (indices.length === start) {
@@ -191,8 +282,10 @@ function extractPreview(gmsh, surfaceTags, geometryId) {
     faceIds: faceIds,
     preview: {
       positionsM: new Float64Array(positions),
+      normals: smoothFaceNormals(positions, indices, faceRanges),
       indices: new Uint32Array(indices),
-      faceRanges: faceRanges
+      faceRanges: faceRanges,
+      featureEdges: extractFeatureEdges(gmsh)
     }
   };
 }
@@ -203,6 +296,7 @@ function importGeometry(gmsh, message) {
   var surfaces;
   var preview;
   var volume;
+  var box;
   try {
     progress(message.requestId, 'import', 'Reading STEP geometry…');
     gmsh.clear();
@@ -226,8 +320,11 @@ function importGeometry(gmsh, message) {
     if (surfaces.length === 0) {
       throw knownImportError('GEOMETRY_NOT_CLOSED', 'The STEP file does not contain a usable closed solid.', 'Imported solid has no boundary surfaces.');
     }
+    box = boundingBoxM(gmsh, solids[0]);
     progress(message.requestId, 'preview', 'Creating surface preview…');
     try {
+      configurePreviewTessellation(gmsh, box);
+      gmsh.model.mesh.setOutwardOrientation(solids[0]);
       gmsh.model.mesh.generate(2);
       preview = extractPreview(gmsh, surfaces, message.geometryId);
     } catch (error) {
@@ -238,7 +335,7 @@ function importGeometry(gmsh, message) {
       sourceName: message.sourceName,
       sourceFormat: 'step',
       faceIds: preview.faceIds,
-      boundingBoxM: boundingBoxM(gmsh, solids[0]),
+      boundingBoxM: box,
       volumeM3: volume,
       preview: preview.preview
     };
@@ -541,7 +638,10 @@ async function handleRequest(message) {
         requestId: message.requestId,
         type: 'import-result',
         result: result
-      }, [result.preview.positionsM.buffer, result.preview.indices.buffer]);
+      }, [
+        result.preview.positionsM.buffer, result.preview.normals.buffer, result.preview.indices.buffer,
+        result.preview.featureEdges.positionsM.buffer, result.preview.featureEdges.indices.buffer
+      ]);
       return;
     }
     if (message.type === 'mesh') {

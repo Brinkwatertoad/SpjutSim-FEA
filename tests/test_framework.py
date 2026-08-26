@@ -230,6 +230,29 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn('device-pixel-ratio conversion', script.read_text())
         self.assertIn('orbit input did not move the camera', script.read_text())
 
+    def test_surface_and_mesh_visualization_contract_and_coverage_exist(self):
+        geometry = (ROOT / 'web/js/geometry/geometry-model.js').read_text()
+        display = (ROOT / 'web/js/mesh/mesh-display.js').read_text()
+        viewport = (ROOT / 'web/js/render/viewport-controller.js').read_text()
+        controller = (ROOT / 'web/js/analysis/app-controller.js').read_text()
+        worker = (ROOT / 'workers/mesher-worker.js').read_text()
+        index = (ROOT / 'web/index.html').read_text()
+        coverage = (ROOT / 'tests/browser/preview-selection-tests.js').read_text()
+        self.assertIn('normals', geometry)
+        self.assertIn('featureEdges', geometry)
+        self.assertIn('buildBoundaryMeshDisplay', display)
+        self.assertIn('BigUint64Array', display)
+        self.assertIn('setMeshDisplay', viewport)
+        self.assertNotIn('EdgesGeometry', viewport)
+        self.assertIn('replaceViewportPresentation', controller)
+        self.assertIn('PREVIEW_MAX_SURFACE_EDGE_LENGTH_FRACTION', worker)
+        self.assertIn('extractFeatureEdges', worker)
+        self.assertIn('viewport-mode', index)
+        self.assertIn('generated-cylinder-r0_5-h1-m.step', coverage)
+        self.assertIn('generated-sphere-r0_5-m.step', coverage)
+        for fixture in ('generated-cylinder-r0_5-h1-m.step', 'generated-sphere-r0_5-m.step'):
+            self.assertTrue((ROOT / 'tests/fixtures' / fixture).is_file())
+
     def test_viewport_navigation_contract_and_browser_coverage_exist(self):
         navigation = (ROOT / 'web/js/render/viewport-navigation.js').read_text()
         viewport = (ROOT / 'web/js/render/viewport-controller.js').read_text()

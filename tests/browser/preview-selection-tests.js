@@ -106,15 +106,79 @@
     assert(oldRenderGeometryDisposed, 'geometry replacement did not dispose the previous GPU geometry');
   }
 
+  function testMeshDisplay(geometry, stepBytes) {
+    return client.generateMesh({
+      geometry: geometry, settings: { preset: 'coarse', elementType: 'tet4' }, stepBytes: stepBytes
+    }).then(function (mesh) {
+      var lineGeometry;
+      var disposed = false;
+      viewport.setGeometryPreview(geometry);
+      viewport.setMeshDisplay(mesh);
+      viewport.setPresentation({ mode: 'mesh', meshStyle: 'lines' });
+      assert(viewport.meshSurface !== null, 'Mesh view did not create a boundary surface');
+      assert(viewport.meshDisplay.userData.lines.geometry.index.count / 2 < mesh.boundaryFaces.triangleConnectivity.length,
+        'mesh lines were not deduplicated from boundary triangles');
+      assert(viewport.meshDisplay.userData.lines.visible, 'shaded-with-lines mesh style hid mesh lines');
+      selectEveryFace(geometry);
+      viewport.setPresentation({ mode: 'mesh', meshStyle: 'wireframe' });
+      assert(!viewport.meshDisplay.userData.lines.visible && viewport.meshSurface.material[0].wireframe,
+        'wireframe mesh style was not applied');
+      lineGeometry = viewport.meshDisplay.userData.lines.geometry;
+      lineGeometry.addEventListener('dispose', function () { disposed = true; });
+      viewport.setMeshDisplay(mesh);
+      assert(disposed, 'replacing a mesh display did not dispose its line buffer');
+      viewport.setPresentation({ mode: 'model', meshStyle: 'lines' });
+      assert(viewport.previewMesh.visible && !viewport.meshDisplay.visible, 'Model mode did not hide the mesh display');
+    });
+  }
+
+  function testCurvedFixtures() {
+    return readFixture('generated-cylinder-r0_5-h1-m.step').then(function (stepBytes) {
+      return client.importGeometry({
+        geometryId: 'preview-cylinder', sourceName: 'generated-cylinder-r0_5-h1-m.step', stepBytes: stepBytes
+      });
+    }).then(function (cylinder) {
+      var maximumRadialDeviation = 0;
+      var index;
+      assert(cylinder.faceIds.length === 3, 'analytic cylinder did not retain its three CAD faces');
+      assert(Math.abs(cylinder.volumeM3 - Math.PI / 4) < 1e-9, 'analytic cylinder volume was incorrect');
+      assert(Math.abs(cylinder.boundingBoxM.minM[0] + 0.5) < 1e-9 && Math.abs(cylinder.boundingBoxM.maxM[2] - 1) < 1e-9,
+        'analytic cylinder bounds were incorrect');
+      assert(cylinder.preview.featureEdges.indices.length > 0 && cylinder.preview.featureEdges.indices.length < cylinder.preview.indices.length,
+        'Model view used triangulation facets instead of only CAD feature edges');
+      for (index = 0; index < cylinder.preview.positionsM.length; index += 3) {
+        if (Math.abs(cylinder.preview.normals[index + 2]) < 0.5) {
+          maximumRadialDeviation = Math.max(maximumRadialDeviation, Math.abs(Math.hypot(cylinder.preview.positionsM[index], cylinder.preview.positionsM[index + 1]) - 0.5));
+        }
+      }
+      assert(maximumRadialDeviation < 0.002, 'cylinder preview exceeded the chord-deviation target');
+      return readFixture('generated-sphere-r0_5-m.step');
+    }).then(function (stepBytes) {
+      return client.importGeometry({
+        geometryId: 'preview-sphere', sourceName: 'generated-sphere-r0_5-m.step', stepBytes: stepBytes
+      });
+    }).then(function (sphere) {
+      assert(sphere.faceIds.length === 1, 'multiply-curved sphere did not retain one CAD face');
+      assert(Math.abs(sphere.volumeM3 - Math.PI / 6) < 1e-9, 'multiply-curved sphere volume was incorrect');
+      assert(Math.abs(sphere.boundingBoxM.minM[0] + 0.5) < 1e-9 && Math.abs(sphere.boundingBoxM.maxM[0] - 0.5) < 1e-9,
+        'multiply-curved sphere bounds were incorrect');
+    });
+  }
+
   testCoordinateConversion();
   readFixture('generated-unit-cube-m.step').then(function (stepBytes) {
     return client.importGeometry({
       geometryId: 'preview-selection-cube', sourceName: 'generated-unit-cube-m.step', stepBytes: stepBytes
-    });
-  }).then(function (geometry) {
+    }).then(function (geometry) { return { geometry: geometry, stepBytes: stepBytes }; });
+  }).then(function (imported) {
+    var geometry = imported.geometry;
     viewport.setGeometryPreview(geometry);
     selectEveryFace(geometry);
     testSelectionAndResize(geometry);
+    return testMeshDisplay(geometry, imported.stepBytes);
+  }).then(function () {
+    return testCurvedFixtures();
+  }).then(function () {
     status.textContent = 'Passed';
     status.dataset.result = 'passed';
     document.title = 'Preview face-selection tests: Passed';
