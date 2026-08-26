@@ -19,6 +19,8 @@
   <button id="generate-mesh-button" type="button"></button>
   <button id="cancel-mesh-button" type="button"></button>
   <p id="mesh-status"></p>
+  <select id="viewport-mode"><option value="model">Model</option><option value="mesh">Mesh</option></select>
+  <select id="display-style"><option value="lines">Shaded with edges</option><option value="wireframe">Wireframe</option></select>
   <canvas id="viewport" style="width: 240px; height: 160px"></canvas>
   <script src="../../web/vendor/three/three.min.js"></script>
   <script src="../../web/js/workers/worker-protocol.js"></script>
@@ -27,6 +29,7 @@
   <script src="../../web/js/mesh/mesh-display.js"></script>
   <script src="../../web/js/analysis/analysis-document.js"></script>
   <script src="../../web/js/analysis/app-controller.js"></script>
+  <script src="../../web/js/render/viewport-navigation.js"></script>
   <script src="../../web/js/render/viewport-controller.js"></script>
   <script src="../../web/js/ui/ui-controller.js"></script>
   <script src="../../web/js/workers/local-worker-bootstrap.js"></script>

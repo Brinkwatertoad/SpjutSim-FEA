@@ -16,7 +16,7 @@
     this.cancelMeshButton = document.getElementById('cancel-mesh-button');
     this.meshStatus = document.getElementById('mesh-status');
     this.viewportMode = document.getElementById('viewport-mode');
-    this.meshStyle = document.getElementById('mesh-style');
+    this.displayStyle = document.getElementById('display-style');
     this.customMeshSizes = null;
     this.generateMeshHandler = null;
     this.cancelMeshHandler = null;
@@ -183,8 +183,8 @@
     if (this.viewportMode) {
       this.viewportMode.addEventListener('change', function () { self.updateViewportPresentation(); });
     }
-    if (this.meshStyle) {
-      this.meshStyle.addEventListener('change', function () { self.updateViewportPresentation(); });
+    if (this.displayStyle) {
+      this.displayStyle.addEventListener('change', function () { self.updateViewportPresentation(); });
     }
     if (this.fitViewButton) { this.fitViewButton.addEventListener('click', function () { if (self.viewport) { self.viewport.fitCurrentModel(); } }); }
     if (this.resetViewButton) { this.resetViewButton.addEventListener('click', function () { if (self.viewport) { self.viewport.resetView(); } }); }
@@ -314,22 +314,22 @@
     try {
       this.controller.replaceViewportPresentation({
         mode: this.viewportMode ? this.viewportMode.value : 'model',
-        meshStyle: this.meshStyle ? this.meshStyle.value : 'lines'
+        displayStyle: this.displayStyle ? this.displayStyle.value : 'lines'
       });
     } catch (error) {
       this.renderViewportPresentation(this.controller.document);
     }
   };
   UIController.prototype.renderViewportPresentation = function (documentState) {
-    var presentation = documentState.viewportPresentation || { mode: 'model', meshStyle: 'lines' };
+    var presentation = documentState.viewportPresentation || { mode: 'model', displayStyle: 'lines' };
     var meshAvailable = Boolean(documentState.mesh);
     if (this.viewportMode) {
       this.viewportMode.value = presentation.mode;
       this.viewportMode.querySelector('option[value="mesh"]').disabled = !meshAvailable;
     }
-    if (this.meshStyle) {
-      this.meshStyle.value = presentation.meshStyle;
-      this.meshStyle.disabled = !meshAvailable || presentation.mode !== 'mesh';
+    if (this.displayStyle) {
+      this.displayStyle.value = presentation.displayStyle;
+      this.displayStyle.disabled = false;
     }
   };
   UIController.prototype.renderFaceSelection = function (documentState) {

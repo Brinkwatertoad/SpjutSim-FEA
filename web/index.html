@@ -61,13 +61,12 @@
         <div class="fea-viewport-actions" aria-label="Viewport actions">
           <label for="viewport-mode">View</label>
           <select id="viewport-mode" aria-label="Viewport presentation mode"><option value="model">Model</option><option value="mesh">Mesh</option></select>
-          <label for="mesh-style">Mesh style</label>
-          <select id="mesh-style" aria-label="Mesh display style"><option value="lines">Shaded with lines</option><option value="wireframe">Wireframe</option></select>
+          <label for="display-style">Display style</label>
+          <select id="display-style" aria-label="Viewport display style"><option value="lines">Shaded with edges</option><option value="wireframe">Wireframe</option></select>
           <button id="fit-view-button" type="button">Fit model</button>
           <button id="reset-view-button" type="button">Reset view</button>
         </div>
         <p class="fea-viewport-help" id="viewport-help">Left drag rotates · Right drag pans · Wheel or pinch zooms · Arrow keys rotate</p>
-        <div class="fea-empty-state" id="viewport-empty-state"><strong>Viewport ready</strong><span>Local Three.js reference scene</span></div>
       </section>
       <aside class="fea-results" aria-label="Analysis output">
         <div role="tablist" aria-label="Output views">

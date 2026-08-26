@@ -90,17 +90,15 @@
       displayedGeometry = documentState.geometry;
       if (displayedGeometry) {
         viewport.setGeometryPreview(displayedGeometry);
-        document.getElementById('viewport-empty-state').hidden = true;
       } else {
         viewport.clearGeometryPreview();
-        document.getElementById('viewport-empty-state').hidden = false;
       }
     }
     if (documentState.mesh !== displayedMesh) {
       displayedMesh = documentState.mesh;
       viewport.setMeshDisplay(displayedMesh);
     }
-    viewport.setPresentation(documentState.viewportPresentation || { mode: 'model', meshStyle: 'lines' });
+    viewport.setPresentation(documentState.viewportPresentation || { mode: 'model', displayStyle: 'lines' });
     viewport.setSelectedFaceIds(documentState.selectedFaceIds || []);
   });
   ui.setImportHandler(importStepFile);

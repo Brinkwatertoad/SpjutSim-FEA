@@ -105,7 +105,8 @@
     controller.completeMeshGeneration(mesh);
     assert(controller.document.mesh && controller.document.meshMetadata.statistics.elementCount === 1, 'valid volume mesh was not stored');
     assert(controller.document.viewportPresentation.mode === 'mesh', 'successful mesh did not activate Mesh view');
-    controller.replaceViewportPresentation({ mode: 'model', meshStyle: 'wireframe' });
+    controller.replaceViewportPresentation({ mode: 'model', displayStyle: 'wireframe' });
+    assert(controller.document.viewportPresentation.displayStyle === 'wireframe', 'display style was not stored for Model view');
     assert(controller.document.mesh === mesh, 'presentation change invalidated mesh data');
     controller.replaceMeshSettings({ preset: 'coarse', elementType: 'tet4' });
     assert(controller.document.mesh === null && controller.document.meshMetadata === null && controller.document.results === null, 'mesh setting change did not invalidate derived state');
@@ -160,12 +161,28 @@
       'custom preset did not receive a valid initial size range');
   }
 
+  function testDisplayStyleIsAvailableInModelView() {
+    var controller = new api.AppController({ document: api.createAnalysisDocument() });
+    var ui = new api.UIController(controller);
+    ui.render(controller.document);
+    assert(!ui.displayStyle.disabled, 'display style was disabled in Model view');
+    ui.displayStyle.value = 'wireframe';
+    ui.updateViewportPresentation();
+    assert(controller.document.viewportPresentation.displayStyle === 'wireframe', 'Model display style change was not applied');
+  }
+
   function testViewportCameraNavigation() {
     var viewport = new api.ViewportController(document.getElementById('viewport'));
     var faceId = validGeometry().faceIds[0];
     var cameraBefore;
     var distanceBefore;
     viewport.setGeometryPreview(validGeometry());
+    viewport.setPresentation({ mode: 'model', displayStyle: 'wireframe' });
+    assert(!viewport.previewMesh.visible &&
+      viewport.importedGeometry.getObjectByName('imported-geometry-feature-edges').visible,
+      'Model wireframe exposed preview tessellation edges');
+    viewport.setPresentation({ mode: 'model', displayStyle: 'lines' });
+    assert(viewport.previewMesh.visible, 'shaded Model display did not restore the preview surface');
     viewport.setSelectedFaceIds([faceId]);
     cameraBefore = viewport.camera.position.clone();
     viewport.orbitByPixels(0, 24);
@@ -176,6 +193,12 @@
     viewport.zoomByWheelDelta(-120);
     assert(viewport.camera.position.distanceTo(viewport.viewTarget) < distanceBefore, 'wheel input did not zoom the camera');
     assert(viewport.selectedFaceIds.has(faceId), 'zoom input changed the selected faces');
+    viewport.setMeshDisplay(validVolumeMesh());
+    viewport.setPresentation({ mode: 'mesh', displayStyle: 'wireframe' });
+    assert(viewport.meshSurface.material[0].wireframe && !viewport.meshDisplay.userData.lines.visible,
+      'Mesh wireframe display was not applied');
+    assert(!viewport.importedGeometry.getObjectByName('imported-geometry-feature-edges').visible,
+      'Mesh view retained Model feature edges');
     viewport.dispose();
   }
 
@@ -249,6 +272,7 @@
     testGeometryContractAndInvalidation();
     testPreviewRequiresOneRangePerFace();
     testCustomMeshPresetCanBeEntered();
+    testDisplayStyleIsAvailableInModelView();
     testViewportCameraNavigation();
     testEscapeClearsFaceSelection();
     return testSolverTimeoutTerminatesWorker().then(testMesherClientUsesDedicatedTransferCopy).then(testMeshContractAndDedicatedTransferCopy);

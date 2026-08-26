@@ -114,21 +114,28 @@
       var disposed = false;
       viewport.setGeometryPreview(geometry);
       viewport.setMeshDisplay(mesh);
-      viewport.setPresentation({ mode: 'mesh', meshStyle: 'lines' });
+      viewport.setPresentation({ mode: 'mesh', displayStyle: 'lines' });
       assert(viewport.meshSurface !== null, 'Mesh view did not create a boundary surface');
       assert(viewport.meshDisplay.userData.lines.geometry.index.count / 2 < mesh.boundaryFaces.triangleConnectivity.length,
         'mesh lines were not deduplicated from boundary triangles');
       assert(viewport.meshDisplay.userData.lines.visible, 'shaded-with-lines mesh style hid mesh lines');
       selectEveryFace(geometry);
-      viewport.setPresentation({ mode: 'mesh', meshStyle: 'wireframe' });
+      viewport.setPresentation({ mode: 'mesh', displayStyle: 'wireframe' });
       assert(!viewport.meshDisplay.userData.lines.visible && viewport.meshSurface.material[0].wireframe,
-        'wireframe mesh style was not applied');
+        'wireframe display style was not applied to Mesh view');
       lineGeometry = viewport.meshDisplay.userData.lines.geometry;
       lineGeometry.addEventListener('dispose', function () { disposed = true; });
       viewport.setMeshDisplay(mesh);
       assert(disposed, 'replacing a mesh display did not dispose its line buffer');
-      viewport.setPresentation({ mode: 'model', meshStyle: 'lines' });
+      viewport.setPresentation({ mode: 'model', displayStyle: 'wireframe' });
+      assert(!viewport.previewMesh.visible && !viewport.previewMesh.material[0].wireframe &&
+        viewport.importedGeometry.getObjectByName('imported-geometry-feature-edges').visible,
+        'Model wireframe showed tessellation edges instead of CAD feature edges');
+      viewport.setPresentation({ mode: 'model', displayStyle: 'lines' });
       assert(viewport.previewMesh.visible && !viewport.meshDisplay.visible, 'Model mode did not hide the mesh display');
+      assert(!viewport.previewMesh.material[0].wireframe &&
+        viewport.importedGeometry.getObjectByName('imported-geometry-feature-edges').visible,
+        'shaded-with-edges display style was not restored in Model view');
     });
   }
 

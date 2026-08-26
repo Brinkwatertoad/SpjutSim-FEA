@@ -78,7 +78,7 @@
     this.previewMesh = null;
     this.meshDisplay = null;
     this.meshSurface = null;
-    this.presentation = { mode: 'model', meshStyle: 'lines' };
+    this.presentation = { mode: 'model', displayStyle: 'lines' };
     this.selectedFaceIds = new Set();
     this.facePickHandler = null;
     this.viewTarget = new root.THREE.Vector3(0, 0, 0);
@@ -546,22 +546,29 @@
 
   ViewportController.prototype.setPresentation = function (presentation) {
     if (!presentation || (presentation.mode !== 'model' && presentation.mode !== 'mesh') ||
-        (presentation.meshStyle !== 'lines' && presentation.meshStyle !== 'wireframe')) {
+        (presentation.displayStyle !== 'lines' && presentation.displayStyle !== 'wireframe')) {
       throw new Error('Invalid viewport presentation.');
     }
-    this.presentation = { mode: presentation.mode, meshStyle: presentation.meshStyle };
+    this.presentation = { mode: presentation.mode, displayStyle: presentation.displayStyle };
     this.applyPresentation();
     this.render();
   };
 
   ViewportController.prototype.applyPresentation = function () {
+    var modelVisible;
+    var featureEdges;
     var meshMaterials;
-    if (this.previewMesh) { this.previewMesh.visible = this.presentation.mode === 'model' || !this.meshSurface; }
+    if (this.previewMesh) {
+      modelVisible = this.presentation.mode === 'model' || !this.meshSurface;
+      this.previewMesh.visible = modelVisible && this.presentation.displayStyle === 'lines';
+      featureEdges = this.importedGeometry.getObjectByName('imported-geometry-feature-edges');
+      if (featureEdges) { featureEdges.visible = modelVisible; }
+    }
     if (!this.meshDisplay) { return; }
     this.meshDisplay.visible = this.presentation.mode === 'mesh';
     meshMaterials = this.meshSurface.material;
-    meshMaterials.forEach(function (material) { material.wireframe = this.presentation.meshStyle === 'wireframe'; }, this);
-    this.meshDisplay.userData.lines.visible = this.presentation.meshStyle === 'lines';
+    meshMaterials.forEach(function (material) { material.wireframe = this.presentation.displayStyle === 'wireframe'; }, this);
+    this.meshDisplay.userData.lines.visible = this.presentation.displayStyle === 'lines';
   };
 
   ViewportController.prototype.setSelectedFaceIds = function (faceIds) {

@@ -1518,9 +1518,12 @@ zoom direction to be reversed, and navigation sensitivity to be adjusted or
 reset.
 
 The main viewport exposes explicit presentation modes for **Model**, **Mesh**,
-**Stress**, and **Deformation** as their data becomes available. Mesh mode must
-show the boundary mesh either as wireframe or as lines over a shaded surface;
-an optional mesh overlay may also be used in compatible result modes. After a
+**Stress**, and **Deformation** as their data becomes available. A separate
+display-style control must apply to every available presentation mode. Model
+mode wireframe must show only CAD feature edges, never preview-tessellation
+edges; its shaded style shows those feature edges over the shaded surface. Mesh
+mode supports element wireframe or element edges over a shaded surface. An
+optional mesh overlay may also be used in compatible result modes. After a
 successful mesh, default to Mesh mode. After a successful solve, default to a
 color-coded von Mises Stress mode. Stress and deformation views must clearly
 identify the active scalar field, units, contour range, and deformation scale;

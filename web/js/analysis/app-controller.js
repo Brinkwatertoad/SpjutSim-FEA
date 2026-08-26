@@ -31,13 +31,13 @@
   function validateViewportPresentation(presentation, meshAvailable) {
     if (!presentation || typeof presentation !== 'object' || Array.isArray(presentation) ||
         (presentation.mode !== 'model' && presentation.mode !== 'mesh') ||
-        (presentation.meshStyle !== 'lines' && presentation.meshStyle !== 'wireframe')) {
+        (presentation.displayStyle !== 'lines' && presentation.displayStyle !== 'wireframe')) {
       throw new Error('Invalid viewport presentation.');
     }
     if (presentation.mode === 'mesh' && !meshAvailable) {
       throw new Error('Generate a mesh before selecting Mesh view.');
     }
-    return { mode: presentation.mode, meshStyle: presentation.meshStyle };
+    return { mode: presentation.mode, displayStyle: presentation.displayStyle };
   }
 
   AppController.prototype.subscribe = function (listener) {
@@ -88,7 +88,7 @@
     this.document.loads = [];
     this.document.meshMetadata = null;
     this.document.mesh = null;
-    this.document.viewportPresentation = { mode: 'model', meshStyle: this.document.viewportPresentation.meshStyle };
+    this.document.viewportPresentation = { mode: 'model', displayStyle: this.document.viewportPresentation.displayStyle };
     this.document.meshGeneration = { status: 'idle', error: null, progress: null };
     this.document.results = null;
     this.document.convergenceStudy = null;
@@ -104,7 +104,7 @@
     this.document.loads = [];
     this.document.meshMetadata = null;
     this.document.mesh = null;
-    this.document.viewportPresentation = { mode: 'model', meshStyle: this.document.viewportPresentation.meshStyle };
+    this.document.viewportPresentation = { mode: 'model', displayStyle: this.document.viewportPresentation.displayStyle };
     this.document.meshGeneration = { status: 'idle', error: null, progress: null };
     this.document.results = null;
     this.document.convergenceStudy = null;
@@ -147,7 +147,7 @@
     this.document.results = null;
     this.document.convergenceStudy = null;
     this.document.meshGeneration = { status: 'idle', error: null, progress: null };
-    this.document.viewportPresentation = { mode: 'model', meshStyle: this.document.viewportPresentation.meshStyle };
+    this.document.viewportPresentation = { mode: 'model', displayStyle: this.document.viewportPresentation.displayStyle };
     this.notify();
   };
 
@@ -167,7 +167,7 @@
     var validation = root.SpjutsimFEA.validateVolumeMeshResult(mesh, this.document.geometry && this.document.geometry.faceIds);
     if (!validation.valid) { throw new Error('Invalid volume mesh: ' + validation.reason); }
     this.document.mesh = mesh;
-    this.document.viewportPresentation = { mode: 'mesh', meshStyle: this.document.viewportPresentation.meshStyle };
+    this.document.viewportPresentation = { mode: 'mesh', displayStyle: this.document.viewportPresentation.displayStyle };
     this.document.meshMetadata = { statistics: mesh.statistics, quality: mesh.quality, memoryInputs: mesh.memoryInputs };
     this.document.results = null;
     this.document.convergenceStudy = null;

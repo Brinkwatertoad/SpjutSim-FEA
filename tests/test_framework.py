@@ -248,6 +248,8 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn('PREVIEW_MAX_SURFACE_EDGE_LENGTH_FRACTION', worker)
         self.assertIn('extractFeatureEdges', worker)
         self.assertIn('viewport-mode', index)
+        self.assertIn('display-style', index)
+        self.assertIn('Model wireframe showed tessellation edges instead of CAD feature edges', coverage)
         self.assertIn('generated-cylinder-r0_5-h1-m.step', coverage)
         self.assertIn('generated-sphere-r0_5-m.step', coverage)
         for fixture in ('generated-cylinder-r0_5-h1-m.step', 'generated-sphere-r0_5-m.step'):

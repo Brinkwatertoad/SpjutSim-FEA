@@ -15,7 +15,7 @@
       meshGeneration: { status: 'idle', error: null, progress: null },
       mesh: null,
       meshMetadata: null,
-      viewportPresentation: { mode: 'model', meshStyle: 'lines' },
+      viewportPresentation: { mode: 'model', displayStyle: 'lines' },
       solveSettings: { relativeTolerance: 1e-8 },
       results: null,
       convergenceStudy: null
