@@ -1098,7 +1098,11 @@ Do not promise that a solve below 8 GiB will succeed.
 
 v1 should not depend on `memory64` for correctness. Treat 64-bit WebAssembly memory as a future capability until the application has been tested across its supported browser matrix and the selected Emscripten/libraries support it reliably.
 
-The initial production build should set an explicit practical upper bound for the solver WASM memory and surface that limit in preflight. The exact bound is an implementation/test decision, not a hidden runtime failure.
+The initial production build sets a 3.5 GiB practical upper bound for the
+single-threaded solver WASM memory and surfaces that limit in preflight. This
+stays below the 32-bit WebAssembly address-space ceiling while leaving room for
+browser/runtime allocations outside the solver heap; it must be recalibrated
+from the supported-browser memory benchmarks before being raised.
 
 If the estimate exceeds the configured WASM heap maximum, disable Solve and require a coarser mesh.
 

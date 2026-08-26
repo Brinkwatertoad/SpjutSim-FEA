@@ -35,16 +35,36 @@
     return uniqueFaceIds;
   }
 
-  function validateViewportPresentation(presentation, meshAvailable) {
+  function validateViewportPresentation(presentation, meshAvailable, resultsAvailable) {
+    var fields = ['vonMises', 'maxPrincipal', 'minPrincipal', 'displacementMagnitude', 'ux', 'uy', 'uz'];
+    var deformationModes = ['undeformed', 'true-scale', 'auto', 'user'];
     if (!presentation || typeof presentation !== 'object' || Array.isArray(presentation) ||
-        (presentation.mode !== 'model' && presentation.mode !== 'mesh') ||
+        ['model', 'mesh', 'stress', 'deformation'].indexOf(presentation.mode) < 0 ||
         (presentation.displayStyle !== 'lines' && presentation.displayStyle !== 'wireframe')) {
       throw new Error('Invalid viewport presentation.');
     }
     if (presentation.mode === 'mesh' && !meshAvailable) {
       throw new Error('Generate a mesh before selecting Mesh view.');
     }
-    return { mode: presentation.mode, displayStyle: presentation.displayStyle };
+    if ((presentation.mode === 'stress' || presentation.mode === 'deformation') && !resultsAvailable) {
+      throw new Error('Solve the analysis before selecting a result view.');
+    }
+    if (presentation.field !== undefined && fields.indexOf(presentation.field) < 0) { throw new Error('Invalid result field.'); }
+    if (presentation.deformationMode !== undefined && deformationModes.indexOf(presentation.deformationMode) < 0) {
+      throw new Error('Invalid deformation mode.');
+    }
+    if (presentation.userDeformationScale !== undefined &&
+        (!Number.isFinite(presentation.userDeformationScale) || presentation.userDeformationScale < 0)) {
+      throw new Error('Deformation scale must be a finite non-negative value.');
+    }
+    return {
+      mode: presentation.mode, displayStyle: presentation.displayStyle,
+      field: presentation.field || (presentation.mode === 'deformation' ? 'displacementMagnitude' : 'vonMises'),
+      meshOverlay: presentation.meshOverlay === true,
+      deformationMode: presentation.deformationMode || 'undeformed',
+      deformationScale: Number.isFinite(presentation.deformationScale) ? presentation.deformationScale : 0,
+      userDeformationScale: Number.isFinite(presentation.userDeformationScale) ? presentation.userDeformationScale : 1
+    };
   }
 
   AppController.prototype.subscribe = function (listener) {
@@ -58,10 +78,16 @@
   };
 
   AppController.prototype.invalidateResults = function (reason) {
+    var hadResults = Boolean(this.document.results);
     this.document.results = null;
     this.document.convergenceStudy = null;
     this.document.analysisRevision = (this.document.analysisRevision || 0) + 1;
-    this.document.resultInvalidation = { reason: reason, revision: this.document.analysisRevision };
+    this.document.resultInvalidation = { reason: reason, revision: this.document.analysisRevision, stale: hadResults };
+    this.document.solvePreflight = { status: 'idle', result: null, error: null, progress: null, analysisRevision: null };
+    this.document.solveExecution = { status: 'idle', error: null, progress: null, analysisRevision: null };
+    if (this.document.viewportPresentation.mode === 'stress' || this.document.viewportPresentation.mode === 'deformation') {
+      this.document.viewportPresentation = Object.assign({}, this.document.viewportPresentation, { mode: this.document.mesh ? 'mesh' : 'model' });
+    }
   };
 
   AppController.prototype.createAnalysisItemId = function (prefix) {
@@ -305,7 +331,92 @@
 
   /** Update viewport-only state without invalidating imported or analysis data. */
   AppController.prototype.replaceViewportPresentation = function (presentation) {
-    this.document.viewportPresentation = validateViewportPresentation(presentation, Boolean(this.document.mesh));
+    this.document.viewportPresentation = validateViewportPresentation(presentation, Boolean(this.document.mesh), Boolean(this.document.results));
+    this.notify();
+  };
+
+  AppController.prototype.beginSolvePreflight = function () {
+    if (!this.document.mesh) { throw new Error('Generate a mesh before preflight.'); }
+    this.document.solvePreflight = { status: 'running', result: null, error: null, progress: null,
+      analysisRevision: this.document.analysisRevision };
+    this.document.solveExecution = { status: 'idle', error: null, progress: null, analysisRevision: null };
+    this.notify();
+    return this.document.analysisRevision;
+  };
+
+  AppController.prototype.reportSolveProgress = function (progress) {
+    var target = this.document.solveExecution.status === 'running' ? this.document.solveExecution : this.document.solvePreflight;
+    if (target.status !== 'running') { return; }
+    target.progress = progress;
+    this.notify();
+  };
+
+  AppController.prototype.completeSolvePreflight = function (revision, result) {
+    if (revision !== this.document.analysisRevision || this.document.solvePreflight.status !== 'running') { return false; }
+    var validation = root.SpjutsimFEA.validatePreflightResult(result);
+    if (!validation.valid) { throw new Error('Invalid solve preflight: ' + validation.reason); }
+    this.document.solvePreflight = { status: 'ready', result: result, error: null, progress: null, analysisRevision: revision };
+    this.notify();
+    return true;
+  };
+
+  AppController.prototype.failSolvePreflight = function (revision, error) {
+    if (revision !== this.document.analysisRevision) { return false; }
+    this.document.solvePreflight = { status: 'failed', result: null,
+      error: error && error.diagnostic ? error.diagnostic : error, progress: null, analysisRevision: revision };
+    this.notify();
+    return true;
+  };
+
+  AppController.prototype.beginSolve = function () {
+    var preflight = this.document.solvePreflight;
+    if (preflight.status !== 'ready' || preflight.analysisRevision !== this.document.analysisRevision || preflight.result.exceedsWasmCap) {
+      throw new Error('Complete a valid solve preflight before solving.');
+    }
+    this.document.solveExecution = { status: 'running', error: null, progress: null, analysisRevision: this.document.analysisRevision };
+    this.notify();
+    return this.document.analysisRevision;
+  };
+
+  AppController.prototype.completeSolve = function (revision, result) {
+    if (revision !== this.document.analysisRevision || this.document.solveExecution.status !== 'running') { return false; }
+    var validation = root.SpjutsimFEA.validateResultModel(result, revision);
+    if (!validation.valid) { throw new Error('Invalid solve result: ' + validation.reason); }
+    this.document.results = result;
+    this.document.solveExecution = { status: 'succeeded', error: null, progress: null, analysisRevision: revision };
+    this.document.resultInvalidation = null;
+    this.document.viewportPresentation = Object.assign({}, this.document.viewportPresentation, {
+      mode: 'stress', field: 'vonMises', deformationMode: 'undeformed', deformationScale: 0
+    });
+    this.notify();
+    return true;
+  };
+
+  AppController.prototype.failSolve = function (revision, error) {
+    if (revision !== this.document.analysisRevision) { return false; }
+    this.document.solveExecution = { status: 'failed', error: error && error.diagnostic ? error.diagnostic : error,
+      progress: null, analysisRevision: revision };
+    this.notify();
+    return true;
+  };
+
+  AppController.prototype.cancelSolve = function () {
+    var wasRunning = this.document.solveExecution.status === 'running' || this.document.solvePreflight.status === 'running';
+    if (!wasRunning) { return; }
+    if (this.document.solveExecution.status === 'running') {
+      this.document.solveExecution = { status: 'cancelled', error: null, progress: null, analysisRevision: this.document.analysisRevision };
+    } else {
+      this.document.solvePreflight = { status: 'cancelled', result: null, error: null, progress: null, analysisRevision: this.document.analysisRevision };
+    }
+    this.notify();
+  };
+
+  AppController.prototype.discardSolvePreflight = function () {
+    if (this.document.solvePreflight.status === 'idle' && this.document.solveExecution.status !== 'running') { return; }
+    this.document.solvePreflight = { status: 'idle', result: null, error: null, progress: null, analysisRevision: null };
+    if (this.document.solveExecution.status !== 'succeeded') {
+      this.document.solveExecution = { status: 'idle', error: null, progress: null, analysisRevision: null };
+    }
     this.notify();
   };
 

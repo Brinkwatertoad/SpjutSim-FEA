@@ -36,6 +36,16 @@
       }
       return runtime.gmsh + '\n' + runtime[kind];
     }
+    if (kind === 'solver') {
+      if (typeof runtime.fem !== 'string') {
+        throw startupFailure(
+          'FEM_RUNTIME_SOURCE_MISSING',
+          'The local FEM runtime is unavailable. Rebuild the FEM WebAssembly artifact.',
+          { worker: kind }
+        );
+      }
+      return runtime.fem + '\n' + runtime[kind];
+    }
     return runtime[kind];
   }
 
@@ -116,7 +126,6 @@
       worker = startedWorker;
       return new Promise(function (resolve, reject) {
         var requestId = kind + '-startup-check';
-        var expectedCode = 'SOLVER_NOT_IMPLEMENTED';
         var settled = false;
         var timeout = root.setTimeout(function () {
           finish(startupFailure(
@@ -143,8 +152,9 @@
           if (message && typeof message.requestId === 'string' && message.requestId !== requestId) {
             return;
           }
-          validation = root.SpjutsimFEA.validateWorkerResponse(message, requestId, 'error');
-          if (!validation.valid || !validation.error || message.error.code !== expectedCode) {
+          validation = root.SpjutsimFEA.validateWorkerResponse(message, requestId, 'diagnostics-result');
+          if (!validation.valid || validation.error || message.result.apiVersion !== 1 ||
+              message.result.runtimeMode !== 'serial-local-embedded') {
             finish(startupFailure(
               'LOCAL_WORKER_INVALID_RESPONSE',
               'The ' + kind + ' worker returned an invalid startup response.',
@@ -171,7 +181,7 @@
         try {
           worker.postMessage({
             protocol: root.SpjutsimFEA.WORKER_PROTOCOL_VERSION,
-            type: 'startup-check',
+            type: 'diagnostics',
             requestId: requestId
           });
         } catch (error) {

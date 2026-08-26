@@ -79,12 +79,16 @@
     this.previewMesh = null;
     this.meshDisplay = null;
     this.meshSurface = null;
+    this.resultDisplay = null;
+    this.resultSurface = null;
+    this.resultModel = null;
     this.analysisOverlay = null;
     this.analysisOverlayState = null;
     this.themeObserver = null;
     this.presentation = { mode: 'model', displayStyle: 'lines' };
     this.selectedFaceIds = new Set();
     this.facePickHandler = null;
+    this.probeHandler = null;
     this.viewTarget = new root.THREE.Vector3(0, 0, 0);
     this.modelCenter = new root.THREE.Vector3(0, 0, 0);
     this.orbitAzimuth = 0;
@@ -159,6 +163,10 @@
       if (event.button !== 0) { return; }
       if (self.suppressNextClick) {
         self.suppressNextClick = false;
+        return;
+      }
+      if ((self.presentation.mode === 'stress' || self.presentation.mode === 'deformation') && self.resultModel) {
+        if (self.probeHandler) { self.probeHandler(self.pickResultAtPointer(event)); }
         return;
       }
       faceId = self.pickFaceAtPointer(event);
@@ -420,6 +428,11 @@
     this.facePickHandler = handler;
   };
 
+  ViewportController.prototype.setProbeHandler = function (handler) {
+    if (handler !== null && typeof handler !== 'function') { throw new Error('Probe handler must be a function or null.'); }
+    this.probeHandler = handler;
+  };
+
   ViewportController.prototype.clearGeometryPreview = function () {
     if (this.importedGeometry) {
       this.scene.remove(this.importedGeometry);
@@ -428,6 +441,7 @@
     this.importedGeometry = null;
     this.previewMesh = null;
     this.clearMeshDisplay();
+    this.clearResultDisplay();
     this.clearAnalysisOverlay();
     this.selectedFaceIds.clear();
     this.scene.getObjectByName('reference-solid').visible = true;
@@ -575,6 +589,122 @@
     this.render();
   };
 
+  function resultColor(normalized, target) {
+    var stops = [[0.12, 0.29, 0.65], [0.18, 0.72, 0.64], [0.94, 0.83, 0.23], [0.84, 0.19, 0.15]];
+    var scaled = Math.max(0, Math.min(1, normalized)) * (stops.length - 1);
+    var low = Math.min(stops.length - 2, Math.floor(scaled));
+    var fraction = scaled - low;
+    target[0] = stops[low][0] + (stops[low + 1][0] - stops[low][0]) * fraction;
+    target[1] = stops[low][1] + (stops[low + 1][1] - stops[low][1]) * fraction;
+    target[2] = stops[low][2] + (stops[low + 1][2] - stops[low][2]) * fraction;
+  }
+
+  ViewportController.prototype.clearResultDisplay = function () {
+    if (this.resultDisplay) {
+      this.scene.remove(this.resultDisplay);
+      disposeObjectResources(this.resultDisplay);
+    }
+    this.resultDisplay = null;
+    this.resultSurface = null;
+    this.resultModel = null;
+    if (this.probeHandler) { this.probeHandler(null); }
+  };
+
+  ViewportController.prototype.setResultModel = function (result) {
+    var geometry;
+    var material;
+    var surface;
+    var lineGeometry;
+    var lineIndices;
+    var triangles;
+    var triangle;
+    var lines;
+    var group;
+    this.clearResultDisplay();
+    if (!result) { this.applyPresentation(); this.render(); return; }
+    if (!root.SpjutsimFEA.validateResultModel(result, result.analysisRevision).valid) { throw new Error('Invalid renderer result model.'); }
+    geometry = new root.THREE.BufferGeometry();
+    geometry.setAttribute('position', new root.THREE.BufferAttribute(new Float32Array(result.originalSurface.nodePositionsM), 3));
+    geometry.setAttribute('color', new root.THREE.BufferAttribute(new Float32Array(result.originalSurface.nodePositionsM.length), 3));
+    geometry.setIndex(new root.THREE.BufferAttribute(result.originalSurface.triangleConnectivity, 1));
+    geometry.computeVertexNormals();
+    material = new root.THREE.MeshStandardMaterial({ vertexColors: true, side: root.THREE.DoubleSide, roughness: 0.72, metalness: 0.02 });
+    surface = new root.THREE.Mesh(geometry, material);
+    surface.name = 'result-surface';
+    triangles = result.originalSurface.triangleConnectivity;
+    lineIndices = new Uint32Array(triangles.length * 2);
+    for (triangle = 0; triangle < triangles.length / 3; triangle += 1) {
+      lineIndices[triangle * 6] = triangles[triangle * 3]; lineIndices[triangle * 6 + 1] = triangles[triangle * 3 + 1];
+      lineIndices[triangle * 6 + 2] = triangles[triangle * 3 + 1]; lineIndices[triangle * 6 + 3] = triangles[triangle * 3 + 2];
+      lineIndices[triangle * 6 + 4] = triangles[triangle * 3 + 2]; lineIndices[triangle * 6 + 5] = triangles[triangle * 3];
+    }
+    lineGeometry = new root.THREE.BufferGeometry();
+    lineGeometry.setAttribute('position', new root.THREE.BufferAttribute(new Float32Array(result.originalSurface.nodePositionsM), 3));
+    lineGeometry.setIndex(new root.THREE.BufferAttribute(lineIndices, 1));
+    lines = new root.THREE.LineSegments(lineGeometry, new root.THREE.LineBasicMaterial({ color: themeColor('--ui-color-grid-major', '#334155'), transparent: true, opacity: 0.8 }));
+    lines.name = 'result-mesh-overlay';
+    group = new root.THREE.Group();
+    group.name = 'result-display';
+    group.add(surface, lines);
+    group.userData.lines = lines;
+    this.scene.add(group);
+    this.resultDisplay = group;
+    this.resultSurface = surface;
+    this.resultModel = result;
+    this.updateResultPresentation();
+    this.applyPresentation();
+    this.render();
+  };
+
+  ViewportController.prototype.activeResultField = function () {
+    if (!this.resultModel) { return null; }
+    var fields = {
+      vonMises: this.resultModel.surfaceFields.vonMisesPa,
+      maxPrincipal: this.resultModel.surfaceFields.maxPrincipalPa,
+      minPrincipal: this.resultModel.surfaceFields.minPrincipalPa,
+      displacementMagnitude: this.resultModel.surfaceFields.displacementMagnitudeM,
+      ux: this.resultModel.surfaceFields.uxM, uy: this.resultModel.surfaceFields.uyM, uz: this.resultModel.surfaceFields.uzM
+    };
+    return fields[this.presentation.field] || fields.vonMises;
+  };
+
+  ViewportController.prototype.updateResultPresentation = function () {
+    var result = this.resultModel;
+    var field;
+    var fieldRange;
+    var position;
+    var linePosition;
+    var colors;
+    var original;
+    var displacement;
+    var scale;
+    var node;
+    var rgb = [0, 0, 0];
+    if (!result || !this.resultSurface) { return; }
+    field = this.activeResultField();
+    fieldRange = result.ranges[this.presentation.field] || result.ranges.vonMises;
+    position = this.resultSurface.geometry.getAttribute('position');
+    linePosition = this.resultDisplay.userData.lines.geometry.getAttribute('position');
+    colors = this.resultSurface.geometry.getAttribute('color');
+    original = result.originalSurface.nodePositionsM;
+    displacement = result.displacementM;
+    scale = Number(this.presentation.deformationScale) || 0;
+    for (node = 0; node < field.length; node += 1) {
+      position.array[node * 3] = original[node * 3] + displacement[node * 3] * scale;
+      position.array[node * 3 + 1] = original[node * 3 + 1] + displacement[node * 3 + 1] * scale;
+      position.array[node * 3 + 2] = original[node * 3 + 2] + displacement[node * 3 + 2] * scale;
+      linePosition.array[node * 3] = position.array[node * 3];
+      linePosition.array[node * 3 + 1] = position.array[node * 3 + 1];
+      linePosition.array[node * 3 + 2] = position.array[node * 3 + 2];
+      resultColor(fieldRange.maximum === fieldRange.minimum ? 0.5 :
+        (field[node] - fieldRange.minimum) / (fieldRange.maximum - fieldRange.minimum), rgb);
+      colors.array[node * 3] = rgb[0]; colors.array[node * 3 + 1] = rgb[1]; colors.array[node * 3 + 2] = rgb[2];
+    }
+    position.needsUpdate = true; linePosition.needsUpdate = true; colors.needsUpdate = true;
+    this.resultSurface.geometry.computeVertexNormals();
+    this.resultSurface.geometry.computeBoundingSphere();
+  };
+
   ViewportController.prototype.clearAnalysisOverlay = function () {
     if (!this.analysisOverlay) { return; }
     this.scene.remove(this.analysisOverlay);
@@ -631,11 +761,13 @@
   };
 
   ViewportController.prototype.setPresentation = function (presentation) {
-    if (!presentation || (presentation.mode !== 'model' && presentation.mode !== 'mesh') ||
+    if (!presentation || ['model', 'mesh', 'stress', 'deformation'].indexOf(presentation.mode) < 0 ||
         (presentation.displayStyle !== 'lines' && presentation.displayStyle !== 'wireframe')) {
       throw new Error('Invalid viewport presentation.');
     }
-    this.presentation = { mode: presentation.mode, displayStyle: presentation.displayStyle };
+    this.presentation = Object.assign({ field: 'vonMises', meshOverlay: false, deformationScale: 0,
+      deformationMode: 'undeformed', userDeformationScale: 1 }, presentation);
+    this.updateResultPresentation();
     this.applyPresentation();
     this.render();
   };
@@ -645,16 +777,22 @@
     var featureEdges;
     var meshMaterials;
     if (this.previewMesh) {
-      modelVisible = this.presentation.mode === 'model' || !this.meshSurface;
+      modelVisible = this.presentation.mode === 'model' || (!this.meshSurface && !this.resultSurface);
       this.previewMesh.visible = modelVisible && this.presentation.displayStyle === 'lines';
       featureEdges = this.importedGeometry.getObjectByName('imported-geometry-feature-edges');
       if (featureEdges) { featureEdges.visible = modelVisible; }
     }
-    if (!this.meshDisplay) { return; }
-    this.meshDisplay.visible = this.presentation.mode === 'mesh';
-    meshMaterials = this.meshSurface.material;
-    meshMaterials.forEach(function (material) { material.wireframe = this.presentation.displayStyle === 'wireframe'; }, this);
-    this.meshDisplay.userData.lines.visible = this.presentation.displayStyle === 'lines';
+    if (this.meshDisplay) {
+      this.meshDisplay.visible = this.presentation.mode === 'mesh';
+      meshMaterials = this.meshSurface.material;
+      meshMaterials.forEach(function (material) { material.wireframe = this.presentation.displayStyle === 'wireframe'; }, this);
+      this.meshDisplay.userData.lines.visible = this.presentation.displayStyle === 'lines';
+    }
+    if (this.resultDisplay) {
+      this.resultDisplay.visible = this.presentation.mode === 'stress' || this.presentation.mode === 'deformation';
+      this.resultSurface.material.wireframe = this.presentation.displayStyle === 'wireframe';
+      this.resultDisplay.userData.lines.visible = this.presentation.meshOverlay === true || this.presentation.displayStyle === 'lines';
+    }
   };
 
   ViewportController.prototype.setSelectedFaceIds = function (faceIds) {
@@ -702,6 +840,46 @@
     if (!Number.isInteger(intersection.faceIndex)) { return null; }
     rangeIndex = pickMesh.userData.triangleFaceIndices[intersection.faceIndex];
     return pickMesh.userData.faceIdsByRange[rangeIndex] || null;
+  };
+
+  ViewportController.prototype.pickResultAtPointer = function (event) {
+    var coordinates;
+    var intersections;
+    var triangle;
+    var indices;
+    var nodes;
+    var field;
+    var displacement;
+    var point = [0, 0, 0];
+    var vector = [0, 0, 0];
+    var axis;
+    var fieldDefinitions = {
+      vonMises: ['von Mises stress', 'MPa', 1e6], maxPrincipal: ['maximum principal stress', 'MPa', 1e6],
+      minPrincipal: ['minimum principal stress', 'MPa', 1e6], displacementMagnitude: ['displacement magnitude', 'mm', 1e-3],
+      ux: ['Ux', 'mm', 1e-3], uy: ['Uy', 'mm', 1e-3], uz: ['Uz', 'mm', 1e-3]
+    };
+    var definition = fieldDefinitions[this.presentation.field] || fieldDefinitions.vonMises;
+    if (!this.resultSurface || !this.resultModel) { return null; }
+    coordinates = pointerToCanvasCoordinates(event, this.canvas);
+    if (!coordinates) { return null; }
+    this.pointer.set(coordinates.ndcX, coordinates.ndcY);
+    this.camera.updateMatrixWorld(); this.raycaster.setFromCamera(this.pointer, this.camera);
+    intersections = this.raycaster.intersectObject(this.resultSurface, false);
+    if (!intersections.length || !Number.isInteger(intersections[0].faceIndex)) { return null; }
+    triangle = intersections[0].faceIndex;
+    indices = this.resultModel.originalSurface.triangleConnectivity;
+    nodes = [indices[triangle * 3], indices[triangle * 3 + 1], indices[triangle * 3 + 2]];
+    field = this.activeResultField(); displacement = this.resultModel.displacementM;
+    nodes.forEach(function (node) {
+      for (axis = 0; axis < 3; axis += 1) {
+        point[axis] += this.resultModel.originalSurface.nodePositionsM[node * 3 + axis] / 3;
+        vector[axis] += displacement[node * 3 + axis] / 3;
+      }
+    }, this);
+    return { faceId: this.resultModel.originalSurface.faceIds[this.resultModel.originalSurface.triangleFaceIndices[triangle]],
+      elementIndex: this.resultModel.originalSurface.triangleElementIndices[triangle], coordinatesM: point,
+      displacementM: vector, fieldLabel: definition[0], unit: definition[1], unitScale: definition[2],
+      fieldValue: (field[nodes[0]] + field[nodes[1]] + field[nodes[2]]) / 3 };
   };
 
   ViewportController.prototype.observeResize = function () {

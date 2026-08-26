@@ -25,7 +25,7 @@
           </div>
         </div>
       </nav>
-      <button class="fea-primary" type="button" disabled title="Available after model preflight">Solve</button>
+      <button class="fea-primary" id="solve-button" type="button" disabled title="Available after model preflight">Solve</button>
     </header>
     <main class="fea-workspace">
       <aside class="fea-tools" aria-label="Analysis tools">
@@ -116,17 +116,36 @@
           <button id="cancel-mesh-button" type="button" hidden>Cancel</button>
           <p id="mesh-status" role="status" aria-live="polite">Import geometry to generate a mesh.</p>
         </section>
+        <section>
+          <h2>Solve preflight</h2>
+          <button id="preflight-button" type="button" disabled>Run preflight</button>
+          <button id="cancel-solve-button" type="button" hidden>Cancel</button>
+          <p id="solve-status" role="status" aria-live="polite">Generate a mesh and finish the analysis definition.</p>
+          <dl id="preflight-summary" class="fea-compact-diagnostics" hidden></dl>
+        </section>
       </aside>
       <section class="fea-canvas" aria-label="3D viewport">
         <canvas id="viewport" tabindex="0" aria-describedby="viewport-help" aria-label="3D viewport. Left drag rotates, right drag pans, wheel or pinch zooms, and arrow keys rotate."></canvas>
         <div class="fea-viewport-actions" aria-label="Viewport actions">
           <label for="viewport-mode">View</label>
-          <select id="viewport-mode" aria-label="Viewport presentation mode"><option value="model">Model</option><option value="mesh">Mesh</option></select>
+          <select id="viewport-mode" aria-label="Viewport presentation mode"><option value="model">Model</option><option value="mesh">Mesh</option><option value="stress">Stress</option><option value="deformation">Deformation</option></select>
           <label for="display-style">Display style</label>
           <select id="display-style" aria-label="Viewport display style"><option value="lines">Shaded with edges</option><option value="wireframe">Wireframe</option></select>
+          <label for="result-field">Field</label>
+          <select id="result-field" aria-label="Displayed result field" disabled>
+            <option value="vonMises">von Mises stress</option><option value="maxPrincipal">Maximum principal stress</option>
+            <option value="minPrincipal">Minimum principal stress</option><option value="displacementMagnitude">Displacement magnitude</option>
+            <option value="ux">Ux</option><option value="uy">Uy</option><option value="uz">Uz</option>
+          </select>
+          <label for="deformation-mode">Shape</label>
+          <select id="deformation-mode" aria-label="Deformation scale mode" disabled><option value="undeformed">Undeformed</option><option value="true-scale">True scale</option><option value="auto">Auto</option><option value="user">User scale</option></select>
+          <input id="deformation-scale" type="number" min="0" step="any" value="1" aria-label="User deformation scale" hidden>
+          <label class="fea-overlay-check" for="mesh-overlay"><input id="mesh-overlay" type="checkbox" disabled> Mesh overlay</label>
           <button id="fit-view-button" type="button">Fit model</button>
           <button id="reset-view-button" type="button">Reset view</button>
         </div>
+        <div id="result-legend" class="fea-result-legend" hidden><strong id="legend-title"></strong><div class="fea-color-ramp"></div><div><span id="legend-min"></span><span id="legend-max"></span></div><small id="legend-status"></small></div>
+        <output id="probe-output" class="fea-probe" hidden></output>
         <p class="fea-viewport-help" id="viewport-help">Left drag rotates · Right drag pans · Wheel or pinch zooms · Arrow keys rotate</p>
       </section>
       <aside class="fea-results" aria-label="Analysis output">
@@ -135,7 +154,9 @@
           <button role="tab" aria-selected="false">Convergence</button>
           <button role="tab" aria-selected="false">Diagnostics</button>
         </div>
-        <p>No analysis results.</p>
+        <p id="results-empty">No analysis results.</p>
+        <section id="results-summary" hidden><h2>Results</h2><dl class="fea-output-list" id="results-values"></dl></section>
+        <section id="diagnostics-summary" hidden><h2>Diagnostics</h2><dl class="fea-output-list" id="diagnostics-values"></dl></section>
         <dl class="fea-diagnostics"><dt>Launch mode</dt><dd id="launch-mode">Detecting…</dd><dt>Worker</dt><dd id="worker-status">Pending</dd><dt>WebAssembly</dt><dd id="wasm-status">Pending</dd></dl>
       </aside>
     </main>
@@ -185,6 +206,7 @@
   <script src="js/mesh/mesh-display.js"></script>
   <script src="js/analysis/analysis-contracts.js"></script>
   <script src="js/analysis/solver-input.js"></script>
+  <script src="js/analysis/result-model.js"></script>
   <script src="js/analysis/analysis-document.js"></script>
   <script src="js/analysis/app-controller.js"></script>
   <script src="js/render/viewport-navigation.js"></script>
@@ -193,10 +215,12 @@
   <script src="js/ui/analysis-authoring-ui.js"></script>
   <script src="js/ui/ui-controller.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source.js"></script>
+  <script src="generated/local-runtime/fem-runtime-source.js"></script>
   <script src="generated/local-runtime/mesher-worker-source.js"></script>
   <script src="generated/local-runtime/solver-worker-source.js"></script>
   <script src="js/workers/local-worker-bootstrap.js"></script>
   <script src="js/workers/mesher-client.js"></script>
+  <script src="js/workers/solver-client.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

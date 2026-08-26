@@ -48,7 +48,7 @@
     SilentWorker.prototype.terminate = function () { this.terminated = true; };
 
     root.Worker = SilentWorker;
-    root.SpjutsimLocalRuntimeWorkers = { solver: "'use strict';" };
+    root.SpjutsimLocalRuntimeWorkers = { solver: "'use strict';", fem: "'use strict';" };
     return api.exerciseWorker('solver', 10).then(function () {
       throw new Error('silent solver unexpectedly completed');
     }).catch(function (error) {
@@ -84,6 +84,34 @@
       statistics: { nodeCount: 4, elementCount: 1, boundaryTriangleCount: 1, minCharacteristicSizeM: 1, maxCharacteristicSizeM: Math.sqrt(2) },
       quality: { metric: 'gamma', minimum: 0.7, p05: 0.7, median: 0.7, poorElementCount: 0, invertedElementCount: 0, nearZeroJacobianCount: 0, warning: null },
       memoryInputs: { nodeCount: 4, elementCount: 1, degreeOfFreedomCount: 12, connectivityEntries: 4, boundaryConnectivityEntries: 3 }
+    };
+  }
+
+  function validResultModel() {
+    var scalar = new Float32Array([10, 20, 30, 40]);
+    return {
+      schemaVersion: 1, analysisRevision: 0, elementType: 'tet4',
+      originalSurface: {
+        nodePositionsM: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]),
+        triangleConnectivity: new Uint32Array([0, 2, 1]), faceIds: ['opaque-face'],
+        triangleFaceIndices: new Uint32Array([0]), triangleElementIndices: new Uint32Array([0])
+      },
+      displacementM: new Float64Array([0, 0, 0, 0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01]),
+      displacementMagnitudeM: new Float64Array([0, 0.01, 0.01, 0.01]),
+      reactionsN: new Float64Array(12),
+      rawElementFields: { strain: new Float64Array(6), stressPa: new Float64Array(6),
+        vonMisesPa: new Float64Array([40]), maxPrincipalPa: new Float64Array([30]), minPrincipalPa: new Float64Array([-10]) },
+      surfaceFields: { vonMisesPa: scalar, maxPrincipalPa: new Float32Array(scalar), minPrincipalPa: new Float32Array(scalar),
+        displacementMagnitudeM: new Float32Array([0, 0.01, 0.01, 0.01]), uxM: new Float32Array([0, 0.01, 0, 0]),
+        uyM: new Float32Array([0, 0, 0.01, 0]), uzM: new Float32Array([0, 0, 0, 0.01]) },
+      ranges: { vonMises: { minimum: 10, maximum: 40 }, maxPrincipal: { minimum: 10, maximum: 40 },
+        minPrincipal: { minimum: 10, maximum: 40 }, displacementMagnitude: { minimum: 0, maximum: 0.01 },
+        ux: { minimum: 0, maximum: 0.01 }, uy: { minimum: 0, maximum: 0.01 }, uz: { minimum: 0, maximum: 0.01 } },
+      extrema: { maxDisplacement: { valueM: 0.01 }, rawVonMisesMax: { valuePa: 40 },
+        displayedVonMisesMax: { valuePa: 40 }, rawMaxPrincipal: { valuePa: 30 }, rawMinPrincipal: { valuePa: -10 } },
+      equilibrium: { totalReactionN: [-1, 0, 0], totalAppliedForceN: [1, 0, 0], relativeResidual: 0 },
+      solverStatistics: { iterations: 1, finalRelativeResidual: 0, solveDurationMs: 1, wasmMemoryBytes: 16777216 },
+      meshStatistics: { nodeCount: 4, elementCount: 1 }, preflight: {}, warnings: []
     };
   }
 
@@ -199,6 +227,25 @@
       'Mesh wireframe display was not applied');
     assert(!viewport.importedGeometry.getObjectByName('imported-geometry-feature-edges').visible,
       'Mesh view retained Model feature edges');
+    var viewState = viewport.captureViewState();
+    var result = validResultModel();
+    viewport.setResultModel(result);
+    viewport.setPresentation({ mode: 'stress', displayStyle: 'lines', field: 'vonMises', meshOverlay: false,
+      deformationMode: 'undeformed', deformationScale: 0, userDeformationScale: 1 });
+    assert(viewport.resultSurface.visible && viewport.resultSurface.geometry.getAttribute('color').array.some(function (value) { return value > 0; }),
+      'Stress view did not prepare the contour surface');
+    viewport.setPresentation({ mode: 'deformation', displayStyle: 'lines', field: 'displacementMagnitude', meshOverlay: true,
+      deformationMode: 'user', deformationScale: 10, userDeformationScale: 10 });
+    assert(Math.abs(viewport.resultSurface.geometry.getAttribute('position').array[3] - 1.1) < 1e-6,
+      'user deformation scale was not applied');
+    assert(viewport.resultDisplay.userData.lines.visible, 'compatible result view hid the requested mesh overlay');
+    assert(JSON.stringify(viewport.captureViewState()) === JSON.stringify(viewState), 'result mode switches changed the camera');
+    var resultGeometry = viewport.resultSurface.geometry;
+    var disposedResultGeometry = false;
+    var disposeResultGeometry = resultGeometry.dispose;
+    resultGeometry.dispose = function () { disposedResultGeometry = true; disposeResultGeometry.call(resultGeometry); };
+    viewport.setResultModel(null);
+    assert(disposedResultGeometry && viewport.resultSurface === null, 'result GPU buffers were not disposed on invalidation');
     viewport.dispose();
   }
 

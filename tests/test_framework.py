@@ -339,5 +339,29 @@ class FrameworkTests(unittest.TestCase):
         ):
             self.assertTrue((ROOT / 'web/wasm/gmsh/licenses' / filename).is_file())
 
+    def test_wasm_solver_and_result_vertical_slice_exists(self):
+        build = (ROOT / 'tools/build-wasm.sh').read_text()
+        worker = (ROOT / 'workers/solver-worker.js').read_text()
+        client = (ROOT / 'web/js/workers/solver-client.js').read_text()
+        result_model = (ROOT / 'web/js/analysis/result-model.js').read_text()
+        viewport = (ROOT / 'web/js/render/viewport-controller.js').read_text()
+        coverage = (ROOT / 'tests/browser/wasm-solve-result-tests.js').read_text()
+        self.assertIn('-sSINGLE_FILE=1', build)
+        self.assertIn('-sENVIRONMENT=worker', build)
+        self.assertNotIn('-pthread', build)
+        self.assertIn('WASM_HEAP_CAP_BYTES = 3758096384', worker)
+        self.assertIn('preflight-result', worker)
+        self.assertIn('solve-result', worker)
+        self.assertIn('cloneSolverTransferInput', client)
+        self.assertIn('validateResultModel', result_model)
+        self.assertIn('setResultModel', viewport)
+        self.assertIn('pickResultAtPointer', viewport)
+        self.assertIn('Stress/von Mises was not activated after solve', coverage)
+        cube_coverage = (ROOT / 'tests/browser/cube-wasm-vertical-slice-tests.js').read_text()
+        self.assertIn('cube axial displacement missed the analytical target', cube_coverage)
+        self.assertIn("['model', 'mesh', 'stress', 'deformation']", cube_coverage)
+        self.assertTrue((ROOT / 'web/wasm/fem/fem.js').is_file())
+        self.assertTrue((ROOT / 'web/generated/local-runtime/fem-runtime-source.js').is_file())
+
 if __name__ == '__main__':
     unittest.main()

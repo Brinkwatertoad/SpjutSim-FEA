@@ -547,7 +547,7 @@ function generateMesh(gmsh, message) {
     return {
       elementType: 'tet4', nodePositionsM: nodes.positions, elementConnectivity: new Uint32Array(tetrahedra.connectivity),
       boundaryFaces: { triangleConnectivity: boundary.triangleConnectivity, faceRanges: boundary.faceRanges }, geometryFaceMap: boundary.geometryFaceMap,
-      statistics: { nodeCount: nodes.positions.length / 3, elementCount: tetrahedra.connectivity.length / 4, boundaryTriangleCount: boundary.triangleConnectivity.length / 3, minCharacteristicSizeM: summary.minCharacteristicSizeM, maxCharacteristicSizeM: summary.maxCharacteristicSizeM },
+      statistics: { nodeCount: nodes.positions.length / 3, elementCount: tetrahedra.connectivity.length / 4, boundaryTriangleCount: boundary.triangleConnectivity.length / 3, minCharacteristicSizeM: summary.minCharacteristicSizeM, maxCharacteristicSizeM: summary.maxCharacteristicSizeM, boundingBoxDiagonalM: diagonalM },
       quality: summary.quality,
       memoryInputs: { nodeCount: nodes.positions.length / 3, elementCount: tetrahedra.connectivity.length / 4, degreeOfFreedomCount: nodes.positions.length, connectivityEntries: tetrahedra.connectivity.length, boundaryConnectivityEntries: boundary.triangleConnectivity.length }
     };

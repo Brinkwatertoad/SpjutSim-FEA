@@ -8,8 +8,11 @@
   var wasmBytes = new Uint8Array([0,97,115,109,1,0,0,0]);
   var activeImport = null;
   var activeMesh = null;
+  var activeSolver = null;
+  var activeSolverRevision = null;
   var displayedGeometry = null;
   var displayedMesh = null;
+  var displayedResults = null;
 
   function importFailure(code, userMessage, developerMessage) {
     var error = new Error(userMessage);
@@ -28,6 +31,8 @@
     var geometryId;
     if (activeImport) { activeImport.cancel(); }
     if (activeMesh) { activeMesh.cancel(); }
+    disposeSolver();
+    app.discardSolvePreflight();
     if (!api.isStepFilename(file.name)) {
       app.beginGeometryImport(file.name);
       app.failGeometryImport(importFailure('INVALID_STEP_EXTENSION', 'Choose a file with a .step or .stp extension.'));
@@ -60,6 +65,8 @@
     var client;
     if (!app.document.geometry || !app.stepSource) { return; }
     if (activeMesh) { activeMesh.cancel(); }
+    disposeSolver();
+    app.discardSolvePreflight();
     app.beginMeshGeneration();
     client = new api.MesherClient({ onProgress: function (progress) { app.reportMeshProgress(progress); } });
     activeMesh = client;
@@ -75,9 +82,59 @@
     });
   }
 
+  function disposeSolver() {
+    if (activeSolver) { activeSolver.dispose(); }
+    activeSolver = null;
+    activeSolverRevision = null;
+  }
+
+  function prepareSolve() {
+    var input;
+    var revision;
+    disposeSolver();
+    try {
+      input = api.prepareSolverInput(app.document);
+      revision = app.beginSolvePreflight();
+    } catch (error) {
+      revision = app.document.analysisRevision;
+      app.failSolvePreflight(revision, error);
+      return;
+    }
+    if (activeMesh) { activeMesh.cancel(); activeMesh = null; }
+    activeSolver = new api.SolverClient({ onProgress: function (progress) { app.reportSolveProgress(progress); } });
+    activeSolverRevision = revision;
+    activeSolver.preflight(input, revision, root.navigator && root.navigator.deviceMemory).then(function (result) {
+      if (activeSolverRevision === revision && !app.completeSolvePreflight(revision, result)) { disposeSolver(); }
+    }).catch(function (error) {
+      if (activeSolverRevision === revision) { app.failSolvePreflight(revision, error); disposeSolver(); }
+    });
+  }
+
+  function solve() {
+    var preflight = app.document.solvePreflight;
+    var confirmed = true;
+    var revision;
+    if (!activeSolver || preflight.status !== 'ready') { return; }
+    if (preflight.result.requiresEightGiBConfirmation) {
+      confirmed = root.confirm('This solve is estimated at or above 8 GiB. Browser, OS, or WebAssembly limits may terminate it even when the device has more memory. Continue?');
+    }
+    if (!confirmed) { return; }
+    try { revision = app.beginSolve(); } catch (error) { return; }
+    activeSolver.solve(revision, app.document.solveSettings, confirmed).then(function (result) {
+      if (activeSolverRevision === revision) { app.completeSolve(revision, result); disposeSolver(); }
+    }).catch(function (error) {
+      if (activeSolverRevision === revision) { app.failSolve(revision, error); disposeSolver(); }
+    });
+  }
+
+  function cancelSolve() {
+    disposeSolver();
+    app.cancelSolve();
+  }
+
   function setText(id, value) { document.getElementById(id).textContent = value; }
   setText('launch-mode', location.protocol === 'file:' ? 'Direct local file' : (root.crossOriginIsolated ? 'HTTP, isolated' : 'HTTP, portable'));
-  root.addEventListener('pagehide', function () { if (activeMesh) { activeMesh.cancel(); } viewport.dispose(); }, { once: true });
+  root.addEventListener('pagehide', function () { if (activeMesh) { activeMesh.cancel(); } disposeSolver(); viewport.dispose(); }, { once: true });
   viewport.setFacePickHandler(function (faceId, additive) {
     if (additive) {
       app.toggleSelectedFace(faceId);
@@ -86,6 +143,7 @@
     }
   });
   app.subscribe(function (documentState) {
+    if (activeSolver && activeSolverRevision !== documentState.analysisRevision) { disposeSolver(); }
     if (documentState.geometry !== displayedGeometry) {
       displayedGeometry = documentState.geometry;
       if (displayedGeometry) {
@@ -98,12 +156,18 @@
       displayedMesh = documentState.mesh;
       viewport.setMeshDisplay(displayedMesh);
     }
+    if (documentState.results !== displayedResults) {
+      displayedResults = documentState.results;
+      viewport.setResultModel(displayedResults);
+    }
     viewport.setPresentation(documentState.viewportPresentation || { mode: 'model', displayStyle: 'lines' });
     viewport.setSelectedFaceIds(documentState.selectedFaceIds || []);
     viewport.setAnalysisOverlay(documentState);
   });
   ui.setImportHandler(importStepFile);
   ui.setMeshHandlers(generateMesh, function () { if (activeMesh) { activeMesh.cancel(); } });
+  ui.setSolveHandlers(prepareSolve, solve, cancelSolve);
+  viewport.setProbeHandler(function (probe) { ui.renderProbe(probe); });
   ui.start();
 
   var repeatedMesherCheck = api.exerciseMesherRuntime().then(function (firstResult) {
@@ -116,7 +180,7 @@
   ]).then(function (checks) {
     var mesher = checks[0];
     setText('worker-status', 'Gmsh ' + mesher.diagnostics.gmshVersion + '; box ' + mesher.smoke.volume + ' m³ / ' + mesher.smoke.surfaceCount + ' faces');
-    setText('wasm-status', 'Embedded module ready');
+    setText('wasm-status', 'FEM API ' + checks[1].result.apiVersion + '; ' + Math.round(checks[1].result.wasmMemoryBytes / 1048576) + ' MiB initial memory');
     setText('app-status', 'Local runtime ready');
   }).catch(function (error) {
     setText('app-status', 'Compatibility check failed');

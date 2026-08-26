@@ -51,10 +51,24 @@ the material/load contract, controller invalidation, boundary projection,
 surface-integration, and six-face glyph-orientation checks. It should report
 `Passed` without a server.
 
+Open `tests/browser/wasm-solve-result-tests.html` directly in Chromium to run
+the embedded FEM worker preflight/solve, transferable result-contract, progress,
+equilibrium, staleness, and default-result-view checks. Open
+`tests/browser/cube-wasm-vertical-slice-tests.html` with local-file access
+enabled (or from the optional HTTP server) for the full STEP cube import,
+face-authored support/load, mesh, analytical axial solve, and four-view check.
+
 After changing either file in `workers/`, regenerate the checked-in local-file worker wrappers:
 
 ```sh
 python3 tools/build-local-runtime.py
+```
+
+Rebuild the checked-in single-file FEM WebAssembly runtime and its file-safe
+wrapper after changing the native FEM core or browser bridge:
+
+```sh
+tools/build-wasm.sh
 ```
 
 Rebuilding the pinned Gmsh/OpenCASCADE artifact is an infrequent dependency-update operation. It downloads and compiles the toolchain and third-party sources under ignored `build/` paths:
@@ -67,6 +81,14 @@ No npm, Node runtime, frontend framework, transpiler, or application bundler is 
 
 ## Current boundary
 
-The current foundation provides app state/controller seams, the internalized SpjutSim UI sources, a repository-local Three.js viewport, a pinned serial Gmsh/OpenCASCADE local runtime, and local STEP import for exactly one closed solid. Import normalizes STEP units to meters, retains canonical source bytes for later disposable-worker remeshes, exposes opaque CAD face identities, and renders a grouped surface preview with orbit/zoom face selection. Coarse, normal, fine, and custom settings produce validated Tet4 volume meshes with CAD-face boundary mapping. Users can author an SI-backed isotropic material, fixed or prescribed supports, pressure, integrated total face force, and gravity. The first-party native FEM core now provides validated Tet4 assembly, deterministic scalar CSR, symmetric constraints, Jacobi-PCG diagnostics, reactions/stress recovery, a versioned C ABI, and exact-topology memory preflight. Browser/WASM solve wiring and result views follow in the next plan.
+The current vertical slice provides app/controller-owned analysis state, local
+STEP import and Tet4 meshing in disposable Gmsh workers, SI-backed analysis
+authoring, exact-topology memory preflight, and the first-party FEM core compiled
+as a pinned single-threaded embedded WASM worker runtime. Solves return validated
+transferable result models with raw and smoothed stress fields, reactions,
+equilibrium and solver diagnostics. The viewport supports Model, Mesh, Stress,
+and Deformation presentation (including legends, scale modes, mesh overlay, and
+approximate probes), defaults to von Mises stress after solve, and disposes stale
+result resources after upstream engineering edits.
 
 See `spec.md` for the product specification and `UI_FOUNDATION.md` for the UI-kit provenance pin.

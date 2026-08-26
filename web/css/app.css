@@ -39,10 +39,18 @@ h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing
 .fea-canvas { position: relative; min-width: 0; background: var(--canvas-background, #111318); }
 #viewport { width: 100%; height: 100%; display: block; outline: none; }
 #viewport:focus-visible { outline: 2px solid var(--ui-color-accent, #4387f5); outline-offset: -3px; }
-.fea-viewport-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
+.fea-viewport-actions { position: absolute; top: 12px; right: 12px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; max-width: calc(100% - 24px); }
 .fea-viewport-actions button { background: color-mix(in srgb, var(--ui-color-surface, #202329) 90%, transparent); }
 .fea-viewport-actions label { align-self: center; color: var(--ui-color-canvas-text, #dbeafe); font-size: 12px; }
 .fea-viewport-actions select { max-width: 152px; color: inherit; background: color-mix(in srgb, var(--ui-color-surface, #202329) 90%, transparent); border: 1px solid var(--border, #3a3e46); border-radius: 4px; }
+.fea-viewport-actions input[type="number"] { width: 72px; color: inherit; background: color-mix(in srgb, var(--ui-color-surface, #202329) 90%, transparent); border: 1px solid var(--border, #3a3e46); border-radius: 4px; }
+.fea-viewport-actions .fea-overlay-check { display: flex; gap: 4px; }
+.fea-result-legend, .fea-probe { position: absolute; left: 12px; padding: 9px; border: 1px solid var(--border, #3a3e46); border-radius: 5px; background: color-mix(in srgb, var(--ui-color-surface, #202329) 92%, transparent); font-size: 11px; }
+.fea-result-legend { bottom: 34px; width: 190px; }
+.fea-result-legend > div:not(.fea-color-ramp) { display: flex; justify-content: space-between; }
+.fea-color-ramp { height: 12px; margin: 6px 0 3px; background: linear-gradient(90deg, #1f4ba5, #2db7a3, #f0d43a, #d73027); }
+.fea-result-legend small { display: block; margin-top: 5px; color: var(--secondary-text, #aeb4bf); }
+.fea-probe { bottom: 34px; left: 214px; max-width: 420px; white-space: normal; }
 .fea-viewport-help { position: absolute; right: 12px; bottom: 4px; max-width: calc(100% - 24px); margin: 0; color: var(--ui-color-canvas-text, #dbeafe); font-size: 12px; opacity: 0.82; pointer-events: none; text-align: right; }
 [role="tablist"] { display: flex; gap: 4px; border-bottom: 1px solid var(--border, #3a3e46); padding-bottom: 8px; }
 [role="tab"] { border: 0; border-radius: 5px; padding: 6px 8px; background: transparent; color: inherit; }
@@ -50,6 +58,10 @@ h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing
 .fea-diagnostics { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin-top: 18px; font-size: 12px; }
 .fea-diagnostics dt { color: var(--secondary-text, #aeb4bf); }
 .fea-diagnostics dd { margin: 0; }
+.fea-compact-diagnostics, .fea-output-list { display: grid; grid-template-columns: minmax(88px, auto) 1fr; gap: 5px 10px; margin: 9px 0; font-size: 12px; }
+.fea-compact-diagnostics dt, .fea-output-list dt { color: var(--secondary-text, #aeb4bf); }
+.fea-compact-diagnostics dd, .fea-output-list dd { margin: 0; overflow-wrap: anywhere; }
+.fea-results section { margin-top: 16px; }
 .fea-controls-settings { display: grid; gap: 12px; }
 .fea-controls-settings > p { margin: 0 0 4px; color: var(--ui-color-text-muted, #aeb4bf); font-size: 13px; }
 .fea-controls-settings input[type="number"], .fea-controls-settings select { width: 100%; max-width: 180px; }

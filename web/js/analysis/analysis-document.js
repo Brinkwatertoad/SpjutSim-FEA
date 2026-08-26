@@ -15,8 +15,13 @@
       meshGeneration: { status: 'idle', error: null, progress: null },
       mesh: null,
       meshMetadata: null,
-      viewportPresentation: { mode: 'model', displayStyle: 'lines' },
-      solveSettings: { relativeTolerance: 1e-8 },
+      viewportPresentation: {
+        mode: 'model', displayStyle: 'lines', field: 'vonMises', meshOverlay: false,
+        deformationMode: 'undeformed', deformationScale: 0, userDeformationScale: 1
+      },
+      solveSettings: { relativeTolerance: 1e-8, equilibriumTolerance: 1e-6, maxIterations: 0 },
+      solvePreflight: { status: 'idle', result: null, error: null, progress: null, analysisRevision: null },
+      solveExecution: { status: 'idle', error: null, progress: null, analysisRevision: null },
       results: null,
       convergenceStudy: null,
       analysisRevision: 0,

@@ -17,9 +17,32 @@
     this.meshStatus = document.getElementById('mesh-status');
     this.viewportMode = document.getElementById('viewport-mode');
     this.displayStyle = document.getElementById('display-style');
+    this.resultField = document.getElementById('result-field');
+    this.deformationMode = document.getElementById('deformation-mode');
+    this.deformationScale = document.getElementById('deformation-scale');
+    this.meshOverlay = document.getElementById('mesh-overlay');
+    this.preflightButton = document.getElementById('preflight-button');
+    this.solveButton = document.getElementById('solve-button');
+    this.cancelSolveButton = document.getElementById('cancel-solve-button');
+    this.solveStatus = document.getElementById('solve-status');
+    this.preflightSummary = document.getElementById('preflight-summary');
+    this.resultsEmpty = document.getElementById('results-empty');
+    this.resultsSummary = document.getElementById('results-summary');
+    this.resultsValues = document.getElementById('results-values');
+    this.diagnosticsSummary = document.getElementById('diagnostics-summary');
+    this.diagnosticsValues = document.getElementById('diagnostics-values');
+    this.resultLegend = document.getElementById('result-legend');
+    this.legendTitle = document.getElementById('legend-title');
+    this.legendMin = document.getElementById('legend-min');
+    this.legendMax = document.getElementById('legend-max');
+    this.legendStatus = document.getElementById('legend-status');
+    this.probeOutput = document.getElementById('probe-output');
     this.customMeshSizes = null;
     this.generateMeshHandler = null;
     this.cancelMeshHandler = null;
+    this.preflightHandler = null;
+    this.solveHandler = null;
+    this.cancelSolveHandler = null;
     this.viewport = null;
     this.navigationPreferences = this.loadNavigationPreferences();
     this.applicationMenu = document.getElementById('application-menu');
@@ -154,6 +177,11 @@
     this.generateMeshHandler = generate;
     this.cancelMeshHandler = cancel;
   };
+  UIController.prototype.setSolveHandlers = function (preflight, solve, cancel) {
+    this.preflightHandler = preflight;
+    this.solveHandler = solve;
+    this.cancelSolveHandler = cancel;
+  };
   UIController.prototype.start = function () {
     var self = this;
     this.applySettingsShortcutPresentation();
@@ -188,6 +216,13 @@
     if (this.displayStyle) {
       this.displayStyle.addEventListener('change', function () { self.updateViewportPresentation(); });
     }
+    if (this.resultField) { this.resultField.addEventListener('change', function () { self.updateViewportPresentation(); }); }
+    if (this.deformationMode) { this.deformationMode.addEventListener('change', function () { self.updateViewportPresentation(); }); }
+    if (this.deformationScale) { this.deformationScale.addEventListener('change', function () { self.updateViewportPresentation(); }); }
+    if (this.meshOverlay) { this.meshOverlay.addEventListener('change', function () { self.updateViewportPresentation(); }); }
+    if (this.preflightButton) { this.preflightButton.addEventListener('click', function () { if (self.preflightHandler) { self.preflightHandler(); } }); }
+    if (this.solveButton) { this.solveButton.addEventListener('click', function () { if (self.solveHandler) { self.solveHandler(); } }); }
+    if (this.cancelSolveButton) { this.cancelSolveButton.addEventListener('click', function () { if (self.cancelSolveHandler) { self.cancelSolveHandler(); } }); }
     if (this.fitViewButton) { this.fitViewButton.addEventListener('click', function () { if (self.viewport) { self.viewport.fitCurrentModel(); } }); }
     if (this.resetViewButton) { this.resetViewButton.addEventListener('click', function () { if (self.viewport) { self.viewport.resetView(); } }); }
     if (this.applicationMenu && root.PortableUIShellBehaviors) {
@@ -261,6 +296,8 @@
     this.renderFaceSelection(documentState);
     this.renderMesh(documentState);
     this.renderViewportPresentation(documentState);
+    this.renderSolve(documentState);
+    this.renderResults(documentState);
     if (this.analysisAuthoring) { this.analysisAuthoring.render(documentState); }
   };
   UIController.prototype.updateMeshSettingsFromControls = function () {
@@ -314,10 +351,18 @@
     if (this.cancelMeshButton) { this.cancelMeshButton.hidden = !isGenerating; }
   };
   UIController.prototype.updateViewportPresentation = function () {
+    var current = this.controller.document.viewportPresentation || {};
+    var mode = this.viewportMode ? this.viewportMode.value : 'model';
+    var field = this.resultField ? this.resultField.value : current.field;
+    var deformationMode = this.deformationMode ? this.deformationMode.value : current.deformationMode;
+    if (mode === 'stress' && ['vonMises', 'maxPrincipal', 'minPrincipal'].indexOf(field) < 0) { field = 'vonMises'; }
+    if (mode === 'deformation' && ['displacementMagnitude', 'ux', 'uy', 'uz'].indexOf(field) < 0) { field = 'displacementMagnitude'; }
     try {
       this.controller.replaceViewportPresentation({
-        mode: this.viewportMode ? this.viewportMode.value : 'model',
-        displayStyle: this.displayStyle ? this.displayStyle.value : 'lines'
+        mode: mode, displayStyle: this.displayStyle ? this.displayStyle.value : 'lines', field: field,
+        meshOverlay: Boolean(this.meshOverlay && this.meshOverlay.checked), deformationMode: deformationMode,
+        deformationScale: this.resolveDeformationScale(deformationMode),
+        userDeformationScale: Math.max(0, Number(this.deformationScale && this.deformationScale.value) || 0)
       });
     } catch (error) {
       this.renderViewportPresentation(this.controller.document);
@@ -326,14 +371,161 @@
   UIController.prototype.renderViewportPresentation = function (documentState) {
     var presentation = documentState.viewportPresentation || { mode: 'model', displayStyle: 'lines' };
     var meshAvailable = Boolean(documentState.mesh);
+    var resultsAvailable = Boolean(documentState.results);
     if (this.viewportMode) {
+      var meshOption = this.viewportMode.querySelector('option[value="mesh"]');
+      var stressOption = this.viewportMode.querySelector('option[value="stress"]');
+      var deformationOption = this.viewportMode.querySelector('option[value="deformation"]');
       this.viewportMode.value = presentation.mode;
-      this.viewportMode.querySelector('option[value="mesh"]').disabled = !meshAvailable;
+      if (meshOption) { meshOption.disabled = !meshAvailable; }
+      if (stressOption) { stressOption.disabled = !resultsAvailable; }
+      if (deformationOption) { deformationOption.disabled = !resultsAvailable; }
     }
     if (this.displayStyle) {
       this.displayStyle.value = presentation.displayStyle;
       this.displayStyle.disabled = false;
     }
+    if (this.resultField) {
+      this.resultField.value = presentation.field || (presentation.mode === 'deformation' ? 'displacementMagnitude' : 'vonMises');
+      this.resultField.disabled = !resultsAvailable || (presentation.mode !== 'stress' && presentation.mode !== 'deformation');
+      Array.from(this.resultField.options).forEach(function (option) {
+        var stress = ['vonMises', 'maxPrincipal', 'minPrincipal'].indexOf(option.value) >= 0;
+        option.hidden = presentation.mode === 'stress' ? !stress : (presentation.mode === 'deformation' ? stress : false);
+      });
+    }
+    if (this.deformationMode) { this.deformationMode.value = presentation.deformationMode || 'undeformed'; this.deformationMode.disabled = !resultsAvailable; }
+    if (this.deformationScale) {
+      this.deformationScale.value = Number.isFinite(presentation.userDeformationScale) ? presentation.userDeformationScale : 1;
+      this.deformationScale.hidden = presentation.deformationMode !== 'user';
+    }
+    if (this.meshOverlay) { this.meshOverlay.checked = presentation.meshOverlay === true; this.meshOverlay.disabled = !meshAvailable || !resultsAvailable; }
+    this.renderLegend(documentState);
+  };
+
+  UIController.prototype.resolveDeformationScale = function (mode) {
+    var result = this.controller.document.results;
+    var positions;
+    var min;
+    var max;
+    var index;
+    var diagonal;
+    var maximumDisplacement;
+    if (mode === 'undeformed' || !result) { return 0; }
+    if (mode === 'true-scale') { return 1; }
+    if (mode === 'user') { return Math.max(0, Number(this.deformationScale && this.deformationScale.value) || 0); }
+    positions = result.originalSurface.nodePositionsM;
+    min = [Infinity, Infinity, Infinity]; max = [-Infinity, -Infinity, -Infinity];
+    for (index = 0; index < positions.length; index += 3) {
+      min[0] = Math.min(min[0], positions[index]); min[1] = Math.min(min[1], positions[index + 1]); min[2] = Math.min(min[2], positions[index + 2]);
+      max[0] = Math.max(max[0], positions[index]); max[1] = Math.max(max[1], positions[index + 1]); max[2] = Math.max(max[2], positions[index + 2]);
+    }
+    diagonal = Math.hypot(max[0] - min[0], max[1] - min[1], max[2] - min[2]);
+    maximumDisplacement = result.extrema.maxDisplacement.valueM;
+    return maximumDisplacement > 0 ? diagonal * 0.1 / maximumDisplacement : 1;
+  };
+
+  function formatNumber(value, unit) {
+    if (!Number.isFinite(value)) { return '—'; }
+    return value.toLocaleString(undefined, { maximumSignificantDigits: 5 }) + (unit ? ' ' + unit : '');
+  }
+  function formatBytes(bytes) { return formatNumber(bytes / 1073741824, 'GiB'); }
+  function replaceDefinitionList(element, entries) {
+    if (!element) { return; }
+    element.textContent = '';
+    entries.forEach(function (entry) {
+      var term = document.createElement('dt');
+      var value = document.createElement('dd');
+      term.textContent = entry[0]; value.textContent = entry[1]; element.append(term, value);
+    });
+  }
+
+  UIController.prototype.renderSolve = function (documentState) {
+    var preflight = documentState.solvePreflight || { status: 'idle' };
+    var execution = documentState.solveExecution || { status: 'idle' };
+    var running = preflight.status === 'running' || execution.status === 'running';
+    var message = 'Generate a mesh and finish the analysis definition.';
+    if (preflight.status === 'running') { message = (preflight.progress && preflight.progress.userMessage) || 'Running solve preflight…'; }
+    else if (execution.status === 'running') { message = (execution.progress && execution.progress.userMessage) || 'Solving…'; }
+    else if (preflight.status === 'failed') { message = (preflight.error && preflight.error.userMessage) || preflight.error && preflight.error.message || 'Preflight failed.'; }
+    else if (execution.status === 'failed') { message = (execution.error && execution.error.userMessage) || 'Solve failed.'; }
+    else if (execution.status === 'cancelled' || preflight.status === 'cancelled') { message = 'Solve cancelled; partial results were discarded.'; }
+    else if (preflight.status === 'ready') {
+      message = preflight.result.exceedsWasmCap ? 'Estimate exceeds the WebAssembly cap; generate a coarser mesh.' : 'Preflight complete. Review the estimate, then solve.';
+    } else if (documentState.mesh) { message = 'Run preflight to validate constraints and estimate solve memory.'; }
+    if (documentState.resultInvalidation && documentState.resultInvalidation.stale) { message += ' Previous results are stale.'; }
+    if (this.solveStatus) { this.solveStatus.textContent = message; this.solveStatus.classList.toggle('fea-error', preflight.status === 'failed' || execution.status === 'failed'); }
+    if (this.preflightButton) { this.preflightButton.disabled = !documentState.mesh || running; }
+    if (this.solveButton) { this.solveButton.disabled = preflight.status !== 'ready' || preflight.result.exceedsWasmCap || running; }
+    if (this.cancelSolveButton) { this.cancelSolveButton.hidden = !running; }
+    if (this.preflightSummary) {
+      this.preflightSummary.hidden = preflight.status !== 'ready';
+      if (preflight.status === 'ready') {
+        replaceDefinitionList(this.preflightSummary, [
+          ['Mesh', preflight.result.nodeCount + ' nodes / ' + preflight.result.elementCount + ' Tet4'],
+          ['System', preflight.result.degreeOfFreedomCount + ' DOF / ' + preflight.result.exactNnz + ' nnz'],
+          ['Memory', formatBytes(preflight.result.estimatedPeakBytes) + ' (' + preflight.result.classification + ')'],
+          ['WASM cap', formatBytes(preflight.result.wasmHeapCapBytes)],
+          ['Device hint', preflight.result.deviceMemoryGiBHint ? formatNumber(preflight.result.deviceMemoryGiBHint, 'GiB') : 'Unavailable'],
+          ['Analysis', preflight.result.constraintCount + ' constrained DOF / ' + preflight.result.loadCount + ' loads'],
+          ['Quality', formatNumber(preflight.result.quality.minimum, 'γ min')]
+        ]);
+      }
+    }
+  };
+
+  UIController.prototype.renderResults = function (documentState) {
+    var result = documentState.results;
+    if (this.resultsEmpty) { this.resultsEmpty.hidden = Boolean(result); }
+    if (this.resultsSummary) { this.resultsSummary.hidden = !result; }
+    if (this.diagnosticsSummary) { this.diagnosticsSummary.hidden = !result; }
+    if (!result) { return; }
+    replaceDefinitionList(this.resultsValues, [
+      ['Max displacement', formatNumber(result.extrema.maxDisplacement.valueM * 1000, 'mm')],
+      ['Raw von Mises max', formatNumber(result.extrema.rawVonMisesMax.valuePa / 1e6, 'MPa')],
+      ['Displayed VM max', formatNumber(result.extrema.displayedVonMisesMax.valuePa / 1e6, 'MPa')],
+      ['Max principal', formatNumber(result.extrema.rawMaxPrincipal.valuePa / 1e6, 'MPa')],
+      ['Min principal', formatNumber(result.extrema.rawMinPrincipal.valuePa / 1e6, 'MPa')],
+      ['Applied force', result.equilibrium.totalAppliedForceN.map(function (v) { return formatNumber(v, 'N'); }).join(', ')],
+      ['Reaction', result.equilibrium.totalReactionN.map(function (v) { return formatNumber(v, 'N'); }).join(', ')]
+    ]);
+    replaceDefinitionList(this.diagnosticsValues, [
+      ['Iterations', String(result.solverStatistics.iterations)],
+      ['Solver residual', formatNumber(result.solverStatistics.finalRelativeResidual)],
+      ['Force balance', formatNumber(result.equilibrium.relativeResidual)],
+      ['Solve time', formatNumber(result.solverStatistics.solveDurationMs, 'ms')],
+      ['Mesh', result.meshStatistics.nodeCount + ' nodes / ' + result.meshStatistics.elementCount + ' elements'],
+      ['WASM memory', formatBytes(result.solverStatistics.wasmMemoryBytes)],
+      ['Warnings', result.warnings.length ? result.warnings.join(' ') : 'None']
+    ]);
+  };
+
+  UIController.prototype.renderLegend = function (documentState) {
+    var result = documentState.results;
+    var presentation = documentState.viewportPresentation || {};
+    var definitions = {
+      vonMises: ['von Mises stress', 'MPa', 1e6], maxPrincipal: ['maximum principal stress', 'MPa', 1e6],
+      minPrincipal: ['minimum principal stress', 'MPa', 1e6], displacementMagnitude: ['displacement magnitude', 'mm', 1e-3],
+      ux: ['Ux', 'mm', 1e-3], uy: ['Uy', 'mm', 1e-3], uz: ['Uz', 'mm', 1e-3]
+    };
+    var definition = definitions[presentation.field];
+    var fieldRange = result && result.ranges[presentation.field];
+    var show = Boolean(result && definition && (presentation.mode === 'stress' || presentation.mode === 'deformation'));
+    if (!this.resultLegend) { return; }
+    this.resultLegend.hidden = !show;
+    if (!show) { return; }
+    this.legendTitle.textContent = definition[0] + ' (' + definition[1] + ')';
+    this.legendMin.textContent = formatNumber(fieldRange.minimum / definition[2]);
+    this.legendMax.textContent = formatNumber(fieldRange.maximum / definition[2]);
+    this.legendStatus.textContent = 'Unclipped range · deformation ×' + formatNumber(presentation.deformationScale || 0);
+  };
+
+  UIController.prototype.renderProbe = function (probe) {
+    if (!this.probeOutput) { return; }
+    this.probeOutput.hidden = !probe;
+    if (!probe) { return; }
+    this.probeOutput.textContent = 'FaceId ' + probe.faceId + ' · xyz ' + probe.coordinatesM.map(function (v) { return formatNumber(v, 'm'); }).join(', ') +
+      ' · u ' + probe.displacementM.map(function (v) { return formatNumber(v * 1000, 'mm'); }).join(', ') +
+      ' · ' + probe.fieldLabel + ' ' + formatNumber(probe.fieldValue / probe.unitScale, probe.unit);
   };
   UIController.prototype.renderFaceSelection = function (documentState) {
     var selectedFaceIds = Array.isArray(documentState.selectedFaceIds) ? documentState.selectedFaceIds : [];
