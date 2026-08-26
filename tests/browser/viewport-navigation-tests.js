@@ -83,10 +83,13 @@
 
   function testSettingsFocus() {
     var opener = document.getElementById('opener');
-    assert(ui.isSettingsShortcut({ metaKey: true, ctrlKey: false, altKey: false, shiftKey: false, key: ',', code: 'Comma' }), 'Command+, settings shortcut was not recognized');
+    var usesMeta = ui.settingsShortcut.modifier === 'meta';
+    assert(ui.resolveSettingsShortcut('MacIntel', 'Version/18.0 Safari/605.1.15').label === 'Ctrl+,', 'Safari did not receive its Control+, fallback');
+    assert(ui.resolveSettingsShortcut('MacIntel', 'Mozilla/5.0 Chrome/145.0.0.0 Safari/537.36').label === '⌘,', 'macOS did not receive its Command-glyph shortcut label');
+    assert(ui.isSettingsShortcut({ metaKey: usesMeta, ctrlKey: !usesMeta, altKey: false, shiftKey: false, key: ',', code: 'Comma' }), 'platform settings shortcut was not recognized');
     opener.focus();
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: ',', code: 'Comma', ctrlKey: true, bubbles: true, cancelable: true }));
-    assert(document.getElementById('settings-backdrop').hidden === false, 'Control+, settings dialog did not open');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: ',', code: 'Comma', ctrlKey: !usesMeta, metaKey: usesMeta, bubbles: true, cancelable: true }));
+    assert(document.getElementById('settings-backdrop').hidden === false, 'settings dialog did not open from its platform shortcut');
     assert(document.activeElement === document.getElementById('navigation-rotate-button'), 'settings did not move focus to controls');
     ui.trapSettingsFocus({ key: 'Escape', preventDefault: function () {} });
     assert(document.getElementById('settings-backdrop').hidden === true, 'Escape did not close settings');

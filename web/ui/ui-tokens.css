@@ -290,10 +290,20 @@ button:disabled:hover {
 }
 
 .ui-menu-list [role="menuitem"] {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-4);
   width: 100%;
   border-color: transparent;
   background: transparent;
   text-align: left;
+}
+
+.ui-menu-shortcut {
+  margin-left: auto;
+  color: var(--ui-color-text-muted);
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .ui-menu-list [role="menuitem"]:hover,

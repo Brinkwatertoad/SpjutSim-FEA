@@ -38,6 +38,8 @@
     this.navigationArrowStep = document.getElementById('navigation-arrow-step');
     this.settingsHub = null;
     this.settingsOpen = false;
+    this.settingsShortcut = this.resolveSettingsShortcut();
+    this.settingsMenuShortcut = document.querySelector('[data-ui-menu-action="settings"] .ui-menu-shortcut');
   }
 
   UIController.prototype.loadNavigationPreferences = function () {
@@ -120,8 +122,26 @@
     else if (!event.shiftKey && index === focusable.length - 1) { event.preventDefault(); focusable[0].focus(); }
   };
 
+  UIController.prototype.resolveSettingsShortcut = function (platform, userAgent) {
+    var resolvedPlatform = String(platform == null ? (root.navigator && root.navigator.platform) : platform || '');
+    var resolvedUserAgent = String(userAgent == null ? (root.navigator && root.navigator.userAgent) : userAgent || '');
+    var isMac = /Mac|iPhone|iPad|iPod/.test(resolvedPlatform);
+    var isSafari = /Safari\//.test(resolvedUserAgent) && !/(Chrome|Chromium|CriOS|FxiOS|Edg|OPR)\//.test(resolvedUserAgent);
+    if (isMac && !isSafari) { return { modifier: 'meta', label: '⌘,' }; }
+    return { modifier: 'control', label: 'Ctrl+,' };
+  };
+
+  UIController.prototype.applySettingsShortcutPresentation = function () {
+    if (!this.settingsMenuShortcut) { return; }
+    this.settingsMenuShortcut.textContent = this.settingsShortcut.label;
+    this.settingsMenuShortcut.parentElement.setAttribute(
+      'aria-keyshortcuts', this.settingsShortcut.modifier === 'meta' ? 'Meta+,' : 'Control+,'
+    );
+  };
+
   UIController.prototype.isSettingsShortcut = function (event) {
-    return Boolean(event && (event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey &&
+    var usesModifier = this.settingsShortcut.modifier === 'meta' ? event && event.metaKey : event && event.ctrlKey;
+    return Boolean(event && usesModifier && !event.altKey && !event.shiftKey &&
       (event.key === ',' || event.code === 'Comma'));
   };
   UIController.prototype.setImportHandler = function (handler) {
@@ -133,6 +153,7 @@
   };
   UIController.prototype.start = function () {
     var self = this;
+    this.applySettingsShortcutPresentation();
     if (this.importButton && this.importInput) {
       this.importButton.addEventListener('click', function () { self.importInput.click(); });
       this.importInput.addEventListener('change', function () {
