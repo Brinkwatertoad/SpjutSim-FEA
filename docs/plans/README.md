@@ -1,5 +1,9 @@
 # Near-term development plans
 
+Before resuming the numbered roadmap, complete the
+[priority authoring remediation](00-priority-authoring-remediation.md) for
+selection clearing, support/load entry, and the material catalog.
+
 Execute these plans in order. Tasks 01–05 establish the portable geometry and
 meshing path. Tasks 06–10 complete the first trusted Tet4 browser vertical
 slice, including viewport interaction and initial result visualization.

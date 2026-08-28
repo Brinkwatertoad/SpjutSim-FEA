@@ -19,9 +19,13 @@ button { font: inherit; }
 .fea-analysis-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px; }
 .fea-analysis-list li button:first-child { overflow: hidden; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
 .fea-analysis-list li button:last-child { padding-inline: 6px; font-size: 11px; }
+.fea-analysis-list .fea-empty-list { color: var(--ui-color-text-muted, #aeb4bf); font-size: 12px; }
 .fea-gravity-form { margin-top: 13px; padding-top: 10px; border-top: 1px solid var(--ui-color-border-soft, #374151); }
 .fea-error { color: var(--ui-color-danger, #da1e28) !important; }
 .fea-warning { color: var(--ui-color-load, #fbbf24) !important; }
+.fea-material-details { margin-top: 8px; color: var(--ui-color-text-muted, #aeb4bf); font-size: 11px; }
+.fea-material-details p { font-size: 11px; }
+.fea-material-details a { color: var(--ui-color-accent, #4387f5); }
 .fea-app { display: grid; grid-template-rows: 42px minmax(0, 1fr); }
 .fea-topbar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; padding: 0 12px; border-bottom: 1px solid var(--border, #3a3e46); background: var(--surface, #202329); }
 .fea-topbar nav { display: flex; gap: 4px; }

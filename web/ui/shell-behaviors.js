@@ -200,6 +200,7 @@
     };
     const handleDocumentKeydown = (event) => {
       if (String(event.key ?? "").toLowerCase() !== "escape") return;
+      if (!groups.some((group) => group.dataset.open === "true")) return;
       closeAll({ restoreFocus: true });
       event.preventDefault?.();
     };

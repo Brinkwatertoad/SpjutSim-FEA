@@ -170,7 +170,7 @@
         return;
       }
       faceId = self.pickFaceAtPointer(event);
-      if (faceId && self.facePickHandler) {
+      if (self.facePickHandler) {
         self.facePickHandler(faceId, Boolean(event.shiftKey));
       }
     };

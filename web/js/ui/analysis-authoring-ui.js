@@ -4,9 +4,14 @@
   function byId(id) { return document.getElementById(id); }
 
   function AnalysisAuthoringUI(controller) {
+    var storage = null;
     this.controller = controller;
     this.materialForm = byId('material-form');
     this.materialStatus = byId('material-status');
+    this.materialCatalogSelect = byId('material-catalog-select');
+    this.materialCatalogDetails = byId('material-catalog-details');
+    this.replaceSavedMaterialButton = byId('replace-saved-material-button');
+    this.removeSavedMaterialButton = byId('remove-saved-material-button');
     this.removeMaterialButton = byId('remove-material-button');
     this.supportForm = byId('support-form');
     this.supportList = byId('support-list');
@@ -25,6 +30,10 @@
     this.gravityStatus = byId('gravity-status');
     this.editingSupportId = null;
     this.editingLoadId = null;
+    this.lastSupportType = this.supportType ? this.supportType.value : 'fixed';
+    this.lastLoadType = this.loadType ? this.loadType.value : 'pressure';
+    try { storage = root.localStorage; } catch (error) { storage = null; }
+    this.materialCatalog = root.SpjutsimFEA.MaterialCatalog ? new root.SpjutsimFEA.MaterialCatalog(storage) : null;
     this.renderedMaterial = undefined;
     this.materialFeedback = null;
     this.supportFeedback = null;
@@ -53,25 +62,131 @@
     element.classList.toggle('fea-warning', Boolean(feedback && feedback.warning));
   }
 
+  var MATERIAL_FIELD_LABELS = {
+    youngsModulusPa: "Young's modulus", poissonsRatio: "Poisson's ratio", densityKgM3: 'density',
+    tensileYieldPa: 'tensile yield', compressiveYieldPa: 'compressive yield',
+    ultimateTensilePa: 'ultimate tensile', ultimateCompressivePa: 'ultimate compressive'
+  };
+
   AnalysisAuthoringUI.prototype.start = function () {
     var self = this;
     if (!this.materialForm) { return; }
     this.materialForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveMaterial(); });
+    if (this.materialCatalogSelect) {
+      this.materialCatalogSelect.addEventListener('change', function () { self.selectMaterialCatalogEntry(); });
+    }
+    if (this.replaceSavedMaterialButton) {
+      this.replaceSavedMaterialButton.addEventListener('click', function () { self.replaceSavedMaterial(); });
+    }
+    if (this.removeSavedMaterialButton) {
+      this.removeSavedMaterialButton.addEventListener('click', function () { self.removeSavedMaterial(); });
+    }
     this.removeMaterialButton.addEventListener('click', function () {
       try { self.controller.clearMaterial(); self.materialFeedback = null; self.render(self.controller.document); } catch (error) { self.materialFeedback = { error: true, message: error.message }; self.render(self.controller.document); }
     });
     this.supportForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveSupport(); });
-    this.supportType.addEventListener('change', function () { self.renderSupportType(); });
+    this.supportType.addEventListener('change', function () {
+      if (!self.editingSupportId) { self.lastSupportType = self.supportType.value; }
+      self.renderSupportType();
+    });
     this.cancelSupportEdit.addEventListener('click', function () { self.resetSupportForm(); });
     ['ux', 'uy', 'uz'].forEach(function (axis) {
       byId('support-' + axis + '-enabled').addEventListener('change', function () { self.renderSupportComponents(); });
     });
     this.loadForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveLoad(); });
-    this.loadType.addEventListener('change', function () { self.renderLoadType(); });
+    this.loadType.addEventListener('change', function () {
+      if (!self.editingLoadId) { self.lastLoadType = self.loadType.value; }
+      self.renderLoadType();
+    });
     this.cancelLoadEdit.addEventListener('click', function () { self.resetLoadForm(); });
     this.gravityForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveGravity(); });
     this.renderSupportType();
     this.renderLoadType();
+    this.renderMaterialCatalogOptions();
+    if (this.materialCatalog && this.materialCatalog.loadWarning) {
+      this.materialFeedback = { warning: true, message: this.materialCatalog.loadWarning };
+    }
+  };
+
+  AnalysisAuthoringUI.prototype.renderMaterialCatalogOptions = function () {
+    var selected;
+    var self = this;
+    if (!this.materialCatalogSelect || !this.materialCatalog) { return; }
+    selected = this.materialCatalogSelect.value || 'custom';
+    this.materialCatalogSelect.replaceChildren();
+    var custom = document.createElement('option');
+    custom.value = 'custom'; custom.textContent = 'Custom';
+    this.materialCatalogSelect.append(custom);
+    this.materialCatalog.list().forEach(function (entry) {
+      var option = document.createElement('option');
+      option.value = entry.id;
+      option.textContent = entry.material.name + (entry.layer === 'user' ? ' (User)' : '');
+      self.materialCatalogSelect.append(option);
+    });
+    this.materialCatalogSelect.value = Array.from(this.materialCatalogSelect.options).some(function (option) { return option.value === selected; }) ? selected : 'custom';
+    this.renderMaterialCatalogSelection();
+  };
+
+  AnalysisAuthoringUI.prototype.writeMaterialFields = function (material) {
+    byId('material-name').value = material && material.name || '';
+    setOptionalDisplay('material-youngs', 'youngsModulusPa', material && material.youngsModulusPa);
+    byId('material-poisson').value = material ? String(material.poissonsRatio) : '';
+    setOptionalDisplay('material-density', 'densityKgM3', material && material.densityKgM3);
+    setOptionalDisplay('material-tensile-yield', 'strengthPa', material && material.tensileYieldPa);
+    setOptionalDisplay('material-compressive-yield', 'strengthPa', material && material.compressiveYieldPa);
+    setOptionalDisplay('material-ultimate-tensile', 'strengthPa', material && material.ultimateTensilePa);
+    setOptionalDisplay('material-ultimate-compressive', 'strengthPa', material && material.ultimateCompressivePa);
+  };
+
+  AnalysisAuthoringUI.prototype.selectMaterialCatalogEntry = function () {
+    var entry = this.materialCatalog && this.materialCatalog.get(this.materialCatalogSelect.value);
+    if (entry) { this.writeMaterialFields(entry.material); }
+    else { this.writeMaterialFields(this.controller.document.material); }
+    this.materialFeedback = null;
+    this.renderMaterialCatalogSelection();
+    this.renderMaterial(this.controller.document);
+  };
+
+  AnalysisAuthoringUI.prototype.renderMaterialCatalogSelection = function () {
+    var selectedId = this.materialCatalogSelect ? this.materialCatalogSelect.value : 'custom';
+    var entry = selectedId !== 'custom' && this.materialCatalog ? this.materialCatalog.get(selectedId) : null;
+    var factory = entry && entry.layer === 'factory';
+    var submit = this.materialForm && this.materialForm.querySelector('button[type="submit"]');
+    var details = this.materialCatalogDetails;
+    Array.from(this.materialForm ? this.materialForm.querySelectorAll('input') : []).forEach(function (input) { input.readOnly = Boolean(factory); });
+    if (submit) { submit.textContent = factory ? 'Apply material' : (entry ? 'Apply saved material' : 'Save custom material'); }
+    if (this.replaceSavedMaterialButton) { this.replaceSavedMaterialButton.hidden = !entry || entry.layer !== 'user'; }
+    if (this.removeSavedMaterialButton) { this.removeSavedMaterialButton.hidden = !entry || entry.layer !== 'user'; }
+    if (!details) { return; }
+    details.replaceChildren();
+    if (!entry) {
+      var customNote = document.createElement('p');
+      customNote.textContent = 'Custom materials are validated in base SI units and saved only in this browser.';
+      details.append(customNote);
+      return;
+    }
+    if (entry.metadata.notes) {
+      var notes = document.createElement('p'); notes.textContent = entry.metadata.notes; details.append(notes);
+    }
+    if (entry.metadata.warning) {
+      var warning = document.createElement('p'); warning.className = 'fea-warning'; warning.textContent = entry.metadata.warning; details.append(warning);
+    }
+    if (entry.metadata.source) {
+      var userSource = document.createElement('p'); userSource.textContent = 'Source: ' + entry.metadata.source; details.append(userSource);
+    }
+    var sources = [];
+    Object.keys(entry.metadata.fieldProvenance || {}).forEach(function (field) {
+      var source = entry.metadata.fieldProvenance[field];
+      var known = sources.find(function (candidate) { return candidate.source.url === source.url; });
+      if (known) { known.fields.push(field); }
+      else { sources.push({ source: source, fields: [field] }); }
+    });
+    sources.forEach(function (group) {
+      var row = document.createElement('p');
+      var link = document.createElement('a'); link.href = group.source.url; link.textContent = group.source.label; link.target = '_blank'; link.rel = 'noreferrer';
+      row.append('Source for ' + group.fields.map(function (field) { return MATERIAL_FIELD_LABELS[field] || field; }).join(', ') + ': ', link);
+      details.append(row);
+    });
   };
 
   AnalysisAuthoringUI.prototype.readMaterial = function () {
@@ -94,11 +209,54 @@
   };
 
   AnalysisAuthoringUI.prototype.saveMaterial = function () {
+    var selectedId = this.materialCatalogSelect ? this.materialCatalogSelect.value : 'custom';
+    var entry = selectedId !== 'custom' && this.materialCatalog ? this.materialCatalog.get(selectedId) : null;
     try {
-      var validation = this.controller.replaceMaterial(this.readMaterial());
+      var material = entry ? this.materialCatalog.materialSnapshot(selectedId) : this.readMaterial();
+      var validation;
+      var saved;
+      if (!entry && this.materialCatalog) { this.materialCatalog.assertUniqueName(material.name); }
+      validation = this.controller.replaceMaterial(material);
+      if (!entry && this.materialCatalog) {
+        saved = this.materialCatalog.saveUser(validation.value);
+        this.renderMaterialCatalogOptions();
+        this.materialCatalogSelect.value = saved.entry.id;
+        this.renderMaterialCatalogSelection();
+      }
       this.materialFeedback = validation.warnings.length
         ? { warning: true, message: validation.warnings[0].message }
-        : { message: 'Material saved in SI units.' };
+        : (saved && saved.storageWarning ? { warning: true, message: saved.storageWarning } : { message: entry ? 'Material applied as an analysis snapshot.' : 'Custom material saved and applied in SI units.' });
+      this.render(this.controller.document);
+    } catch (error) {
+      this.materialFeedback = { error: true, message: error.message };
+      this.render(this.controller.document);
+    }
+  };
+
+  AnalysisAuthoringUI.prototype.replaceSavedMaterial = function () {
+    try {
+      var id = this.materialCatalogSelect.value;
+      var material = this.readMaterial();
+      this.materialCatalog.assertUniqueName(material.name, id);
+      var validation = this.controller.replaceMaterial(material);
+      var result = this.materialCatalog.replaceUser(id, validation.value);
+      this.materialFeedback = result.storageWarning ? { warning: true, message: result.storageWarning } : { message: 'Saved material explicitly replaced and applied.' };
+      if (validation.warnings.length) { this.materialFeedback = { warning: true, message: validation.warnings[0].message }; }
+      this.renderMaterialCatalogOptions();
+      this.render(this.controller.document);
+    } catch (error) {
+      this.materialFeedback = { error: true, message: error.message };
+      this.render(this.controller.document);
+    }
+  };
+
+  AnalysisAuthoringUI.prototype.removeSavedMaterial = function () {
+    try {
+      var result = this.materialCatalog.removeUser(this.materialCatalogSelect.value);
+      this.materialCatalogSelect.value = 'custom';
+      this.materialFeedback = result.storageWarning ? { warning: true, message: result.storageWarning } : { message: 'Saved material removed. The active analysis snapshot is unchanged.' };
+      this.renderMaterialCatalogOptions();
+      this.writeMaterialFields(this.controller.document.material);
       this.render(this.controller.document);
     } catch (error) {
       this.materialFeedback = { error: true, message: error.message };
@@ -110,19 +268,13 @@
     var material = documentState.material;
     if (this.renderedMaterial !== material) {
       this.renderedMaterial = material;
-      byId('material-name').value = material && material.name || '';
-      setOptionalDisplay('material-youngs', 'youngsModulusPa', material && material.youngsModulusPa);
-      byId('material-poisson').value = material ? String(material.poissonsRatio) : '';
-      setOptionalDisplay('material-density', 'densityKgM3', material && material.densityKgM3);
-      setOptionalDisplay('material-tensile-yield', 'strengthPa', material && material.tensileYieldPa);
-      setOptionalDisplay('material-compressive-yield', 'strengthPa', material && material.compressiveYieldPa);
-      setOptionalDisplay('material-ultimate-tensile', 'strengthPa', material && material.ultimateTensilePa);
-      setOptionalDisplay('material-ultimate-compressive', 'strengthPa', material && material.ultimateCompressivePa);
+      if (!this.materialCatalogSelect || this.materialCatalogSelect.value === 'custom') { this.writeMaterialFields(material); }
     }
     this.removeMaterialButton.disabled = !material;
     setFeedback(this.materialStatus, this.materialFeedback, material
       ? (material.name || 'Unnamed material') + ' · ' + root.SpjutsimFEA.siToDisplay('youngsModulusPa', material.youngsModulusPa) + ' GPa'
       : 'No material defined.');
+    this.renderMaterialCatalogSelection();
   };
 
   AnalysisAuthoringUI.prototype.renderSupportType = function () {
@@ -140,7 +292,6 @@
 
   AnalysisAuthoringUI.prototype.readSupport = function () {
     var support = {
-      name: byId('support-name').value.trim(),
       type: this.supportType.value,
       faceIds: this.controller.document.selectedFaceIds.slice()
     };
@@ -173,7 +324,6 @@
     if (!item) { return; }
     this.editingSupportId = id;
     this.controller.selectBoundaryCondition(id);
-    byId('support-name').value = item.name;
     this.supportType.value = item.type;
     ['ux', 'uy', 'uz'].forEach(function (axis) {
       var value = item[axis + 'M'];
@@ -188,7 +338,7 @@
   AnalysisAuthoringUI.prototype.resetSupportForm = function (renderNow) {
     this.editingSupportId = null;
     this.supportForm.reset();
-    this.supportType.value = 'fixed';
+    this.supportType.value = this.lastSupportType;
     this.supportForm.querySelector('button[type="submit"]').textContent = 'Add support';
     this.cancelSupportEdit.hidden = true;
     this.renderSupportType();
@@ -197,6 +347,13 @@
 
   AnalysisAuthoringUI.prototype.renderAnalysisList = function (list, items, select, remove) {
     list.replaceChildren();
+    if (!items.length) {
+      var empty = document.createElement('li');
+      empty.className = 'fea-empty-list';
+      empty.textContent = 'None defined.';
+      list.append(empty);
+      return;
+    }
     items.forEach(function (item) {
       var row = document.createElement('li');
       var choose = document.createElement('button');
@@ -233,7 +390,7 @@
   };
 
   AnalysisAuthoringUI.prototype.readLoad = function () {
-    var load = { name: byId('load-name').value.trim(), type: this.loadType.value, faceIds: this.controller.document.selectedFaceIds.slice() };
+    var load = { type: this.loadType.value, faceIds: this.controller.document.selectedFaceIds.slice() };
     if (load.type === 'pressure') {
       load.pressurePa = root.SpjutsimFEA.displayToSI('pressurePa', readNumber('load-pressure', 'pressure'));
     } else {
@@ -261,7 +418,6 @@
     if (!item) { return; }
     this.editingLoadId = id;
     this.controller.selectLoad(id);
-    byId('load-name').value = item.name;
     this.loadType.value = item.type;
     byId('load-pressure').value = item.pressurePa === undefined ? '' : String(root.SpjutsimFEA.siToDisplay('pressurePa', item.pressurePa));
     ['x', 'y', 'z'].forEach(function (axis, index) { byId('load-f' + axis).value = item.forceN ? String(item.forceN[index]) : ''; });
@@ -273,7 +429,7 @@
   AnalysisAuthoringUI.prototype.resetLoadForm = function (renderNow) {
     this.editingLoadId = null;
     this.loadForm.reset();
-    this.loadType.value = 'pressure';
+    this.loadType.value = this.lastLoadType;
     this.loadForm.querySelector('button[type="submit"]').textContent = 'Add load';
     this.cancelLoadEdit.hidden = true;
     this.renderLoadType();

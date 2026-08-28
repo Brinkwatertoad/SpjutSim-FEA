@@ -67,6 +67,11 @@
     var oldRenderGeometry;
     var oldRenderGeometryDisposed = false;
     controller.replaceGeometry(geometry, { sourceName: geometry.sourceName, stepBytes: new Uint8Array([1]).buffer });
+    viewport.setFacePickHandler(function (faceId, additive) {
+      if (!faceId) { controller.clearSelectedFaces(); }
+      else if (additive) { controller.toggleSelectedFace(faceId); }
+      else { controller.replaceSelectedFaces([faceId]); }
+    });
     viewport.setSelectedFaceIds([]);
     controller.replaceSelectedFaces([selectedFaceId]);
     viewport.setSelectedFaceIds(controller.document.selectedFaceIds);
@@ -93,6 +98,16 @@
     assert(viewport.selectedFaceIds.has(selectedFaceId), 'resize changed the selected faces');
     assert(viewport.pickFaceAtPointer({ clientX: canvas.getBoundingClientRect().left, clientY: canvas.getBoundingClientRect().top }) === null,
       'empty-space click returned a FaceId');
+    controller.replaceSelectedFaces([selectedFaceId]);
+    var rect = canvas.getBoundingClientRect();
+    viewport.pointerDownListener({ pointerId: 91, pointerType: 'mouse', button: 0, clientX: rect.left, clientY: rect.top });
+    viewport.pointerMoveListener({ pointerId: 91, pointerType: 'mouse', button: 0, clientX: rect.left + 20, clientY: rect.top + 10 });
+    viewport.pointerUpListener({ pointerId: 91, pointerType: 'mouse', button: 0, clientX: rect.left + 20, clientY: rect.top + 10 });
+    canvas.dispatchEvent(new MouseEvent('click', { button: 0, clientX: rect.left, clientY: rect.top, bubbles: true }));
+    assert(controller.document.selectedFaceIds.length === 1, 'camera drag cleared the selected faces');
+    canvas.dispatchEvent(new MouseEvent('click', { button: 0, clientX: rect.left, clientY: rect.top, bubbles: true }));
+    assert(controller.document.selectedFaceIds.length === 0, 'primary-button background click did not clear selected faces');
+    controller.replaceSelectedFaces([selectedFaceId]);
     controller.toggleSelectedFace(selectedFaceId);
     viewport.setSelectedFaceIds(controller.document.selectedFaceIds);
     assert(!viewport.selectedFaceIds.has(selectedFaceId), 'toggle selection was not reflected in the viewport');

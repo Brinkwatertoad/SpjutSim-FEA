@@ -127,7 +127,18 @@ If import or healing fails, the user receives a specific import error and no sim
 
 ### Step 2 — Material
 
-The user enters material data.
+The user chooses a material from the application catalog or defines a custom
+material. The material chooser defaults to **Custom** and includes the built-in
+materials Steel (ASTM A36), Aluminum (6061-T6), PLA, ABS, ASA, PETG, TPU, and
+Nylon. Choosing a catalog entry copies its current properties into the analysis
+document; the analysis must not retain a live reference that could change when
+the catalog is edited later.
+
+Custom exposes the same property editor used for catalog entries. Saving a
+valid, named custom material both applies it to the current analysis and adds it
+to the browser-local material catalog for later use. Built-in entries are
+immutable. User entries may be explicitly replaced or removed, but a save must
+never silently overwrite an existing case-insensitive name.
 
 Required:
 
@@ -146,6 +157,26 @@ Optional:
 Density becomes required if gravity is enabled.
 
 Strength data is not required to solve; it is required for corresponding factor-of-safety calculations.
+
+Catalog values are engineering starting points, not certification data. The UI
+must identify their source/revision and remind users to verify values against
+the actual alloy, grade, filament, print orientation, and process. This is
+especially important for printed polymers. TPU also requires a prominent
+warning that a small-strain linear-isotropic model may be inappropriate for its
+normal large-deformation behavior. Do not ship guessed placeholder values.
+
+The material-library architecture should follow the established SpjutSim-Truss
+pattern: immutable checked-in factory records, stable IDs, base-SI values,
+source metadata, a separately persisted validated User layer, and exact
+analysis/document snapshots. The reviewed Truss records provide a starting
+point for Steel A36 and Aluminum 6061-T6, but the active catalog/schema does not
+contain Poisson's ratio or any of the requested polymer records. The repository's
+legacy `Material_properties.csv` includes some additional metal fields, but its
+own specification marks that file unaudited and its values conflict with the
+active catalog; it is not an authoritative FEA source. Every enabled FEA
+built-in must therefore have a project-reviewed source for all supplied
+properties. Provenance from a partial Truss record must not be presented as
+support for added fields.
 
 ### Step 3 — Boundary conditions and loads
 
@@ -309,6 +340,14 @@ results
 convergence study
 UI preferences
 ```
+
+The active analysis material is engineering state and is stored as a complete
+`IsotropicMaterial` snapshot. The checked-in built-in material catalog and the
+browser-local user-material catalog are separate from the analysis document.
+Likewise, remembered authoring choices such as the last support type and last
+surface-load type are UI preferences, not solver inputs. Failure to access
+browser storage must not prevent a valid custom material from being used in the
+current analysis; report that it could not be retained for future sessions.
 
 Recommended top-level responsibilities:
 
@@ -500,6 +539,26 @@ Use plain JavaScript objects for configuration/state and typed arrays for bulk n
  * @property {number=} ultimateCompressivePa
  */
 ```
+
+Material-library records wrap, rather than replace, the solver-facing
+`IsotropicMaterial` contract:
+
+```js
+/**
+ * @typedef {Object} MaterialCatalogEntry
+ * @property {string} id Stable opaque catalog identifier
+ * @property {'built-in'|'user'} origin
+ * @property {string=} source Human-readable source/revision metadata
+ * @property {string=} sourceUrl Safe HTTP(S) provenance link
+ * @property {string=} notes Limitations or grade/process notes
+ * @property {IsotropicMaterial} material
+ */
+```
+
+Built-in IDs are stable across releases. Selecting any catalog entry produces a
+copy of `entry.material` in the analysis document, so updating or deleting a
+user catalog entry cannot mutate an already-applied analysis. Only the
+`IsotropicMaterial` snapshot crosses the solver boundary.
 
 Validation:
 
@@ -1387,6 +1446,10 @@ Examples:
 Examples:
 
 - unusually high/low Poisson's ratio;
+- use of a generic printed-polymer preset without confirmation that its values
+  match the actual material and print process;
+- use of TPU or another material likely to violate the small-strain,
+  linear-isotropic material assumptions;
 - poor mesh quality;
 - very coarse mesh relative to geometry;
 - apparently insufficient constraint against rigid-body motion;
@@ -1467,6 +1530,40 @@ The analysis state model remains authoritative. Controls render the state and di
 
 Use the copied custom-select enhancement for select-heavy controls such as units, mesh preset, result field, and deformation display mode when appropriate. Native controls must remain the underlying semantic source.
 
+#### 15.2.1 Material authoring
+
+The Material tool starts on **Custom**, followed by the built-in entries Steel
+(ASTM A36), Aluminum (6061-T6), PLA, ABS, ASA, PETG, TPU, and Nylon and then
+user-saved entries.
+Selecting an entry renders all properties and source/limitation notes before it
+is applied. Custom material fields use the same units and validation as the
+active analysis material. Saving a custom material requires a non-empty unique
+name, adds it to browser-local catalog storage, selects it, and applies a
+snapshot to the analysis. Replacing or deleting a user entry must be explicit;
+built-in entries cannot be modified or deleted. User-created entries default
+their Source metadata to `User`, following the SpjutSim-Truss convention.
+
+#### 15.2.2 Support and load authoring
+
+Each section presents its add/edit form before its list of defined items. The
+list must appear immediately below the corresponding form and feedback, with a
+clear empty state. Gravity remains a separate body-load control and is not part
+of the face-load list.
+
+Users do not enter support or surface-load names. On creation, the controller
+assigns a stable display name using a per-category monotonically increasing
+sequence: `Support 1`, `Support 2`, ... and `Load 1`, `Load 2`, .... Deleting an
+item does not reuse its number, and editing an item's type does not rename it.
+Generated names remain part of the analysis item contract for diagnostics and
+future document serialization.
+
+Support and surface-load type controls remember their last authoring choice
+independently. Adding an item, cancelling an edit, selecting an existing item,
+or rerendering the UI must not reset either control to a hard-coded default.
+The remembered values are UI preferences; at minimum they persist for the
+current application session. While editing, the form shows the item's actual
+type, then restores the remembered authoring type when returning to add mode.
+
 ### 15.3 Settings
 
 Use the existing SpjutSim settings dialog/hub pattern for application preferences rather than analysis inputs.
@@ -1544,6 +1641,17 @@ The viewport must support:
 - selected-face highlight;
 - selecting the faces associated with an existing BC from the analysis tree/tools pane.
 
+In a face-selection presentation mode, a primary-button click on viewport
+background (no model face hit) clears the complete current face selection,
+including when a selection modifier is held. A pointer gesture classified as
+orbit/pan must not clear selection.
+Pressing `Escape` also clears the complete face selection when the event has not
+already been consumed by a higher-priority interaction such as a modal, menu,
+or other dismissible overlay. These actions change only transient selected
+`FaceId` state: they do not delete supports/loads, leave edit mode, invalidate
+mesh/results, or clear a result probe. Clicking outside the viewport on other
+application controls does not clear faces.
+
 The preview mesh must preserve a face-to-triangle map for picking.
 
 ### 15.7 Loads/support glyphs
@@ -1611,7 +1719,13 @@ Browser-side JavaScript logic should have a lightweight in-browser test harness 
 - worker message validation/version handling;
 - memory warning classification;
 - units/display conversion;
-- face-selection state;
+- face-selection state, including background-click and unconsumed-`Escape`
+  clearing without clearing after camera drags;
+- deterministic support/load auto-naming, non-reused sequences, form/list
+  ordering, and independent remembered authoring types across add/edit/cancel;
+- built-in material catalog validation, catalog-to-analysis snapshot copying,
+  custom-material save/replace/remove behavior, storage failure handling, and
+  preservation of existing analyses when catalog entries change;
 - critical SpjutSim shell behavior used by the app.
 
 The harness may be a static `/tests/browser/index.html` page using first-party assertion helpers and can be run manually or under a configured headless browser in CI without becoming a frontend package dependency.

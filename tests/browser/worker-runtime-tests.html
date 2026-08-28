@@ -6,6 +6,7 @@
 </head>
 <body>
   <p id="test-status" role="status">Running…</p>
+  <nav id="application-menu"><div data-ui-menu-group data-open="false"><button data-ui-menu-button type="button" aria-expanded="false">File</button><div class="ui-menu-list"><button data-ui-menu-action="fit-view" type="button">Fit</button></div></div></nav>
   <select id="mesh-preset">
     <option value="coarse">Coarse</option>
     <option value="normal" selected>Normal</option>
@@ -23,6 +24,7 @@
   <select id="display-style"><option value="lines">Shaded with edges</option><option value="wireframe">Wireframe</option></select>
   <canvas id="viewport" style="width: 240px; height: 160px"></canvas>
   <script src="../../web/vendor/three/three.min.js"></script>
+  <script src="../../web/ui/shell-behaviors.js"></script>
   <script src="../../web/js/workers/worker-protocol.js"></script>
   <script src="../../web/js/geometry/geometry-model.js"></script>
   <script src="../../web/js/mesh/volume-mesh.js"></script>

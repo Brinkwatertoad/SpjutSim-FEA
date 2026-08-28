@@ -6,6 +6,8 @@
     this.listeners = [];
     this.stepSource = null;
     this.nextAnalysisItemSequence = 1;
+    this.nextSupportNameSequence = 1;
+    this.nextLoadNameSequence = 1;
   }
 
   function findItem(items, id, label) {
@@ -178,6 +180,7 @@
   };
 
   AppController.prototype.clearSelectedFaces = function () {
+    if (!this.document.selectedFaceIds.length) { return; }
     this.document.selectedFaceIds = [];
     this.notify();
   };
@@ -201,11 +204,14 @@
 
   AppController.prototype.createBoundaryCondition = function (definition) {
     var candidate = Object.assign({}, definition, {
-      id: this.createAnalysisItemId('support'), faceIds: this.document.selectedFaceIds.slice()
+      id: this.createAnalysisItemId('support'),
+      name: 'Support ' + this.nextSupportNameSequence,
+      faceIds: this.document.selectedFaceIds.slice()
     });
     var validation = root.SpjutsimFEA.validateBoundaryCondition(candidate, this.document.geometry && this.document.geometry.faceIds);
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
     this.document.boundaryConditions.push(validation.value);
+    this.nextSupportNameSequence += 1;
     this.invalidateResults('boundary-conditions');
     this.notify();
     return validation.value.id;
@@ -216,7 +222,7 @@
     var existing = this.document.boundaryConditions[index];
     var candidate = Object.assign({}, definition, {
       id: id,
-      name: definition.name === undefined ? existing.name : definition.name,
+      name: existing.name,
       type: definition.type === undefined ? existing.type : definition.type,
       faceIds: definition.faceIds === undefined ? existing.faceIds.slice() : definition.faceIds
     });
@@ -242,11 +248,14 @@
 
   AppController.prototype.createLoad = function (definition) {
     var candidate = Object.assign({}, definition, {
-      id: this.createAnalysisItemId('load'), faceIds: this.document.selectedFaceIds.slice()
+      id: this.createAnalysisItemId('load'),
+      name: 'Load ' + this.nextLoadNameSequence,
+      faceIds: this.document.selectedFaceIds.slice()
     });
     var validation = root.SpjutsimFEA.validateLoad(candidate, this.document.geometry && this.document.geometry.faceIds);
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
     this.document.loads.push(validation.value);
+    this.nextLoadNameSequence += 1;
     this.invalidateResults('loads');
     this.notify();
     return validation.value.id;
@@ -257,7 +266,7 @@
     var existing = this.document.loads[index];
     var candidate = Object.assign({}, definition, {
       id: id,
-      name: definition.name === undefined ? existing.name : definition.name,
+      name: existing.name,
       type: definition.type === undefined ? existing.type : definition.type,
       faceIds: definition.faceIds === undefined ? existing.faceIds.slice() : definition.faceIds
     });

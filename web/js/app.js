@@ -136,7 +136,9 @@
   setText('launch-mode', location.protocol === 'file:' ? 'Direct local file' : (root.crossOriginIsolated ? 'HTTP, isolated' : 'HTTP, portable'));
   root.addEventListener('pagehide', function () { if (activeMesh) { activeMesh.cancel(); } disposeSolver(); viewport.dispose(); }, { once: true });
   viewport.setFacePickHandler(function (faceId, additive) {
-    if (additive) {
+    if (!faceId) {
+      app.clearSelectedFaces();
+    } else if (additive) {
       app.toggleSelectedFace(faceId);
     } else {
       app.replaceSelectedFaces([faceId]);

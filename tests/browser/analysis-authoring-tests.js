@@ -66,6 +66,16 @@
 
   function near(a, b, tolerance) { return Math.abs(a - b) <= (tolerance || Math.max(1e-9, Math.abs(b) * 1e-12)); }
 
+  function memoryStorage(initial) {
+    var values = Object.assign({}, initial || {});
+    return {
+      getItem: function (key) { return Object.prototype.hasOwnProperty.call(values, key) ? values[key] : null; },
+      setItem: function (key, value) { values[key] = String(value); },
+      removeItem: function (key) { delete values[key]; },
+      read: function (key) { return values[key]; }
+    };
+  }
+
   function testContractsAndConversions() {
     assert(api.displayToSI('youngsModulusPa', 210) === 210e9, 'GPa input was not stored as Pa');
     assert(api.siToDisplay('displacementM', 0.0015) === 1.5, 'meter displacement was not displayed in mm');
@@ -77,6 +87,57 @@
     assert(!api.validateKnownFaceIds(['face-x-', 'face-x-'], ['face-x-']).valid, 'duplicate faces were accepted');
     assert(!api.validateKnownFaceIds(['missing'], ['face-x-']).valid, 'unknown faces were accepted');
     assert(!api.validateGravity({ enabled: true, accelerationMS2: [0, 0, -9.8] }, null).valid, 'gravity did not require density');
+  }
+
+  function testMaterialCatalog() {
+    var factories = api.FACTORY_MATERIALS;
+    var storage = memoryStorage();
+    var catalog = new api.MaterialCatalog(storage);
+    var saved;
+    var snapshot;
+    assert(factories.length === 8, 'material catalog did not expose all eight reviewed built-ins');
+    factories.forEach(function (entry) {
+      var validation = api.validateIsotropicMaterial(entry.material);
+      assert(validation.valid, entry.id + ' did not contain a valid isotropic material');
+      assert(Object.isFrozen(entry) && Object.isFrozen(entry.material), entry.id + ' factory record was mutable');
+      Object.keys(entry.material).forEach(function (field) {
+        if (field !== 'name') { assert(entry.metadata.fieldProvenance[field], entry.id + ' lacked field-level provenance for ' + field); }
+      });
+    });
+    assert(factories[0].material.youngsModulusPa === 200e9 && factories[0].material.tensileYieldPa === 250e6 &&
+      factories[0].material.ultimateTensilePa === 400e6 && factories[0].material.densityKgM3 === 7850,
+    'Steel A36 did not retain the exact reviewed Truss seed');
+    assert(factories[1].material.youngsModulusPa === 69e9 && factories[1].material.tensileYieldPa === 276e6 &&
+      factories[1].material.ultimateTensilePa === 310e6 && factories[1].material.densityKgM3 === 2700,
+    'Aluminum 6061-T6 did not retain the exact reviewed Truss seed');
+    assert(factories[0].metadata.fieldProvenance.poissonsRatio.url !== factories[0].metadata.fieldProvenance.youngsModulusPa.url,
+      'partial Truss provenance was incorrectly applied to the steel Poisson ratio');
+    assert(factories.find(function (entry) { return entry.material.name === 'TPU'; }).metadata.warning.indexOf('linear-isotropic') !== -1,
+      'TPU did not include the prominent model-limitation warning');
+    snapshot = catalog.materialSnapshot(factories[0].id);
+    snapshot.youngsModulusPa = 1;
+    assert(catalog.materialSnapshot(factories[0].id).youngsModulusPa === 200e9, 'catalog snapshot mutation changed a factory record');
+
+    saved = catalog.saveUser({ name: 'My material', youngsModulusPa: 4e9, poissonsRatio: 0.31 });
+    assert(saved.entry.id === 'user.material.1' && !saved.storageWarning, 'custom material was not assigned a stable persisted ID');
+    expectError(function () { catalog.saveUser({ name: 'my MATERIAL', youngsModulusPa: 5e9, poissonsRatio: 0.3 }); }, 'already exists');
+    catalog.replaceUser(saved.entry.id, { name: 'My replacement', youngsModulusPa: 5e9, poissonsRatio: 0.3 });
+    assert(catalog.get(saved.entry.id).material.youngsModulusPa === 5e9, 'explicit custom replacement failed');
+    catalog.removeUser(saved.entry.id);
+    assert(catalog.get(saved.entry.id) === null, 'explicit custom removal failed');
+    saved = catalog.saveUser({ name: 'Next material', youngsModulusPa: 6e9, poissonsRatio: 0.29 });
+    assert(saved.entry.id === 'user.material.2', 'deleted user material sequence was reused');
+    assert(new api.MaterialCatalog(storage).get(saved.entry.id), 'valid stored user catalog did not reload');
+
+    var corrupt = memoryStorage();
+    corrupt.setItem(api.MATERIAL_CATALOG_STORAGE_KEY, '{bad');
+    assert(new api.MaterialCatalog(corrupt).loadWarning, 'corrupt material storage did not produce a guarded warning');
+    var unsupported = memoryStorage();
+    unsupported.setItem(api.MATERIAL_CATALOG_STORAGE_KEY, JSON.stringify({ schemaVersion: 99, nextUserSequence: 1, materials: [] }));
+    assert(new api.MaterialCatalog(unsupported).loadWarning, 'unsupported material storage schema was accepted');
+    var failing = new api.MaterialCatalog({ getItem: function () { return null; }, setItem: function () { throw new Error('quota'); } });
+    saved = failing.saveUser({ name: 'Session only', youngsModulusPa: 1e9, poissonsRatio: 0.25 });
+    assert(saved.storageWarning && failing.get(saved.entry.id), 'storage failure prevented current-session use of a valid material');
   }
 
   function testSymmetricCurvedFaceGlyph() {
@@ -123,6 +184,29 @@
       controller.replaceBoundaryCondition(prescribedId, { faceIds: ['face-x+'], name: 'Incomplete', type: 'prescribed-displacement' });
     }, 'at least one prescribed');
     controller.replaceBoundaryCondition(prescribedId, { faceIds: ['face-x+', 'face-x+'], name: 'Duplicate', type: 'fixed' });
+  }
+
+  function testGeneratedNamesAndSequences() {
+    var state = api.createAnalysisDocument();
+    var controller = new api.AppController({ document: state });
+    var support1;
+    var support2;
+    var load1;
+    controller.replaceGeometry(cubeGeometry('cube-names'), { sourceName: 'cube.step', stepBytes: new Uint8Array([7]).buffer });
+    controller.replaceSelectedFaces(['face-x-']);
+    support1 = controller.createBoundaryCondition({ name: 'Ignored', type: 'fixed' });
+    support2 = controller.createBoundaryCondition({ type: 'fixed' });
+    controller.removeBoundaryCondition(support1);
+    assert(state.boundaryConditions[0].name === 'Support 2', 'support deletion reused or changed a generated number');
+    controller.createBoundaryCondition({ type: 'fixed' });
+    assert(state.boundaryConditions[1].name === 'Support 3', 'support sequence was not monotonic');
+    controller.replaceBoundaryCondition(support2, { name: 'Renamed', type: 'fixed' });
+    assert(state.boundaryConditions[0].name === 'Support 2', 'editing changed a generated support name');
+    controller.replaceSelectedFaces(['face-x+']);
+    load1 = controller.createLoad({ name: 'Ignored', type: 'pressure', pressurePa: 1e6 });
+    assert(state.loads[0].name === 'Load 1', 'load sequence was not independent from the support sequence');
+    controller.replaceLoad(load1, { name: 'Renamed', type: 'pressure', pressurePa: 2e6 });
+    assert(state.loads[0].name === 'Load 1', 'editing changed a generated load name');
   }
 
   function runCompleteControllerProjectionTest() {
@@ -182,6 +266,7 @@
   function testKeyboardSemanticAuthoring() {
     var state = api.createAnalysisDocument();
     var controller = new api.AppController({ document: state });
+    try { root.localStorage.removeItem(api.MATERIAL_CATALOG_STORAGE_KEY); } catch (error) { /* Storage may be unavailable in hardened browser profiles. */ }
     var authoring = new api.AnalysisAuthoringUI(controller);
     controller.replaceGeometry(cubeGeometry('cube-ui'), { sourceName: 'cube.step', stepBytes: new Uint8Array([4]).buffer });
     authoring.start();
@@ -193,22 +278,43 @@
     document.getElementById('material-form').requestSubmit();
     assert(state.material && state.material.youngsModulusPa === 200e9, 'keyboard form submission did not store material in SI units');
     controller.replaceSelectedFaces(['face-x-']);
-    document.getElementById('support-name').value = 'Keyboard fixed';
     document.getElementById('support-form').requestSubmit();
-    assert(state.boundaryConditions.length === 1, 'keyboard form submission did not add a support');
+    assert(state.boundaryConditions.length === 1 && state.boundaryConditions[0].name === 'Support 1', 'keyboard form submission did not add an auto-named support');
     controller.replaceSelectedFaces(['face-x+']);
-    document.getElementById('load-name').value = 'Keyboard pressure';
     document.getElementById('load-pressure').value = '1.5';
     document.getElementById('load-form').requestSubmit();
-    assert(state.loads.length === 1 && state.loads[0].pressurePa === 1.5e6, 'keyboard form submission did not add a pressure load');
+    assert(state.loads.length === 1 && state.loads[0].name === 'Load 1' && state.loads[0].pressurePa === 1.5e6, 'keyboard form submission did not add an auto-named pressure load');
     assert(document.getElementById('support-list').querySelector('button') && document.getElementById('load-list').querySelector('button'),
       'authored items were not exposed as keyboard-focusable buttons');
+
+    assert(document.getElementById('support-form').compareDocumentPosition(document.getElementById('support-list')) & Node.DOCUMENT_POSITION_FOLLOWING,
+      'support list was not ordered below its form');
+    assert(document.getElementById('support-status').compareDocumentPosition(document.getElementById('support-list')) & Node.DOCUMENT_POSITION_FOLLOWING,
+      'support list was not ordered below feedback');
+    assert(document.getElementById('load-form').compareDocumentPosition(document.getElementById('load-list')) & Node.DOCUMENT_POSITION_FOLLOWING,
+      'load list was not ordered below its form');
+
+    document.getElementById('support-type').value = 'prescribed-displacement';
+    document.getElementById('support-type').dispatchEvent(new Event('change'));
+    authoring.beginSupportEdit(state.boundaryConditions[0].id);
+    assert(document.getElementById('support-type').value === 'fixed', 'support edit did not show the item type');
+    authoring.resetSupportForm();
+    assert(document.getElementById('support-type').value === 'prescribed-displacement', 'support add mode did not restore its remembered type');
+    assert(document.getElementById('load-type').value === 'pressure', 'support type memory interfered with the load type');
+    document.getElementById('load-type').value = 'total-force';
+    document.getElementById('load-type').dispatchEvent(new Event('change'));
+    authoring.beginLoadEdit(state.loads[0].id);
+    assert(document.getElementById('load-type').value === 'pressure', 'load edit did not show the item type');
+    authoring.resetLoadForm();
+    assert(document.getElementById('load-type').value === 'total-force', 'load add mode did not restore its remembered type');
   }
 
   try {
     testContractsAndConversions();
+    testMaterialCatalog();
     testSymmetricCurvedFaceGlyph();
     expectError(testControllerAndProjection, 'only once');
+    testGeneratedNamesAndSequences();
     runCompleteControllerProjectionTest();
     testKeyboardSemanticAuthoring();
     status.textContent = 'Passed'; status.dataset.result = 'passed'; document.title = 'Analysis authoring tests: Passed';

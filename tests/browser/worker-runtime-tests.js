@@ -201,10 +201,28 @@
 
   function testViewportCameraNavigation() {
     var viewport = new api.ViewportController(document.getElementById('viewport'));
+    var controller = new api.AppController({ document: api.createAnalysisDocument() });
     var faceId = validGeometry().faceIds[0];
     var cameraBefore;
     var distanceBefore;
     viewport.setGeometryPreview(validGeometry());
+    controller.replaceGeometry(validGeometry(), { sourceName: 'cube.step', stepBytes: new Uint8Array([9]).buffer });
+    controller.replaceSelectedFaces([faceId]);
+    var revisionBeforeSelectionClear = controller.document.analysisRevision;
+    viewport.setFacePickHandler(function (pickedFaceId) {
+      if (!pickedFaceId) { controller.clearSelectedFaces(); }
+      else { controller.replaceSelectedFaces([pickedFaceId]); }
+    });
+    var rect = viewport.canvas.getBoundingClientRect();
+    viewport.pointerClickListener({ button: 0, shiftKey: false, clientX: rect.left, clientY: rect.top });
+    assert(controller.document.selectedFaceIds.length === 0, 'empty viewport click did not report a no-hit pick');
+    assert(controller.document.analysisRevision === revisionBeforeSelectionClear, 'background selection clearing invalidated analysis results');
+    controller.replaceSelectedFaces([faceId]);
+    viewport.pointerDownListener({ pointerId: 81, pointerType: 'mouse', button: 0, clientX: rect.left, clientY: rect.top });
+    viewport.pointerMoveListener({ pointerId: 81, pointerType: 'mouse', button: 0, clientX: rect.left + 20, clientY: rect.top + 10 });
+    viewport.pointerUpListener({ pointerId: 81, pointerType: 'mouse', button: 0, clientX: rect.left + 20, clientY: rect.top + 10 });
+    viewport.pointerClickListener({ button: 0, shiftKey: false, clientX: rect.left, clientY: rect.top });
+    assert(controller.document.selectedFaceIds.length === 1, 'camera drag was misreported as a background click');
     viewport.setPresentation({ mode: 'model', displayStyle: 'wireframe' });
     assert(!viewport.previewMesh.visible &&
       viewport.importedGeometry.getObjectByName('imported-geometry-feature-edges').visible,
@@ -312,6 +330,14 @@
     document.dispatchEvent(event);
     assert(controller.document.selectedFaceIds.length === 0, 'Escape did not clear selected faces');
     assert(event.defaultPrevented, 'Escape did not consume the selection-clear shortcut');
+    controller.replaceSelectedFaces(['opaque-face']);
+    var menuGroup = document.querySelector('[data-ui-menu-group]');
+    menuGroup.dataset.open = 'true';
+    menuGroup.querySelector('[data-ui-menu-button]').setAttribute('aria-expanded', 'true');
+    event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
+    assert(controller.document.selectedFaceIds.length === 1, 'Escape cleared selection instead of dismissing the open menu first');
+    assert(menuGroup.dataset.open === 'false' && event.defaultPrevented, 'Escape did not dismiss and consume the open menu');
   }
 
   root.SpjutsimWorkerRuntimeTests = Promise.resolve().then(function () {
