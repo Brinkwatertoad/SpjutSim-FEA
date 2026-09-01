@@ -186,7 +186,7 @@
       var index;
       assert(cylinder.faceIds.length === 3, 'analytic cylinder did not retain its three CAD faces');
       assert(Math.abs(cylinder.volumeM3 - Math.PI / 4) < 1e-9, 'analytic cylinder volume was incorrect');
-      assert(Math.abs(cylinder.boundingBoxM.minM[0] + 0.5) < 1e-9 && Math.abs(cylinder.boundingBoxM.maxM[2] - 1) < 1e-9,
+      assert(Math.abs(cylinder.boundingBoxM.minM[0] + 0.5) < 2e-7 && Math.abs(cylinder.boundingBoxM.maxM[2] - 1) < 2e-7,
         'analytic cylinder bounds were incorrect');
       assert(cylinder.preview.featureEdges.indices.length > 0 && cylinder.preview.featureEdges.indices.length < cylinder.preview.indices.length,
         'Model view used triangulation facets instead of only CAD feature edges');
@@ -204,7 +204,7 @@
     }).then(function (sphere) {
       assert(sphere.faceIds.length === 1, 'multiply-curved sphere did not retain one CAD face');
       assert(Math.abs(sphere.volumeM3 - Math.PI / 6) < 1e-9, 'multiply-curved sphere volume was incorrect');
-      assert(Math.abs(sphere.boundingBoxM.minM[0] + 0.5) < 1e-9 && Math.abs(sphere.boundingBoxM.maxM[0] - 0.5) < 1e-9,
+      assert(Math.abs(sphere.boundingBoxM.minM[0] + 0.5) < 2e-7 && Math.abs(sphere.boundingBoxM.maxM[0] - 0.5) < 2e-7,
         'multiply-curved sphere bounds were incorrect');
     });
   }

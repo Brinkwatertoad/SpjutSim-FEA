@@ -17,7 +17,19 @@
     return error;
   }
 
-  function workerSource(kind) {
+  function validGmshParts(runtime) {
+    var index;
+    if (!Array.isArray(runtime.gmshParts) || !Number.isSafeInteger(runtime.gmshPartCount) ||
+        runtime.gmshPartCount <= 0 || runtime.gmshParts.length !== runtime.gmshPartCount) {
+      return false;
+    }
+    for (index = 0; index < runtime.gmshPartCount; index += 1) {
+      if (typeof runtime.gmshParts[index] !== 'string') { return false; }
+    }
+    return true;
+  }
+
+  function workerSourceParts(kind) {
     var runtime = root.SpjutsimLocalRuntimeWorkers;
     if (!runtime || typeof runtime[kind] !== 'string') {
       throw startupFailure(
@@ -27,14 +39,14 @@
       );
     }
     if (kind === 'mesher') {
-      if (typeof runtime.gmsh !== 'string') {
+      if (!validGmshParts(runtime)) {
         throw startupFailure(
           'GMSH_RUNTIME_SOURCE_MISSING',
           'The local geometry runtime is unavailable. Regenerate the Gmsh local runtime artifact.',
           { worker: kind }
         );
       }
-      return runtime.gmsh + '\n' + runtime[kind];
+      return runtime.gmshParts.concat(['\n', runtime[kind]]);
     }
     if (kind === 'solver') {
       if (typeof runtime.fem !== 'string') {
@@ -44,18 +56,18 @@
           { worker: kind }
         );
       }
-      return runtime.fem + '\n' + runtime[kind];
+      return [runtime.fem, '\n', runtime[kind]];
     }
-    return runtime[kind];
+    return [runtime[kind]];
   }
 
   function startLocalWorker(kind) {
-    var source;
+    var sourceParts;
     var url;
     var worker;
     try {
-      source = workerSource(kind);
-      url = URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
+      sourceParts = workerSourceParts(kind);
+      url = URL.createObjectURL(new Blob(sourceParts, { type: 'text/javascript' }));
       worker = new Worker(url);
     } catch (error) {
       if (url) { URL.revokeObjectURL(url); }

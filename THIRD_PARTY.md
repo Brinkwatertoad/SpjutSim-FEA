@@ -15,10 +15,11 @@
 
 ## Gmsh/OpenCASCADE
 
-- Runtime artifact: `web/generated/local-runtime/gmsh-runtime-source.js`
+- Runtime artifacts: `web/generated/local-runtime/gmsh-runtime-source.js` and
+  `web/generated/local-runtime/gmsh-runtime-source-part-*.js`
 - Runtime mode: `serial-local` (classic worker script with embedded WASM)
-- Artifact size: `59,054,731` bytes
-- Artifact SHA-256: `0c84578c3be1e51064fb6f74c68661e32d5e33286797c3dacb2e85ff3700d7c6`
+- Embedded payload SHA-256:
+  `49e61f1b64e86d1bcdbb15bef03bf4077c2c4530d55a943a87a9fb5212b8f0de`
 - GMSH-JS: tag `v0.3.0`, commit
   `3fdabeeb1dac2417446cefb9f75ecb6645315cd6`, from
   <https://github.com/loumalouomega/GMSH-JS>
@@ -44,7 +45,9 @@
 - Local modifications: upstream source trees are unmodified. The build uses the
   generated GMSH-JS C exports, converts its single ESM `buildApi` export to a
   classic worker-local function, attaches `FS` and the Emscripten module to the
-  API, and wraps the combined source as a checked-in string for Blob workers.
+  API, and splits the combined source into checked-in strings small enough for
+  static hosting. The browser passes those strings directly to one Blob-backed
+  worker without joining a second full-size copy in memory.
 - License: the GMSH-JS package and generated artifact are
   GPL-2.0-or-later; Gmsh is GPL-2.0-or-later with its stated linking exception;
   OCCT is LGPL-2.1 with its additional exception. Exact notices are checked in

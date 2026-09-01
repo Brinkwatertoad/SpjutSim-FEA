@@ -1,11 +1,13 @@
 import hashlib
 import json
 import pathlib
+import re
 import subprocess
 import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+CLOUDFLARE_STATIC_ASSET_LIMIT_BYTES = 25 * 1024 * 1024
 
 class FrameworkTests(unittest.TestCase):
     def test_no_frontend_package_manifest(self):
@@ -88,15 +90,19 @@ class FrameworkTests(unittest.TestCase):
                     'python3', str(generator), '--output-dir', str(output),
                     '--gmsh-core', str(core), '--gmsh-runtime', str(runtime),
                     '--gmsh-descriptor', str(descriptor),
+                    '--gmsh-part-characters', '64',
                 ],
                 check=True,
                 cwd=ROOT,
             )
-            generated = (output / 'gmsh-runtime-source.js').read_text()
-            self.assertIn('initializeSpjutsimGmsh', generated)
-            self.assertIn('"threaded": false', generated)
-            self.assertIn('"networkRequired": false', generated)
-            self.assertNotIn('export function buildApi', generated)
+            manifest = (output / 'gmsh-runtime-source.js').read_text()
+            parts = sorted(output.glob('gmsh-runtime-source-part-*.js'))
+            self.assertGreater(len(parts), 1)
+            source = self._read_gmsh_source_parts(parts)
+            self.assertIn('initializeSpjutsimGmsh', source)
+            self.assertIn('"threaded": false', manifest)
+            self.assertIn('"networkRequired": false', manifest)
+            self.assertNotIn('export function buildApi', source)
 
     def test_gmsh_runtime_packaging_rejects_threaded_core(self):
         generator = ROOT / 'tools/build-local-runtime.py'
@@ -324,20 +330,38 @@ class FrameworkTests(unittest.TestCase):
         self.assertNotIn('cmake --install "$OCCT_BUILD" || true', build_script)
 
     def test_pinned_gmsh_runtime_artifact(self):
-        artifact = ROOT / 'web/generated/local-runtime/gmsh-runtime-source.js'
-        content = artifact.read_bytes()
-        self.assertEqual(len(content), 59054731)
+        runtime_dir = ROOT / 'web/generated/local-runtime'
+        manifest = (runtime_dir / 'gmsh-runtime-source.js').read_text(encoding='utf-8')
+        parts = sorted(runtime_dir.glob('gmsh-runtime-source-part-*.js'))
+        source = self._read_gmsh_source_parts(parts)
+        self.assertIn('"gmshJs": "v0.3.0"', manifest)
+        self.assertIn('"occtVersion": "7.8.1"', manifest)
         self.assertEqual(
-            hashlib.sha256(content).hexdigest(),
-            '0c84578c3be1e51064fb6f74c68661e32d5e33286797c3dacb2e85ff3700d7c6',
+            hashlib.sha256(source.encode('utf-8')).hexdigest(),
+            '49e61f1b64e86d1bcdbb15bef03bf4077c2c4530d55a943a87a9fb5212b8f0de',
         )
-        self.assertNotIn(b'SharedArrayBuffer', content)
-        self.assertNotIn(b'PThread', content)
+        self.assertNotIn('SharedArrayBuffer', source)
+        self.assertNotIn('PThread', source)
         for filename in (
             'GMSH-JS-LICENSE.txt', 'GMSH-LICENSE.txt',
             'OCCT-LGPL-2.1.txt', 'OCCT-LGPL-EXCEPTION.txt',
         ):
             self.assertTrue((ROOT / 'web/wasm/gmsh/licenses' / filename).is_file())
+
+    def test_gmsh_runtime_assets_fit_cloudflare_static_hosting(self):
+        artifacts = sorted((ROOT / 'web/generated/local-runtime').glob('gmsh-runtime-source*.js'))
+        self.assertGreater(len(artifacts), 1, 'the embedded Gmsh runtime must be split across static assets')
+        oversized = [artifact.name for artifact in artifacts if artifact.stat().st_size > CLOUDFLARE_STATIC_ASSET_LIMIT_BYTES]
+        self.assertEqual(oversized, [], 'Gmsh runtime assets exceed Cloudflare\'s 25 MiB per-file limit')
+
+    def _read_gmsh_source_parts(self, artifacts):
+        chunks = []
+        for expected_index, artifact in enumerate(artifacts):
+            match = re.search(r'^  runtime\.gmshParts\[(\d+)\] = (.+);$', artifact.read_text(encoding='utf-8'), re.MULTILINE)
+            self.assertIsNotNone(match, artifact.name + ' did not assign a Gmsh source part')
+            self.assertEqual(int(match.group(1)), expected_index)
+            chunks.append(json.loads(match.group(2)))
+        return ''.join(chunks)
 
     def test_wasm_solver_and_result_vertical_slice_exists(self):
         build = (ROOT / 'tools/build-wasm.sh').read_text()

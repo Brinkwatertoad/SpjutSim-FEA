@@ -1,0 +1,14 @@
+{
+  "name": "spjutsim-fea",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": true,
+  "routes": [
+    {
+      "pattern": "fea.spjutsim.com",
+      "custom_domain": true
+    }
+  ],
+  "assets": {
+    "directory": "./web"
+  }
+}

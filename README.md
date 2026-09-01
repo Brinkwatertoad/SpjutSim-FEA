@@ -79,6 +79,19 @@ tools/build-gmsh-local-runtime.sh
 
 No npm, Node runtime, frontend framework, transpiler, or application bundler is required.
 
+## Deploy a Cloudflare preview
+
+The checked-in `wrangler.jsonc` publishes `web/` as static assets to the
+`spjutsim-fea` Worker's `workers.dev` hostname and the `fea.spjutsim.com`
+Custom Domain. With Wrangler available as operator tooling, run:
+
+```sh
+wrangler deploy
+```
+
+Wrangler is not an application runtime or development dependency; direct
+`file://` previewing and all normal source work remain dependency-free.
+
 ## Current boundary
 
 The current vertical slice provides app/controller-owned analysis state, local

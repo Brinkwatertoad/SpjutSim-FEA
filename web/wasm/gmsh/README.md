@@ -1,9 +1,10 @@
 # Gmsh local runtime
 
-The distributed Gmsh/OpenCASCADE runtime is
-`web/generated/local-runtime/gmsh-runtime-source.js`. It is a generated classic
-script containing a serial Emscripten loader, embedded WASM, API descriptor, and
-marshaller. The main page never initializes Gmsh; it copies the source into a
+The distributed Gmsh/OpenCASCADE runtime consists of the manifest
+`web/generated/local-runtime/gmsh-runtime-source.js` and the ordered
+`gmsh-runtime-source-part-*.js` files beside it. These generated classic scripts
+contain a serial Emscripten loader, embedded WASM, API descriptor, and marshaller.
+The main page never initializes Gmsh; it passes the source parts directly into a
 disposable Blob-backed mesher worker.
 
 The `serial-local` build deliberately disables OpenMP and pthreads. It does not
@@ -43,7 +44,8 @@ in `THIRD_PARTY.md`.
   and rerun after correcting it; the build is incremental.
 - `OpenMP unexpectedly enabled`: do not bypass the check. The resulting shared
   memory module would break the direct-local execution contract.
-- `GMSH_RUNTIME_SOURCE_MISSING`: rebuild the artifact and confirm
-  `gmsh-runtime-source.js` is loaded before the worker wrappers in `web/index.html`.
+- `GMSH_RUNTIME_SOURCE_MISSING`: rebuild the artifacts and confirm every numbered
+  source part and then `gmsh-runtime-source.js` are loaded before the worker
+  wrappers in `web/index.html`.
 - `MESHER_INITIALIZATION_FAILED`: use its developer message for loader details;
   the user-facing message intentionally does not expose raw Gmsh/Emscripten text.

@@ -201,4 +201,4 @@ cp "$OCCT_SOURCE/OCCT_LGPL_EXCEPTION.txt" "$license_dir/OCCT-LGPL-EXCEPTION.txt"
 
 shasum -a 256 "$DIST/gmsh-core.serial.js" \
   "$SOURCE_ROOT/src/runtime.mjs" "$SOURCE_ROOT/generated/gmsh-api.json" \
-  "$ROOT/web/generated/local-runtime/gmsh-runtime-source.js"
+  "$ROOT"/web/generated/local-runtime/gmsh-runtime-source*.js
