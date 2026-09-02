@@ -154,17 +154,23 @@ class FrameworkTests(unittest.TestCase):
         cube = ROOT / 'tests/fixtures/generated-unit-cube-m.step'
         two_solids = ROOT / 'tests/fixtures/generated-two-unit-cubes-m.step'
         invalid = ROOT / 'tests/fixtures/invalid-step-text.step'
+        iges = ROOT / 'tests/fixtures/generated-unit-cube-m.iges'
+        brep = ROOT / 'tests/fixtures/generated-unit-cube-m.brep'
         self.assertTrue(cube.is_file())
         self.assertTrue(two_solids.is_file())
         self.assertTrue(invalid.is_file())
+        self.assertTrue(iges.is_file())
+        self.assertTrue(brep.is_file())
         self.assertIn('FACETED_BREP', cube.read_text())
         self.assertIn('validateGeometryModel', geometry)
         self.assertIn('validateImportRequest', geometry)
         self.assertIn('sourceBytes.slice(0)', client)
         self.assertIn('sourceFormatForFilename', geometry)
-        self.assertIn("'Geometry.OCCTargetUnit', 'M'", worker)
+        self.assertIn("'Geometry.OCCTargetUnit'", worker)
         self.assertIn('gmsh.FS.writeFile', worker)
         self.assertIn('gmsh.model.occ.importShapes', worker)
+        self.assertIn('igesScaleToMeters', worker)
+        self.assertIn('gmsh.model.occ.healShapes', worker)
         for code in ('GEOMETRY_IMPORT_FAILED', 'GEOMETRY_NO_SOLID', 'MULTIPLE_SOLIDS_UNSUPPORTED', 'GEOMETRY_NOT_CLOSED'):
             self.assertIn(code, worker)
         self.assertIn('replaceGeometry', controller)
@@ -187,8 +193,10 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn('geometry replacement retained', content)
         self.assertTrue(import_harness.is_file())
         self.assertIn('generated-unit-cube-m.step', import_script.read_text())
+        self.assertIn('generated-unit-cube-m.iges', import_script.read_text())
+        self.assertIn('generated-unit-cube-m.brep', import_script.read_text())
         self.assertIn('MULTIPLE_SOLIDS_UNSUPPORTED', import_script.read_text())
-        self.assertIn('expected six opaque CAD face IDs', import_script.read_text())
+        self.assertIn('cube did not expose six CAD faces', import_script.read_text())
 
     def test_tet4_mesh_contract_and_browser_coverage_exist(self):
         contract = (ROOT / 'web/js/mesh/volume-mesh.js').read_text()

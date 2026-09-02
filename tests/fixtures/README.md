@@ -4,6 +4,11 @@
 B-rep for a closed 1 m × 1 m × 1 m cube. It is maintained in this repository
 as a regression fixture and has no third-party licensing restriction.
 
+`generated-unit-cube-m.iges` and `generated-unit-cube-m.brep` are public-domain
+OpenCASCADE exports of the same one-meter cube. The IGES file declares
+millimeters and stores 1000-unit edges so explicit SI normalization is covered;
+the unitless BREP fixture uses meter coordinates.
+
 `invalid-step-text.step` is intentionally malformed input used to verify that
 import errors are recoverable and user-facing.
 

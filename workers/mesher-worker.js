@@ -8,6 +8,13 @@ var requestQueue = Promise.resolve();
 var PREVIEW_MAX_SURFACE_EDGE_LENGTH_FRACTION = 0.025;
 var PREVIEW_CURVATURE_SEGMENTS_PER_2PI = 48;
 var PREVIEW_RELATIVE_TRIANGLE_AREA_SQUARED = 1e-28;
+var CAD_FORMAT_EXTENSIONS = Object.freeze({ step: /\.(step|stp)$/i, iges: /\.(iges|igs)$/i, brep: /\.brep$/i });
+
+function validCadSource(message) {
+  return message && CAD_FORMAT_EXTENSIONS[message.sourceFormat] &&
+    typeof message.sourceName === 'string' && CAD_FORMAT_EXTENSIONS[message.sourceFormat].test(message.sourceName) &&
+    message.sourceBytes instanceof ArrayBuffer && message.sourceBytes.byteLength > 0;
+}
 
 function workerError(code, stage, userMessage, developerMessage, recoverable) {
   return {
@@ -55,21 +62,17 @@ function validateRequest(message) {
     );
   }
   if (message.type === 'import') {
-    if (!(message.stepBytes instanceof ArrayBuffer) || message.stepBytes.byteLength === 0 ||
-        typeof message.sourceName !== 'string' || !/\.(step|stp)$/i.test(message.sourceName) ||
-        typeof message.geometryId !== 'string' || message.geometryId.length === 0) {
+    if (!validCadSource(message) || typeof message.geometryId !== 'string' || message.geometryId.length === 0) {
       return workerError(
         'INVALID_IMPORT_REQUEST',
         'import',
-        'Choose a non-empty .step or .stp file.',
-        'Import requests require stepBytes, sourceName, and geometryId.'
+        'Choose a non-empty STEP, IGES, or BREP file.',
+        'Import requests require matching sourceBytes, sourceName, sourceFormat, and geometryId.'
       );
     }
   }
   if (message.type === 'mesh') {
-    if (!(message.stepBytes instanceof ArrayBuffer) || message.stepBytes.byteLength === 0 ||
-        typeof message.sourceName !== 'string' || !/\.(step|stp)$/i.test(message.sourceName) ||
-        typeof message.geometryId !== 'string' || message.geometryId.length === 0 ||
+    if (!validCadSource(message) || typeof message.geometryId !== 'string' || message.geometryId.length === 0 ||
         !Array.isArray(message.faceIds) || message.faceIds.length === 0 ||
         message.faceIds.some(function (faceId) { return typeof faceId !== 'string' || faceId.length === 0; }) ||
         !message.settings || message.settings.elementType !== 'tet4' ||
@@ -77,7 +80,7 @@ function validateRequest(message) {
         message.settings.minSizeM <= 0 || message.settings.minSizeM > message.settings.maxSizeM) {
       return workerError(
         'INVALID_MESH_REQUEST', 'mesh', 'Choose valid Tet4 mesh settings.',
-        'Mesh requests require canonical STEP bytes, stable FaceIds, and a positive min/max size range.'
+        'Mesh requests require a canonical CAD source, stable FaceIds, and a positive min/max size range.'
       );
     }
   }
@@ -105,6 +108,71 @@ function entityTags(result) {
     tags.push(values[index]);
   }
   return tags;
+}
+
+var IGES_UNIT_SCALE_M = Object.freeze({
+  1: 0.0254, 2: 0.001, 4: 0.3048, 5: 1609.344, 6: 1,
+  7: 1000, 8: 0.0000254, 9: 0.000001, 10: 0.01, 11: 0.0000000254
+});
+
+function igesGlobalParameters(sourceBytes) {
+  var text = new TextDecoder('ascii').decode(new Uint8Array(sourceBytes));
+  var globalData = text.split(/\r?\n/).filter(function (line) {
+    return line.length > 72 && line.charAt(72) === 'G';
+  }).map(function (line) { return line.slice(0, 72); }).join('');
+  var values = [];
+  var index = 0;
+  var start;
+  var length;
+  while (index < globalData.length && globalData.charAt(index) !== ';') {
+    if (globalData.charAt(index) === ',') { values.push(''); index += 1; continue; }
+    start = index;
+    while (index < globalData.length && /[0-9]/.test(globalData.charAt(index))) { index += 1; }
+    if (index > start && /[Hh]/.test(globalData.charAt(index))) {
+      length = Number(globalData.slice(start, index));
+      index += 1;
+      values.push(globalData.slice(index, index + length));
+      index += length;
+    } else {
+      index = start;
+      while (index < globalData.length && globalData.charAt(index) !== ',' && globalData.charAt(index) !== ';') { index += 1; }
+      values.push(globalData.slice(start, index).trim());
+    }
+    if (globalData.charAt(index) === ',') { index += 1; }
+  }
+  return values;
+}
+
+function igesScaleToMeters(sourceBytes) {
+  var parameters = igesGlobalParameters(sourceBytes);
+  var unitFlag = Number(parameters[13]);
+  var scale = IGES_UNIT_SCALE_M[unitFlag];
+  if (!Number.isFinite(scale)) {
+    throw knownImportError(
+      'IGES_UNITS_UNSUPPORTED',
+      'The IGES file uses an unsupported or unreadable length unit.',
+      'IGES global unit flag was ' + String(parameters[13]) + '.'
+    );
+  }
+  return scale;
+}
+
+function importCadShapes(gmsh, message, temporaryPath) {
+  var imported;
+  var scaleM = 1;
+  gmsh.option.restoreDefaults();
+  gmsh.option.setString('Geometry.OCCTargetUnit', message.sourceFormat === 'step' ? 'M' : '');
+  gmsh.FS.writeFile(temporaryPath, new Uint8Array(message.sourceBytes));
+  imported = gmsh.model.occ.importShapes(temporaryPath, true, message.sourceFormat);
+  if (message.sourceFormat === 'iges') {
+    scaleM = igesScaleToMeters(message.sourceBytes);
+    if (scaleM !== 1) { gmsh.model.occ.dilate(imported.outDimTags, 0, 0, 0, scaleM, scaleM, scaleM); }
+  }
+  gmsh.model.occ.synchronize();
+  if (message.sourceFormat === 'iges' && entityTags(gmsh.model.getEntities(3)).length === 0) {
+    gmsh.model.occ.healShapes([], 1e-8, true, true, true, true, true);
+    gmsh.model.occ.synchronize();
+  }
 }
 
 function importErrorFor(error, fallbackCode, fallbackMessage) {
@@ -139,7 +207,7 @@ function boundingBoxM(gmsh, solidTag) {
   var axis;
   for (axis = 0; axis < 3; axis += 1) {
     if (!Number.isFinite(minM[axis]) || !Number.isFinite(maxM[axis]) || minM[axis] >= maxM[axis]) {
-      throw knownImportError('GEOMETRY_NOT_CLOSED', 'The STEP file does not contain a usable closed solid.', 'Invalid solid bounding box.');
+      throw knownImportError('GEOMETRY_NOT_CLOSED', 'The CAD file does not contain a usable closed solid.', 'Invalid solid bounding box.');
     }
   }
   return { minM: minM, maxM: maxM };
@@ -209,7 +277,7 @@ function extractFeatureEdges(gmsh) {
     var localIndex;
     var typeIndex;
     if (coordinates.length !== nodeTags.length * 3) {
-      throw knownImportError('GEOMETRY_NOT_CLOSED', 'The STEP file could not be converted into a usable surface preview.', 'Feature-edge node coordinate count does not match node tags.');
+      throw knownImportError('GEOMETRY_NOT_CLOSED', 'The CAD file could not be converted into a usable surface preview.', 'Feature-edge node coordinate count does not match node tags.');
     }
     for (localIndex = 0; localIndex < nodeTags.length; localIndex += 1) {
       indexByNodeTag[String(nodeTags[localIndex])] = positions.length / 3;
@@ -223,7 +291,7 @@ function extractFeatureEdges(gmsh) {
         var first = indexByNodeTag[String(connectivity[edgeIndex])];
         var second = indexByNodeTag[String(connectivity[edgeIndex + 1])];
         if (first === undefined || second === undefined) {
-          throw knownImportError('GEOMETRY_NOT_CLOSED', 'The STEP file could not be converted into a usable surface preview.', 'Feature edge references a missing node.');
+          throw knownImportError('GEOMETRY_NOT_CLOSED', 'The CAD file could not be converted into a usable surface preview.', 'Feature edge references a missing node.');
         }
         indices.push(first, second);
       }
@@ -250,7 +318,7 @@ function extractPreview(gmsh, surfaceTags, geometryId, modelScaleM) {
     var start = indices.length;
     var faceId = 'face-' + geometryId + '-' + (surfaceIndex + 1);
     if (coordinates.length !== nodeTags.length * 3) {
-      throw knownImportError('GEOMETRY_NOT_CLOSED', 'The STEP file could not be converted into a usable surface preview.', 'Surface node coordinate count does not match node tags.');
+      throw knownImportError('GEOMETRY_NOT_CLOSED', 'The CAD file could not be converted into a usable surface preview.', 'Surface node coordinate count does not match node tags.');
     }
     for (localIndex = 0; localIndex < nodeTags.length; localIndex += 1) {
       indexByNodeTag[String(nodeTags[localIndex])] = positions.length / 3;
@@ -262,20 +330,20 @@ function extractPreview(gmsh, surfaceTags, geometryId, modelScaleM) {
       var elementIndex;
       if (type !== 2) { continue; }
       if (connectivity.length % 3 !== 0) {
-        throw knownImportError('GEOMETRY_NOT_CLOSED', 'The STEP file could not be converted into a usable surface preview.', 'Triangle connectivity is incomplete.');
+        throw knownImportError('GEOMETRY_NOT_CLOSED', 'The CAD file could not be converted into a usable surface preview.', 'Triangle connectivity is incomplete.');
       }
       for (elementIndex = 0; elementIndex < connectivity.length; elementIndex += 3) {
         var a = indexByNodeTag[String(connectivity[elementIndex])];
         var b = indexByNodeTag[String(connectivity[elementIndex + 1])];
         var c = indexByNodeTag[String(connectivity[elementIndex + 2])];
         if (a === undefined || b === undefined || c === undefined) {
-          throw knownImportError('GEOMETRY_NOT_CLOSED', 'The STEP file could not be converted into a usable surface preview.', 'Triangle references a node outside its surface.');
+          throw knownImportError('GEOMETRY_NOT_CLOSED', 'The CAD file could not be converted into a usable surface preview.', 'Triangle references a node outside its surface.');
         }
         if (triangleHasArea(positions, a, b, c, modelScaleM)) { indices.push(a, b, c); }
       }
     }
     if (indices.length === start) {
-      throw knownImportError('GEOMETRY_NOT_CLOSED', 'The STEP file could not be converted into a usable surface preview.', 'Surface has no triangle elements.');
+      throw knownImportError('GEOMETRY_NOT_CLOSED', 'The CAD file could not be converted into a usable surface preview.', 'Surface has no triangle elements.');
     }
     faceIds.push(faceId);
     faceRanges.push({ faceId: faceId, start: start, count: indices.length - start });
@@ -293,7 +361,7 @@ function extractPreview(gmsh, surfaceTags, geometryId, modelScaleM) {
 }
 
 function importGeometry(gmsh, message) {
-  var temporaryPath = '/spjutsim-import-' + message.requestId.replace(/[^A-Za-z0-9_-]/g, '_') + '.step';
+  var temporaryPath = '/spjutsim-import-' + message.requestId.replace(/[^A-Za-z0-9_-]/g, '_') + '.' + message.sourceFormat;
   var solids;
   var surfaces;
   var preview;
@@ -301,27 +369,24 @@ function importGeometry(gmsh, message) {
   var box;
   var previewScaleM;
   try {
-    progress(message.requestId, 'import', 'Reading STEP geometry…');
+    progress(message.requestId, 'import', 'Reading CAD geometry…');
     gmsh.clear();
     gmsh.model.add(message.geometryId);
-    gmsh.option.setString('Geometry.OCCTargetUnit', 'M');
-    gmsh.FS.writeFile(temporaryPath, new Uint8Array(message.stepBytes));
-    gmsh.model.occ.importShapes(temporaryPath, true, 'step');
-    gmsh.model.occ.synchronize();
+    importCadShapes(gmsh, message, temporaryPath);
     solids = entityTags(gmsh.model.getEntities(3));
     if (solids.length === 0) {
-      throw knownImportError('GEOMETRY_NO_SOLID', 'The STEP file does not contain a usable 3D solid.', 'No dimension-3 entities were imported.');
+      throw knownImportError('GEOMETRY_NO_SOLID', 'The CAD file does not contain a usable 3D solid.', 'No dimension-3 entities were imported.');
     }
     if (solids.length !== 1) {
       throw knownImportError('MULTIPLE_SOLIDS_UNSUPPORTED', 'This analysis supports exactly one solid body.', 'Imported ' + solids.length + ' dimension-3 entities.');
     }
     volume = gmsh.model.occ.getMass(3, solids[0]).mass;
     if (!Number.isFinite(volume) || volume <= 0) {
-      throw knownImportError('GEOMETRY_NOT_CLOSED', 'The STEP file does not contain a usable closed solid.', 'Solid volume is not positive.');
+      throw knownImportError('GEOMETRY_NOT_CLOSED', 'The CAD file does not contain a usable closed solid.', 'Solid volume is not positive.');
     }
     surfaces = entityTags(gmsh.model.getEntities(2));
     if (surfaces.length === 0) {
-      throw knownImportError('GEOMETRY_NOT_CLOSED', 'The STEP file does not contain a usable closed solid.', 'Imported solid has no boundary surfaces.');
+      throw knownImportError('GEOMETRY_NOT_CLOSED', 'The CAD file does not contain a usable closed solid.', 'Imported solid has no boundary surfaces.');
     }
     box = boundingBoxM(gmsh, solids[0]);
     progress(message.requestId, 'preview', 'Creating surface preview…');
@@ -331,19 +396,19 @@ function importGeometry(gmsh, message) {
       gmsh.model.mesh.generate(2);
       preview = extractPreview(gmsh, surfaces, message.geometryId, previewScaleM);
     } catch (error) {
-      throw importErrorFor(error, 'GEOMETRY_NOT_CLOSED', 'The STEP file could not be converted into a closed surface.');
+      throw importErrorFor(error, 'GEOMETRY_NOT_CLOSED', 'The CAD file could not be converted into a closed surface.');
     }
     return {
       geometryId: message.geometryId,
       sourceName: message.sourceName,
-      sourceFormat: 'step',
+      sourceFormat: message.sourceFormat,
       faceIds: preview.faceIds,
       boundingBoxM: box,
       volumeM3: volume,
       preview: preview.preview
     };
   } catch (error) {
-    throw importErrorFor(error, 'GEOMETRY_IMPORT_FAILED', 'The STEP file could not be read.');
+    throw importErrorFor(error, 'GEOMETRY_IMPORT_FAILED', 'The CAD file could not be read.');
   } finally {
     try { gmsh.FS.unlink(temporaryPath); } catch (ignore) {}
     try { gmsh.clear(); } catch (ignoreClear) {}
@@ -358,10 +423,7 @@ function restoreMeshGeometry(gmsh, message, temporaryPath) {
   var surfaces;
   gmsh.clear();
   gmsh.model.add(message.geometryId);
-  gmsh.option.setString('Geometry.OCCTargetUnit', 'M');
-  gmsh.FS.writeFile(temporaryPath, new Uint8Array(message.stepBytes));
-  gmsh.model.occ.importShapes(temporaryPath, true, 'step');
-  gmsh.model.occ.synchronize();
+  importCadShapes(gmsh, message, temporaryPath);
   solids = entityTags(gmsh.model.getEntities(3));
   surfaces = entityTags(gmsh.model.getEntities(2));
   if (solids.length !== 1 || surfaces.length !== message.faceIds.length) {
@@ -505,7 +567,7 @@ function meshStatistics(positions, connectivity, gammaQualities, diagonalM) {
 }
 
 function generateMesh(gmsh, message) {
-  var temporaryPath = '/spjutsim-mesh-' + message.requestId.replace(/[^A-Za-z0-9_-]/g, '_') + '.step';
+  var temporaryPath = '/spjutsim-mesh-' + message.requestId.replace(/[^A-Za-z0-9_-]/g, '_') + '.' + message.sourceFormat;
   var restored;
   var nodes;
   var tetrahedra;
@@ -673,7 +735,7 @@ async function handleRequest(message) {
     errorResponse(message.requestId, workerError(
       (normalizedError && normalizedError.code) || (message.type === 'import' ? 'GEOMETRY_IMPORT_FAILED' : (message.type === 'mesh' ? 'MESH_GENERATION_FAILED' : 'MESHER_OPERATION_FAILED')),
       (normalizedError && normalizedError.stage) || (message.type === 'import' ? 'import' : (message.type === 'mesh' ? 'mesh' : 'geometry')),
-      (normalizedError && normalizedError.userMessage) || (message.type === 'import' ? 'The STEP file could not be read.' : (message.type === 'mesh' ? 'The volume mesh could not be generated.' : 'The local geometry engine could not complete its operation.')),
+      (normalizedError && normalizedError.userMessage) || (message.type === 'import' ? 'The CAD file could not be read.' : (message.type === 'mesh' ? 'The volume mesh could not be generated.' : 'The local geometry engine could not complete its operation.')),
       (normalizedError && normalizedError.developerMessage) || (error && error.message)
     ));
   }
