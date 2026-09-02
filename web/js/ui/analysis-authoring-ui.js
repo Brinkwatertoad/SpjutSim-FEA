@@ -28,6 +28,12 @@
     this.removeLoadItemButton = byId('remove-load-item-button');
     this.gravityForm = byId('gravity-form');
     this.gravityStatus = byId('gravity-status');
+    this.modelRotationAxis = byId('model-rotation-axis');
+    this.modelRotationAngle = byId('model-rotation-angle');
+    this.rotateModelPositiveButton = byId('rotate-model-positive');
+    this.rotateModelNegativeButton = byId('rotate-model-negative');
+    this.resetModelOrientationButton = byId('reset-model-orientation');
+    this.modelOrientationStatus = byId('model-orientation-status');
     this.setupInspectorStatus = byId('setup-inspector-status');
     this.setupModelList = byId('setup-inspector-model-list');
     this.setupSupportList = byId('setup-inspector-support-list');
@@ -49,6 +55,7 @@
     this.supportFeedback = null;
     this.loadFeedback = null;
     this.gravityFeedback = null;
+    this.orientationFeedback = null;
   }
 
   function readNumber(id, label, optional) {
@@ -116,6 +123,9 @@
     this.cancelLoadEdit.addEventListener('click', function () { self.closeInspectorRow({ restoreFocus: true, cancelEdit: true }); });
     this.removeLoadItemButton.addEventListener('click', function () { self.removeActiveLoad(); });
     this.gravityForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveGravity(); });
+    if (this.rotateModelPositiveButton) { this.rotateModelPositiveButton.addEventListener('click', function () { self.rotateModel(1); }); }
+    if (this.rotateModelNegativeButton) { this.rotateModelNegativeButton.addEventListener('click', function () { self.rotateModel(-1); }); }
+    if (this.resetModelOrientationButton) { this.resetModelOrientationButton.addEventListener('click', function () { self.resetModelOrientation(); }); }
     if (this.addSupportButton) {
       this.addSupportButton.addEventListener('click', function () { self.openInspectorRow('support', 'new', self.addSupportButton); });
     }
@@ -499,6 +509,46 @@
     setFeedback(this.gravityStatus, this.gravityFeedback, gravity.enabled ? 'Gravity is active.' : 'Gravity is off.');
   };
 
+  AnalysisAuthoringUI.prototype.rotateModel = function (direction) {
+    try {
+      var angle = Math.abs(readNumber('model-rotation-angle', 'rotation angle'));
+      if (!(angle > 0)) { throw new Error('Enter a rotation angle greater than zero.'); }
+      this.controller.rotateGeometryAroundGlobalAxis(this.modelRotationAxis.value, direction * angle);
+      this.orientationFeedback = { message: 'Rotated around global ' + this.modelRotationAxis.value.toUpperCase() + ' by ' + (direction > 0 ? '+' : '−') + angle + '°.' };
+      this.announceSetup(this.orientationFeedback.message);
+      this.render(this.controller.document);
+    } catch (error) {
+      this.orientationFeedback = { error: true, message: error.message };
+      this.render(this.controller.document);
+    }
+  };
+
+  AnalysisAuthoringUI.prototype.resetModelOrientation = function () {
+    try {
+      this.controller.resetGeometryOrientation();
+      this.orientationFeedback = { message: 'Model orientation reset.' };
+      this.announceSetup(this.orientationFeedback.message);
+      this.render(this.controller.document);
+    } catch (error) {
+      this.orientationFeedback = { error: true, message: error.message };
+      this.render(this.controller.document);
+    }
+  };
+
+  AnalysisAuthoringUI.prototype.renderModelOrientation = function (documentState) {
+    var disabled = !documentState.geometry;
+    [this.modelRotationAxis, this.modelRotationAngle, this.rotateModelPositiveButton,
+      this.rotateModelNegativeButton, this.resetModelOrientationButton].forEach(function (control) {
+      if (control) { control.disabled = disabled; }
+    });
+    if (this.resetModelOrientationButton && documentState.geometry) {
+      this.resetModelOrientationButton.disabled = documentState.geometry.orientation.operations.length === 0;
+    }
+    setFeedback(this.modelOrientationStatus, this.orientationFeedback, disabled
+      ? 'Import geometry to adjust orientation.'
+      : (documentState.geometry.orientation.operations.length ? documentState.geometry.orientation.operations.join(' · ') : 'Original orientation.'));
+  };
+
   AnalysisAuthoringUI.prototype.openInspectorRow = function (kind, itemId, opener) {
     var selectedItem;
     if (this.activeInspectorKind === kind && this.activeInspectorItemId === itemId) {
@@ -636,6 +686,7 @@
     this.renderSupports(documentState);
     this.renderLoads(documentState);
     this.renderGravity(documentState);
+    this.renderModelOrientation(documentState);
     this.renderSetupInspector(documentState);
   };
 

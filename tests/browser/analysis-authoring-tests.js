@@ -206,7 +206,7 @@
       'setup rows were not emitted in stable document order');
     assert(rows[0].primaryText === 'cube.step' && rows[0].secondaryText === 'Steel A36 · STEP',
       'model row omitted source or material');
-    assert(rows[0].metaText === '6 faces', 'model row omitted face count');
+    assert(rows[0].metaText === '6 faces · Original orientation', 'model row omitted face count or orientation');
     assert(rows[1].secondaryText === 'Fixed · X, Y, Z' && rows[1].metaText === '2 faces',
       'fixed support row omitted constrained components or face count');
     assert(rows[2].secondaryText === 'X 0 mm · Z 1 mm', 'prescribed support row omitted displacement values');
@@ -224,7 +224,9 @@
     [
       'setup-inspector', 'setup-inspector-status', 'setup-inspector-model-list',
       'setup-inspector-support-list', 'setup-inspector-load-list',
-      'setup-inspector-form-stash', 'setup-add-support-button', 'setup-add-load-button'
+      'setup-inspector-form-stash', 'setup-add-support-button', 'setup-add-load-button',
+      'model-rotation-axis', 'model-rotation-angle', 'rotate-model-positive',
+      'rotate-model-negative', 'reset-model-orientation', 'model-orientation-status'
     ].forEach(function (id) {
       assert(document.getElementById(id), 'missing inspector node #' + id);
     });
@@ -362,6 +364,25 @@
     var inspectorRows = Array.from(document.querySelectorAll('[data-setup-row]'));
     assert(inspectorRows.map(function (row) { return row.dataset.setupKind; }).join('|') === 'model|support|load',
       'compact setup rows were not rendered in model/support/load order');
+    var modelTrigger = document.querySelector('[data-setup-kind="model"] [data-setup-row-trigger]');
+    modelTrigger.click();
+    assert(document.getElementById('model-rotation-angle').value === '90', 'model rotation did not default to 90 degrees');
+    document.getElementById('model-rotation-axis').value = 'z';
+    document.getElementById('rotate-model-positive').click();
+    assert(state.geometry.orientation.operations.join('') === 'Z +90°', 'positive axis rotation was not applied');
+    assert(state.boundaryConditions[0].faceIds.join('|') === 'face-x-' && state.loads[0].pressurePa === 1.5e6,
+      'model orientation rotated or discarded global authored setup');
+    assert(document.querySelector('[data-setup-kind="model"] .fea-setup-row-meta').textContent.indexOf('Z +90°') !== -1,
+      'compact Model row omitted its orientation summary');
+    document.getElementById('model-rotation-angle').value = '30';
+    document.getElementById('rotate-model-negative').click();
+    assert(state.geometry.orientation.operations[1] === 'Z −30°', 'negative axis rotation was not applied');
+    document.getElementById('reset-model-orientation').click();
+    assert(state.geometry.orientation.operations.length === 0 && near(state.geometry.preview.positionsM[3], 1),
+      'orientation reset did not restore the imported model frame');
+    assert(document.getElementById('model-orientation-status').textContent === 'Model orientation reset.',
+      'orientation reset was not announced in the Model editor');
+    authoring.closeInspectorRow({ cancelEdit: true });
     var supportTrigger = document.querySelector('[data-setup-kind="support"][data-item-id="support-1"] [data-setup-row-trigger]');
     assert(supportTrigger && supportTrigger.getAttribute('aria-expanded') === 'false', 'support setup row was missing or not collapsed');
     controller.replaceSelectedFaces(['face-z+']);

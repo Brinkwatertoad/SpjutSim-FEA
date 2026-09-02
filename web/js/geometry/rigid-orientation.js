@@ -148,6 +148,19 @@
     return applyRotationToGeometry(geometry, axisRotationMatrix(axis, degrees), axis.toUpperCase() + ' ' + formatAngle(degrees));
   }
 
+  function resetGeometryOrientation(geometry) {
+    var matrix;
+    var inverse;
+    var reset;
+    if (!validateRigidOrientation(geometry && geometry.orientation).valid) {
+      throw new Error('The model does not have a valid rigid orientation.');
+    }
+    matrix = geometry.orientation.rotation;
+    inverse = [matrix[0], matrix[3], matrix[6], matrix[1], matrix[4], matrix[7], matrix[2], matrix[5], matrix[8]];
+    reset = applyRotationToGeometry(geometry, inverse, null);
+    return Object.assign({}, reset, { orientation: identityRigidOrientation() });
+  }
+
   root.SpjutsimFEA = root.SpjutsimFEA || {};
   root.SpjutsimFEA.identityRigidOrientation = identityRigidOrientation;
   root.SpjutsimFEA.validateRigidOrientation = validateRigidOrientation;
@@ -156,4 +169,5 @@
   root.SpjutsimFEA.multiplyRotation3 = multiplyRotation3;
   root.SpjutsimFEA.applyRotationToGeometry = applyRotationToGeometry;
   root.SpjutsimFEA.rotateGeometryAroundGlobalAxis = rotateGeometryAroundGlobalAxis;
+  root.SpjutsimFEA.resetGeometryOrientation = resetGeometryOrientation;
 }(globalThis));

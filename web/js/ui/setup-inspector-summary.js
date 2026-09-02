@@ -31,7 +31,7 @@
       'model',
       geometry.sourceName,
       (material ? (material.name || 'Unnamed material') : 'No material') + ' · ' + String(geometry.sourceFormat || '').toUpperCase(),
-      faceCountText(geometry.faceIds)
+      faceCountText(geometry.faceIds) + ' · ' + (geometry.orientation.operations.length ? geometry.orientation.operations.join(' · ') : 'Original orientation')
     );
   }
 

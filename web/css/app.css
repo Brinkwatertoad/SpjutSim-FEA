@@ -30,6 +30,9 @@ button { font: inherit; }
 .fea-setup-row-meta { color: var(--secondary-text, #aeb4bf); font-size: 10px; }
 .fea-setup-editor { padding: 7px; border-top: 1px solid var(--ui-color-border-soft, #374151); }
 .fea-setup-actions { display: flex; gap: 5px; }
+.fea-orientation-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 6px; }
+.fea-orientation-controls .fea-setup-actions { margin-top: 7px; flex-wrap: wrap; }
+.fea-orientation-controls .fea-setup-actions button { flex: 1 1 auto; }
 .fea-analysis-list { display: grid; gap: 5px; margin: 7px 0; padding: 0; list-style: none; }
 .fea-analysis-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px; }
 .fea-analysis-list li button:first-child { overflow: hidden; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
