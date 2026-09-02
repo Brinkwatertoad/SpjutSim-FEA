@@ -125,6 +125,13 @@
     this.notify();
   };
 
+  AppController.prototype.restoreGeometryImportStatus = function () {
+    this.document.geometryImport = this.document.geometry
+      ? { status: 'succeeded', sourceName: this.document.geometry.sourceName, error: null }
+      : { status: 'idle', sourceName: null, error: null };
+    this.notify();
+  };
+
   /** Replace engineering state that depends on the imported geometry. */
   AppController.prototype.replaceGeometry = function (geometry, source) {
     var validation = root.SpjutsimFEA.validateGeometryModel(geometry);
@@ -147,6 +154,71 @@
     this.document.meshGeneration = { status: 'idle', error: null, progress: null };
     this.refreshConstraintStability();
     this.invalidateResults('geometry');
+    this.document.geometryImport = { status: 'succeeded', sourceName: source.sourceName, error: null };
+    this.notify();
+  };
+
+  /** Atomically install a replacement geometry and a completely validated setup transfer. */
+  AppController.prototype.replaceGeometryWithSetup = function (geometry, source, transfer) {
+    var geometryValidation = root.SpjutsimFEA.validateGeometryModel(geometry);
+    var materialValidation;
+    var gravityValidation;
+    var meshValidation;
+    var supports;
+    var loads;
+    var viewportPreferences;
+    if (!geometryValidation.valid) { throw new Error('Invalid replacement geometry: ' + geometryValidation.reason); }
+    if (!source || typeof source.sourceName !== 'string' || source.sourceFormat !== geometry.sourceFormat ||
+        root.SpjutsimFEA.sourceFormatForFilename(source.sourceName) !== source.sourceFormat ||
+        !(source.sourceBytes instanceof ArrayBuffer) || !source.sourceBytes.byteLength) {
+      throw new Error('A non-empty canonical CAD source matching the replacement geometry is required.');
+    }
+    if (!transfer || !Array.isArray(transfer.boundaryConditions) || !Array.isArray(transfer.loads)) {
+      throw new Error('A completed replacement setup transfer is required.');
+    }
+    materialValidation = transfer.material === null ? { valid: true, value: null }
+      : root.SpjutsimFEA.validateIsotropicMaterial(transfer.material, transfer.gravity);
+    if (!materialValidation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(materialValidation)); }
+    gravityValidation = root.SpjutsimFEA.validateGravity(transfer.gravity, materialValidation.value);
+    if (!gravityValidation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(gravityValidation)); }
+    supports = transfer.boundaryConditions.map(function (item) {
+      var validation = root.SpjutsimFEA.validateBoundaryCondition(item, geometry.faceIds);
+      if (!validation.valid) { throw new Error('Invalid selected CAD faces for replacement support: ' + root.SpjutsimFEA.firstValidationMessage(validation)); }
+      return validation.value;
+    });
+    loads = transfer.loads.map(function (item) {
+      var validation = root.SpjutsimFEA.validateLoad(item, geometry.faceIds);
+      if (!validation.valid) { throw new Error('Invalid selected CAD faces for replacement load: ' + root.SpjutsimFEA.firstValidationMessage(validation)); }
+      return validation.value;
+    });
+    meshValidation = root.SpjutsimFEA.validateMeshSettings(transfer.meshSettings, geometry.boundingBoxM);
+    if (!meshValidation.valid) { throw new Error('Invalid transferred mesh settings: ' + meshValidation.reason); }
+    if (!transfer.solveSettings || !Number.isFinite(transfer.solveSettings.relativeTolerance) || transfer.solveSettings.relativeTolerance <= 0 ||
+        !Number.isFinite(transfer.solveSettings.equilibriumTolerance) || transfer.solveSettings.equilibriumTolerance <= 0 ||
+        !Number.isFinite(transfer.solveSettings.maxIterations) || transfer.solveSettings.maxIterations < 0) {
+      throw new Error('Invalid transferred solve settings.');
+    }
+    viewportPreferences = transfer.viewportPreferences || {};
+
+    this.geometrySource = { sourceName: source.sourceName, sourceFormat: source.sourceFormat, sourceBytes: source.sourceBytes };
+    this.document.geometry = geometry;
+    this.document.material = materialValidation.value;
+    this.document.boundaryConditions = supports;
+    this.document.loads = loads;
+    this.document.gravity = gravityValidation.value;
+    this.document.meshSettings = Object.assign({}, transfer.meshSettings);
+    this.document.solveSettings = Object.assign({}, transfer.solveSettings);
+    this.document.selectedFaceIds = [];
+    this.document.meshMetadata = null;
+    this.document.mesh = null;
+    this.document.meshGeneration = { status: 'idle', error: null, progress: null };
+    this.refreshConstraintStability();
+    this.invalidateResults('geometry');
+    this.document.viewportPresentation = {
+      mode: 'model', displayStyle: viewportPreferences.displayStyle || 'lines', field: 'vonMises', meshOverlay: false,
+      deformationMode: 'undeformed', deformationScale: 0,
+      userDeformationScale: Number.isFinite(viewportPreferences.userDeformationScale) ? viewportPreferences.userDeformationScale : 100
+    };
     this.document.geometryImport = { status: 'succeeded', sourceName: source.sourceName, error: null };
     this.notify();
   };

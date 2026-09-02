@@ -1538,13 +1538,13 @@ Use the internalized SpjutSim UI shell as the baseline application chrome:
 +-------------------------------------------------------------------+
 | App title/status | File/View/etc menus            | primary Solve |
 +----------------------+--------------------------------------------+
-| Tools pane           | Canvas / Results layout                    |
-| Compact setup        | +---------------------+------------------+  |
-|  Model + material    | |                     | Results          |  |
+| Setup pane           | Canvas / Results layout                    |
+|  Model               | +---------------------+------------------+  |
+|  Material            | |                     | Results          |  |
 |  Supports            | |    Three.js         | / Convergence    |  |
 |  Loads               | |    viewport         | / Diagnostics    |  |
-| Geometry / Mesh      | |                     |                  |  |
-| Solve preflight      | +---------------------+------------------+  |
+|  Mesh                | |                     |                  |  |
+|  Solve preflight     | +---------------------+------------------+  |
 +----------------------+--------------------------------------------+
 ```
 
@@ -1564,8 +1564,12 @@ The exact tab names may change, but numerical results and convergence should liv
 
 Use ordinary semantic HTML controls enhanced by the internal UI helpers where useful.
 
-The highest-priority tools-pane surface is a compact setup inspector placed at
-the top of the pane. It groups Model (including material), Supports, and Loads.
+The whole left pane is **Setup**, without a nested Setup subpanel. Its fixed
+top-to-bottom order is Model, Material, Supports, Loads, Mesh, and Solve
+Preflight. Model owns CAD import/replacement and orientation; clicking the empty
+Model row opens the file chooser, while an imported model collapses to a compact
+source/format/face/orientation summary. Material is a separate adjacent compact
+row whose existing editor expands in place. Supports and Loads follow.
 A typical model with a material, a few supports, and a few simple loads must fit
 together in the normal tools-pane viewport without requiring page scrolling.
 Each compact row includes the engineering value/components, display units, and
@@ -1578,9 +1582,9 @@ parallel draft, or expose separate Material/Supports/Loads editing sections.
 Save, cancel, delete, and Escape return focus to the logical row or Add action.
 Escape closes the inline editor before it clears transient face selection.
 
-Below the inspector, retain focused Geometry / Import, Mesh, and Solve preflight
-tools. Expanded editors may use their own bounded overflow when necessary, but
-collapsed setup summaries remain compact and readable.
+Below the compact rows, retain focused Mesh and Solve Preflight tools. Expanded
+editors may use their own bounded overflow when necessary, but collapsed setup
+summaries remain compact and readable.
 
 The analysis state model remains authoritative. Controls render the state and dispatch commands; they do not own the engineering model.
 

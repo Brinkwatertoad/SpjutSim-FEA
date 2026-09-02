@@ -4,26 +4,30 @@
 <body>
   <p id="test-status" role="status">Running…</p>
   <aside class="fea-tools" style="width:280px;height:720px;overflow:auto">
+    <h1 id="setup-inspector-title">Setup</h1>
     <section id="setup-inspector" class="fea-setup-inspector" aria-labelledby="setup-inspector-title">
-      <div class="fea-setup-heading"><h2 id="setup-inspector-title">Setup</h2></div>
       <p id="setup-inspector-status" class="fea-visually-hidden" role="status" aria-live="polite"></p>
       <div class="fea-setup-group"><h3>Model</h3><ul id="setup-inspector-model-list" class="fea-setup-list"></ul></div>
+      <div class="fea-setup-group"><h3>Material</h3><ul id="setup-inspector-material-list" class="fea-setup-list"></ul></div>
       <div class="fea-setup-group"><div class="fea-setup-group-heading"><h3>Supports</h3><button id="setup-add-support-button" type="button">Add</button></div><p id="constraint-stability-summary" class="fea-constraint-stability" role="status" aria-live="polite"></p><ul id="setup-inspector-support-list" class="fea-setup-list"></ul></div>
       <div class="fea-setup-group"><div class="fea-setup-group-heading"><h3>Loads</h3><button id="setup-add-load-button" type="button">Add</button></div><ul id="setup-inspector-load-list" class="fea-setup-list"></ul></div>
       <div id="setup-inspector-form-stash" hidden>
-    <div id="material-editor">
-    <select id="material-catalog-select"><option value="custom">Custom</option></select>
-    <form id="material-form" novalidate>
-      <input id="material-name"><input id="material-youngs"><input id="material-poisson"><input id="material-density">
-      <input id="material-tensile-yield"><input id="material-compressive-yield"><input id="material-ultimate-tensile"><input id="material-ultimate-compressive">
-      <button type="submit">Save material</button><button id="replace-saved-material-button" type="button">Replace saved</button><button id="remove-saved-material-button" type="button">Remove saved</button><button id="remove-material-button" type="button">Remove</button>
-    </form><div id="material-catalog-details"></div><p id="material-status"></p>
+    <div id="model-editor">
+    <button id="import-step-button" type="button">Import or replace CAD…</button><input id="import-step-input" type="file" hidden>
+    <p id="geometry-status"></p><p id="face-selection-status"></p><button id="clear-face-selection-button" type="button">Clear faces</button>
     <fieldset class="fea-orientation-controls"><legend>Model orientation</legend>
       <div class="fea-orientation-fields"><label for="model-rotation-axis">Axis</label><select id="model-rotation-axis"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select><label for="model-rotation-angle">Angle</label><input id="model-rotation-angle" type="number" value="90"></div>
       <div class="fea-setup-actions"><button id="rotate-model-positive" type="button">Rotate +</button><button id="rotate-model-negative" type="button">Rotate −</button><button id="reset-model-orientation" type="button">Reset</button></div>
       <select id="model-face-direction"><option value="+x">+X</option><option value="-x">−X</option><option value="+y">+Y</option><option value="-y">−Y</option><option value="+z">+Z</option><option value="-z">−Z</option></select><button id="orient-selected-face" type="button">Orient selected face</button>
       <p id="model-orientation-status" role="status" aria-live="polite"></p>
     </fieldset></div>
+    <div id="material-editor">
+    <select id="material-catalog-select"><option value="custom">Custom</option></select>
+    <form id="material-form" novalidate>
+      <input id="material-name"><input id="material-youngs"><input id="material-poisson"><input id="material-density">
+      <input id="material-tensile-yield"><input id="material-compressive-yield"><input id="material-ultimate-tensile"><input id="material-ultimate-compressive">
+      <button type="submit">Save material</button><button id="replace-saved-material-button" type="button">Replace saved</button><button id="remove-saved-material-button" type="button">Remove saved</button><button id="remove-material-button" type="button">Remove</button>
+    </form><div id="material-catalog-details"></div><p id="material-status"></p></div>
     <div id="support-editor">
     <form id="support-form" novalidate>
       <select id="support-type"><option value="fixed">Fixed</option><option value="custom">Choose components</option></select>
@@ -49,6 +53,7 @@
   <script src="../../web/js/analysis/constraint-stability.js"></script>
   <script src="../../web/js/analysis/material-catalog.js"></script>
   <script src="../../web/js/analysis/solver-input.js"></script>
+  <script src="../../web/js/analysis/replacement-migration.js"></script>
   <script src="../../web/js/analysis/analysis-document.js"></script>
   <script src="../../web/js/analysis/app-controller.js"></script>
   <script src="../../web/js/render/analysis-glyphs.js"></script>

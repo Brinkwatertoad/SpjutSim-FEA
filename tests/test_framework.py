@@ -316,7 +316,7 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn("--ui-color-support", viewport)
         for element_id in ('material-form', 'support-form', 'load-form', 'gravity-form'):
             self.assertIn(element_id, index)
-        for inspector_id in ('setup-inspector', 'setup-inspector-model-list', 'setup-inspector-support-list',
+        for inspector_id in ('setup-inspector', 'setup-inspector-model-list', 'setup-inspector-material-list', 'setup-inspector-support-list',
                              'setup-inspector-load-list', 'setup-inspector-form-stash'):
             self.assertIn(inspector_id, index)
         for legacy_section_id in ('material-tool', 'supports-tool', 'loads-tool'):

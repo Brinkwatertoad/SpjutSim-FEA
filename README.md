@@ -116,6 +116,15 @@ and CAD `FaceId` references remain in the global analysis frame. STL and OBJ are
 intentionally deferred until durable surface-patch identity and solid validation
 are defined for tessellated input.
 
+The left pane is one compact Setup sequence: Model, Material, Supports, Loads,
+Mesh, and Solve Preflight. Model owns CAD import/replacement and collapses to a
+small source/face/orientation summary; Material expands independently directly
+beneath it. Importing over an active model opens a side-by-side transfer flow.
+Each old support/load is highlighted in order while the user maps replacement
+faces or explicitly drops the item. Material, gravity, mesh/solve settings, and
+orientation transfer automatically, and the replacement is installed only
+after the completed summary is accepted.
+
 Every support uses one component-based global-coordinate contract. The Fixed
 editor preset sets X, Y, and Z displacement to zero; Choose components permits
 any one-, two-, or three-axis combination and finite nonzero prescribed values.

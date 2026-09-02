@@ -38,6 +38,7 @@
     this.modelOrientationStatus = byId('model-orientation-status');
     this.setupInspectorStatus = byId('setup-inspector-status');
     this.setupModelList = byId('setup-inspector-model-list');
+    this.setupMaterialList = byId('setup-inspector-material-list');
     this.setupSupportList = byId('setup-inspector-support-list');
     this.constraintStabilitySummary = byId('constraint-stability-summary');
     this.setupLoadList = byId('setup-inspector-load-list');
@@ -599,6 +600,11 @@
 
   AnalysisAuthoringUI.prototype.openInspectorRow = function (kind, itemId, opener) {
     var selectedItem;
+    if (kind === 'model' && !this.controller.document.geometry) {
+      var importButton = byId('import-step-button');
+      if (importButton && !importButton.disabled) { importButton.click(); }
+      return;
+    }
     if (this.activeInspectorKind === kind && this.activeInspectorItemId === itemId) {
       this.closeInspectorRow({ restoreFocus: true, cancelEdit: true });
       return;
@@ -613,7 +619,7 @@
     this.activeInspectorFocusReturn = opener || null;
     if (kind === 'support') { selectedItem = this.controller.document.boundaryConditions.find(function (item) { return item.id === itemId; }); }
     if (kind === 'load') { selectedItem = this.controller.document.loads.find(function (item) { return item.id === itemId; }); }
-    this.announceSetup('Editing ' + (selectedItem ? selectedItem.name : (itemId === 'new' ? 'new ' + kind : (kind === 'model' ? 'model and material' : kind))) + '.');
+    this.announceSetup('Editing ' + (selectedItem ? selectedItem.name : (itemId === 'new' ? 'new ' + kind : kind)) + '.');
     if (kind === 'support' && itemId !== 'new') { this.beginSupportEdit(itemId); }
     else if (kind === 'load' && itemId !== 'new') { this.beginLoadEdit(itemId); }
     else { this.render(this.controller.document); }
@@ -622,7 +628,7 @@
   AnalysisAuthoringUI.prototype.returnEditorsToStash = function () {
     var stash = this.setupFormStash;
     if (!stash) { return; }
-    ['material-editor', 'support-editor', 'load-editor', 'gravity-editor'].forEach(function (id) {
+    ['model-editor', 'material-editor', 'support-editor', 'load-editor', 'gravity-editor'].forEach(function (id) {
       var editor = byId(id);
       if (editor && editor.parentElement !== stash) { stash.append(editor); }
     });
@@ -660,7 +666,7 @@
 
   AnalysisAuthoringUI.prototype.mountInlineEditor = function (kind, itemId) {
     var host = document.querySelector('[data-setup-kind="' + kind + '"][data-item-id="' + itemId + '"] [data-setup-editor-host]');
-    var editor = byId(kind === 'model' ? 'material-editor' : (kind + '-editor'));
+    var editor = byId(kind + '-editor');
     if (!host || !editor) { return; }
     host.append(editor);
     if (kind === 'load' && itemId === 'new') { host.append(byId('gravity-editor')); }
@@ -671,8 +677,9 @@
     var groups;
     if (!this.setupModelList || !root.SpjutsimFEA.buildSetupInspectorRows) { return; }
     this.returnEditorsToStash();
-    groups = { model: this.setupModelList, support: this.setupSupportList, load: this.setupLoadList, gravity: this.setupLoadList };
+    groups = { model: this.setupModelList, material: this.setupMaterialList, support: this.setupSupportList, load: this.setupLoadList, gravity: this.setupLoadList };
     this.setupModelList.replaceChildren();
+    this.setupMaterialList.replaceChildren();
     this.setupSupportList.replaceChildren();
     this.setupLoadList.replaceChildren();
     var definitions = root.SpjutsimFEA.buildSetupInspectorRows(documentState).slice();

@@ -31,7 +31,9 @@ have distinct numerical/browser acceptance evidence.
 - Complete: component-based X/Y/Z supports and six-mode rigid-body diagnostics.
 - Complete: distributed surface-contacting glyphs and a corner XYZ triad.
 - Complete: Truss-compatible deformation animation.
-- Next: transactional replacement-model setup transfer.
+- Complete: single-hierarchy Setup pane with Model-owned CAD import.
+- Complete: transactional replacement-model setup transfer.
+- Next: UI Kit-compatible factory/imported color schemes.
 
 ## Constraints
 

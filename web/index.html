@@ -28,15 +28,34 @@
       <button class="fea-primary" id="solve-button" type="button" disabled title="Available after model preflight">Solve</button>
     </header>
     <main class="fea-workspace">
-      <aside class="fea-tools" aria-label="Analysis tools">
-        <h1>Analysis</h1>
+      <aside class="fea-tools" aria-label="Setup">
+        <h1 id="setup-inspector-title">Setup</h1>
         <section id="setup-inspector" class="fea-setup-inspector" aria-labelledby="setup-inspector-title">
-          <div class="fea-setup-heading"><h2 id="setup-inspector-title">Setup</h2></div>
           <p id="setup-inspector-status" class="fea-visually-hidden" role="status" aria-live="polite"></p>
           <div class="fea-setup-group"><h3>Model</h3><ul id="setup-inspector-model-list" class="fea-setup-list"></ul></div>
+          <div class="fea-setup-group"><h3>Material</h3><ul id="setup-inspector-material-list" class="fea-setup-list"></ul></div>
           <div class="fea-setup-group"><div class="fea-setup-group-heading"><h3>Supports</h3><button id="setup-add-support-button" type="button">Add</button></div><p id="constraint-stability-summary" class="fea-constraint-stability" role="status" aria-live="polite">Import a model to check rigid-body stability.</p><ul id="setup-inspector-support-list" class="fea-setup-list"></ul></div>
           <div class="fea-setup-group"><div class="fea-setup-group-heading"><h3>Loads</h3><button id="setup-add-load-button" type="button">Add</button></div><ul id="setup-inspector-load-list" class="fea-setup-list"></ul></div>
           <div id="setup-inspector-form-stash" hidden>
+            <div id="model-editor">
+              <button id="import-step-button" type="button">Import or replace CAD…</button>
+              <input id="import-step-input" type="file" accept=".step,.stp,.iges,.igs,.brep" hidden>
+              <p id="geometry-status">Choose a STEP, IGES, or BREP solid to begin.</p>
+              <p id="face-selection-status" role="status" aria-live="polite">Import geometry to select faces.</p>
+              <button id="clear-face-selection-button" type="button" disabled>Clear selected faces</button>
+              <fieldset class="fea-orientation-controls"><legend>Model orientation</legend>
+                <div class="fea-orientation-fields">
+                  <label for="model-rotation-axis">Global axis</label><select id="model-rotation-axis"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select>
+                  <label for="model-rotation-angle">Angle (degrees)</label><input id="model-rotation-angle" type="number" min="0" step="any" value="90">
+                </div>
+                <div class="fea-setup-actions"><button id="rotate-model-positive" type="button">Rotate +</button><button id="rotate-model-negative" type="button">Rotate −</button><button id="reset-model-orientation" type="button">Reset</button></div>
+                <div class="fea-orientation-fields">
+                  <label for="model-face-direction">Selected face normal</label><select id="model-face-direction"><option value="+x">+X</option><option value="-x">−X</option><option value="+y">+Y</option><option value="-y">−Y</option><option value="+z" selected>+Z</option><option value="-z">−Z</option></select>
+                  <button id="orient-selected-face" type="button">Orient selected face</button>
+                </div>
+                <p id="model-orientation-status" role="status" aria-live="polite">Import geometry to adjust orientation.</p>
+              </fieldset>
+            </div>
             <div id="material-editor">
               <label for="material-catalog-select">Catalog</label>
               <select id="material-catalog-select" aria-describedby="material-catalog-details"><option value="custom" selected>Custom</option></select>
@@ -59,18 +78,6 @@
               </form>
               <div id="material-catalog-details" class="fea-material-details" aria-live="polite"></div>
               <p id="material-status" role="status" aria-live="polite">No material defined.</p>
-              <fieldset class="fea-orientation-controls"><legend>Model orientation</legend>
-                <div class="fea-orientation-fields">
-                  <label for="model-rotation-axis">Global axis</label><select id="model-rotation-axis"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select>
-                  <label for="model-rotation-angle">Angle (degrees)</label><input id="model-rotation-angle" type="number" min="0" step="any" value="90">
-                </div>
-                <div class="fea-setup-actions"><button id="rotate-model-positive" type="button">Rotate +</button><button id="rotate-model-negative" type="button">Rotate −</button><button id="reset-model-orientation" type="button">Reset</button></div>
-                <div class="fea-orientation-fields">
-                  <label for="model-face-direction">Selected face normal</label><select id="model-face-direction"><option value="+x">+X</option><option value="-x">−X</option><option value="+y">+Y</option><option value="-y">−Y</option><option value="+z" selected>+Z</option><option value="-z">−Z</option></select>
-                  <button id="orient-selected-face" type="button">Orient selected face</button>
-                </div>
-                <p id="model-orientation-status" role="status" aria-live="polite">Import geometry to adjust orientation.</p>
-              </fieldset>
             </div>
             <div id="support-editor">
               <p class="fea-help">Supports attach to the currently selected CAD faces.</p>
@@ -113,14 +120,6 @@
               <p id="gravity-status" role="status" aria-live="polite">Gravity is off.</p>
             </div>
           </div>
-        </section>
-        <section>
-          <h2>Geometry</h2>
-          <button id="import-step-button" type="button">Import CAD…</button>
-          <input id="import-step-input" type="file" accept=".step,.stp,.iges,.igs,.brep" hidden>
-          <p id="geometry-status">Choose a STEP, IGES, or BREP solid to begin.</p>
-          <p id="face-selection-status" role="status" aria-live="polite">Import geometry to select faces.</p>
-          <button id="clear-face-selection-button" type="button" disabled>Clear selected faces</button>
         </section>
         <section>
           <h2>Mesh</h2>
@@ -214,6 +213,19 @@
       </div>
     </section>
   </div>
+  <div class="ui-modal-backdrop" id="replacement-migration-backdrop" hidden>
+    <section class="fea-replacement-dialog" id="replacement-migration-dialog" role="dialog" aria-modal="true" aria-labelledby="replacement-migration-title" tabindex="-1">
+      <header class="fea-replacement-header"><div><h2 id="replacement-migration-title">Transfer setup to replacement model</h2><p id="replacement-migration-progress"></p></div><button id="replacement-migration-cancel" type="button">Cancel</button></header>
+      <p id="replacement-migration-status" role="status" aria-live="polite">Select matching faces on the replacement.</p>
+      <div class="fea-replacement-views">
+        <figure><figcaption>Current model — referenced faces</figcaption><canvas id="replacement-old-viewport" aria-label="Current model reference viewport"></canvas></figure>
+        <figure><figcaption>Replacement model — select matching faces</figcaption><canvas id="replacement-new-viewport" tabindex="0" aria-label="Replacement model selectable viewport"></canvas></figure>
+      </div>
+      <section class="fea-replacement-item" aria-labelledby="replacement-item-name"><h3 id="replacement-item-name"></h3><p id="replacement-item-description"></p></section>
+      <section id="replacement-migration-summary" hidden><h3>Transfer summary</h3><ul id="replacement-migration-summary-list"></ul></section>
+      <footer class="fea-replacement-actions"><button id="replacement-migration-back" type="button">Back</button><span></span><button id="replacement-migration-drop" type="button" data-action-intent="danger">Drop item</button><button id="replacement-migration-map" class="ui-button-primary" type="button">Use selected faces</button><button id="replacement-migration-apply" class="ui-button-primary" type="button" hidden>Apply replacement</button></footer>
+    </section>
+  </div>
   <script src="ui/color-schemes.js"></script>
   <script src="ui/custom-select.js"></script>
   <script src="ui/overflow-menu.js"></script>
@@ -231,6 +243,7 @@
   <script src="js/analysis/analysis-contracts.js"></script>
   <script src="js/analysis/constraint-stability.js"></script>
   <script src="js/analysis/material-catalog.js"></script>
+  <script src="js/analysis/replacement-migration.js"></script>
   <script src="js/analysis/solver-input.js"></script>
   <script src="js/analysis/result-model.js"></script>
   <script src="js/analysis/analysis-document.js"></script>
@@ -250,6 +263,7 @@
   <script src="generated/local-runtime/gmsh-runtime-source-part-006.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source-part-007.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source-part-008.js"></script>
+  <script src="js/ui/replacement-migration-ui.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source.js"></script>
   <script src="generated/local-runtime/fem-runtime-source.js"></script>
   <script src="generated/local-runtime/mesher-worker-source.js"></script>

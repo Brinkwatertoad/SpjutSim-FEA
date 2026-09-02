@@ -209,19 +209,21 @@ viewport is disposed, or when a non-deformed presentation becomes active.
 ## Compact setup inspector
 
 The compact setup inspector is the highest-priority release feature and the
-primary way to understand and revisit authored setup. Place it at the top of
-the tools pane in a sticky region below the pane header so ordinary model,
-support, and load setup is visible together without scrolling through separate
-authoring sections.
+primary way to understand and revisit authored setup. The whole left pane is
+named Setup; do not nest a second Setup panel within it. Keep ordinary model,
+material, support, and load setup visible together without scrolling through
+separate authoring sections.
 
 The inspector contains:
 
-- Model, including source format, orientation, and active material;
+- Model, including source format, orientation, and CAD import/replacement;
+- Material, immediately below Model;
 - Supports;
 - Loads, including gravity when enabled.
 
 Use compact grouped rows with stable item identifiers. The Model row includes
-the source name/format, material name, and orientation summary. Each support row
+the source name/format and orientation summary; the Material row includes its
+name and primary properties. Each support row
 shows its X/Y/Z constrained components, prescribed values when nonzero, and face
 count. Each simple load row shows pressure or force type, its value/vector with
 units, and face count. Gravity appears as a load row when enabled. A typical
@@ -231,8 +233,10 @@ normal tools-pane viewport without requiring page scrolling.
 Selecting a support or surface load selects and highlights its faces and opens
 that item's editor directly beneath or within the selected inspector row. The
 user can modify, save, cancel, or delete the item there without finding a
-separate section farther down the tools pane. Selecting Model opens its material
-and orientation actions in the same inspector region. Provide compact add
+separate section farther down the tools pane. Clicking an empty Model row opens
+CAD import; after import, Model opens import/replacement and orientation actions
+in the same region. Material independently opens the existing material editor.
+Provide compact add
 actions for supports and loads that open the corresponding editor in place.
 
 The existing authoring controls may be reused internally, but there must be one

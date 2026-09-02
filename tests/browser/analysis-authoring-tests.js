@@ -299,6 +299,51 @@
       'deformation animation did not wrap deterministically');
   }
 
+  function testReplacementMigrationContract() {
+    var controller = new api.AppController({ document: api.createAnalysisDocument() });
+    var oldGeometry = api.rotateGeometryAroundGlobalAxis(cubeGeometry('old-model'), 'z', 90);
+    var replacement = cubeGeometry('replacement-model');
+    var oldSource = { sourceName: 'old.step', sourceFormat: 'step', sourceBytes: new Uint8Array([1]).buffer };
+    var newSource = { sourceName: 'replacement.step', sourceFormat: 'step', sourceBytes: new Uint8Array([2]).buffer };
+    var draft;
+    var transfer;
+    controller.replaceGeometry(oldGeometry, oldSource);
+    controller.document.material = { name: 'Transfer steel', youngsModulusPa: 200e9, poissonsRatio: 0.3, densityKgM3: 7850 };
+    controller.document.boundaryConditions = [{ id: 'support-a', name: 'Support A', type: 'support', faceIds: [oldGeometry.faceIds[0]], componentsM: { x: 0, z: 0.001 } }];
+    controller.document.loads = [{ id: 'load-a', name: 'Load A', type: 'total-force', faceIds: [oldGeometry.faceIds[1]], forceN: [10, 20, 30] }];
+    controller.document.gravity = { enabled: true, accelerationMS2: [0, 0, -9.81] };
+    controller.document.meshSettings = { preset: 'coarse', elementType: 'tet4' };
+    controller.document.solveSettings = { relativeTolerance: 1e-7, equilibriumTolerance: 2e-6, maxIterations: 50 };
+    draft = api.createReplacementMigrationDraft(controller.document, replacement, newSource);
+    assert(draft.items.map(function (item) { return item.kind + ':' + item.id; }).join('|') === 'support:support-a|load:load-a',
+      'replacement items were not ordered supports before loads in document order');
+    assert(draft.newGeometry.orientation.operations.join('|') === oldGeometry.orientation.operations.join('|'),
+      'replacement model did not inherit the prior orientation preference');
+    expectError(function () { api.buildReplacementMigrationTransfer(draft); }, 'Map or drop every support and load');
+    expectError(function () { api.mapReplacementMigrationItem(draft, 0, ['missing-face']); }, 'replacement model');
+    api.mapReplacementMigrationItem(draft, 0, [replacement.faceIds[2], replacement.faceIds[3]]);
+    api.dropReplacementMigrationItem(draft, 1);
+    transfer = api.buildReplacementMigrationTransfer(draft);
+    assert(transfer.boundaryConditions.length === 1 && transfer.boundaryConditions[0].faceIds.join('|') === replacement.faceIds[2] + '|' + replacement.faceIds[3] &&
+      transfer.loads.length === 0 && transfer.droppedItems.length === 1,
+    'replacement mapping did not retain the mapped support and explicit load drop');
+    assert(transfer.material.name === 'Transfer steel' && transfer.gravity.enabled && transfer.meshSettings.preset === 'coarse' && transfer.solveSettings.maxIterations === 50,
+      'replacement transfer lost automatically retained analysis settings');
+    var originalGeometry = controller.document.geometry;
+    var originalRevision = controller.document.analysisRevision;
+    expectError(function () {
+      controller.replaceGeometryWithSetup(draft.newGeometry, newSource, Object.assign({}, transfer, {
+        boundaryConditions: [Object.assign({}, transfer.boundaryConditions[0], { faceIds: ['invalid'] })]
+      }));
+    }, 'selected CAD faces');
+    assert(controller.document.geometry === originalGeometry && controller.document.analysisRevision === originalRevision,
+      'invalid replacement payload partially mutated the active analysis');
+    controller.replaceGeometryWithSetup(draft.newGeometry, newSource, transfer);
+    assert(controller.document.geometry === draft.newGeometry && controller.document.material.name === 'Transfer steel' &&
+      controller.document.boundaryConditions.length === 1 && controller.document.loads.length === 0 && controller.document.mesh === null && controller.document.results === null,
+    'completed replacement transfer was not installed atomically');
+  }
+
   function testSetupInspectorSummaries() {
     var state = api.createAnalysisDocument();
     state.geometry = cubeGeometry('cube-summary');
@@ -315,27 +360,29 @@
 
     var rows = api.buildSetupInspectorRows(state);
     assert(rows.map(function (row) { return row.kind + ':' + row.itemId; }).join('|') ===
-      'model:model|support:support-1|support:support-2|load:load-1|load:load-2|gravity:gravity',
+      'model:model|material:material|support:support-1|support:support-2|load:load-1|load:load-2|gravity:gravity',
       'setup rows were not emitted in stable document order');
-    assert(rows[0].primaryText === 'cube.step' && rows[0].secondaryText === 'Steel A36 · STEP',
-      'model row omitted source or material');
+    assert(rows[0].primaryText === 'cube.step' && rows[0].secondaryText === 'STEP',
+      'model row omitted source format');
     assert(rows[0].metaText === '6 faces · Original orientation', 'model row omitted face count or orientation');
-    assert(rows[1].secondaryText === 'Fixed · X, Y, Z' && rows[1].metaText === '2 faces',
+    assert(rows[1].primaryText === 'Steel A36' && rows[1].secondaryText === '200 GPa · ν 0.3',
+      'material row omitted compact engineering properties');
+    assert(rows[2].secondaryText === 'Fixed · X, Y, Z' && rows[2].metaText === '2 faces',
       'fixed support row omitted constrained components or face count');
-    assert(rows[2].secondaryText === 'X 0 mm · Z 1 mm', 'prescribed support row omitted displacement values');
-    assert(rows[3].secondaryText === 'Pressure · 1.5 MPa', 'pressure row omitted display units');
-    assert(rows[4].secondaryText === 'Force · [120, −30, 45] N', 'force row omitted vector or display units');
-    assert(rows[5].secondaryText === '[0, 0, −9.80665] m/s²', 'gravity row omitted acceleration');
+    assert(rows[3].secondaryText === 'X 0 mm · Z 1 mm', 'prescribed support row omitted displacement values');
+    assert(rows[4].secondaryText === 'Pressure · 1.5 MPa', 'pressure row omitted display units');
+    assert(rows[5].secondaryText === 'Force · [120, −30, 45] N', 'force row omitted vector or display units');
+    assert(rows[6].secondaryText === '[0, 0, −9.80665] m/s²', 'gravity row omitted acceleration');
     assert(rows.every(function (row) { return row.ariaLabel.indexOf(row.primaryText) !== -1; }),
       'setup row accessible label omitted its primary text');
 
     state.gravity.enabled = false;
-    assert(api.buildSetupInspectorRows(state).length === 5, 'disabled gravity was included as a setup row');
+    assert(api.buildSetupInspectorRows(state).length === 6, 'disabled gravity was included as a setup row');
   }
 
   function testSetupInspectorMarkup() {
     [
-      'setup-inspector', 'setup-inspector-status', 'setup-inspector-model-list',
+      'setup-inspector', 'setup-inspector-status', 'setup-inspector-model-list', 'setup-inspector-material-list',
       'setup-inspector-support-list', 'setup-inspector-load-list',
       'setup-inspector-form-stash', 'setup-add-support-button', 'setup-add-load-button',
       'constraint-stability-summary',
@@ -349,6 +396,19 @@
     assert(document.querySelectorAll('#support-form').length === 1, 'support form was duplicated');
     assert(document.querySelectorAll('#load-form').length === 1, 'load form was duplicated');
     assert(document.querySelectorAll('#gravity-form').length === 1, 'gravity form was duplicated');
+    assert(document.querySelector('.fea-tools > h1').textContent === 'Setup' && !document.querySelector('#setup-inspector h2'),
+      'left pane retained a nested Analysis/Setup hierarchy');
+    var emptyController = new api.AppController({ document: api.createAnalysisDocument() });
+    var emptyAuthoring = new api.AnalysisAuthoringUI(emptyController);
+    var importRequested = false;
+    document.getElementById('import-step-button').addEventListener('click', function () { importRequested = true; }, { once: true });
+    emptyAuthoring.render(emptyController.document);
+    document.querySelector('[data-setup-kind="model"] [data-setup-row-trigger]').click();
+    assert(importRequested, 'clicking the empty Model row did not open CAD import');
+    document.querySelector('[data-setup-kind="material"] [data-setup-row-trigger]').click();
+    assert(document.getElementById('material-form').closest('[data-setup-kind="material"]'),
+      'Material did not expand immediately below Model');
+    emptyAuthoring.closeInspectorRow({ cancelEdit: true });
   }
 
   function testControllerAndProjection() {
@@ -480,8 +540,8 @@
     document.getElementById('load-form').requestSubmit();
     assert(state.loads.length === 1 && state.loads[0].name === 'Load 1' && state.loads[0].pressurePa === 1.5e6, 'keyboard form submission did not add an auto-named pressure load');
     var inspectorRows = Array.from(document.querySelectorAll('[data-setup-row]'));
-    assert(inspectorRows.map(function (row) { return row.dataset.setupKind; }).join('|') === 'model|support|load',
-      'compact setup rows were not rendered in model/support/load order');
+    assert(inspectorRows.map(function (row) { return row.dataset.setupKind; }).join('|') === 'model|material|support|load',
+      'compact setup rows were not rendered in model/material/support/load order');
     var modelTrigger = document.querySelector('[data-setup-kind="model"] [data-setup-row-trigger]');
     modelTrigger.click();
     assert(document.getElementById('model-rotation-angle').value === '90', 'model rotation did not default to 90 degrees');
@@ -621,6 +681,7 @@
     testSymmetricCurvedFaceGlyph();
     testDistributedSurfaceGlyphSampling();
     testDeformationAnimationCycle();
+    testReplacementMigrationContract();
     testSetupInspectorSummaries();
     testSetupInspectorMarkup();
     expectError(testControllerAndProjection, 'only once');

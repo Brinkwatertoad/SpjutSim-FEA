@@ -4,6 +4,7 @@
   var app = new api.AppController({ document: api.createAnalysisDocument() });
   var ui = new api.UIController(app);
   var viewport = new api.ViewportController(document.getElementById('viewport'));
+  var replacementMigrationUI = new api.ReplacementMigrationUI();
   ui.setViewportController(viewport);
   var wasmBytes = new Uint8Array([0,97,115,109,1,0,0,0]);
   var activeImport = null;
@@ -29,11 +30,15 @@
   function importCadFile(file) {
     var client;
     var geometryId;
+    var replacing = Boolean(app.document.geometry);
     var sourceFormat = api.sourceFormatForFilename(file.name);
+    if (replacementMigrationUI.draft) { replacementMigrationUI.cancel(); }
     if (activeImport) { activeImport.cancel(); }
-    if (activeMesh) { activeMesh.cancel(); }
-    disposeSolver();
-    app.discardSolvePreflight();
+    if (!replacing) {
+      if (activeMesh) { activeMesh.cancel(); }
+      disposeSolver();
+      app.discardSolvePreflight();
+    }
     if (!sourceFormat) {
       app.beginGeometryImport(file.name);
       app.failGeometryImport(importFailure('INVALID_CAD_EXTENSION', 'Choose a STEP, IGES, or OpenCASCADE BREP file.'));
@@ -53,7 +58,18 @@
         sourceFormat: sourceFormat,
         sourceBytes: sourceBytes
       }).then(function (geometry) {
-        app.replaceGeometry(geometry, { sourceName: file.name, sourceFormat: sourceFormat, sourceBytes: sourceBytes });
+        var source = { sourceName: file.name, sourceFormat: sourceFormat, sourceBytes: sourceBytes };
+        if (app.document.geometry) {
+          var draft = api.createReplacementMigrationDraft(app.document, geometry, source);
+          app.restoreGeometryImportStatus();
+          replacementMigrationUI.open(draft, function (replacementGeometry, replacementSource, transfer) {
+            if (activeMesh) { activeMesh.cancel(); activeMesh = null; }
+            disposeSolver();
+            app.replaceGeometryWithSetup(replacementGeometry, replacementSource, transfer);
+          });
+        } else {
+          app.replaceGeometry(geometry, source);
+        }
       });
     }).catch(function (error) {
       if (activeImport === client) { app.failGeometryImport(error); }
@@ -136,7 +152,7 @@
 
   function setText(id, value) { document.getElementById(id).textContent = value; }
   setText('launch-mode', location.protocol === 'file:' ? 'Direct local file' : (root.crossOriginIsolated ? 'HTTP, isolated' : 'HTTP, portable'));
-  root.addEventListener('pagehide', function () { if (activeMesh) { activeMesh.cancel(); } disposeSolver(); ui.dispose(); viewport.dispose(); }, { once: true });
+  root.addEventListener('pagehide', function () { if (activeMesh) { activeMesh.cancel(); } disposeSolver(); replacementMigrationUI.dispose(); ui.dispose(); viewport.dispose(); }, { once: true });
   viewport.setFacePickHandler(function (faceId, additive) {
     if (!faceId) {
       app.clearSelectedFaces();

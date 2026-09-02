@@ -61,6 +61,47 @@
     });
   }
 
+  function testReplacementMigrationUI(geometry) {
+    var host = document.createElement('div');
+    var state = api.createAnalysisDocument();
+    var applied = null;
+    var cancelled = false;
+    var migration;
+    host.innerHTML = '<div id="replacement-migration-backdrop" hidden><section id="replacement-migration-dialog" tabindex="-1">' +
+      '<p id="replacement-migration-progress"></p><p id="replacement-migration-status"></p>' +
+      '<canvas id="replacement-old-viewport" style="width:240px;height:160px"></canvas><canvas id="replacement-new-viewport" style="width:240px;height:160px"></canvas>' +
+      '<h3 id="replacement-item-name"></h3><p id="replacement-item-description"></p>' +
+      '<section id="replacement-migration-summary" hidden><ul id="replacement-migration-summary-list"></ul></section>' +
+      '<button id="replacement-migration-back"></button><button id="replacement-migration-drop"></button>' +
+      '<button id="replacement-migration-map"></button><button id="replacement-migration-apply" hidden></button><button id="replacement-migration-cancel"></button>' +
+      '</section></div>';
+    document.body.append(host);
+    state.geometry = geometry;
+    state.boundaryConditions = [{ id: 'support-transfer', name: 'Transfer support', type: 'support', faceIds: [geometry.faceIds[0]], componentsM: { x: 0 } }];
+    migration = new api.ReplacementMigrationUI();
+    migration.open(api.createReplacementMigrationDraft(state, geometry, {
+      sourceName: geometry.sourceName, sourceFormat: geometry.sourceFormat, sourceBytes: new Uint8Array([8]).buffer
+    }), function (newGeometry, source, transfer) { applied = { geometry: newGeometry, source: source, transfer: transfer }; });
+    assert(migration.oldViewport && migration.newViewport && migration.oldViewport.selectedFaceIds.has(geometry.faceIds[0]),
+      'replacement dialog did not retain side-by-side old/new model views with old faces highlighted');
+    migration.newViewport.facePickHandler(geometry.faceIds[1], false);
+    document.getElementById('replacement-migration-map').click();
+    assert(!document.getElementById('replacement-migration-summary').hidden && !document.getElementById('replacement-migration-apply').hidden,
+      'completed mappings did not advance to the transfer summary');
+    document.getElementById('replacement-migration-apply').click();
+    assert(applied && applied.transfer.boundaryConditions[0].faceIds[0] === geometry.faceIds[1] &&
+      document.getElementById('replacement-migration-backdrop').hidden,
+    'applying the migration did not return the mapped atomic transfer payload');
+    migration.open(api.createReplacementMigrationDraft(state, geometry, {
+      sourceName: geometry.sourceName, sourceFormat: geometry.sourceFormat, sourceBytes: new Uint8Array([9]).buffer
+    }), function () {}, function () { cancelled = true; });
+    document.getElementById('replacement-migration-cancel').click();
+    assert(cancelled && document.getElementById('replacement-migration-backdrop').hidden && state.geometry === geometry &&
+      state.boundaryConditions[0].faceIds[0] === geometry.faceIds[0],
+    'cancelling replacement migration changed the active analysis');
+    host.remove();
+  }
+
   function testSelectionAndResize(geometry) {
     var controller = new api.AppController({ document: api.createAnalysisDocument() });
     var selectedFaceId = geometry.faceIds[0];
@@ -263,6 +304,7 @@
     var geometry = imported.geometry;
     viewport.setGeometryPreview(geometry);
     selectEveryFace(geometry);
+    testReplacementMigrationUI(geometry);
     testSelectionAndResize(geometry);
     return testMeshDisplay(geometry, imported.sourceBytes);
   }).then(function () {

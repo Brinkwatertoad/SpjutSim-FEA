@@ -24,15 +24,22 @@
 
   function summarizeModelRow(documentState) {
     var geometry = documentState.geometry;
-    var material = documentState.material;
-    if (!geometry) { return row('model', 'model', 'No model', material ? (material.name || 'Unnamed material') : 'No material', 'Import a CAD solid'); }
+    if (!geometry) { return row('model', 'model', 'Import CAD…', 'STEP, IGES, or BREP solid', 'No model'); }
     return row(
       'model',
       'model',
       geometry.sourceName,
-      (material ? (material.name || 'Unnamed material') : 'No material') + ' · ' + String(geometry.sourceFormat || '').toUpperCase(),
+      String(geometry.sourceFormat || '').toUpperCase(),
       faceCountText(geometry.faceIds) + ' · ' + (geometry.orientation.operations.length ? geometry.orientation.operations.join(' · ') : 'Original orientation')
     );
+  }
+
+  function summarizeMaterialRow(documentState) {
+    var material = documentState.material;
+    if (!material) { return row('material', 'material', 'Add material…', 'Required before solving', 'No material'); }
+    return row('material', 'material', material.name || 'Unnamed material',
+      formatNumber(material.youngsModulusPa / 1e9) + ' GPa · ν ' + formatNumber(material.poissonsRatio),
+      material.densityKgM3 ? formatNumber(material.densityKgM3) + ' kg/m³' : 'Density not set');
   }
 
   function summarizeSupportRow(item) {
@@ -62,7 +69,7 @@
   }
 
   function buildSetupInspectorRows(documentState) {
-    var rows = [summarizeModelRow(documentState)];
+    var rows = [summarizeModelRow(documentState), summarizeMaterialRow(documentState)];
     documentState.boundaryConditions.forEach(function (item) { rows.push(summarizeSupportRow(item)); });
     documentState.loads.forEach(function (item) { rows.push(summarizeLoadRow(item)); });
     if (documentState.gravity && documentState.gravity.enabled) { rows.push(summarizeGravityRow(documentState.gravity)); }
