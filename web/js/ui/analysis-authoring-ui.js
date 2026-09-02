@@ -542,6 +542,13 @@
     }
   };
 
+  AnalysisAuthoringUI.prototype.handleDocumentKeyDown = function (event) {
+    if (!event || event.key !== 'Escape' || event.defaultPrevented || !this.activeInspectorKind) { return false; }
+    this.closeInspectorRow({ restoreFocus: true, cancelEdit: true });
+    event.preventDefault();
+    return true;
+  };
+
   AnalysisAuthoringUI.prototype.mountInlineEditor = function (kind, itemId) {
     var host = document.querySelector('[data-setup-kind="' + kind + '"][data-item-id="' + itemId + '"] [data-setup-editor-host]');
     var editor = byId(kind === 'model' ? 'material-editor' : (kind + '-editor'));

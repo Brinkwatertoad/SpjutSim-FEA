@@ -345,6 +345,13 @@
     assert(supportTrigger.getAttribute('aria-label').indexOf('Support 1') !== -1 && supportTrigger.getAttribute('aria-label').indexOf('1 face') !== -1,
       'setup row accessible name omitted its item summary');
     assert(document.getElementById('support-form').closest('[data-setup-editor-host]'), 'support form was not mounted in the selected row');
+    var escapeEvent = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+    var selectedBeforeEscape = state.selectedFaceIds.slice();
+    assert(authoring.handleDocumentKeyDown(escapeEvent), 'inline editor did not consume Escape');
+    assert(escapeEvent.defaultPrevented && !authoring.activeInspectorKind, 'Escape did not close and consume the inline editor');
+    assert(state.selectedFaceIds.join('|') === selectedBeforeEscape.join('|'), 'closing inline editor cleared selected CAD faces');
+    supportTrigger = document.querySelector('[data-setup-kind="support"][data-item-id="support-1"] [data-setup-row-trigger]');
+    supportTrigger.click();
     supportTrigger.focus();
     document.getElementById('cancel-support-edit').click();
     assert(!document.getElementById('support-form').closest('[data-setup-editor-host]'), 'cancel did not close the inline support editor');

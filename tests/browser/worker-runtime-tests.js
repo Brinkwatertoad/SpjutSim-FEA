@@ -324,9 +324,21 @@
     var controller = new api.AppController({ document: api.createAnalysisDocument() });
     var ui = new api.UIController(controller);
     var event = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+    var editorOpen = true;
+    ui.analysisAuthoring = {
+      start: function () {}, render: function () {},
+      handleDocumentKeyDown: function (keyEvent) {
+        if (!editorOpen) { return false; }
+        editorOpen = false; keyEvent.preventDefault(); return true;
+      }
+    };
     controller.replaceGeometry(validGeometry(), { sourceName: 'cube.step', stepBytes: new Uint8Array([1]).buffer });
     controller.replaceSelectedFaces(['opaque-face']);
     ui.start();
+    document.dispatchEvent(event);
+    assert(controller.document.selectedFaceIds.length === 1, 'Escape cleared selection before closing the setup editor');
+    assert(!editorOpen && event.defaultPrevented, 'Escape did not give the setup editor first priority');
+    event = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
     document.dispatchEvent(event);
     assert(controller.document.selectedFaceIds.length === 0, 'Escape did not clear selected faces');
     assert(event.defaultPrevented, 'Escape did not consume the selection-clear shortcut');

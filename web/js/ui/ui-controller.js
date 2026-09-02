@@ -274,6 +274,7 @@
         return;
       }
       if (self.settingsOpen) { return; }
+      if (self.analysisAuthoring && self.analysisAuthoring.handleDocumentKeyDown(event)) { return; }
       if (event.key !== 'Escape' || !self.controller.document.selectedFaceIds.length) { return; }
       self.controller.clearSelectedFaces();
       event.preventDefault();
