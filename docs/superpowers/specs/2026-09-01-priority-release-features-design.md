@@ -21,12 +21,13 @@ aliases, or fallback normalization for the existing support representation.
 Implement the work contract-first so later UI and rendering features consume
 stable application state:
 
-1. Geometry formats and orientation.
-2. Component-based translational supports and six-mode stability diagnostics.
-3. Distributed 3D glyphs and the screen-fixed axis triad.
-4. Deformation animation and the compact setup inspector.
-5. Transactional replacement-model remapping.
-6. UI Kit-compatible color schemes and complete release verification.
+1. Compact setup inspector and unified authoring selection.
+2. Geometry formats and orientation.
+3. Component-based translational supports and six-mode stability diagnostics.
+4. Distributed 3D glyphs and the screen-fixed axis triad.
+5. Deformation animation.
+6. Transactional replacement-model remapping.
+7. UI Kit-compatible color schemes and complete release verification.
 
 The contracts should leave a clean seam for a future versioned project-document
 system, but project save/load, command history, and general document migration
@@ -207,17 +208,38 @@ viewport is disposed, or when a non-deformed presentation becomes active.
 
 ## Compact setup inspector
 
-Add a compact, selectable setup list containing:
+The compact setup inspector is the highest-priority release feature and the
+primary way to understand and revisit authored setup. Place it at the top of
+the tools pane in a sticky region below the pane header so ordinary model,
+support, and load setup is visible together without scrolling through separate
+authoring sections.
+
+The inspector contains:
 
 - Model, including source format, orientation, and active material;
 - Supports;
 - Loads, including gravity when enabled.
 
-Rows use stable item identifiers. Selecting a support or surface load selects
-and highlights its faces and populates the existing authoring editor. Selecting
-Model exposes material and orientation actions. The compact list is a browsing
-and selection surface; detailed values continue to use the existing semantic
-forms rather than duplicated inline state.
+Use compact grouped rows with stable item identifiers. The Model row includes
+the source name/format, material name, and orientation summary. Each support row
+shows its X/Y/Z constrained components, prescribed values when nonzero, and face
+count. Each simple load row shows pressure or force type, its value/vector with
+units, and face count. Gravity appears as a load row when enabled. A typical
+model with a material, a few supports, and a few simple loads must fit in the
+normal tools-pane viewport without requiring page scrolling.
+
+Selecting a support or surface load selects and highlights its faces and opens
+that item's editor directly beneath or within the selected inspector row. The
+user can modify, save, cancel, or delete the item there without finding a
+separate section farther down the tools pane. Selecting Model opens its material
+and orientation actions in the same inspector region. Provide compact add
+actions for supports and loads that open the corresponding editor in place.
+
+The existing authoring controls may be reused internally, but there must be one
+rendered source for each editable value and one controller command path. Do not
+maintain duplicated inspector and legacy-form drafts. Once the inspector owns a
+workflow, remove or collapse the superseded scattered section so the tools pane
+does not present two competing editing surfaces.
 
 The list reports support component summaries and the current Tx/Ty/Tz/Rx/Ry/Rz
 stability assessment. Keyboard selection, focus visibility, accessible names,
@@ -366,7 +388,9 @@ The priority release work is accepted only when:
   cones;
 - the camera-relative XYZ triad remains fixed in a viewport corner;
 - deformation animation matches the approved Truss-2D timing and lifecycle;
-- the compact setup inspector selects and edits every required item;
+- the compact setup inspector is the first delivered slice, keeps ordinary
+  model/material/support/load information visible together without page
+  scrolling, and selects and edits every required item in place;
 - replacement migration is cancellable and atomic, and supports explicit item
   drops with a review summary;
 - portable schemes work across the included factory choices and imported files;
