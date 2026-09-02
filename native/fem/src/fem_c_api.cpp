@@ -61,10 +61,9 @@ int fem_load_mesh(FemContext *c, const double *positions, uint32_t nodes,
   if (!c || !positions || !connectivity || nodes == 0 || elements == 0)
     return -1;
   return guarded(c, [&]() {
-    if (nodes_per_element != 4) {
+    if (nodes_per_element != 4 && nodes_per_element != 10) {
       c->bridge_error = {ErrorCode::unsupported_element_type,
-                         "Only four-node tetrahedral elements are supported by "
-                         "this solver version.",
+                         "Only Tet4 and Tet10 elements are supported.",
                          {},
                          true};
       return -1;
@@ -73,7 +72,7 @@ int fem_load_mesh(FemContext *c, const double *positions, uint32_t nodes,
         static_cast<std::size_t>(nodes) >
             std::numeric_limits<std::size_t>::max() / 3 ||
         static_cast<std::size_t>(elements) >
-            std::numeric_limits<std::size_t>::max() / 4) {
+            std::numeric_limits<std::size_t>::max() / nodes_per_element) {
       c->bridge_error = {
           ErrorCode::graph_index_overflow,
           "The mesh buffer sizes exceed the supported 32-bit solver range.",
@@ -85,7 +84,10 @@ int fem_load_mesh(FemContext *c, const double *positions, uint32_t nodes,
     m.node_positions_m.assign(positions,
                               positions + static_cast<std::size_t>(nodes) * 3);
     m.tet4_connectivity.assign(
-        connectivity, connectivity + static_cast<std::size_t>(elements) * 4);
+        connectivity,
+        connectivity + static_cast<std::size_t>(elements) * nodes_per_element);
+    m.element_type = nodes_per_element == 10 ? ElementType::tet10
+                                             : ElementType::tet4;
     return status(c->implementation.load_mesh(std::move(m)));
   });
 }
@@ -124,35 +126,40 @@ int fem_set_nodal_forces(FemContext *c, const double *forces, uint32_t count) {
   });
 }
 int fem_add_pressure(FemContext *c, const uint32_t *triangles, uint32_t count,
-                     double pressure) {
-  if (!c || !triangles || count == 0)
+                     uint32_t nodes_per_face, double pressure) {
+  if (!c || !triangles || count == 0 ||
+      (nodes_per_face != 3 && nodes_per_face != 6))
     return -1;
   return guarded(c, [&]() {
     if (static_cast<std::size_t>(count) >
-        std::numeric_limits<std::size_t>::max() / 3)
+        std::numeric_limits<std::size_t>::max() / nodes_per_face)
       return -1;
     SurfaceLoad load;
     load.type = SurfaceLoadType::pressure;
     load.pressure_pa = pressure;
+    load.nodes_per_face = nodes_per_face;
     load.triangle_connectivity.assign(
-        triangles, triangles + static_cast<std::size_t>(count) * 3);
+        triangles, triangles + static_cast<std::size_t>(count) * nodes_per_face);
     c->loads.surface_loads.push_back(std::move(load));
     return status(c->implementation.set_loads(c->loads));
   });
 }
 int fem_add_total_face_force(FemContext *c, const uint32_t *triangles,
-                             uint32_t count, const double force[3]) {
-  if (!c || !triangles || !force || count == 0)
+                             uint32_t count, uint32_t nodes_per_face,
+                             const double force[3]) {
+  if (!c || !triangles || !force || count == 0 ||
+      (nodes_per_face != 3 && nodes_per_face != 6))
     return -1;
   return guarded(c, [&]() {
     if (static_cast<std::size_t>(count) >
-        std::numeric_limits<std::size_t>::max() / 3)
+        std::numeric_limits<std::size_t>::max() / nodes_per_face)
       return -1;
     SurfaceLoad load;
     load.type = SurfaceLoadType::total_force;
     load.total_force_n = {force[0], force[1], force[2]};
+    load.nodes_per_face = nodes_per_face;
     load.triangle_connectivity.assign(
-        triangles, triangles + static_cast<std::size_t>(count) * 3);
+        triangles, triangles + static_cast<std::size_t>(count) * nodes_per_face);
     c->loads.surface_loads.push_back(std::move(load));
     return status(c->implementation.set_loads(c->loads));
   });
@@ -227,6 +234,8 @@ int fem_get_result_info(FemContext *c, FemResultInfo *out) {
   out->node_count = static_cast<uint32_t>(r.displacement_magnitude_m.size());
   out->element_count = static_cast<uint32_t>(r.element_von_mises_pa.size());
   out->degree_of_freedom_count = static_cast<uint32_t>(r.displacement_m.size());
+  out->recovery_sample_count =
+      static_cast<uint32_t>(r.recovery_von_mises_pa.size());
   out->iterations = r.solver.iterations;
   out->termination_reason = static_cast<uint32_t>(r.solver.termination);
   out->final_relative_residual = r.solver.final_relative_residual;
@@ -243,6 +252,9 @@ int fem_get_result_info(FemContext *c, FemResultInfo *out) {
   out->raw_von_mises_element = r.raw_von_mises_max.element_index;
   out->raw_max_principal_element = r.raw_max_principal.element_index;
   out->raw_min_principal_element = r.raw_min_principal.element_index;
+  out->raw_von_mises_sample = r.raw_von_mises_max.sample_index;
+  out->raw_max_principal_sample = r.raw_max_principal.sample_index;
+  out->raw_min_principal_sample = r.raw_min_principal.sample_index;
   out->displacement_m = r.displacement_m.data();
   out->displacement_magnitude_m = r.displacement_magnitude_m.data();
   out->element_strain = r.element_strain.data();
@@ -251,6 +263,12 @@ int fem_get_result_info(FemContext *c, FemResultInfo *out) {
   out->element_max_principal_pa = r.element_max_principal_pa.data();
   out->element_min_principal_pa = r.element_min_principal_pa.data();
   out->reaction_n = r.reaction_n.data();
+  out->recovery_strain = r.recovery_strain.data();
+  out->recovery_stress_pa = r.recovery_stress_pa.data();
+  out->recovery_von_mises_pa = r.recovery_von_mises_pa.data();
+  out->recovery_max_principal_pa = r.recovery_max_principal_pa.data();
+  out->recovery_min_principal_pa = r.recovery_min_principal_pa.data();
+  out->recovery_sample_element = r.recovery_sample_element.data();
   return 0;
 }
 int fem_get_last_error(FemContext *c, FemErrorInfo *out) {

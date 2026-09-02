@@ -69,7 +69,7 @@
   }
 
   function summarizeMeshRow(documentState) {
-    var settings = documentState.meshSettings || { preset: 'normal', elementType: 'tet4' };
+    var settings = documentState.meshSettings || { preset: 'normal', elementType: 'tet10' };
     var preset = settings.preset.charAt(0).toUpperCase() + settings.preset.slice(1);
     var elementLabel = settings.elementType === 'tet10' ? 'Tet10' : 'Tet4';
     var metadata = documentState.meshMetadata;

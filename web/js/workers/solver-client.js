@@ -106,7 +106,7 @@
         };
         worker.onerror = function (event) { finish(clientFailure('SOLVER_WORKER_FAILED', 'The solver worker stopped unexpectedly.', event.message)); };
         worker.onmessageerror = function () { finish(clientFailure('SOLVER_MESSAGE_FAILED', 'The solver could not return its result.')); };
-        try { worker.postMessage(Object.assign({ protocol: 1, type: type, requestId: requestId }, payload), transfer || []); }
+        try { worker.postMessage(Object.assign({ protocol: root.SpjutsimFEA.WORKER_PROTOCOL_VERSION, type: type, requestId: requestId }, payload), transfer || []); }
         catch (error) { finish(clientFailure('SOLVER_MESSAGE_FAILED', 'The solver could not receive the analysis.', error.message)); }
       });
     });

@@ -9,7 +9,7 @@
 
   function testResponseValidation() {
     var wrongType = api.validateWorkerResponse({
-      protocol: 1,
+      protocol: 2,
       requestId: 'diagnostics-1',
       type: 'box-smoke-result',
       result: {}
@@ -17,7 +17,7 @@
     assert(!wrongType.valid && wrongType.reason === 'unexpected-response-type', 'wrong response type was accepted');
 
     var wrongProtocol = api.validateWorkerResponse({
-      protocol: 2,
+      protocol: 3,
       requestId: 'diagnostics-1',
       type: 'diagnostics-result',
       result: {}
@@ -25,7 +25,7 @@
     assert(!wrongProtocol.valid && wrongProtocol.reason === 'invalid-envelope', 'version-mismatched response was accepted');
 
     var malformedError = api.validateWorkerResponse({
-      protocol: 1,
+      protocol: 2,
       requestId: 'diagnostics-1',
       type: 'error',
       error: { code: 'BROKEN' }
@@ -41,7 +41,7 @@
       worker = this;
       this.terminated = false;
       root.setTimeout(function () {
-        worker.onmessage({ data: { protocol: 1, type: 'ready', worker: 'solver' } });
+        worker.onmessage({ data: { protocol: 2, type: 'ready', worker: 'solver' } });
       }, 0);
     }
     SilentWorker.prototype.postMessage = function () {};
@@ -93,7 +93,7 @@
   function validResultModel() {
     var scalar = new Float32Array([10, 20, 30, 40]);
     return {
-      schemaVersion: 1, analysisRevision: 0, elementType: 'tet4',
+      schemaVersion: 2, analysisRevision: 0, elementType: 'tet4',
       originalSurface: {
         nodePositionsM: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]),
         triangleConnectivity: new Uint32Array([0, 2, 1]), faceIds: ['opaque-face'],
@@ -104,6 +104,9 @@
       reactionsN: new Float64Array(12),
       rawElementFields: { strain: new Float64Array(6), stressPa: new Float64Array(6),
         vonMisesPa: new Float64Array([40]), maxPrincipalPa: new Float64Array([30]), minPrincipalPa: new Float64Array([-10]) },
+      recoverySampleFields: { strain: new Float64Array(6), stressPa: new Float64Array(6),
+        vonMisesPa: new Float64Array([40]), maxPrincipalPa: new Float64Array([30]), minPrincipalPa: new Float64Array([-10]),
+        elementIndices: new Uint32Array([0]) },
       surfaceFields: { vonMisesPa: scalar, maxPrincipalPa: new Float32Array(scalar), minPrincipalPa: new Float32Array(scalar),
         displacementMagnitudeM: new Float32Array([0, 0.01, 0.01, 0.01]), uxM: new Float32Array([0, 0.01, 0, 0]),
         uyM: new Float32Array([0, 0, 0.01, 0]), uzM: new Float32Array([0, 0, 0, 0.01]) },
@@ -380,7 +383,7 @@
         posted = message;
         root.setTimeout(function () {
           worker.onmessage({ data: {
-            protocol: 1, requestId: message.requestId, type: 'import-result', result: validGeometry()
+            protocol: 2, requestId: message.requestId, type: 'import-result', result: validGeometry()
           } });
         }, 0);
       },
@@ -405,7 +408,7 @@
       postMessage: function (message) {
         posted = message;
         root.setTimeout(function () {
-          worker.onmessage({ data: { protocol: 1, requestId: message.requestId, type: 'mesh-result', result: validVolumeMesh() } });
+          worker.onmessage({ data: { protocol: 2, requestId: message.requestId, type: 'mesh-result', result: validVolumeMesh() } });
         }, 0);
       },
       terminate: function () {}

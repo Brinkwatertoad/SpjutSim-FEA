@@ -98,6 +98,10 @@ double fem_wasm_result_value(uint32_t key) {
   case 18: return result_info.raw_von_mises_element;
   case 19: return result_info.raw_max_principal_element;
   case 20: return result_info.raw_min_principal_element;
+  case 21: return result_info.recovery_sample_count;
+  case 22: return result_info.raw_von_mises_sample;
+  case 23: return result_info.raw_max_principal_sample;
+  case 24: return result_info.raw_min_principal_sample;
   default: return 0;
   }
 }
@@ -112,8 +116,17 @@ const double *fem_wasm_result_pointer(uint32_t key) {
   case 5: return result_info.element_max_principal_pa;
   case 6: return result_info.element_min_principal_pa;
   case 7: return result_info.reaction_n;
+  case 8: return result_info.recovery_strain;
+  case 9: return result_info.recovery_stress_pa;
+  case 10: return result_info.recovery_von_mises_pa;
+  case 11: return result_info.recovery_max_principal_pa;
+  case 12: return result_info.recovery_min_principal_pa;
   default: return nullptr;
   }
+}
+
+const uint32_t *fem_wasm_result_index_pointer(uint32_t key) {
+  return key == 0 ? result_info.recovery_sample_element : nullptr;
 }
 
 int fem_wasm_read_error(FemContext *context) {

@@ -8,7 +8,7 @@ int main() {
   FemContext *context = fem_create();
   require(context != nullptr, "C API context allocation failed");
   require(fem_load_mesh(context, mesh.node_positions_m.data(), 8,
-                        mesh.tet4_connectivity.data(), 6, 10) != 0,
+                        mesh.tet4_connectivity.data(), 6, 7) != 0,
           "unsupported element type accepted");
   FemErrorInfo error{SPJUTSIM_FEM_API_VERSION, sizeof(FemErrorInfo)};
   require(fem_get_last_error(context, &error) == 0 &&
@@ -31,7 +31,7 @@ int main() {
           "C API constraints failed");
   const uint32_t face[] = {1, 3, 7, 1, 7, 5};
   const double force[] = {1000, 0, 0};
-  require(fem_add_total_face_force(context, face, 2, force) == 0,
+  require(fem_add_total_face_force(context, face, 2, 3, force) == 0,
           "C API surface force failed");
   FemMemoryEstimate estimate{SPJUTSIM_FEM_API_VERSION,
                              sizeof(FemMemoryEstimate)};
@@ -52,6 +52,7 @@ int main() {
   require(fem_get_result_info(context, &result) == 0,
           "C API result view failed");
   require(result.node_count == 8 && result.element_count == 6 &&
+              result.recovery_sample_count == 6 &&
               near(result.total_reaction_n[0], -1000, 1e-9, 1e-6),
           "C API result contract wrong");
   require(std::isfinite(result.solve_duration_ms) &&

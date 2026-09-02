@@ -108,7 +108,7 @@
       throw new Error('Mesh-exact rigid-body stability diagnostics are required before preflight.');
     }
     return {
-      protocol: 1,
+      protocol: root.SpjutsimFEA.WORKER_PROTOCOL_VERSION,
       mesh: mesh,
       material: materialValidation.value,
       constraintStability: constraintStability,

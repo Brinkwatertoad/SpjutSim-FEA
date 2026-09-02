@@ -47,8 +47,8 @@ class FrameworkTests(unittest.TestCase):
             for filename in ('mesher-worker-source.js', 'solver-worker-source.js'):
                 generated = (output_dir / filename).read_text(encoding='utf-8')
                 self.assertEqual(generated, (checked_in / filename).read_text(encoding='utf-8'))
-                self.assertIn('Worker protocol: 1', generated)
-                self.assertIn('WORKER_PROTOCOL_VERSION = 1', generated)
+                self.assertIn('Worker protocol: 2', generated)
+                self.assertIn('WORKER_PROTOCOL_VERSION = 2', generated)
 
     def test_local_runtime_generation_rejects_stale_protocol(self):
         generator = ROOT / 'tools/build-local-runtime.py'
@@ -58,7 +58,7 @@ class FrameworkTests(unittest.TestCase):
             for filename in ('mesher-worker.js', 'solver-worker.js'):
                 content = (ROOT / 'workers' / filename).read_text(encoding='utf-8')
                 (source_dir / filename).write_text(
-                    content.replace('WORKER_PROTOCOL_VERSION = 1', 'WORKER_PROTOCOL_VERSION = 2'),
+                    content.replace('WORKER_PROTOCOL_VERSION = 2', 'WORKER_PROTOCOL_VERSION = 3'),
                     encoding='utf-8',
                 )
             result = subprocess.run(
@@ -71,7 +71,7 @@ class FrameworkTests(unittest.TestCase):
                 capture_output=True,
             )
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn('protocol is 2, expected 1', result.stderr)
+            self.assertIn('protocol is 3, expected 2', result.stderr)
 
     def test_gmsh_runtime_packaging_embeds_serial_inputs(self):
         generator = ROOT / 'tools/build-local-runtime.py'

@@ -1,5 +1,5 @@
 'use strict';
-var WORKER_PROTOCOL_VERSION = 1;
+var WORKER_PROTOCOL_VERSION = 2;
 var WASM_HEAP_CAP_BYTES = 3758096384;
 var activeAnalysis = null;
 var femModulePromise = typeof createSpjutsimFemModule === 'function'
@@ -38,16 +38,19 @@ function validateInput(input) {
   var mesh;
   var nodeCount;
   var i;
-  if (!input || input.protocol !== 1 || !input.mesh || !input.material || !input.constraintStability ||
+  if (!input || input.protocol !== WORKER_PROTOCOL_VERSION || !input.mesh || !input.material || !input.constraintStability ||
       !Array.isArray(input.boundaryConditions) || !Array.isArray(input.loads) || !input.gravity) {
     throw diagnostic('INVALID_SOLVER_INPUT', 'preflight', 'The analysis input is incomplete.');
   }
   mesh = input.mesh;
-  if (mesh.elementType !== 'tet4' || !validTypedArray(mesh.nodePositionsM, Float64Array, 3, false) ||
-      !validTypedArray(mesh.elementConnectivity, Uint32Array, 4, false) || !mesh.boundaryFaces ||
+  var elementNodes = mesh.elementType === 'tet10' ? 10 : mesh.elementType === 'tet4' ? 4 : 0;
+  var faceNodes = mesh.boundaryFaces && mesh.boundaryFaces.solverElementType === 'tri6' ? 6 : 3;
+  if (!elementNodes || !validTypedArray(mesh.nodePositionsM, Float64Array, 3, false) ||
+      !validTypedArray(mesh.elementConnectivity, Uint32Array, elementNodes, false) || !mesh.boundaryFaces ||
+      !validTypedArray(mesh.boundaryFaces.solverConnectivity, Uint32Array, faceNodes, false) ||
       !validTypedArray(mesh.boundaryFaces.triangleConnectivity, Uint32Array, 3, false) ||
       !Array.isArray(mesh.boundaryFaces.faceRanges)) {
-    throw diagnostic('INVALID_SOLVER_MESH', 'preflight', 'The Tet4 mesh buffers are invalid.');
+    throw diagnostic('INVALID_SOLVER_MESH', 'preflight', 'The tetrahedral mesh buffers are invalid.');
   }
   nodeCount = mesh.nodePositionsM.length / 3;
   if (input.constraintStability.basis !== 'mesh' || input.constraintStability.provisional !== false ||
@@ -86,9 +89,10 @@ function validateInput(input) {
     });
   });
   input.loads.forEach(function (load) {
-    if (!(load.triangleConnectivity instanceof Uint32Array) || !load.triangleConnectivity.length ||
-        load.triangleConnectivity.length % 3) {
-      throw diagnostic('INVALID_LOAD', 'preflight', 'A surface load has no boundary triangles.');
+    var loadFaceNodes = load.surfaceElementType === 'tri6' ? 6 : load.surfaceElementType === 'tri3' ? 3 : 0;
+    if (!loadFaceNodes || !(load.surfaceConnectivity instanceof Uint32Array) || !load.surfaceConnectivity.length ||
+        load.surfaceConnectivity.length % loadFaceNodes) {
+      throw diagnostic('INVALID_LOAD', 'preflight', 'A surface load has invalid solver-face connectivity.');
     }
   });
   return input;
@@ -148,10 +152,11 @@ function loadAnalysis(Module, input) {
   var constraints;
   if (!context) { throw diagnostic('MEMORY_LIMIT_EXCEEDED', 'preflight', 'WebAssembly could not create the FEM context.'); }
   try {
+    var elementNodes = input.mesh.elementType === 'tet10' ? 10 : 4;
     withWasmArray(Module, input.mesh.nodePositionsM, function (positions) {
       withWasmArray(Module, input.mesh.elementConnectivity, function (connectivity) {
         checkNative(Module, context, Module._fem_load_mesh(context, positions, input.mesh.nodePositionsM.length / 3,
-          connectivity, input.mesh.elementConnectivity.length / 4, 4), 'mesh');
+          connectivity, input.mesh.elementConnectivity.length / elementNodes, elementNodes), 'mesh');
       });
     });
     checkNative(Module, context, Module._fem_set_material(context, input.material.youngsModulusPa,
@@ -164,14 +169,15 @@ function loadAnalysis(Module, input) {
     });
     checkNative(Module, context, Module._fem_clear_loads(context), 'preflight');
     input.loads.forEach(function (load) {
-      withWasmArray(Module, load.triangleConnectivity, function (triangles) {
+      var faceNodes = load.surfaceElementType === 'tri6' ? 6 : 3;
+      withWasmArray(Module, load.surfaceConnectivity, function (triangles) {
         if (load.type === 'pressure') {
           checkNative(Module, context, Module._fem_add_pressure(context, triangles,
-            load.triangleConnectivity.length / 3, load.pressurePa), 'preflight');
+            load.surfaceConnectivity.length / faceNodes, faceNodes, load.pressurePa), 'preflight');
         } else {
           withWasmArray(Module, new Float64Array(load.forceN), function (force) {
             checkNative(Module, context, Module._fem_add_total_face_force(context, triangles,
-              load.triangleConnectivity.length / 3, force), 'preflight');
+              load.surfaceConnectivity.length / faceNodes, faceNodes, force), 'preflight');
           });
         }
       });
@@ -206,15 +212,15 @@ function copyResultArray(Module, pointer, length) {
   return new Float64Array(Module.HEAPF64.subarray(pointer / 8, pointer / 8 + length));
 }
 
-function smooth(connectivity, elements, nodeCount) {
+function smooth(connectivity, elements, nodeCount, elementNodes) {
   var sums = new Float64Array(nodeCount);
   var counts = new Uint32Array(nodeCount);
   var element;
   var corner;
   var node;
   for (element = 0; element < elements.length; element += 1) {
-    for (corner = 0; corner < 4; corner += 1) {
-      node = connectivity[element * 4 + corner]; sums[node] += elements[element]; counts[node] += 1;
+    for (corner = 0; corner < elementNodes; corner += 1) {
+      node = connectivity[element * elementNodes + corner]; sums[node] += elements[element]; counts[node] += 1;
     }
   }
   for (node = 0; node < nodeCount; node += 1) { sums[node] = counts[node] ? sums[node] / counts[node] : 0; }
@@ -241,7 +247,7 @@ function elementLocation(mesh, element) {
   var axis;
   var node;
   for (corner = 0; corner < 4; corner += 1) {
-    node = mesh.elementConnectivity[element * 4 + corner];
+    node = mesh.elementConnectivity[element * (mesh.elementType === 'tet10' ? 10 : 4) + corner];
     for (axis = 0; axis < 3; axis += 1) { location[axis] += mesh.nodePositionsM[node * 3 + axis] / 4; }
   }
   return location;
@@ -257,9 +263,10 @@ function boundaryMapping(mesh) {
   var face;
   var triangle;
   var key;
-  for (element = 0; element < mesh.elementConnectivity.length / 4; element += 1) {
+  var elementNodes = mesh.elementType === 'tet10' ? 10 : 4;
+  for (element = 0; element < mesh.elementConnectivity.length / elementNodes; element += 1) {
     for (face = 0; face < 4; face += 1) {
-      key = faces[face].map(function (corner) { return mesh.elementConnectivity[element * 4 + corner]; })
+      key = faces[face].map(function (corner) { return mesh.elementConnectivity[element * elementNodes + corner]; })
         .sort(function (a, b) { return a - b; }).join(':');
       byKey[key] = element;
     }
@@ -278,16 +285,23 @@ function boundaryMapping(mesh) {
 function makeResult(Module, input, revision, preflight) {
   var v = Module._fem_wasm_result_value;
   var p = Module._fem_wasm_result_pointer;
+  var ip = Module._fem_wasm_result_index_pointer;
   var nodes = v(0);
   var elements = v(1);
+  var samples = v(21);
+  var elementNodes = input.mesh.elementType === 'tet10' ? 10 : 4;
   var displacement = copyResultArray(Module, p(0), nodes * 3);
   var displacementMagnitude = copyResultArray(Module, p(1), nodes);
   var raw = { strain: copyResultArray(Module, p(2), elements * 6), stressPa: copyResultArray(Module, p(3), elements * 6),
     vonMisesPa: copyResultArray(Module, p(4), elements), maxPrincipalPa: copyResultArray(Module, p(5), elements),
     minPrincipalPa: copyResultArray(Module, p(6), elements) };
-  var surface = { vonMisesPa: smooth(input.mesh.elementConnectivity, raw.vonMisesPa, nodes),
-    maxPrincipalPa: smooth(input.mesh.elementConnectivity, raw.maxPrincipalPa, nodes),
-    minPrincipalPa: smooth(input.mesh.elementConnectivity, raw.minPrincipalPa, nodes),
+  var recovery = { strain: copyResultArray(Module, p(8), samples * 6), stressPa: copyResultArray(Module, p(9), samples * 6),
+    vonMisesPa: copyResultArray(Module, p(10), samples), maxPrincipalPa: copyResultArray(Module, p(11), samples),
+    minPrincipalPa: copyResultArray(Module, p(12), samples),
+    elementIndices: new Uint32Array(Module.HEAPU32.subarray(ip(0) / 4, ip(0) / 4 + samples)) };
+  var surface = { vonMisesPa: smooth(input.mesh.elementConnectivity, raw.vonMisesPa, nodes, elementNodes),
+    maxPrincipalPa: smooth(input.mesh.elementConnectivity, raw.maxPrincipalPa, nodes, elementNodes),
+    minPrincipalPa: smooth(input.mesh.elementConnectivity, raw.minPrincipalPa, nodes, elementNodes),
     displacementMagnitudeM: new Float32Array(displacementMagnitude), uxM: component(displacement, 0),
     uyM: component(displacement, 1), uzM: component(displacement, 2) };
   var mapping = boundaryMapping(input.mesh);
@@ -299,22 +313,23 @@ function makeResult(Module, input, revision, preflight) {
     warnings.push('Displacement exceeds 5% of the model diagonal; geometric nonlinearity may matter.');
   }
   return {
-    schemaVersion: 1, analysisRevision: revision, elementType: 'tet4',
+    schemaVersion: 2, analysisRevision: revision, elementType: input.mesh.elementType,
     originalSurface: { nodePositionsM: new Float32Array(input.mesh.nodePositionsM),
       triangleConnectivity: new Uint32Array(input.mesh.boundaryFaces.triangleConnectivity),
       faceIds: input.mesh.boundaryFaces.faceRanges.map(function (item) { return item.faceId; }),
       triangleFaceIndices: mapping.faceIndices, triangleElementIndices: mapping.elementIndices },
-    displacementM: displacement, displacementMagnitudeM: displacementMagnitude, rawElementFields: raw, surfaceFields: surface,
+    displacementM: displacement, displacementMagnitudeM: displacementMagnitude, rawElementFields: raw,
+    recoverySampleFields: recovery, surfaceFields: surface,
     ranges: { vonMises: range(surface.vonMisesPa), maxPrincipal: range(surface.maxPrincipalPa),
       minPrincipal: range(surface.minPrincipalPa), displacementMagnitude: range(surface.displacementMagnitudeM),
       ux: range(surface.uxM), uy: range(surface.uyM), uz: range(surface.uzM) },
     extrema: {
       maxDisplacement: { valueM: maximumDisplacement, nodeIndex: maximumNode,
         locationM: Array.prototype.slice.call(input.mesh.nodePositionsM, maximumNode * 3, maximumNode * 3 + 3) },
-      rawVonMisesMax: { valuePa: v(15), elementIndex: v(18), locationM: elementLocation(input.mesh, v(18)) },
+      rawVonMisesMax: { valuePa: v(15), elementIndex: v(18), sampleIndex: v(22), locationM: elementLocation(input.mesh, v(18)) },
       displayedVonMisesMax: { valuePa: range(surface.vonMisesPa).maximum },
-      rawMaxPrincipal: { valuePa: v(16), elementIndex: v(19), locationM: elementLocation(input.mesh, v(19)) },
-      rawMinPrincipal: { valuePa: v(17), elementIndex: v(20), locationM: elementLocation(input.mesh, v(20)) }
+      rawMaxPrincipal: { valuePa: v(16), elementIndex: v(19), sampleIndex: v(23), locationM: elementLocation(input.mesh, v(19)) },
+      rawMinPrincipal: { valuePa: v(17), elementIndex: v(20), sampleIndex: v(24), locationM: elementLocation(input.mesh, v(20)) }
     },
     reactionsN: copyResultArray(Module, p(7), nodes * 3),
     equilibrium: { totalReactionN: [v(9), v(10), v(11)], totalAppliedForceN: [v(12), v(13), v(14)], relativeResidual: v(8) },
@@ -330,6 +345,7 @@ function transfers(result) {
   Object.keys(result.originalSurface).forEach(function (key) { add(result.originalSurface[key]); });
   add(result.displacementM); add(result.displacementMagnitudeM); add(result.reactionsN);
   Object.keys(result.rawElementFields).forEach(function (key) { add(result.rawElementFields[key]); });
+  Object.keys(result.recoverySampleFields).forEach(function (key) { add(result.recoverySampleFields[key]); });
   Object.keys(result.surfaceFields).forEach(function (key) { add(result.surfaceFields[key]); });
   return output;
 }
@@ -384,9 +400,9 @@ self.onmessage = function (event) {
     return;
   }
   femModulePromise.then(function (Module) {
-    if (Module._fem_wasm_api_version() !== 1) { throw diagnostic('FEM_API_VERSION_MISMATCH', 'worker-startup', 'The FEM WebAssembly API does not match the application.'); }
+    if (Module._fem_wasm_api_version() !== 2) { throw diagnostic('FEM_API_VERSION_MISMATCH', 'worker-startup', 'The FEM WebAssembly API does not match the application.'); }
     if (message.type === 'diagnostics') {
-      reply(message.requestId, 'diagnostics-result', { apiVersion: 1, runtimeMode: 'serial-local-embedded',
+      reply(message.requestId, 'diagnostics-result', { apiVersion: 2, runtimeMode: 'serial-local-embedded',
         wasmMemoryBytes: Module.HEAPU8.buffer.byteLength, wasmHeapCapBytes: WASM_HEAP_CAP_BYTES });
     } else if (message.type === 'preflight') { handlePreflight(Module, message); }
     else if (message.type === 'solve') { handleSolve(Module, message); }

@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#define SPJUTSIM_FEM_API_VERSION 1u
+#define SPJUTSIM_FEM_API_VERSION 2u
 
 typedef struct FemContext FemContext;
 
@@ -35,7 +35,7 @@ typedef struct FemMemoryEstimate {
 
 typedef struct FemResultInfo {
   uint32_t api_version, struct_size, node_count, element_count,
-      degree_of_freedom_count;
+      degree_of_freedom_count, recovery_sample_count;
   uint32_t iterations, termination_reason;
   double final_relative_residual, solve_duration_ms, strain_energy_j,
       force_balance_relative_residual;
@@ -43,6 +43,8 @@ typedef struct FemResultInfo {
   double raw_von_mises_max_pa, raw_max_principal_pa, raw_min_principal_pa;
   uint32_t raw_von_mises_element, raw_max_principal_element,
       raw_min_principal_element;
+  uint32_t raw_von_mises_sample, raw_max_principal_sample,
+      raw_min_principal_sample;
   const double *displacement_m;
   const double *displacement_magnitude_m;
   const double *element_strain;
@@ -51,6 +53,12 @@ typedef struct FemResultInfo {
   const double *element_max_principal_pa;
   const double *element_min_principal_pa;
   const double *reaction_n;
+  const double *recovery_strain;
+  const double *recovery_stress_pa;
+  const double *recovery_von_mises_pa;
+  const double *recovery_max_principal_pa;
+  const double *recovery_min_principal_pa;
+  const uint32_t *recovery_sample_element;
 } FemResultInfo;
 
 typedef struct FemErrorInfo {
@@ -77,9 +85,11 @@ int fem_clear_loads(FemContext *context);
 int fem_set_nodal_forces(FemContext *context, const double *forces_n,
                          uint32_t degree_of_freedom_count);
 int fem_add_pressure(FemContext *context, const uint32_t *triangles,
-                     uint32_t triangle_count, double pressure_pa);
+                     uint32_t triangle_count, uint32_t nodes_per_face,
+                     double pressure_pa);
 int fem_add_total_face_force(FemContext *context, const uint32_t *triangles,
-                             uint32_t triangle_count, const double force_n[3]);
+                             uint32_t triangle_count, uint32_t nodes_per_face,
+                             const double force_n[3]);
 int fem_set_gravity(FemContext *context, int enabled,
                     const double acceleration_m_s2[3]);
 int fem_estimate_memory(FemContext *context, double device_memory_gib_hint,

@@ -12,7 +12,8 @@
 
   function validatePreflightResult(result) {
     var classifications = ['likely-safe', 'caution', 'likely-insufficient'];
-    if (!result || typeof result !== 'object' || result.modelVersion !== 1 || result.elementType !== 'tet4' ||
+    if (!result || typeof result !== 'object' || result.modelVersion !== 1 ||
+        ['tet4', 'tet10'].indexOf(result.elementType) < 0 ||
         classifications.indexOf(result.classification) < 0 ||
         !Number.isInteger(result.nodeCount) || result.nodeCount <= 0 ||
         !Number.isInteger(result.elementCount) || result.elementCount <= 0 ||
@@ -37,8 +38,9 @@
     var index;
     var requiredSurfaceFields = ['vonMisesPa', 'maxPrincipalPa', 'minPrincipalPa', 'displacementMagnitudeM', 'uxM', 'uyM', 'uzM'];
     var requiredElementFields = { strain: 6, stressPa: 6, vonMisesPa: 1, maxPrincipalPa: 1, minPrincipalPa: 1 };
-    if (!result || result.schemaVersion !== 1 || result.analysisRevision !== expectedRevision || result.elementType !== 'tet4' ||
-        !result.originalSurface || !result.surfaceFields || !result.rawElementFields || !result.extrema ||
+    if (!result || result.schemaVersion !== 2 || result.analysisRevision !== expectedRevision ||
+        ['tet4', 'tet10'].indexOf(result.elementType) < 0 ||
+        !result.originalSurface || !result.surfaceFields || !result.rawElementFields || !result.recoverySampleFields || !result.extrema ||
         !result.equilibrium || !result.solverStatistics || !result.meshStatistics || !Array.isArray(result.warnings)) {
       return { valid: false, reason: 'invalid-result-envelope' };
     }
@@ -74,6 +76,21 @@
       var name = Object.keys(requiredElementFields)[index];
       if (!validFiniteArray(result.rawElementFields[name], Float64Array, elementCount * requiredElementFields[name])) {
         return { valid: false, reason: 'invalid-raw-result-field' };
+      }
+    }
+    var sampleCount = result.elementType === 'tet10' ? elementCount * 4 : elementCount;
+    if (!validFiniteArray(result.recoverySampleFields.strain, Float64Array, sampleCount * 6) ||
+        !validFiniteArray(result.recoverySampleFields.stressPa, Float64Array, sampleCount * 6) ||
+        !validFiniteArray(result.recoverySampleFields.vonMisesPa, Float64Array, sampleCount) ||
+        !validFiniteArray(result.recoverySampleFields.maxPrincipalPa, Float64Array, sampleCount) ||
+        !validFiniteArray(result.recoverySampleFields.minPrincipalPa, Float64Array, sampleCount) ||
+        !(result.recoverySampleFields.elementIndices instanceof Uint32Array) ||
+        result.recoverySampleFields.elementIndices.length !== sampleCount) {
+      return { valid: false, reason: 'invalid-recovery-sample-field' };
+    }
+    for (index = 0; index < sampleCount; index += 1) {
+      if (result.recoverySampleFields.elementIndices[index] >= elementCount) {
+        return { valid: false, reason: 'recovery-sample-element-out-of-range' };
       }
     }
     if (!Number.isFinite(result.equilibrium.relativeResidual) || result.equilibrium.relativeResidual < 0 ||

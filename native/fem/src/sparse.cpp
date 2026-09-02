@@ -39,10 +39,12 @@ bool checked_scalar_graph_counts(std::uint64_t nodes, std::uint64_t edges,
 
 bool build_csr_graph(std::uint32_t node_count,
                      const std::vector<std::uint32_t> &connectivity,
+                     std::uint32_t arity,
                      CsrGraph &out, Diagnostic &diagnostic) {
-  if (node_count == 0 || connectivity.empty() || connectivity.size() % 4 != 0) {
+  if (node_count == 0 || (arity != 4 && arity != 10) ||
+      connectivity.empty() || connectivity.size() % arity != 0) {
     diagnostic = {ErrorCode::invalid_argument,
-                  "Tet4 connectivity is empty or incomplete.",
+                  "Tetrahedral connectivity is empty or incomplete.",
                   {},
                   true};
     return false;
@@ -54,8 +56,8 @@ bool build_csr_graph(std::uint32_t node_count,
   (void)preliminary_dofs;
   (void)preliminary_nnz;
   std::vector<std::uint32_t> adjacency_reservations(node_count, 0);
-  for (std::size_t e = 0; e < connectivity.size(); e += 4)
-    for (int a = 0; a < 4; ++a) {
+  for (std::size_t e = 0; e < connectivity.size(); e += arity)
+    for (std::uint32_t a = 0; a < arity; ++a) {
       if (connectivity[e + a] >= node_count) {
         diagnostic = {ErrorCode::mesh_invalid_index,
                       "The mesh references a missing node.",
@@ -64,20 +66,20 @@ bool build_csr_graph(std::uint32_t node_count,
         return false;
       }
       if (adjacency_reservations[connectivity[e + a]] >
-          std::numeric_limits<std::uint32_t>::max() - 3) {
+          std::numeric_limits<std::uint32_t>::max() - (arity - 1)) {
         diagnostic = {ErrorCode::graph_index_overflow,
                       "The node adjacency count exceeds the supported range.",
                       {},
                       true};
         return false;
       }
-      adjacency_reservations[connectivity[e + a]] += 3;
+      adjacency_reservations[connectivity[e + a]] += arity - 1;
     }
   std::vector<std::vector<std::uint32_t>> adjacency(node_count);
   for (std::uint32_t node = 0; node < node_count; ++node)
     adjacency[node].reserve(adjacency_reservations[node]);
-  for (std::size_t e = 0; e < connectivity.size(); e += 4) {
-    for (int a = 0; a < 4; ++a) {
+  for (std::size_t e = 0; e < connectivity.size(); e += arity) {
+    for (std::uint32_t a = 0; a < arity; ++a) {
       const auto na = connectivity[e + a];
       if (na >= node_count) {
         diagnostic = {ErrorCode::mesh_invalid_index,
@@ -86,7 +88,7 @@ bool build_csr_graph(std::uint32_t node_count,
                       true};
         return false;
       }
-      for (int b = a + 1; b < 4; ++b) {
+      for (std::uint32_t b = a + 1; b < arity; ++b) {
         const auto nb = connectivity[e + b];
         if (nb >= node_count) {
           diagnostic = {ErrorCode::mesh_invalid_index,
@@ -97,7 +99,7 @@ bool build_csr_graph(std::uint32_t node_count,
         }
         if (na == nb) {
           diagnostic = {ErrorCode::mesh_invalid_jacobian,
-                        "A Tet4 element repeats a node index.",
+                        "A tetrahedral element repeats a node index.",
                         {},
                         true};
           return false;
@@ -188,7 +190,8 @@ MemoryEstimate estimate_memory(const Mesh &mesh, const CsrGraph &graph,
                                double multiplier) {
   MemoryEstimate e;
   e.node_count = mesh.node_positions_m.size() / 3;
-  e.element_count = mesh.tet4_connectivity.size() / 4;
+  const auto arity = nodes_per_element(mesh);
+  e.element_count = mesh.tet4_connectivity.size() / arity;
   e.degree_of_freedom_count = graph.degree_of_freedom_count;
   e.adjacency_edge_count = graph.adjacency_edge_count;
   e.exact_nnz = graph.column_indices.size();
@@ -200,17 +203,22 @@ MemoryEstimate estimate_memory(const Mesh &mesh, const CsrGraph &graph,
   e.matrix_values_bytes = e.exact_nnz * sizeof(double);
   e.matrix_index_bytes = e.exact_nnz * sizeof(std::uint32_t);
   e.row_pointer_bytes = (e.degree_of_freedom_count + 1) * sizeof(std::uint32_t);
-  // The graph builder reserves exactly three neighbors per Tet4 node
-  // occurrence before sorting duplicate connectivity edges away.
-  e.graph_bytes = (12 * e.element_count) * sizeof(std::uint32_t) +
+  // The graph builder reserves arity - 1 neighbors per node occurrence
+  // before sorting duplicate connectivity edges away.
+  e.graph_bytes = (arity * (arity - 1) * e.element_count) *
+                      sizeof(std::uint32_t) +
                   e.node_count * sizeof(std::vector<std::uint32_t>);
+  const auto local_dofs = arity * 3;
   e.assembly_work_bytes =
-      144 * sizeof(double) + 72 * sizeof(double) + 12 * sizeof(double);
+      (local_dofs * local_dofs + 6 * local_dofs + local_dofs) *
+      sizeof(double);
   // external/RHS plus PCG solution, r, z, p, Ap, and Jacobi diagonal.
   e.solver_work_bytes = 8 * e.degree_of_freedom_count * sizeof(double);
-  // u, reactions, nodal magnitudes, and 15 element scalars.
+  // u, reactions, nodal magnitudes, element averages, and raw recovery data.
+  const auto samples_per_element = arity == 10 ? 4 : 1;
   e.result_bytes =
-      (2 * e.degree_of_freedom_count + e.node_count + 15 * e.element_count) *
+      (2 * e.degree_of_freedom_count + e.node_count + 15 * e.element_count +
+       15 * samples_per_element * e.element_count) *
       sizeof(double);
   e.runtime_overhead_bytes = kRuntimeOverhead;
   const auto sparse_structure =

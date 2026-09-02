@@ -1,5 +1,5 @@
 'use strict';
-var WORKER_PROTOCOL_VERSION = 1;
+var WORKER_PROTOCOL_VERSION = 2;
 var gmshPromise = null;
 var requestQueue = Promise.resolve();
 

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": null,
+  "browser": { "name": null, "version": null, "platform": null },
+  "case": { "name": null, "elementType": "tet10", "nodeCount": 0, "elementCount": 0 },
+  "preflight": { "modelVersion": 1, "modeledPeakBytes": 0, "safetyMultiplier": 1.5, "predictedPeakBytes": 0 },
+  "observed": { "wasmBytesBefore": 0, "wasmBytesAfter": 0, "externalProcessPeakBytes": null },
+  "solve": { "outcome": null, "iterations": 0, "durationMs": 0, "wallTimeMs": 0 }
+}

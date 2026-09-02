@@ -137,10 +137,11 @@ The compact Supports group continuously reports provisional preview or exact
 mesh rank across Tx/Ty/Tz/Rx/Ry/Rz, explicitly identifying free or coupled rigid
 motion. Native solver diagnostics remain the final singularity check.
 
-Tet10 meshes preserve six-node quadratic boundary faces for solver integration
-and use a separate linear-triangle subdivision for viewport display and picking.
-Until the Task 13 solver/API work lands, Tet10 meshes are inspectable but Solve
-remains intentionally limited to Tet4.
+Tet10 is the production default. Quadratic meshes preserve six-node boundary
+faces for load integration and use a separate linear-triangle subdivision for
+viewport display and picking. Tet4 remains available as a debug/reference
+option. The native/WASM result contract retains four Tet10 recovery samples per
+element alongside separately named element-averaged smoothing fields.
 
 Loads and supports are shown at deterministic, area-aware samples across their
 actual selected surfaces. Load-arrow tips touch the surface; all vector arrows

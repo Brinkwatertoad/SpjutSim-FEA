@@ -2,6 +2,7 @@
 
 #include "spjutsim/pcg.hpp"
 #include "spjutsim/tet4.hpp"
+#include "spjutsim/tet10.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -25,12 +26,31 @@ std::array<double, 12> element_coordinates(const Mesh &mesh,
           mesh.node_positions_m[mesh.tet4_connectivity[offset + n] * 3 + axis];
   return x;
 }
+std::array<double, 30> tet10_coordinates(const Mesh &mesh,
+                                         std::size_t offset) {
+  std::array<double, 30> x{};
+  for (int n = 0; n < 10; ++n)
+    for (int axis = 0; axis < 3; ++axis)
+      x[n * 3 + axis] =
+          mesh.node_positions_m[mesh.tet4_connectivity[offset + n] * 3 + axis];
+  return x;
+}
 std::array<double, 9>
 triangle_coordinates(const Mesh &mesh,
                      const std::vector<std::uint32_t> &indices,
                      std::size_t offset) {
   std::array<double, 9> x{};
   for (int n = 0; n < 3; ++n)
+    for (int axis = 0; axis < 3; ++axis)
+      x[n * 3 + axis] = mesh.node_positions_m[indices[offset + n] * 3 + axis];
+  return x;
+}
+std::array<double, 18>
+tri6_coordinates(const Mesh &mesh,
+                 const std::vector<std::uint32_t> &indices,
+                 std::size_t offset) {
+  std::array<double, 18> x{};
+  for (int n = 0; n < 6; ++n)
     for (int axis = 0; axis < 3; ++axis)
       x[n * 3 + axis] = mesh.node_positions_m[indices[offset + n] * 3 + axis];
   return x;
@@ -104,8 +124,9 @@ bool has_six_rigid_constraints(const Mesh &mesh,
   const auto nodes =
       static_cast<std::uint32_t>(mesh.node_positions_m.size() / 3);
   DisjointSet sets(nodes);
-  for (std::size_t e = 0; e < mesh.tet4_connectivity.size(); e += 4)
-    for (int n = 1; n < 4; ++n)
+  const auto arity = nodes_per_element(mesh);
+  for (std::size_t e = 0; e < mesh.tet4_connectivity.size(); e += arity)
+    for (std::uint32_t n = 1; n < arity; ++n)
       sets.unite(mesh.tet4_connectivity[e], mesh.tet4_connectivity[e + n]);
   std::unordered_map<std::uint32_t, std::vector<std::uint32_t>> component_nodes;
   for (std::uint32_t n = 0; n < nodes; ++n)
@@ -159,10 +180,17 @@ bool has_six_rigid_constraints(const Mesh &mesh,
 void add_element_vector(std::vector<double> &global,
                         const std::vector<std::uint32_t> &conn,
                         std::size_t offset,
-                        const std::array<double, 12> &local) {
-  for (int n = 0; n < 4; ++n)
+                        const double *local, std::uint32_t arity) {
+  for (std::uint32_t n = 0; n < arity; ++n)
     for (int a = 0; a < 3; ++a)
       global[conn[offset + n] * 3 + a] += local[n * 3 + a];
+}
+template <std::size_t N>
+void add_element_vector(std::vector<double> &global,
+                        const std::vector<std::uint32_t> &conn,
+                        std::size_t offset,
+                        const std::array<double, N> &local) {
+  add_element_vector(global, conn, offset, local.data(), N / 3);
 }
 } // namespace
 
@@ -265,10 +293,12 @@ void Context::invalidate_analysis() {
 bool Context::load_mesh(Mesh mesh) {
   mesh_valid_ = graph_valid_ = false;
   invalidate_analysis();
+  const auto arity = nodes_per_element(mesh);
   if (mesh.node_positions_m.empty() || mesh.node_positions_m.size() % 3 ||
-      mesh.tet4_connectivity.empty() || mesh.tet4_connectivity.size() % 4) {
+      (arity != 4 && arity != 10) || mesh.tet4_connectivity.empty() ||
+      mesh.tet4_connectivity.size() % arity) {
     diagnostic_ = make_error(ErrorCode::invalid_argument,
-                             "The Tet4 mesh buffers are empty or incomplete.");
+                             "The tetrahedral mesh buffers are empty or incomplete.");
     return false;
   }
   if (mesh.node_positions_m.size() / 3 >
@@ -279,15 +309,22 @@ bool Context::load_mesh(Mesh mesh) {
     return false;
   }
   Diagnostic d;
-  for (std::size_t e = 0; e < mesh.tet4_connectivity.size(); e += 4) {
-    for (int n = 0; n < 4; ++n)
+  for (std::size_t e = 0; e < mesh.tet4_connectivity.size(); e += arity) {
+    for (std::uint32_t n = 0; n < arity; ++n)
       if (mesh.tet4_connectivity[e + n] >= mesh.node_positions_m.size() / 3) {
         diagnostic_ = make_error(ErrorCode::mesh_invalid_index,
                                  "The mesh references a missing node.");
         return false;
       }
-    Tet4Data data;
-    if (!build_tet4_data(element_coordinates(mesh, e), data, d)) {
+    bool valid = false;
+    if (arity == 4) {
+      Tet4Data data;
+      valid = build_tet4_data(element_coordinates(mesh, e), data, d);
+    } else {
+      Tet10Data data;
+      valid = build_tet10_data(tet10_coordinates(mesh, e), data, d);
+    }
+    if (!valid) {
       diagnostic_ = d;
       return false;
     }
@@ -296,7 +333,7 @@ bool Context::load_mesh(Mesh mesh) {
   try {
     if (!build_csr_graph(
             static_cast<std::uint32_t>(mesh.node_positions_m.size() / 3),
-            mesh.tet4_connectivity, graph, d)) {
+            mesh.tet4_connectivity, arity, graph, d)) {
       diagnostic_ = d;
       return false;
     }
@@ -396,7 +433,7 @@ bool Context::preflight(double device_gib, std::uint64_t cap,
   }
   if (!mesh_valid_ || !graph_valid_) {
     diagnostic_ = make_error(ErrorCode::invalid_argument,
-                             "Load a valid Tet4 mesh before preflight.");
+                             "Load a valid tetrahedral mesh before preflight.");
     return false;
   }
   if (!material_valid_) {
@@ -439,7 +476,8 @@ bool Context::preflight(double device_gib, std::uint64_t cap,
   }
   for (const auto &load : loads_.surface_loads) {
     if (load.triangle_connectivity.empty() ||
-        load.triangle_connectivity.size() % 3) {
+        (load.nodes_per_face != 3 && load.nodes_per_face != 6) ||
+        load.triangle_connectivity.size() % load.nodes_per_face) {
       diagnostic_ =
           make_error(ErrorCode::invalid_argument,
                      "A surface load has incomplete triangle connectivity.");
@@ -500,46 +538,66 @@ bool Context::solve(const SolveSettings &settings) {
     if (!loads_.nodal_forces_n.empty())
       external = loads_.nodal_forces_n;
     const auto d = isotropic_constitutive_matrix(material_);
+    const auto arity = nodes_per_element(mesh_);
+    const auto local_dofs = arity * 3;
     Diagnostic local;
-    for (std::size_t e = 0; e < mesh_.tet4_connectivity.size(); e += 4) {
-      if ((e / 4) % 256 == 0 && settings.is_cancelled &&
+    for (std::size_t e = 0; e < mesh_.tet4_connectivity.size(); e += arity) {
+      if ((e / arity) % 256 == 0 && settings.is_cancelled &&
           settings.is_cancelled()) {
         restore_graph();
         diagnostic_ = make_error(ErrorCode::cancelled,
                                  "The solve was cancelled during assembly.");
         return false;
       }
-      Tet4Data data;
-      if (!build_tet4_data(element_coordinates(mesh_, e), data, local)) {
-        restore_graph();
-        diagnostic_ = local;
-        return false;
+      std::vector<double> ke(local_dofs * local_dofs);
+      if (arity == 4) {
+        Tet4Data data;
+        if (!build_tet4_data(element_coordinates(mesh_, e), data, local)) {
+          restore_graph(); diagnostic_ = local; return false;
+        }
+        const auto fixed = tet4_stiffness(data, d);
+        std::copy(fixed.begin(), fixed.end(), ke.begin());
+        if (loads_.gravity_enabled)
+          add_element_vector(external, mesh_.tet4_connectivity, e,
+                             tet4_body_force(data.volume_m3,
+                                             material_.density_kg_m3,
+                                             loads_.gravity_m_s2));
+      } else {
+        Tet10Data data;
+        if (!build_tet10_data(tet10_coordinates(mesh_, e), data, local)) {
+          restore_graph(); diagnostic_ = local; return false;
+        }
+        const auto fixed = tet10_stiffness(data, d);
+        std::copy(fixed.begin(), fixed.end(), ke.begin());
+        if (loads_.gravity_enabled)
+          add_element_vector(external, mesh_.tet4_connectivity, e,
+                             tet10_body_force(data, material_.density_kg_m3,
+                                              loads_.gravity_m_s2));
       }
-      const auto ke = tet4_stiffness(data, d);
-      for (int a = 0; a < 4; ++a)
+      for (std::uint32_t a = 0; a < arity; ++a)
         for (int ca = 0; ca < 3; ++ca) {
           const auto row = mesh_.tet4_connectivity[e + a] * 3 + ca;
-          for (int b = 0; b < 4; ++b)
+          for (std::uint32_t b = 0; b < arity; ++b)
             for (int cb = 0; cb < 3; ++cb) {
               const auto col = mesh_.tet4_connectivity[e + b] * 3 + cb,
                          pos = csr_position(matrix.graph, row, col);
-              matrix.values[pos] += ke[(a * 3 + ca) * 12 + b * 3 + cb];
+              matrix.values[pos] += ke[(a * 3 + ca) * local_dofs + b * 3 + cb];
             }
         }
-      if (loads_.gravity_enabled)
-        add_element_vector(external, mesh_.tet4_connectivity, e,
-                           tet4_body_force(data.volume_m3,
-                                           material_.density_kg_m3,
-                                           loads_.gravity_m_s2));
     }
     for (const auto &load : loads_.surface_loads) {
       double total_area = 0;
       if (load.type == SurfaceLoadType::total_force)
-        for (std::size_t t = 0; t < load.triangle_connectivity.size(); t += 3)
-          total_area += triangle_area(
-              triangle_coordinates(mesh_, load.triangle_connectivity, t));
-      for (std::size_t t = 0; t < load.triangle_connectivity.size(); t += 3) {
-        if ((t / 3) % 1024 == 0 && settings.is_cancelled &&
+        for (std::size_t t = 0; t < load.triangle_connectivity.size();
+             t += load.nodes_per_face)
+          total_area += load.nodes_per_face == 3
+                            ? triangle_area(triangle_coordinates(
+                                  mesh_, load.triangle_connectivity, t))
+                            : tri6_area(tri6_coordinates(
+                                  mesh_, load.triangle_connectivity, t), local);
+      for (std::size_t t = 0; t < load.triangle_connectivity.size();
+           t += load.nodes_per_face) {
+        if ((t / load.nodes_per_face) % 1024 == 0 && settings.is_cancelled &&
             settings.is_cancelled()) {
           restore_graph();
           diagnostic_ = make_error(
@@ -547,18 +605,26 @@ bool Context::solve(const SolveSettings &settings) {
               "The solve was cancelled during surface-load integration.");
           return false;
         }
-        const auto x =
-            triangle_coordinates(mesh_, load.triangle_connectivity, t);
-        const auto f = load.type == SurfaceLoadType::pressure
-                           ? triangle_pressure_force(x, load.pressure_pa, local)
-                           : triangle_total_force(x, total_area,
-                                                  load.total_force_n, local);
+        std::array<double, 18> f{};
+        if (load.nodes_per_face == 3) {
+          const auto x = triangle_coordinates(mesh_, load.triangle_connectivity, t);
+          const auto fixed = load.type == SurfaceLoadType::pressure
+                                 ? triangle_pressure_force(x, load.pressure_pa, local)
+                                 : triangle_total_force(x, total_area,
+                                                        load.total_force_n, local);
+          std::copy(fixed.begin(), fixed.end(), f.begin());
+        } else {
+          const auto x = tri6_coordinates(mesh_, load.triangle_connectivity, t);
+          f = load.type == SurfaceLoadType::pressure
+                  ? tri6_pressure_force(x, load.pressure_pa, local)
+                  : tri6_total_force(x, total_area, load.total_force_n, local);
+        }
         if (local.code != ErrorCode::none) {
           restore_graph();
           diagnostic_ = local;
           return false;
         }
-        for (int n = 0; n < 3; ++n)
+        for (std::uint32_t n = 0; n < load.nodes_per_face; ++n)
           for (int a = 0; a < 3; ++a)
             external[load.triangle_connectivity[t + n] * 3 + a] += f[n * 3 + a];
       }
@@ -580,18 +646,25 @@ bool Context::solve(const SolveSettings &settings) {
     result.displacement_m = std::move(u);
     result.displacement_magnitude_m.resize(mesh_.node_positions_m.size() / 3);
     result.reaction_n.assign(dofs, 0.0);
-    const auto elements = mesh_.tet4_connectivity.size() / 4;
+    const auto elements = mesh_.tet4_connectivity.size() / arity;
+    const auto samples_per_element = arity == 10 ? 4U : 1U;
     result.element_strain.resize(elements * 6);
     result.element_stress_pa.resize(elements * 6);
     result.element_von_mises_pa.resize(elements);
     result.element_max_principal_pa.resize(elements);
     result.element_min_principal_pa.resize(elements);
+    result.recovery_strain.resize(elements * samples_per_element * 6);
+    result.recovery_stress_pa.resize(elements * samples_per_element * 6);
+    result.recovery_von_mises_pa.resize(elements * samples_per_element);
+    result.recovery_max_principal_pa.resize(elements * samples_per_element);
+    result.recovery_min_principal_pa.resize(elements * samples_per_element);
+    result.recovery_sample_element.resize(elements * samples_per_element);
     std::vector<double> internal(dofs, 0.0);
     result.raw_von_mises_max.value = -std::numeric_limits<double>::infinity();
     result.raw_max_principal.value = -std::numeric_limits<double>::infinity();
     result.raw_min_principal.value = std::numeric_limits<double>::infinity();
-    for (std::size_t e = 0; e < mesh_.tet4_connectivity.size(); e += 4) {
-      if ((e / 4) % 256 == 0 && settings.is_cancelled &&
+    for (std::size_t e = 0; e < mesh_.tet4_connectivity.size(); e += arity) {
+      if ((e / arity) % 256 == 0 && settings.is_cancelled &&
           settings.is_cancelled()) {
         restore_graph();
         diagnostic_ =
@@ -599,38 +672,64 @@ bool Context::solve(const SolveSettings &settings) {
                        "The solve was cancelled during stress recovery.");
         return false;
       }
-      Tet4Data data;
-      build_tet4_data(element_coordinates(mesh_, e), data, local);
-      std::array<double, 12> ue{}, fe{};
-      for (int n = 0; n < 4; ++n)
+      const auto ei = e / arity;
+      std::vector<double> ue(local_dofs), fe(local_dofs), ke;
+      for (std::uint32_t n = 0; n < arity; ++n)
         for (int a = 0; a < 3; ++a)
           ue[n * 3 + a] =
               result.displacement_m[mesh_.tet4_connectivity[e + n] * 3 + a];
-      const auto strain = tet4_strain(data, ue);
-      const auto stress = stress_from_strain(d, strain);
-      for (int i = 0; i < 12; ++i)
-        for (int q = 0; q < 6; ++q)
-          fe[i] += data.b[q * 12 + i] * stress[q] * data.volume_m3;
-      add_element_vector(internal, mesh_.tet4_connectivity, e, fe);
-      const auto principal = principal_stresses(stress);
-      const auto vm = von_mises_stress(stress);
-      const auto ei = e / 4;
-      for (int i = 0; i < 6; ++i) {
-        result.element_strain[ei * 6 + i] = strain[i];
-        result.element_stress_pa[ei * 6 + i] = stress[i];
+      auto record_sample = [&](std::uint32_t local_sample,
+                               const std::array<double, 6> &strain) {
+        const auto stress = stress_from_strain(d, strain);
+        const auto principal = principal_stresses(stress);
+        const auto vm = von_mises_stress(stress);
+        const auto sample = ei * samples_per_element + local_sample;
+        result.recovery_sample_element[sample] = static_cast<std::uint32_t>(ei);
+        for (int i = 0; i < 6; ++i) {
+          result.recovery_strain[sample * 6 + i] = strain[i];
+          result.recovery_stress_pa[sample * 6 + i] = stress[i];
+          result.element_strain[ei * 6 + i] += strain[i] / samples_per_element;
+          result.element_stress_pa[ei * 6 + i] += stress[i] / samples_per_element;
+        }
+        result.recovery_von_mises_pa[sample] = vm;
+        result.recovery_max_principal_pa[sample] = principal[0];
+        result.recovery_min_principal_pa[sample] = principal[2];
+        result.element_von_mises_pa[ei] += vm / samples_per_element;
+        result.element_max_principal_pa[ei] += principal[0] / samples_per_element;
+        result.element_min_principal_pa[ei] += principal[2] / samples_per_element;
+        if (vm > result.raw_von_mises_max.value)
+          result.raw_von_mises_max = {vm, static_cast<std::uint32_t>(ei),
+                                      static_cast<std::uint32_t>(sample)};
+        if (principal[0] > result.raw_max_principal.value)
+          result.raw_max_principal = {principal[0], static_cast<std::uint32_t>(ei),
+                                      static_cast<std::uint32_t>(sample)};
+        if (principal[2] < result.raw_min_principal.value)
+          result.raw_min_principal = {principal[2], static_cast<std::uint32_t>(ei),
+                                      static_cast<std::uint32_t>(sample)};
+      };
+      if (arity == 4) {
+        Tet4Data data;
+        build_tet4_data(element_coordinates(mesh_, e), data, local);
+        std::array<double, 12> fixed_u{};
+        std::copy(ue.begin(), ue.end(), fixed_u.begin());
+        record_sample(0, tet4_strain(data, fixed_u));
+        const auto fixed_ke = tet4_stiffness(data, d);
+        ke.assign(fixed_ke.begin(), fixed_ke.end());
+      } else {
+        Tet10Data data;
+        build_tet10_data(tet10_coordinates(mesh_, e), data, local);
+        std::array<double, 30> fixed_u{};
+        std::copy(ue.begin(), ue.end(), fixed_u.begin());
+        for (std::uint32_t point = 0; point < data.points.size(); ++point)
+          record_sample(point, tet10_strain(data.points[point], fixed_u));
+        const auto fixed_ke = tet10_stiffness(data, d);
+        ke.assign(fixed_ke.begin(), fixed_ke.end());
       }
-      result.element_von_mises_pa[ei] = vm;
-      result.element_max_principal_pa[ei] = principal[0];
-      result.element_min_principal_pa[ei] = principal[2];
-      if (vm > result.raw_von_mises_max.value)
-        result.raw_von_mises_max = {vm, static_cast<std::uint32_t>(ei)};
-      if (principal[0] > result.raw_max_principal.value)
-        result.raw_max_principal = {principal[0],
-                                    static_cast<std::uint32_t>(ei)};
-      if (principal[2] < result.raw_min_principal.value)
-        result.raw_min_principal = {principal[2],
-                                    static_cast<std::uint32_t>(ei)};
-      for (int i = 0; i < 12; ++i)
+      for (std::uint32_t i = 0; i < local_dofs; ++i)
+        for (std::uint32_t j = 0; j < local_dofs; ++j)
+          fe[i] += ke[i * local_dofs + j] * ue[j];
+      add_element_vector(internal, mesh_.tet4_connectivity, e, fe.data(), arity);
+      for (std::uint32_t i = 0; i < local_dofs; ++i)
         result.strain_energy_j += 0.5 * ue[i] * fe[i];
     }
     std::vector<unsigned char> constrained(dofs, 0);

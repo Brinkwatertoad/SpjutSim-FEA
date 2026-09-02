@@ -333,7 +333,7 @@
   };
   UIController.prototype.updateMeshSettingsFromControls = function () {
     var preset = this.meshPreset.value;
-    var settings = { preset: preset, elementType: this.meshElementType ? this.meshElementType.value : 'tet4' };
+    var settings = { preset: preset, elementType: this.meshElementType ? this.meshElementType.value : 'tet10' };
     if (preset === 'custom') {
       var minimum = Number(this.meshMinSize.value);
       var maximum = Number(this.meshMaxSize.value);
@@ -358,7 +358,7 @@
     }
   };
   UIController.prototype.renderMesh = function (documentState) {
-    var settings = documentState.meshSettings || { preset: 'normal', elementType: 'tet4' };
+    var settings = documentState.meshSettings || { preset: 'normal', elementType: 'tet10' };
     var generation = documentState.meshGeneration || { status: 'idle' };
     var hasGeometry = Boolean(documentState.geometry);
     var isGenerating = generation.status === 'generating';
@@ -554,19 +554,17 @@
     else if (execution.status === 'cancelled' || preflight.status === 'cancelled') { message = 'Solve cancelled; partial results were discarded.'; }
     else if (preflight.status === 'ready') {
       message = preflight.result.exceedsWasmCap ? 'Estimate exceeds the WebAssembly cap; generate a coarser mesh.' : 'Preflight complete. Review the estimate, then solve.';
-    } else if (documentState.mesh && documentState.mesh.elementType === 'tet10') {
-      message = 'Tet10 mesh inspection is available; Tet10 Solve is enabled in Task 13.';
     } else if (documentState.mesh) { message = 'Run preflight to validate constraints and estimate solve memory.'; }
     if (documentState.resultInvalidation && documentState.resultInvalidation.stale) { message += ' Previous results are stale.'; }
     if (this.solveStatus) { this.solveStatus.textContent = message; this.solveStatus.classList.toggle('fea-error', preflight.status === 'failed' || execution.status === 'failed'); }
-    if (this.preflightButton) { this.preflightButton.disabled = !documentState.mesh || documentState.mesh.elementType === 'tet10' || running; }
+    if (this.preflightButton) { this.preflightButton.disabled = !documentState.mesh || running; }
     if (this.solveButton) { this.solveButton.disabled = preflight.status !== 'ready' || preflight.result.exceedsWasmCap || running; }
     if (this.cancelSolveButton) { this.cancelSolveButton.hidden = !running; }
     if (this.preflightSummary) {
       this.preflightSummary.hidden = preflight.status !== 'ready';
       if (preflight.status === 'ready') {
         replaceDefinitionList(this.preflightSummary, [
-          ['Mesh', preflight.result.nodeCount + ' nodes / ' + preflight.result.elementCount + ' Tet4'],
+          ['Mesh', preflight.result.nodeCount + ' nodes / ' + preflight.result.elementCount + ' ' + preflight.result.elementType.toUpperCase()],
           ['System', preflight.result.degreeOfFreedomCount + ' DOF / ' + preflight.result.exactNnz + ' nnz'],
           ['Memory', formatBytes(preflight.result.estimatedPeakBytes) + ' (' + preflight.result.classification + ')'],
           ['WASM cap', formatBytes(preflight.result.wasmHeapCapBytes)],

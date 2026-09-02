@@ -12,7 +12,7 @@
       constraintStability: null,
       loads: [],
       gravity: { enabled: false, accelerationMS2: [0, 0, -9.80665] },
-      meshSettings: { preset: 'normal', elementType: 'tet4' },
+      meshSettings: { preset: 'normal', elementType: 'tet10' },
       meshGeneration: { status: 'idle', error: null, progress: null },
       mesh: null,
       meshMetadata: null,
