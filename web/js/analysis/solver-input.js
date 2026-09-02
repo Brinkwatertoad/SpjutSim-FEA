@@ -86,16 +86,22 @@
     var knownFaceIds = documentState && documentState.geometry && documentState.geometry.faceIds;
     var materialValidation;
     var gravityValidation;
+    var constraintStability;
     if (!mesh) { throw new Error('Generate a mesh before preparing solver input.'); }
     if (!Array.isArray(knownFaceIds)) { throw new Error('Imported geometry is required.'); }
     materialValidation = root.SpjutsimFEA.validateIsotropicMaterial(documentState.material, documentState.gravity);
     if (!materialValidation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(materialValidation)); }
     gravityValidation = root.SpjutsimFEA.validateGravity(documentState.gravity, materialValidation.value);
     if (!gravityValidation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(gravityValidation)); }
+    constraintStability = root.SpjutsimFEA.analyzeDocumentConstraintStability(documentState);
+    if (!constraintStability || constraintStability.basis !== 'mesh') {
+      throw new Error('Mesh-exact rigid-body stability diagnostics are required before preflight.');
+    }
     return {
       protocol: 1,
       mesh: mesh,
       material: materialValidation.value,
+      constraintStability: constraintStability,
       boundaryConditions: documentState.boundaryConditions.map(function (condition) {
         var validated = root.SpjutsimFEA.validateBoundaryCondition(condition, knownFaceIds);
         var surface;

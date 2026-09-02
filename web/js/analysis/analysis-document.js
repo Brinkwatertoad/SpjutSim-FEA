@@ -9,6 +9,7 @@
       geometryImport: { status: 'idle', sourceName: null, error: null },
       material: null,
       boundaryConditions: [],
+      constraintStability: null,
       loads: [],
       gravity: { enabled: false, accelerationMS2: [0, 0, -9.80665] },
       meshSettings: { preset: 'normal', elementType: 'tet4' },

@@ -40,6 +40,8 @@
   var documentState = analysis();
   var controller = new api.AppController({ document: documentState });
   var input = api.prepareSolverInput(documentState);
+  assert(input.constraintStability && input.constraintStability.basis === 'mesh' && input.constraintStability.rank === 6,
+    'solver input omitted mesh-exact rigid-body stability metadata');
   var sourceByteLength = documentState.mesh.nodePositionsM.byteLength;
   var progressStages = [];
   var client = new api.SolverClient({ onProgress: function (item) { progressStages.push(item.stage); } });
@@ -48,6 +50,8 @@
     assert(documentState.mesh.nodePositionsM.byteLength === sourceByteLength, 'preflight detached the controller-owned mesh');
     assert(preflight.exactNnz > 0 && preflight.degreeOfFreedomCount === 12, 'native preflight counts were invalid');
     assert(preflight.wasmHeapCapBytes === 3758096384, 'configured WASM cap was not surfaced');
+    assert(preflight.constraintStability && preflight.constraintStability.rank === 6,
+      'solve preflight omitted mesh-exact rigid-body stability metadata');
     assert(controller.completeSolvePreflight(revision, preflight), 'current preflight was discarded');
     controller.beginSolve();
     return client.solve(revision, documentState.solveSettings, false);

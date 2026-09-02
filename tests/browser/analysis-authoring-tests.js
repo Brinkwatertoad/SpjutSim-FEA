@@ -146,6 +146,64 @@
     }, 'stable normal');
   }
 
+  function testConstraintStabilityContracts() {
+    var positions = cubeTopology().positions;
+    var none = api.analyzeRigidModeObservations(positions, []);
+    var fixedFace = [];
+    [0, 3, 4, 7].forEach(function (pointIndex) {
+      ['x', 'y', 'z'].forEach(function (axis) { fixedFace.push({ pointIndex: pointIndex, axis: axis }); });
+    });
+    var complete = api.analyzeRigidModeObservations(positions, fixedFace);
+    var xOnly = api.analyzeRigidModeObservations(positions, [
+      { pointIndex: 0, axis: 'x' }, { pointIndex: 3, axis: 'x' }, { pointIndex: 4, axis: 'x' }
+    ]);
+    var coupled = api.analyzeRigidModeObservations(positions, [{ pointIndex: 0, axis: 'x' }]);
+    var transformed = new Float64Array(positions.length);
+    for (var index = 0; index < positions.length; index += 3) {
+      transformed[index] = positions[index] * 1000 + 17;
+      transformed[index + 1] = positions[index + 1] * 1000 - 29;
+      transformed[index + 2] = positions[index + 2] * 1000 + 41;
+    }
+    var transformedComplete = api.analyzeRigidModeObservations(transformed, fixedFace.concat(fixedFace));
+    assert(none.rank === 0 && none.freeModeCount === 6 && none.modes.every(function (mode) { return mode.status === 'free'; }),
+      'unconstrained geometry did not report all six canonical rigid modes free');
+    assert(complete.rank === 6 && complete.freeModeCount === 0 && complete.status === 'fully-constrained',
+      'three-component constraints across a planar face did not suppress all rigid modes');
+    assert(xOnly.modes.find(function (mode) { return mode.id === 'Ty'; }).status === 'free' &&
+      xOnly.modes.find(function (mode) { return mode.id === 'Tz'; }).status === 'free',
+    'axis-only supports did not preserve canonical free translations');
+    assert(coupled.modes.find(function (mode) { return mode.id === 'Tx'; }).status === 'coupled' && coupled.coupledFreedomCount > 0,
+      'coupled rigid freedom was presented as a false per-axis result');
+    assert(transformedComplete.rank === complete.rank && transformedComplete.modes.map(function (mode) { return mode.status; }).join('|') ===
+      complete.modes.map(function (mode) { return mode.status; }).join('|'),
+    'rigid-mode rank changed under coordinate translation, scale, or duplicate observations');
+  }
+
+  function testControllerConstraintStability() {
+    var state = api.createAnalysisDocument();
+    var controller = new api.AppController({ document: state });
+    var source = { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([11]).buffer };
+    controller.replaceGeometry(cubeGeometry('stability-cube'), source);
+    assert(state.constraintStability.basis === 'preview' && state.constraintStability.provisional &&
+      state.constraintStability.rank === 0, 'import did not create provisional unconstrained diagnostics');
+    controller.replaceSelectedFaces(['face-x-']);
+    var supportId = controller.createBoundaryCondition({ type: 'support', componentsM: { x: 0 } });
+    assert(state.constraintStability.rank === 3 && state.constraintStability.status === 'underconstrained',
+      'preview diagnostics did not account for an X-only face support');
+    controller.replaceBoundaryCondition(supportId, { type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
+    assert(state.constraintStability.rank === 6 && state.constraintStability.status === 'fully-constrained',
+      'preview diagnostics did not recognize a stable face support');
+    controller.completeMeshGeneration(cubeMesh());
+    assert(state.constraintStability.basis === 'mesh' && !state.constraintStability.provisional && state.constraintStability.rank === 6,
+      'mesh generation did not replace provisional stability with exact constrained-node diagnostics');
+    controller.rotateGeometryAroundGlobalAxis('z', 90);
+    assert(state.mesh === null && state.constraintStability.basis === 'preview' && state.constraintStability.rank === 6,
+      'orientation did not restore provisional global-component stability diagnostics');
+    controller.removeBoundaryCondition(supportId);
+    assert(state.constraintStability.rank === 0 && state.constraintStability.freeModeCount === 6,
+      'support removal left stale constrained rigid modes');
+  }
+
   function testMaterialCatalog() {
     var factories = api.FACTORY_MATERIALS;
     var storage = memoryStorage();
@@ -255,6 +313,7 @@
       'setup-inspector', 'setup-inspector-status', 'setup-inspector-model-list',
       'setup-inspector-support-list', 'setup-inspector-load-list',
       'setup-inspector-form-stash', 'setup-add-support-button', 'setup-add-load-button',
+      'constraint-stability-summary',
       'model-rotation-axis', 'model-rotation-angle', 'rotate-model-positive',
       'rotate-model-negative', 'reset-model-orientation', 'model-orientation-status',
       'model-face-direction', 'orient-selected-face'
@@ -388,6 +447,8 @@
     controller.replaceSelectedFaces(['face-x-']);
     document.getElementById('support-form').requestSubmit();
     assert(state.boundaryConditions.length === 1 && state.boundaryConditions[0].name === 'Support 1', 'keyboard form submission did not add an auto-named support');
+    assert(document.getElementById('constraint-stability-summary').textContent.indexOf('Fully constrained · Preview') === 0,
+      'compact setup inspector did not show provisional full constraint stability');
     controller.replaceSelectedFaces(['face-x+']);
     document.getElementById('load-pressure').value = '1.5';
     document.getElementById('load-form').requestSubmit();
@@ -479,6 +540,9 @@
     'custom two-axis support did not save the enabled global components');
     assert(document.querySelector('[data-setup-kind="support"][data-item-id="support-1"] .fea-setup-row-summary').textContent === 'Y 0 mm · Z 1.25 mm',
       'compact support row did not show its component values');
+    assert(document.getElementById('constraint-stability-summary').textContent.indexOf('Underconstrained · Preview') === 0 &&
+      document.getElementById('constraint-stability-summary').textContent.indexOf('Free: Tx') !== -1,
+    'compact stability line did not identify the free global translation');
     document.getElementById('load-type').value = 'total-force';
     document.getElementById('load-type').dispatchEvent(new Event('change'));
     authoring.beginLoadEdit(state.loads[0].id);
@@ -525,6 +589,8 @@
   try {
     testContractsAndConversions();
     testRigidOrientationContracts();
+    testConstraintStabilityContracts();
+    testControllerConstraintStability();
     testMaterialCatalog();
     testSymmetricCurvedFaceGlyph();
     testSetupInspectorSummaries();

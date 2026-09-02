@@ -468,6 +468,7 @@
           ['WASM cap', formatBytes(preflight.result.wasmHeapCapBytes)],
           ['Device hint', preflight.result.deviceMemoryGiBHint ? formatNumber(preflight.result.deviceMemoryGiBHint, 'GiB') : 'Unavailable'],
           ['Analysis', preflight.result.constraintCount + ' constrained DOF / ' + preflight.result.loadCount + ' loads'],
+          ['Stability', preflight.result.constraintStability.status === 'fully-constrained' ? 'Fully constrained (mesh)' : 'Underconstrained (mesh)'],
           ['Quality', formatNumber(preflight.result.quality.minimum, 'γ min')]
         ]);
       }

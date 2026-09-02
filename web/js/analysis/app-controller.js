@@ -92,6 +92,11 @@
     }
   };
 
+  AppController.prototype.refreshConstraintStability = function () {
+    this.document.constraintStability = root.SpjutsimFEA.analyzeDocumentConstraintStability(this.document);
+    return this.document.constraintStability;
+  };
+
   AppController.prototype.createAnalysisItemId = function (prefix) {
     var id = prefix + '-' + this.nextAnalysisItemSequence;
     this.nextAnalysisItemSequence += 1;
@@ -140,6 +145,7 @@
     this.document.mesh = null;
     this.document.viewportPresentation = { mode: 'model', displayStyle: this.document.viewportPresentation.displayStyle };
     this.document.meshGeneration = { status: 'idle', error: null, progress: null };
+    this.refreshConstraintStability();
     this.invalidateResults('geometry');
     this.document.geometryImport = { status: 'succeeded', sourceName: source.sourceName, error: null };
     this.notify();
@@ -155,6 +161,7 @@
     this.document.mesh = null;
     this.document.viewportPresentation = { mode: 'model', displayStyle: this.document.viewportPresentation.displayStyle };
     this.document.meshGeneration = { status: 'idle', error: null, progress: null };
+    this.refreshConstraintStability();
     this.invalidateResults('geometry');
     this.document.geometryImport = { status: 'idle', sourceName: null, error: null };
     this.notify();
@@ -168,6 +175,7 @@
     this.document.mesh = null;
     this.document.meshMetadata = null;
     this.document.meshGeneration = { status: 'idle', error: null, progress: null };
+    this.refreshConstraintStability();
     this.document.viewportPresentation = Object.assign({}, this.document.viewportPresentation, { mode: 'model' });
     this.invalidateResults('orientation');
     this.notify();
@@ -265,6 +273,7 @@
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
     this.document.boundaryConditions.push(validation.value);
     this.nextSupportNameSequence += 1;
+    this.refreshConstraintStability();
     this.invalidateResults('boundary-conditions');
     this.notify();
     return validation.value.id;
@@ -282,6 +291,7 @@
     var validation = root.SpjutsimFEA.validateBoundaryCondition(candidate, this.document.geometry && this.document.geometry.faceIds);
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
     this.document.boundaryConditions[index] = validation.value;
+    this.refreshConstraintStability();
     this.invalidateResults('boundary-conditions');
     this.notify();
   };
@@ -295,6 +305,7 @@
   AppController.prototype.removeBoundaryCondition = function (id) {
     var index = findItem(this.document.boundaryConditions, id, 'support');
     this.document.boundaryConditions.splice(index, 1);
+    this.refreshConstraintStability();
     this.invalidateResults('boundary-conditions');
     this.notify();
   };
@@ -357,6 +368,7 @@
     this.document.meshSettings = Object.assign({}, settings);
     this.document.mesh = null;
     this.document.meshMetadata = null;
+    this.refreshConstraintStability();
     this.invalidateResults('mesh-settings');
     this.document.meshGeneration = { status: 'idle', error: null, progress: null };
     this.document.viewportPresentation = { mode: 'model', displayStyle: this.document.viewportPresentation.displayStyle };
@@ -381,6 +393,7 @@
     this.document.mesh = mesh;
     this.document.viewportPresentation = { mode: 'mesh', displayStyle: this.document.viewportPresentation.displayStyle };
     this.document.meshMetadata = { statistics: mesh.statistics, quality: mesh.quality, memoryInputs: mesh.memoryInputs };
+    this.refreshConstraintStability();
     this.invalidateResults('mesh');
     this.document.meshGeneration = { status: 'succeeded', error: null, progress: null };
     this.notify();

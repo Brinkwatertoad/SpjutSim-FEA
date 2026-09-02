@@ -38,7 +38,7 @@ function validateInput(input) {
   var mesh;
   var nodeCount;
   var i;
-  if (!input || input.protocol !== 1 || !input.mesh || !input.material ||
+  if (!input || input.protocol !== 1 || !input.mesh || !input.material || !input.constraintStability ||
       !Array.isArray(input.boundaryConditions) || !Array.isArray(input.loads) || !input.gravity) {
     throw diagnostic('INVALID_SOLVER_INPUT', 'preflight', 'The analysis input is incomplete.');
   }
@@ -50,6 +50,11 @@ function validateInput(input) {
     throw diagnostic('INVALID_SOLVER_MESH', 'preflight', 'The Tet4 mesh buffers are invalid.');
   }
   nodeCount = mesh.nodePositionsM.length / 3;
+  if (input.constraintStability.basis !== 'mesh' || input.constraintStability.provisional !== false ||
+      input.constraintStability.status !== 'fully-constrained' || input.constraintStability.rank !== 6 ||
+      !Array.isArray(input.constraintStability.modes) || input.constraintStability.modes.length !== 6) {
+    throw diagnostic('LIKELY_RIGID_BODY_MODE', 'preflight', 'The supports do not suppress all rigid-body motion.');
+  }
   for (i = 0; i < mesh.elementConnectivity.length; i += 1) {
     if (mesh.elementConnectivity[i] >= nodeCount) { throw diagnostic('MESH_INVALID_INDEX', 'mesh', 'The mesh references a missing node.'); }
   }
@@ -192,6 +197,7 @@ function memoryResult(Module, input, constraintCount) {
       rowPointerBytes: v(18), assemblyWorkBytes: v(19), solverWorkBytes: v(20), resultBytes: v(21), runtimeOverheadBytes: v(22) },
     elementType: input.mesh.elementType, quality: input.mesh.quality, constraintCount: constraintCount,
     supportCount: input.boundaryConditions.length, loadCount: input.loads.length + (input.gravity.enabled ? 1 : 0),
+    constraintStability: input.constraintStability,
     warnings: input.mesh.quality && input.mesh.quality.warning ? [input.mesh.quality.warning] : []
   };
 }

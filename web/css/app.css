@@ -28,6 +28,8 @@ button { font: inherit; }
 .fea-setup-row-summary, .fea-setup-row-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fea-setup-row-summary { font-size: 11px; }
 .fea-setup-row-meta { color: var(--secondary-text, #aeb4bf); font-size: 10px; }
+.fea-constraint-stability { margin: 1px 0 3px; color: var(--secondary-text, #aeb4bf); font-size: 10px; line-height: 1.2; }
+.fea-constraint-stability.fea-warning { color: var(--ui-color-warning, #fbbf24); }
 .fea-setup-editor { padding: 7px; border-top: 1px solid var(--ui-color-border-soft, #374151); }
 .fea-setup-actions { display: flex; gap: 5px; }
 .fea-orientation-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 6px; }

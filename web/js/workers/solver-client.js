@@ -20,6 +20,9 @@
         })
       }),
       material: Object.assign({}, input.material),
+      constraintStability: Object.assign({}, input.constraintStability, {
+        modes: input.constraintStability.modes.map(function (mode) { return Object.assign({}, mode); })
+      }),
       boundaryConditions: input.boundaryConditions.map(function (condition) {
         return Object.assign({}, condition, {
           boundaryTriangleConnectivity: new Uint32Array(condition.boundaryTriangleConnectivity),

@@ -21,7 +21,10 @@
         !Number.isFinite(result.estimatedPeakBytes) || result.estimatedPeakBytes <= 0 ||
         !Number.isFinite(result.wasmHeapCapBytes) || result.wasmHeapCapBytes <= 0 ||
         typeof result.exceedsWasmCap !== 'boolean' || typeof result.requiresEightGiBConfirmation !== 'boolean' ||
-        !Number.isInteger(result.constraintCount) || !Number.isInteger(result.loadCount) || !Array.isArray(result.warnings)) {
+        !Number.isInteger(result.constraintCount) || !Number.isInteger(result.loadCount) || !Array.isArray(result.warnings) ||
+        !result.constraintStability || result.constraintStability.basis !== 'mesh' || result.constraintStability.rank !== 6 ||
+        result.constraintStability.status !== 'fully-constrained' || !Array.isArray(result.constraintStability.modes) ||
+        result.constraintStability.modes.length !== 6) {
       return { valid: false, reason: 'invalid-preflight-result' };
     }
     return { valid: true };

@@ -39,6 +39,7 @@
     this.setupInspectorStatus = byId('setup-inspector-status');
     this.setupModelList = byId('setup-inspector-model-list');
     this.setupSupportList = byId('setup-inspector-support-list');
+    this.constraintStabilitySummary = byId('constraint-stability-summary');
     this.setupLoadList = byId('setup-inspector-load-list');
     this.setupFormStash = byId('setup-inspector-form-stash');
     this.addSupportButton = byId('setup-add-support-button');
@@ -408,6 +409,30 @@
     setFeedback(this.supportStatus, this.supportFeedback, !documentState.geometry
       ? 'Import geometry and select faces to add a support.'
       : (documentState.boundaryConditions.length ? documentState.boundaryConditions.length + ' support item(s) defined.' : 'Select one or more faces, then add a support.'));
+    this.renderConstraintStability(documentState);
+  };
+
+  AnalysisAuthoringUI.prototype.renderConstraintStability = function (documentState) {
+    var stability = documentState.constraintStability;
+    var constrained;
+    var free;
+    var coupled;
+    var parts;
+    if (!this.constraintStabilitySummary) { return; }
+    if (!stability) {
+      this.constraintStabilitySummary.textContent = 'Import a model to check rigid-body stability.';
+      this.constraintStabilitySummary.classList.remove('fea-warning');
+      return;
+    }
+    constrained = stability.modes.filter(function (mode) { return mode.status === 'constrained'; }).map(function (mode) { return mode.id; });
+    free = stability.modes.filter(function (mode) { return mode.status === 'free'; }).map(function (mode) { return mode.id; });
+    coupled = stability.modes.filter(function (mode) { return mode.status === 'coupled'; }).map(function (mode) { return mode.id; });
+    parts = [stability.status === 'fully-constrained' ? 'Fully constrained' : 'Underconstrained', stability.provisional ? 'Preview' : 'Mesh'];
+    if (constrained.length) { parts.push('Constrained: ' + constrained.join(', ')); }
+    if (free.length) { parts.push('Free: ' + free.join(', ')); }
+    if (coupled.length) { parts.push('Coupled: ' + coupled.join(', ') + ' (' + stability.coupledFreedomCount + ' mode' + (stability.coupledFreedomCount === 1 ? '' : 's') + ')'); }
+    this.constraintStabilitySummary.textContent = parts.join(' · ');
+    this.constraintStabilitySummary.classList.toggle('fea-warning', stability.status !== 'fully-constrained');
   };
 
   AnalysisAuthoringUI.prototype.renderLoadType = function () {
