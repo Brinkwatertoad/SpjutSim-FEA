@@ -87,6 +87,123 @@
     return result;
   }
 
+  function normalizedVector3(vector, message) {
+    var length;
+    if (!vector || vector.length !== 3 || !Array.prototype.every.call(vector, Number.isFinite)) {
+      throw new Error(message);
+    }
+    length = Math.hypot(vector[0], vector[1], vector[2]);
+    if (!(length > 1e-14)) { throw new Error(message); }
+    return [vector[0] / length, vector[1] / length, vector[2] / length];
+  }
+
+  function cross3(left, right) {
+    return [
+      left[1] * right[2] - left[2] * right[1],
+      left[2] * right[0] - left[0] * right[2],
+      left[0] * right[1] - left[1] * right[0]
+    ];
+  }
+
+  function shortestRotationMatrix(fromVector, toVector) {
+    var from = normalizedVector3(fromVector, 'Face alignment requires a stable source direction.');
+    var to = normalizedVector3(toVector, 'Face alignment requires a stable target direction.');
+    var cross = cross3(from, to);
+    var sine = Math.hypot(cross[0], cross[1], cross[2]);
+    var cosine = Math.max(-1, Math.min(1, from[0] * to[0] + from[1] * to[1] + from[2] * to[2]));
+    var axis;
+    var basis;
+    var scale;
+    if (sine < 1e-12) {
+      if (cosine > 0) { return IDENTITY_MATRIX.slice(); }
+      basis = Math.abs(from[0]) <= Math.abs(from[1]) && Math.abs(from[0]) <= Math.abs(from[2])
+        ? [1, 0, 0] : (Math.abs(from[1]) <= Math.abs(from[2]) ? [0, 1, 0] : [0, 0, 1]);
+      axis = normalizedVector3(cross3(from, basis), 'Face alignment could not find a stable rotation axis.');
+      return [
+        2 * axis[0] * axis[0] - 1, 2 * axis[0] * axis[1], 2 * axis[0] * axis[2],
+        2 * axis[1] * axis[0], 2 * axis[1] * axis[1] - 1, 2 * axis[1] * axis[2],
+        2 * axis[2] * axis[0], 2 * axis[2] * axis[1], 2 * axis[2] * axis[2] - 1
+      ];
+    }
+    scale = (1 - cosine) / (sine * sine);
+    return [
+      1 - scale * (cross[1] * cross[1] + cross[2] * cross[2]),
+      -cross[2] + scale * cross[0] * cross[1],
+      cross[1] + scale * cross[0] * cross[2],
+      cross[2] + scale * cross[1] * cross[0],
+      1 - scale * (cross[0] * cross[0] + cross[2] * cross[2]),
+      -cross[0] + scale * cross[1] * cross[2],
+      -cross[1] + scale * cross[2] * cross[0],
+      cross[0] + scale * cross[2] * cross[1],
+      1 - scale * (cross[0] * cross[0] + cross[1] * cross[1])
+    ];
+  }
+
+  function analyzeGeometryFaceNormal(geometry, faceId) {
+    var preview = geometry && geometry.preview;
+    var range = preview && Array.isArray(preview.faceRanges) && preview.faceRanges.find(function (item) { return item.faceId === faceId; });
+    var sum = [0, 0, 0];
+    var largest = null;
+    var normals = [];
+    var offset;
+    var triangle;
+    var first;
+    var second;
+    var cross;
+    var length;
+    var representative;
+    var minimumAlignment = 1;
+    if (!range || !preview.positionsM || !preview.indices || range.count < 3) {
+      throw new Error('The selected face does not provide enough preview geometry to determine a stable normal.');
+    }
+    for (offset = range.start; offset < range.start + range.count; offset += 3) {
+      triangle = [preview.indices[offset], preview.indices[offset + 1], preview.indices[offset + 2]];
+      first = [
+        preview.positionsM[triangle[1] * 3] - preview.positionsM[triangle[0] * 3],
+        preview.positionsM[triangle[1] * 3 + 1] - preview.positionsM[triangle[0] * 3 + 1],
+        preview.positionsM[triangle[1] * 3 + 2] - preview.positionsM[triangle[0] * 3 + 2]
+      ];
+      second = [
+        preview.positionsM[triangle[2] * 3] - preview.positionsM[triangle[0] * 3],
+        preview.positionsM[triangle[2] * 3 + 1] - preview.positionsM[triangle[0] * 3 + 1],
+        preview.positionsM[triangle[2] * 3 + 2] - preview.positionsM[triangle[0] * 3 + 2]
+      ];
+      cross = cross3(first, second);
+      length = Math.hypot(cross[0], cross[1], cross[2]);
+      if (!Number.isFinite(length) || length <= 1e-14) { continue; }
+      sum[0] += cross[0]; sum[1] += cross[1]; sum[2] += cross[2];
+      normals.push([cross[0] / length, cross[1] / length, cross[2] / length]);
+      if (!largest || length > largest.length) { largest = { length: length, normal: normals[normals.length - 1] }; }
+    }
+    if (!largest) { throw new Error('The selected face has no stable normal because its preview triangles are degenerate.'); }
+    try {
+      representative = normalizedVector3(sum, 'The selected face has no stable area-weighted normal.');
+    } catch (error) {
+      representative = largest.normal.slice();
+    }
+    normals.forEach(function (normal) {
+      minimumAlignment = Math.min(minimumAlignment,
+        normal[0] * representative[0] + normal[1] * representative[1] + normal[2] * representative[2]);
+    });
+    return {
+      normal: representative,
+      minimumAlignment: minimumAlignment,
+      warning: minimumAlignment < Math.cos(15 * Math.PI / 180)
+        ? 'The selected face is curved or faceted; alignment uses its area-weighted preview normal.' : null
+    };
+  }
+
+  function alignGeometryFaceNormal(geometry, faceId, targetVector, targetLabel) {
+    var analysis = analyzeGeometryFaceNormal(geometry, faceId);
+    var target = normalizedVector3(targetVector, 'Choose a finite global target direction.');
+    return {
+      geometry: applyRotationToGeometry(geometry, shortestRotationMatrix(analysis.normal, target), 'Face → ' + targetLabel),
+      warning: analysis.warning,
+      sourceNormal: analysis.normal,
+      targetNormal: target
+    };
+  }
+
   function transformTriples(values, rotation, Constructor) {
     var transformed = new Constructor(values.length);
     var index;
@@ -167,6 +284,9 @@
   root.SpjutsimFEA.axisRotationMatrix = axisRotationMatrix;
   root.SpjutsimFEA.transformVector3 = transformVector3;
   root.SpjutsimFEA.multiplyRotation3 = multiplyRotation3;
+  root.SpjutsimFEA.shortestRotationMatrix = shortestRotationMatrix;
+  root.SpjutsimFEA.analyzeGeometryFaceNormal = analyzeGeometryFaceNormal;
+  root.SpjutsimFEA.alignGeometryFaceNormal = alignGeometryFaceNormal;
   root.SpjutsimFEA.applyRotationToGeometry = applyRotationToGeometry;
   root.SpjutsimFEA.rotateGeometryAroundGlobalAxis = rotateGeometryAroundGlobalAxis;
   root.SpjutsimFEA.resetGeometryOrientation = resetGeometryOrientation;

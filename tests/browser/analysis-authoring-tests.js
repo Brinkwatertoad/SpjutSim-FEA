@@ -97,6 +97,12 @@
     var rotated = api.rotateGeometryAroundGlobalAxis(geometry, 'z', 90);
     var composed = api.rotateGeometryAroundGlobalAxis(rotated, 'x', -90);
     var cancelled = api.rotateGeometryAroundGlobalAxis(api.rotateGeometryAroundGlobalAxis(geometry, 'z', 45), 'z', -45);
+    var topNormal = api.analyzeGeometryFaceNormal(geometry, 'face-z+');
+    var opposite = api.shortestRotationMatrix([0, 0, 1], [0, 0, -1]);
+    var curved = api.analyzeGeometryFaceNormal({ preview: {
+      positionsM: new Float64Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1]),
+      indices: new Uint32Array([0, 1, 2, 3, 4, 5]), faceRanges: [{ faceId: 'curved', start: 0, count: 6 }]
+    } }, 'curved');
     assert(api.validateRigidOrientation(identity).valid, 'identity orientation was rejected');
     assert(!api.validateRigidOrientation({ rotation: [2, 0, 0, 0, 1, 0, 0, 0, 1], operations: [] }).valid,
       'scaled orientation matrix was accepted');
@@ -114,6 +120,18 @@
     'canceling arbitrary rotations inflated the model bounds');
     assert(geometry.preview.positionsM[3] === 1 && geometry.orientation.operations.length === 0,
       'orientation mutated the source geometry');
+    assert(near(topNormal.normal[0], 0) && near(topNormal.normal[1], 0) && near(topNormal.normal[2], 1) && !topNormal.warning,
+      'planar face area-weighted normal was incorrect');
+    rotatedVector = api.transformVector3(opposite, [0, 0, 1]);
+    assert(near(rotatedVector[0], 0) && near(rotatedVector[1], 0) && near(rotatedVector[2], -1),
+      'deterministic antiparallel face alignment was incorrect');
+    assert(curved.warning, 'strongly non-planar face did not produce an orientation warning');
+    expectError(function () {
+      api.analyzeGeometryFaceNormal({ preview: {
+        positionsM: new Float64Array([0, 0, 0, 1, 0, 0, 2, 0, 0]), indices: new Uint32Array([0, 1, 2]),
+        faceRanges: [{ faceId: 'flat', start: 0, count: 3 }]
+      } }, 'flat');
+    }, 'stable normal');
   }
 
   function testMaterialCatalog() {
@@ -226,7 +244,8 @@
       'setup-inspector-support-list', 'setup-inspector-load-list',
       'setup-inspector-form-stash', 'setup-add-support-button', 'setup-add-load-button',
       'model-rotation-axis', 'model-rotation-angle', 'rotate-model-positive',
-      'rotate-model-negative', 'reset-model-orientation', 'model-orientation-status'
+      'rotate-model-negative', 'reset-model-orientation', 'model-orientation-status',
+      'model-face-direction', 'orient-selected-face'
     ].forEach(function (id) {
       assert(document.getElementById(id), 'missing inspector node #' + id);
     });
@@ -382,6 +401,15 @@
       'orientation reset did not restore the imported model frame');
     assert(document.getElementById('model-orientation-status').textContent === 'Model orientation reset.',
       'orientation reset was not announced in the Model editor');
+    controller.replaceSelectedFaces(['face-z+']);
+    document.getElementById('model-face-direction').value = '-z';
+    document.getElementById('orient-selected-face').click();
+    var alignedNormal = api.analyzeGeometryFaceNormal(state.geometry, 'face-z+').normal;
+    assert(near(alignedNormal[0], 0) && near(alignedNormal[1], 0) && near(alignedNormal[2], -1),
+      'selected face was not aligned to the requested global direction');
+    assert(state.geometry.orientation.operations[0] === 'Face → −Z', 'face alignment was omitted from the orientation summary');
+    assert(state.selectedFaceIds.join('|') === 'face-z+', 'face alignment changed the selected CAD face identity');
+    document.getElementById('reset-model-orientation').click();
     authoring.closeInspectorRow({ cancelEdit: true });
     var supportTrigger = document.querySelector('[data-setup-kind="support"][data-item-id="support-1"] [data-setup-row-trigger]');
     assert(supportTrigger && supportTrigger.getAttribute('aria-expanded') === 'false', 'support setup row was missing or not collapsed');

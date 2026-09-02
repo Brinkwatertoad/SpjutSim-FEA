@@ -33,6 +33,8 @@
     this.rotateModelPositiveButton = byId('rotate-model-positive');
     this.rotateModelNegativeButton = byId('rotate-model-negative');
     this.resetModelOrientationButton = byId('reset-model-orientation');
+    this.modelFaceDirection = byId('model-face-direction');
+    this.orientSelectedFaceButton = byId('orient-selected-face');
     this.modelOrientationStatus = byId('model-orientation-status');
     this.setupInspectorStatus = byId('setup-inspector-status');
     this.setupModelList = byId('setup-inspector-model-list');
@@ -126,6 +128,7 @@
     if (this.rotateModelPositiveButton) { this.rotateModelPositiveButton.addEventListener('click', function () { self.rotateModel(1); }); }
     if (this.rotateModelNegativeButton) { this.rotateModelNegativeButton.addEventListener('click', function () { self.rotateModel(-1); }); }
     if (this.resetModelOrientationButton) { this.resetModelOrientationButton.addEventListener('click', function () { self.resetModelOrientation(); }); }
+    if (this.orientSelectedFaceButton) { this.orientSelectedFaceButton.addEventListener('click', function () { self.orientSelectedFace(); }); }
     if (this.addSupportButton) {
       this.addSupportButton.addEventListener('click', function () { self.openInspectorRow('support', 'new', self.addSupportButton); });
     }
@@ -535,12 +538,29 @@
     }
   };
 
+  AnalysisAuthoringUI.prototype.orientSelectedFace = function () {
+    try {
+      var result = this.controller.orientSelectedFaceToDirection(this.modelFaceDirection.value);
+      this.orientationFeedback = result.warning
+        ? { warning: true, message: result.warning }
+        : { message: 'Selected face aligned to global ' + this.modelFaceDirection.options[this.modelFaceDirection.selectedIndex].text + '.' };
+      this.announceSetup(this.orientationFeedback.message);
+      this.render(this.controller.document);
+    } catch (error) {
+      this.orientationFeedback = { error: true, message: error.message };
+      this.render(this.controller.document);
+    }
+  };
+
   AnalysisAuthoringUI.prototype.renderModelOrientation = function (documentState) {
     var disabled = !documentState.geometry;
     [this.modelRotationAxis, this.modelRotationAngle, this.rotateModelPositiveButton,
-      this.rotateModelNegativeButton, this.resetModelOrientationButton].forEach(function (control) {
+      this.rotateModelNegativeButton, this.resetModelOrientationButton, this.modelFaceDirection].forEach(function (control) {
       if (control) { control.disabled = disabled; }
     });
+    if (this.orientSelectedFaceButton) {
+      this.orientSelectedFaceButton.disabled = disabled || documentState.selectedFaceIds.length !== 1;
+    }
     if (this.resetModelOrientationButton && documentState.geometry) {
       this.resetModelOrientationButton.disabled = documentState.geometry.orientation.operations.length === 0;
     }

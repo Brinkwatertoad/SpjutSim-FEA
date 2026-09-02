@@ -191,6 +191,26 @@
     return this.replaceOrientedGeometry(root.SpjutsimFEA.resetGeometryOrientation(this.document.geometry));
   };
 
+  AppController.prototype.orientSelectedFaceToDirection = function (direction) {
+    var directions = {
+      '+x': { vector: [1, 0, 0], label: '+X' }, '-x': { vector: [-1, 0, 0], label: '−X' },
+      '+y': { vector: [0, 1, 0], label: '+Y' }, '-y': { vector: [0, -1, 0], label: '−Y' },
+      '+z': { vector: [0, 0, 1], label: '+Z' }, '-z': { vector: [0, 0, -1], label: '−Z' }
+    };
+    var target = directions[direction];
+    var result;
+    if (!this.document.geometry) { throw new Error('Import geometry before changing model orientation.'); }
+    if (this.document.selectedFaceIds.length !== 1) {
+      throw new Error('Select exactly one CAD face to orient it to a global direction.');
+    }
+    if (!target) { throw new Error('Choose a global +X, −X, +Y, −Y, +Z, or −Z direction.'); }
+    result = root.SpjutsimFEA.alignGeometryFaceNormal(
+      this.document.geometry, this.document.selectedFaceIds[0], target.vector, target.label
+    );
+    this.replaceOrientedGeometry(result.geometry);
+    return result;
+  };
+
   /** Replace the UI-only set of selected CAD faces. */
   AppController.prototype.replaceSelectedFaces = function (faceIds) {
     this.document.selectedFaceIds = validatedFaceIds(this.document.geometry, faceIds);

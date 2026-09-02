@@ -65,6 +65,10 @@
                   <label for="model-rotation-angle">Angle (degrees)</label><input id="model-rotation-angle" type="number" min="0" step="any" value="90">
                 </div>
                 <div class="fea-setup-actions"><button id="rotate-model-positive" type="button">Rotate +</button><button id="rotate-model-negative" type="button">Rotate −</button><button id="reset-model-orientation" type="button">Reset</button></div>
+                <div class="fea-orientation-fields">
+                  <label for="model-face-direction">Selected face normal</label><select id="model-face-direction"><option value="+x">+X</option><option value="-x">−X</option><option value="+y">+Y</option><option value="-y">−Y</option><option value="+z" selected>+Z</option><option value="-z">−Z</option></select>
+                  <button id="orient-selected-face" type="button">Orient selected face</button>
+                </div>
                 <p id="model-orientation-status" role="status" aria-live="polite">Import geometry to adjust orientation.</p>
               </fieldset>
             </div>

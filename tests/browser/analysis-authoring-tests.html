@@ -21,6 +21,7 @@
     <fieldset class="fea-orientation-controls"><legend>Model orientation</legend>
       <div class="fea-orientation-fields"><label for="model-rotation-axis">Axis</label><select id="model-rotation-axis"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select><label for="model-rotation-angle">Angle</label><input id="model-rotation-angle" type="number" value="90"></div>
       <div class="fea-setup-actions"><button id="rotate-model-positive" type="button">Rotate +</button><button id="rotate-model-negative" type="button">Rotate −</button><button id="reset-model-orientation" type="button">Reset</button></div>
+      <select id="model-face-direction"><option value="+x">+X</option><option value="-x">−X</option><option value="+y">+Y</option><option value="-y">−Y</option><option value="+z">+Z</option><option value="-z">−Z</option></select><button id="orient-selected-face" type="button">Orient selected face</button>
       <p id="model-orientation-status" role="status" aria-live="polite"></p>
     </fieldset></div>
     <div id="support-editor">
