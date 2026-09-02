@@ -120,14 +120,14 @@
     });
   };
 
-  /** Generate a solver-ready Tet4 mesh without exposing Gmsh data to the caller. */
+  /** Generate a solver-ready tetrahedral mesh without exposing Gmsh data to the caller. */
   MesherClient.prototype.generateMesh = function (request) {
     var self = this;
     var geometryValidation;
     var settingsValidation;
     var resolvedSettings;
     if (!request || typeof request !== 'object' || Array.isArray(request)) {
-      return Promise.reject(clientFailure('INVALID_MESH_REQUEST', 'Choose valid Tet4 mesh settings.', 'Mesh request must be an object.', 'mesh'));
+      return Promise.reject(clientFailure('INVALID_MESH_REQUEST', 'Choose valid tetrahedral mesh settings.', 'Mesh request must be an object.', 'mesh'));
     }
     geometryValidation = root.SpjutsimFEA.validateGeometryModel(request.geometry);
     if (!geometryValidation.valid || !(request.sourceBytes instanceof ArrayBuffer) || request.sourceBytes.byteLength === 0) {
@@ -135,7 +135,7 @@
     }
     settingsValidation = root.SpjutsimFEA.validateMeshSettings(request.settings, request.geometry.boundingBoxM);
     if (!settingsValidation.valid) {
-      return Promise.reject(clientFailure('INVALID_MESH_SETTINGS', 'Choose valid Tet4 mesh settings.', settingsValidation.reason, 'mesh'));
+      return Promise.reject(clientFailure('INVALID_MESH_SETTINGS', 'Choose valid tetrahedral mesh settings.', settingsValidation.reason, 'mesh'));
     }
     resolvedSettings = root.SpjutsimFEA.resolveMeshSettings(request.settings, request.geometry.boundingBoxM);
     return this.ensureWorker().then(function (worker) {

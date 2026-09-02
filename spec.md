@@ -642,13 +642,23 @@ await mesher.dispose();
   elementType: 'tet4', // or 'tet10'
   nodePositionsM: Float64Array,
   elementConnectivity: Uint32Array,
-  boundaryFaces: /* typed-array boundary representation */,
+  boundaryFaces: {
+    solverElementType: 'tri3', // or 'tri6'
+    solverConnectivity: Uint32Array,
+    solverFaceRanges: /* FaceId ranges into solverConnectivity */,
+    triangleConnectivity: Uint32Array,
+    faceRanges: /* matching FaceId ranges for display/picking triangles */
+  },
   geometryFaceMap: /* FaceId -> boundary range/index mapping */,
   statistics: { /* node/element counts, sizes */ },
   quality: { /* quality summary */ },
   memoryInputs: { /* topology values used by estimator */ }
 }
 ```
+
+Quadratic meshes must retain their six-node boundary faces for load integration.
+Rendering, picking, and glyph placement consume a separate linear-triangle
+subdivision so those presentation systems do not need element-specific logic.
 
 No solver code may import or depend on Gmsh-specific types or entity tags.
 

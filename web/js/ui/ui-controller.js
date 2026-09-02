@@ -8,6 +8,7 @@
     this.geometryStatus = document.getElementById('geometry-status');
     this.faceSelectionStatus = document.getElementById('face-selection-status');
     this.clearFaceSelectionButton = document.getElementById('clear-face-selection-button');
+    this.meshElementType = document.getElementById('mesh-element-type');
     this.meshPreset = document.getElementById('mesh-preset');
     this.meshCustomSizes = document.getElementById('mesh-custom-sizes');
     this.meshMinSize = document.getElementById('mesh-min-size');
@@ -213,6 +214,9 @@
     if (this.meshPreset) {
       this.meshPreset.addEventListener('change', function () { self.updateMeshSettingsFromControls(); });
     }
+    if (this.meshElementType) {
+      this.meshElementType.addEventListener('change', function () { self.updateMeshSettingsFromControls(); });
+    }
     if (this.meshMinSize) { this.meshMinSize.addEventListener('change', function () { self.updateMeshSettingsFromControls(); }); }
     if (this.meshMaxSize) { this.meshMaxSize.addEventListener('change', function () { self.updateMeshSettingsFromControls(); }); }
     if (this.generateMeshButton) {
@@ -329,7 +333,7 @@
   };
   UIController.prototype.updateMeshSettingsFromControls = function () {
     var preset = this.meshPreset.value;
-    var settings = { preset: preset, elementType: 'tet4' };
+    var settings = { preset: preset, elementType: this.meshElementType ? this.meshElementType.value : 'tet4' };
     if (preset === 'custom') {
       var minimum = Number(this.meshMinSize.value);
       var maximum = Number(this.meshMaxSize.value);
@@ -359,19 +363,21 @@
     var hasGeometry = Boolean(documentState.geometry);
     var isGenerating = generation.status === 'generating';
     var message = 'Import geometry to generate a mesh.';
+    var elementLabel = settings.elementType === 'tet10' ? 'Tet10' : 'Tet4';
+    if (this.meshElementType) { this.meshElementType.value = settings.elementType; this.meshElementType.disabled = !hasGeometry || isGenerating; }
     if (this.meshPreset) { this.meshPreset.value = settings.preset; this.meshPreset.disabled = !hasGeometry || isGenerating; }
     if (this.meshCustomSizes) { this.meshCustomSizes.hidden = settings.preset !== 'custom'; }
     if (this.meshMinSize) { this.meshMinSize.value = settings.preset === 'custom' ? settings.minSizeM : ''; this.meshMinSize.disabled = !hasGeometry || isGenerating; }
     if (this.meshMaxSize) { this.meshMaxSize.value = settings.preset === 'custom' ? settings.maxSizeM : ''; this.meshMaxSize.disabled = !hasGeometry || isGenerating; }
     if (isGenerating) {
-      message = (generation.progress && generation.progress.userMessage) || 'Generating Tet4 mesh…';
+      message = (generation.progress && generation.progress.userMessage) || 'Generating ' + elementLabel + ' mesh…';
     } else if (generation.status === 'failed') {
       message = (generation.error && generation.error.userMessage) || 'The mesh could not be generated.';
     } else if (documentState.meshMetadata) {
-      message = documentState.meshMetadata.statistics.elementCount + ' Tet4 elements; ' + documentState.meshMetadata.statistics.nodeCount + ' nodes.';
+      message = documentState.meshMetadata.statistics.elementCount + ' ' + elementLabel + ' elements; ' + documentState.meshMetadata.statistics.nodeCount + ' nodes.';
       if (documentState.meshMetadata.quality.warning) { message += ' ' + documentState.meshMetadata.quality.warning; }
     } else if (hasGeometry) {
-      message = 'Ready to generate a Tet4 mesh.';
+      message = 'Ready to generate a ' + elementLabel + ' mesh.';
     }
     if (this.meshStatus) { this.meshStatus.textContent = message; }
     if (this.generateMeshButton) { this.generateMeshButton.disabled = !hasGeometry || isGenerating; }
@@ -548,10 +554,12 @@
     else if (execution.status === 'cancelled' || preflight.status === 'cancelled') { message = 'Solve cancelled; partial results were discarded.'; }
     else if (preflight.status === 'ready') {
       message = preflight.result.exceedsWasmCap ? 'Estimate exceeds the WebAssembly cap; generate a coarser mesh.' : 'Preflight complete. Review the estimate, then solve.';
+    } else if (documentState.mesh && documentState.mesh.elementType === 'tet10') {
+      message = 'Tet10 mesh inspection is available; Tet10 Solve is enabled in Task 13.';
     } else if (documentState.mesh) { message = 'Run preflight to validate constraints and estimate solve memory.'; }
     if (documentState.resultInvalidation && documentState.resultInvalidation.stale) { message += ' Previous results are stale.'; }
     if (this.solveStatus) { this.solveStatus.textContent = message; this.solveStatus.classList.toggle('fea-error', preflight.status === 'failed' || execution.status === 'failed'); }
-    if (this.preflightButton) { this.preflightButton.disabled = !documentState.mesh || running; }
+    if (this.preflightButton) { this.preflightButton.disabled = !documentState.mesh || documentState.mesh.elementType === 'tet10' || running; }
     if (this.solveButton) { this.solveButton.disabled = preflight.status !== 'ready' || preflight.result.exceedsWasmCap || running; }
     if (this.cancelSolveButton) { this.cancelSolveButton.hidden = !running; }
     if (this.preflightSummary) {

@@ -494,6 +494,7 @@
 
   AppController.prototype.beginSolvePreflight = function () {
     if (!this.document.mesh) { throw new Error('Generate a mesh before preflight.'); }
+    if (this.document.mesh.elementType === 'tet10') { throw new Error('Tet10 solving is enabled in Task 13.'); }
     this.document.solvePreflight = { status: 'running', result: null, error: null, progress: null,
       analysisRevision: this.document.analysisRevision };
     this.document.solveExecution = { status: 'idle', error: null, progress: null, analysisRevision: null };

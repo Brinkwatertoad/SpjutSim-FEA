@@ -45,6 +45,7 @@
     <form id="gravity-form"><input id="gravity-enabled" type="checkbox"><input id="gravity-x" value="0"><input id="gravity-y" value="0"><input id="gravity-z" value="-9.80665"><button type="submit">Apply gravity</button></form>
     <p id="gravity-status"></p></div>
     <div id="mesh-editor">
+      <select id="mesh-element-type"><option value="tet4" selected>Tet4</option><option value="tet10">Tet10</option></select>
       <select id="mesh-preset"><option value="coarse">Coarse</option><option value="normal" selected>Normal</option><option value="fine">Fine</option><option value="custom">Custom</option></select>
       <div id="mesh-custom-sizes" hidden><input id="mesh-min-size" type="number"><input id="mesh-max-size" type="number"></div>
       <button id="generate-mesh-button" type="button">Generate mesh</button><button id="cancel-mesh-button" type="button" hidden>Cancel</button><button id="delete-mesh-button" type="button" hidden>Delete mesh</button><p id="mesh-status"></p>

@@ -49,10 +49,53 @@
     return {
       elementType: 'tet4', nodePositionsM: cube.positions,
       elementConnectivity: new Uint32Array([0, 1, 3, 4]),
-      boundaryFaces: { triangleConnectivity: cube.indices, faceRanges: faceRanges }, geometryFaceMap: faceMap,
-      statistics: { nodeCount: 8, elementCount: 1, boundaryTriangleCount: 12, minCharacteristicSizeM: 1, maxCharacteristicSizeM: 1 },
-      quality: { metric: 'gamma', minimum: 0.5, invertedElementCount: 0, nearZeroJacobianCount: 0 },
-      memoryInputs: { nodeCount: 8, elementCount: 1 }
+      boundaryFaces: { solverElementType: 'tri3', solverConnectivity: new Uint32Array(cube.indices),
+        solverFaceRanges: faceRanges.map(function (range) { return Object.assign({}, range); }),
+        triangleConnectivity: cube.indices, faceRanges: faceRanges }, geometryFaceMap: faceMap,
+      statistics: { nodeCount: 8, elementCount: 1, boundaryTriangleCount: 12, boundaryElementCount: 12,
+        minCharacteristicSizeM: 1, maxCharacteristicSizeM: 1 },
+      quality: { metric: 'gamma', minimum: 0.5, minimumJacobian: 1, maximumEdgeRatio: 1,
+        invertedElementCount: 0, nearZeroJacobianCount: 0 },
+      memoryInputs: { nodeCount: 8, elementCount: 1, connectivityEntries: 4, boundaryConnectivityEntries: 36 }
+    };
+  }
+
+  function tet10Mesh() {
+    var positions = new Float64Array([
+      0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+      0.5, 0, 0, 0.5, 0.5, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.5, 0.5, 0.5, 0.5
+    ]);
+    var solver = new Uint32Array([
+      0, 2, 1, 6, 5, 4,
+      0, 1, 3, 4, 9, 7,
+      0, 3, 2, 7, 8, 6,
+      1, 2, 3, 5, 8, 9
+    ]);
+    var display = new Uint32Array([
+      0, 6, 4, 6, 2, 5, 4, 5, 1, 6, 5, 4,
+      0, 4, 7, 4, 1, 9, 7, 9, 3, 4, 9, 7,
+      0, 7, 6, 7, 3, 8, 6, 8, 2, 7, 8, 6,
+      1, 5, 9, 5, 2, 8, 9, 8, 3, 5, 8, 9
+    ]);
+    var faceIds = ['face-0', 'face-1', 'face-2', 'face-3'];
+    var displayRanges = faceIds.map(function (faceId, index) { return { faceId: faceId, start: index * 12, count: 12 }; });
+    var solverRanges = faceIds.map(function (faceId, index) { return { faceId: faceId, start: index * 6, count: 6 }; });
+    var faceMap = {};
+    displayRanges.forEach(function (range) { faceMap[range.faceId] = range; });
+    return {
+      elementType: 'tet10', nodePositionsM: positions,
+      elementConnectivity: new Uint32Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
+      boundaryFaces: {
+        solverElementType: 'tri6', solverConnectivity: solver, solverFaceRanges: solverRanges,
+        triangleConnectivity: display, faceRanges: displayRanges
+      },
+      geometryFaceMap: faceMap,
+      statistics: { nodeCount: 10, elementCount: 1, boundaryTriangleCount: 16, boundaryElementCount: 4,
+        minCharacteristicSizeM: 1, maxCharacteristicSizeM: Math.sqrt(2), boundingBoxDiagonalM: Math.sqrt(3) },
+      quality: { metric: 'gamma', minimum: 0.5, p05: 0.5, median: 0.5, poorElementCount: 0,
+        invertedElementCount: 0, nearZeroJacobianCount: 0, minimumJacobian: 1, maximumEdgeRatio: Math.sqrt(2), warning: null },
+      memoryInputs: { nodeCount: 10, elementCount: 1, degreeOfFreedomCount: 30,
+        connectivityEntries: 10, boundaryConnectivityEntries: 24 }
     };
   }
 
@@ -99,6 +142,25 @@
       'non-finite support component was accepted');
     assert(!api.validateBoundaryCondition({ id: 'legacy', name: 'Legacy', type: 'fixed', faceIds: ['face-x-'] }, ['face-x-']).valid,
       'legacy fixed support contract was accepted');
+  }
+
+  function testTet10MeshContract() {
+    var mesh = tet10Mesh();
+    var resolved = api.resolveMeshSettings({ preset: 'coarse', elementType: 'tet10' },
+      { minM: [0, 0, 0], maxM: [1, 1, 1] });
+    var selected;
+    assert(resolved.elementType === 'tet10', 'mesh setting resolution discarded Tet10');
+    assert(api.validateVolumeMeshResult(mesh, ['face-0', 'face-1', 'face-2', 'face-3']).valid,
+      'valid Tet10 mesh did not satisfy the public contract');
+    selected = api.selectedBoundary(mesh, ['face-0']);
+    assert(selected.surfaceElementType === 'tri6' && selected.surfaceConnectivity.length === 6,
+      'solver projection lost quadratic boundary connectivity');
+    assert(selected.triangleConnectivity.length === 12 && selected.nodeIndices.length === 6,
+      'display projection did not retain the four linear triangles or mid-edge nodes');
+    assert(!api.validateVolumeMeshResult(Object.assign({}, mesh, {
+      elementConnectivity: new Uint32Array([0, 1, 2, 3])
+    }), ['face-0', 'face-1', 'face-2', 'face-3']).valid,
+    'Tet10 mesh accepted Tet4 connectivity');
   }
 
   function testRigidOrientationContracts() {
@@ -726,6 +788,7 @@
 
   try {
     testContractsAndConversions();
+    testTet10MeshContract();
     testRigidOrientationContracts();
     testConstraintStabilityContracts();
     testControllerConstraintStability();

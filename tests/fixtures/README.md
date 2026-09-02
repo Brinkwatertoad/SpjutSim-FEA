@@ -21,3 +21,6 @@ true circular feature edges. `generated-sphere-r0_5-m.step` is a public-domain
 analytic, multiply-curved sphere with radius 0.5 m, volume `pi / 6 m^3`, and
 one CAD face. Both use millimetre STEP source units and are normalized to metres
 by the import adapter.
+
+The unit cube also anchors the Tet10 ordering test: its straight edges make each
+quadratic edge-node midpoint independently checkable from the two corner nodes.

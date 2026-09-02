@@ -69,11 +69,12 @@
   }
 
   function summarizeMeshRow(documentState) {
-    var settings = documentState.meshSettings || { preset: 'normal' };
+    var settings = documentState.meshSettings || { preset: 'normal', elementType: 'tet4' };
     var preset = settings.preset.charAt(0).toUpperCase() + settings.preset.slice(1);
+    var elementLabel = settings.elementType === 'tet10' ? 'Tet10' : 'Tet4';
     var metadata = documentState.meshMetadata;
-    if (!metadata) { return row('mesh', 'mesh', 'Mesh', 'Not generated', preset); }
-    return row('mesh', 'mesh', 'Mesh', metadata.statistics.elementCount + ' Tet4 elements',
+    if (!metadata) { return row('mesh', 'mesh', 'Mesh', 'Not generated · ' + elementLabel, preset); }
+    return row('mesh', 'mesh', 'Mesh', metadata.statistics.elementCount + ' ' + elementLabel + ' elements',
       metadata.statistics.nodeCount + ' nodes · ' + preset);
   }
 

@@ -92,11 +92,11 @@ function validateRequest(message) {
     if (!validCadSource(message) || typeof message.geometryId !== 'string' || message.geometryId.length === 0 ||
         !validOrientation(message.orientation) || !Array.isArray(message.faceIds) || message.faceIds.length === 0 ||
         message.faceIds.some(function (faceId) { return typeof faceId !== 'string' || faceId.length === 0; }) ||
-        !message.settings || message.settings.elementType !== 'tet4' ||
+        !message.settings || (message.settings.elementType !== 'tet4' && message.settings.elementType !== 'tet10') ||
         !Number.isFinite(message.settings.minSizeM) || !Number.isFinite(message.settings.maxSizeM) ||
         message.settings.minSizeM <= 0 || message.settings.minSizeM > message.settings.maxSizeM) {
       return workerError(
-        'INVALID_MESH_REQUEST', 'mesh', 'Choose valid Tet4 mesh settings.',
+        'INVALID_MESH_REQUEST', 'mesh', 'Choose valid tetrahedral mesh settings.',
         'Mesh requests require a canonical CAD source, stable FaceIds, and a positive min/max size range.'
       );
     }
@@ -506,28 +506,58 @@ function extractElementConnectivity(elements, expectedType, nodesPerElement, ind
   return { connectivity: connectivity, elementTags: elementTags };
 }
 
-function extractBoundaryFaces(gmsh, surfaceTags, faceIds, indexByNodeTag) {
-  var connectivity = [];
+function appendDisplayTriangles(connectivity, nodes, elementType) {
+  if (elementType === 'tri3') {
+    connectivity.push(nodes[0], nodes[1], nodes[2]);
+    return;
+  }
+  // Application Tri6 order follows Gmsh: vertices 0/1/2, then edges
+  // 0-1, 1-2, and 2-0. Four linear triangles preserve the curved mid-nodes.
+  connectivity.push(
+    nodes[0], nodes[3], nodes[5],
+    nodes[3], nodes[1], nodes[4],
+    nodes[5], nodes[4], nodes[2],
+    nodes[3], nodes[4], nodes[5]
+  );
+}
+
+function extractBoundaryFaces(gmsh, surfaceTags, faceIds, indexByNodeTag, descriptor) {
+  var solverConnectivity = [];
+  var displayConnectivity = [];
+  var solverFaceRanges = [];
   var faceRanges = [];
   var geometryFaceMap = Object.create(null);
   var surfaceIndex;
   for (surfaceIndex = 0; surfaceIndex < surfaceTags.length; surfaceIndex += 1) {
-    var start = connectivity.length;
+    var solverStart = solverConnectivity.length;
+    var displayStart = displayConnectivity.length;
     var extracted = extractElementConnectivity(
-      gmsh.model.mesh.getElements(2, surfaceTags[surfaceIndex]), 2, 3, indexByNodeTag, 'BOUNDARY_EXTRACTION_FAILED'
+      gmsh.model.mesh.getElements(2, surfaceTags[surfaceIndex]), descriptor.gmshFaceType,
+      descriptor.solverFaceNodes, indexByNodeTag, 'BOUNDARY_EXTRACTION_FAILED'
     );
     var faceId = faceIds[surfaceIndex];
     var range;
     var connectivityIndex;
     for (connectivityIndex = 0; connectivityIndex < extracted.connectivity.length; connectivityIndex += 1) {
-      connectivity.push(extracted.connectivity[connectivityIndex]);
+      solverConnectivity.push(extracted.connectivity[connectivityIndex]);
     }
-    range = { faceId: faceId, start: start, count: connectivity.length - start };
+    for (connectivityIndex = 0; connectivityIndex < extracted.connectivity.length; connectivityIndex += descriptor.solverFaceNodes) {
+      appendDisplayTriangles(displayConnectivity,
+        extracted.connectivity.slice(connectivityIndex, connectivityIndex + descriptor.solverFaceNodes),
+        descriptor.solverFaceType);
+    }
+    solverFaceRanges.push({ faceId: faceId, start: solverStart, count: solverConnectivity.length - solverStart });
+    range = { faceId: faceId, start: displayStart, count: displayConnectivity.length - displayStart };
     faceRanges.push(range);
     geometryFaceMap[faceId] = { faceId: faceId, start: range.start, count: range.count };
   }
   return {
-    triangleConnectivity: new Uint32Array(connectivity), faceRanges: faceRanges, geometryFaceMap: geometryFaceMap
+    solverElementType: descriptor.solverFaceType,
+    solverConnectivity: new Uint32Array(solverConnectivity),
+    solverFaceRanges: solverFaceRanges,
+    triangleConnectivity: new Uint32Array(displayConnectivity),
+    faceRanges: faceRanges,
+    geometryFaceMap: geometryFaceMap
   };
 }
 
@@ -535,15 +565,54 @@ function quantile(sortedValues, fraction) {
   return sortedValues[Math.min(sortedValues.length - 1, Math.max(0, Math.round((sortedValues.length - 1) * fraction)))];
 }
 
-function meshStatistics(positions, connectivity, gammaQualities, diagonalM) {
+var TET10_QUADRATURE_A = 0.5854101966249685;
+var TET10_QUADRATURE_B = 0.1381966011250105;
+var TET10_QUADRATURE_BARYCENTRIC = [
+  [TET10_QUADRATURE_A, TET10_QUADRATURE_B, TET10_QUADRATURE_B, TET10_QUADRATURE_B],
+  [TET10_QUADRATURE_B, TET10_QUADRATURE_A, TET10_QUADRATURE_B, TET10_QUADRATURE_B],
+  [TET10_QUADRATURE_B, TET10_QUADRATURE_B, TET10_QUADRATURE_A, TET10_QUADRATURE_B],
+  [TET10_QUADRATURE_B, TET10_QUADRATURE_B, TET10_QUADRATURE_B, TET10_QUADRATURE_A]
+];
+var TET10_EDGE_PAIRS = [[0, 1], [1, 2], [2, 0], [0, 3], [2, 3], [3, 1]];
+var BARYCENTRIC_DERIVATIVES = [[-1, -1, -1], [1, 0, 0], [0, 1, 0], [0, 0, 1]];
+
+function tet10JacobianDeterminant(positions, ids, barycentric) {
+  var derivatives = [];
+  var node;
+  var axis;
+  for (node = 0; node < 4; node += 1) {
+    derivatives.push(BARYCENTRIC_DERIVATIVES[node].map(function (value) { return (4 * barycentric[node] - 1) * value; }));
+  }
+  TET10_EDGE_PAIRS.forEach(function (pair) {
+    derivatives.push([0, 1, 2].map(function (coordinate) {
+      return 4 * (BARYCENTRIC_DERIVATIVES[pair[0]][coordinate] * barycentric[pair[1]] +
+        barycentric[pair[0]] * BARYCENTRIC_DERIVATIVES[pair[1]][coordinate]);
+    }));
+  });
+  var jacobian = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+  for (node = 0; node < 10; node += 1) {
+    for (axis = 0; axis < 3; axis += 1) {
+      jacobian[0][axis] += positions[ids[node] * 3] * derivatives[node][axis];
+      jacobian[1][axis] += positions[ids[node] * 3 + 1] * derivatives[node][axis];
+      jacobian[2][axis] += positions[ids[node] * 3 + 2] * derivatives[node][axis];
+    }
+  }
+  return jacobian[0][0] * (jacobian[1][1] * jacobian[2][2] - jacobian[1][2] * jacobian[2][1]) -
+    jacobian[0][1] * (jacobian[1][0] * jacobian[2][2] - jacobian[1][2] * jacobian[2][0]) +
+    jacobian[0][2] * (jacobian[1][0] * jacobian[2][1] - jacobian[1][1] * jacobian[2][0]);
+}
+
+function meshStatistics(positions, connectivity, gammaQualities, diagonalM, descriptor) {
   var minEdge = Infinity;
   var maxEdge = 0;
+  var maximumEdgeRatio = 1;
+  var minimumJacobian = Infinity;
   var inverted = 0;
   var nearZero = 0;
   var index;
   var nearZeroSixVolume = MESH_NEAR_ZERO_JACOBIAN_RELATIVE * diagonalM * diagonalM * diagonalM * 6;
   var edgePairs = [[0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3]];
-  for (index = 0; index < connectivity.length; index += 4) {
+  for (index = 0; index < connectivity.length; index += descriptor.volumeNodes) {
     var ids = [connectivity[index], connectivity[index + 1], connectivity[index + 2], connectivity[index + 3]];
     var ax = positions[ids[1] * 3] - positions[ids[0] * 3];
     var ay = positions[ids[1] * 3 + 1] - positions[ids[0] * 3 + 1];
@@ -556,8 +625,18 @@ function meshStatistics(positions, connectivity, gammaQualities, diagonalM) {
     var cz = positions[ids[3] * 3 + 2] - positions[ids[0] * 3 + 2];
     var sixVolume = ax * (by * cz - bz * cy) - ay * (bx * cz - bz * cx) + az * (bx * cy - by * cx);
     var edgeIndex;
-    if (sixVolume <= 0) { inverted += 1; }
-    if (Math.abs(sixVolume) <= nearZeroSixVolume) { nearZero += 1; }
+    var elementMinimumJacobian = sixVolume;
+    if (descriptor.elementType === 'tet10') {
+      var tet10Ids = Array.prototype.slice.call(connectivity, index, index + 10);
+      elementMinimumJacobian = Math.min.apply(null, TET10_QUADRATURE_BARYCENTRIC.map(function (point) {
+        return tet10JacobianDeterminant(positions, tet10Ids, point);
+      }));
+    }
+    minimumJacobian = Math.min(minimumJacobian, elementMinimumJacobian);
+    if (elementMinimumJacobian <= 0) { inverted += 1; }
+    if (Math.abs(elementMinimumJacobian) <= nearZeroSixVolume) { nearZero += 1; }
+    var elementMinEdge = Infinity;
+    var elementMaxEdge = 0;
     for (edgeIndex = 0; edgeIndex < edgePairs.length; edgeIndex += 1) {
       var first = ids[edgePairs[edgeIndex][0]] * 3;
       var second = ids[edgePairs[edgeIndex][1]] * 3;
@@ -567,7 +646,10 @@ function meshStatistics(positions, connectivity, gammaQualities, diagonalM) {
       var length = Math.sqrt(dx * dx + dy * dy + dz * dz);
       minEdge = Math.min(minEdge, length);
       maxEdge = Math.max(maxEdge, length);
+      elementMinEdge = Math.min(elementMinEdge, length);
+      elementMaxEdge = Math.max(elementMaxEdge, length);
     }
+    maximumEdgeRatio = Math.max(maximumEdgeRatio, elementMaxEdge / elementMinEdge);
   }
   gammaQualities.sort(function (left, right) { return left - right; });
   return {
@@ -579,6 +661,7 @@ function meshStatistics(positions, connectivity, gammaQualities, diagonalM) {
       metric: 'gamma', minimum: gammaQualities[0], p05: quantile(gammaQualities, 0.05),
       median: quantile(gammaQualities, 0.5), poorElementCount: gammaQualities.filter(function (value) { return value < MESH_POOR_GAMMA_THRESHOLD; }).length,
       invertedElementCount: inverted, nearZeroJacobianCount: nearZero,
+      minimumJacobian: minimumJacobian, maximumEdgeRatio: maximumEdgeRatio,
       warning: gammaQualities[0] < MESH_POOR_GAMMA_THRESHOLD ? 'Some elements have low gamma quality.' : null
     }
   };
@@ -608,6 +691,9 @@ function generateMesh(gmsh, message) {
   var box;
   var diagonalM;
   var summary;
+  var descriptor = message.settings.elementType === 'tet10'
+    ? { elementType: 'tet10', volumeNodes: 10, gmshVolumeType: 11, solverFaceType: 'tri6', solverFaceNodes: 6, gmshFaceType: 9 }
+    : { elementType: 'tet4', volumeNodes: 4, gmshVolumeType: 4, solverFaceType: 'tri3', solverFaceNodes: 3, gmshFaceType: 2 };
   try {
     progress(message.requestId, 'mesh-import', 'Restoring CAD geometry…');
     restored = restoreMeshGeometry(gmsh, message, temporaryPath);
@@ -619,31 +705,45 @@ function generateMesh(gmsh, message) {
     gmsh.option.setNumber('Mesh.MeshSizeFromCurvature', 1);
     gmsh.option.setNumber('Mesh.MeshSizeExtendFromBoundary', 1);
     gmsh.model.mesh.setOutwardOrientation(restored.solidTag);
-    progress(message.requestId, 'mesh-generate', 'Generating Tet4 volume mesh…');
+    progress(message.requestId, 'mesh-generate', 'Generating first-order tetrahedral volume mesh…');
     gmsh.model.mesh.generate(3);
+    if (descriptor.elementType === 'tet10') {
+      progress(message.requestId, 'mesh-upgrade', 'Converting the volume mesh to Tet10…');
+      gmsh.model.mesh.setOrder(2);
+      progress(message.requestId, 'mesh-optimize', 'Optimizing the quadratic mesh…');
+      gmsh.model.mesh.optimize('HighOrder');
+    }
     progress(message.requestId, 'mesh-extract', 'Extracting solver-ready mesh data…');
     nodes = denseNodeMap(gmsh);
-    tetrahedra = extractElementConnectivity(gmsh.model.mesh.getElements(3, restored.solidTag), 4, 4, nodes.indexByNodeTag, 'MESH_EXTRACTION_FAILED');
-    boundary = extractBoundaryFaces(gmsh, restored.surfaceTags, message.faceIds, nodes.indexByNodeTag);
+    tetrahedra = extractElementConnectivity(gmsh.model.mesh.getElements(3, restored.solidTag), descriptor.gmshVolumeType,
+      descriptor.volumeNodes, nodes.indexByNodeTag, 'MESH_EXTRACTION_FAILED');
+    boundary = extractBoundaryFaces(gmsh, restored.surfaceTags, message.faceIds, nodes.indexByNodeTag, descriptor);
     rotatePositionsInPlace(nodes.positions, message.orientation.rotation);
     qualityResult = gmsh.model.mesh.getElementQualities(tetrahedra.elementTags, 'gamma');
     gammaQualities = Array.prototype.slice.call((qualityResult && qualityResult.elementsQuality) || qualityResult || []);
     if (gammaQualities.length !== tetrahedra.elementTags.length || gammaQualities.some(function (value) { return !Number.isFinite(value); })) {
       throw knownMeshError('MESH_QUALITY_FAILED', 'The generated mesh quality could not be evaluated.', 'Gmsh gamma quality output did not match tetrahedron count.');
     }
-    summary = meshStatistics(nodes.positions, tetrahedra.connectivity, gammaQualities, diagonalM);
+    summary = meshStatistics(nodes.positions, tetrahedra.connectivity, gammaQualities, diagonalM, descriptor);
     if (summary.invertedElementCount > 0) {
-      throw knownMeshError('INVERTED_ELEMENTS', 'The generated mesh contains inverted elements.', 'Found ' + summary.invertedElementCount + ' non-positive Tet4 Jacobians.');
+      throw knownMeshError('INVERTED_ELEMENTS', 'The generated mesh contains inverted elements.', 'Found ' + summary.invertedElementCount + ' non-positive ' + descriptor.elementType + ' Jacobians.');
     }
     if (summary.nearZeroJacobianCount > 0) {
-      throw knownMeshError('DEGENERATE_ELEMENTS', 'The generated mesh contains degenerate elements.', 'Found ' + summary.nearZeroJacobianCount + ' near-zero Tet4 Jacobians.');
+      throw knownMeshError('DEGENERATE_ELEMENTS', 'The generated mesh contains degenerate elements.', 'Found ' + summary.nearZeroJacobianCount + ' near-zero ' + descriptor.elementType + ' Jacobians.');
     }
     return {
-      elementType: 'tet4', nodePositionsM: nodes.positions, elementConnectivity: new Uint32Array(tetrahedra.connectivity),
-      boundaryFaces: { triangleConnectivity: boundary.triangleConnectivity, faceRanges: boundary.faceRanges }, geometryFaceMap: boundary.geometryFaceMap,
-      statistics: { nodeCount: nodes.positions.length / 3, elementCount: tetrahedra.connectivity.length / 4, boundaryTriangleCount: boundary.triangleConnectivity.length / 3, minCharacteristicSizeM: summary.minCharacteristicSizeM, maxCharacteristicSizeM: summary.maxCharacteristicSizeM, boundingBoxDiagonalM: diagonalM },
+      elementType: descriptor.elementType, nodePositionsM: nodes.positions, elementConnectivity: new Uint32Array(tetrahedra.connectivity),
+      boundaryFaces: { solverElementType: boundary.solverElementType, solverConnectivity: boundary.solverConnectivity,
+        solverFaceRanges: boundary.solverFaceRanges, triangleConnectivity: boundary.triangleConnectivity, faceRanges: boundary.faceRanges },
+      geometryFaceMap: boundary.geometryFaceMap,
+      statistics: { nodeCount: nodes.positions.length / 3, elementCount: tetrahedra.connectivity.length / descriptor.volumeNodes,
+        boundaryTriangleCount: boundary.triangleConnectivity.length / 3,
+        boundaryElementCount: boundary.solverConnectivity.length / descriptor.solverFaceNodes,
+        minCharacteristicSizeM: summary.minCharacteristicSizeM, maxCharacteristicSizeM: summary.maxCharacteristicSizeM, boundingBoxDiagonalM: diagonalM },
       quality: summary.quality,
-      memoryInputs: { nodeCount: nodes.positions.length / 3, elementCount: tetrahedra.connectivity.length / 4, degreeOfFreedomCount: nodes.positions.length, connectivityEntries: tetrahedra.connectivity.length, boundaryConnectivityEntries: boundary.triangleConnectivity.length }
+      memoryInputs: { nodeCount: nodes.positions.length / 3, elementCount: tetrahedra.connectivity.length / descriptor.volumeNodes,
+        degreeOfFreedomCount: nodes.positions.length, connectivityEntries: tetrahedra.connectivity.length,
+        boundaryConnectivityEntries: boundary.solverConnectivity.length }
     };
   } catch (error) {
     if (error && error.spjutsimError) { throw error; }
@@ -751,6 +851,7 @@ async function handleRequest(message) {
       }, [
         result.nodePositionsM.buffer,
         result.elementConnectivity.buffer,
+        result.boundaryFaces.solverConnectivity.buffer,
         result.boundaryFaces.triangleConnectivity.buffer
       ]);
       return;

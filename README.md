@@ -37,6 +37,11 @@ the cube Tet4 extraction checks across the coarse, normal, fine, and custom
 presets. It should report `Passed`; this verifies boundary FaceId stability,
 positive volumes, surface area, and increasing preset resolution.
 
+Open `tests/browser/tet10-mesh-tests.html` from the optional HTTP server to run
+the quadratic cube extraction check. It verifies Gmsh Tet10/Tri6 node ordering,
+quadratic boundary preservation, four-triangle display subdivision, stable CAD
+face ranges, and sampled Jacobian/edge-ratio quality metadata.
+
 Open `tests/browser/preview-selection-tests.html` from the optional HTTP server
 to run the imported STEP-cube face-picking checks across canvas sizes. It should
 report `Passed`; the pointer conversion check also covers a simulated 2× device
@@ -96,7 +101,7 @@ Wrangler is not an application runtime or development dependency; direct
 ## Current boundary
 
 The current vertical slice provides app/controller-owned analysis state, local
-STEP/IGES/BREP import and Tet4 meshing in disposable Gmsh workers, SI-backed analysis
+STEP/IGES/BREP import and Tet4/Tet10 meshing in disposable Gmsh workers, SI-backed analysis
 authoring, exact-topology memory preflight, and the first-party FEM core compiled
 as a pinned single-threaded embedded WASM worker runtime. Solves return validated
 transferable result models with raw and smoothed stress fields, reactions,
@@ -131,6 +136,11 @@ any one-, two-, or three-axis combination and finite nonzero prescribed values.
 The compact Supports group continuously reports provisional preview or exact
 mesh rank across Tx/Ty/Tz/Rx/Ry/Rz, explicitly identifying free or coupled rigid
 motion. Native solver diagnostics remain the final singularity check.
+
+Tet10 meshes preserve six-node quadratic boundary faces for solver integration
+and use a separate linear-triangle subdivision for viewport display and picking.
+Until the Task 13 solver/API work lands, Tet10 meshes are inspectable but Solve
+remains intentionally limited to Tet4.
 
 Loads and supports are shown at deterministic, area-aware samples across their
 actual selected surfaces. Load-arrow tips touch the surface; all vector arrows

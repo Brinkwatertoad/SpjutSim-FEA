@@ -122,6 +122,11 @@
               <p id="gravity-status" role="status" aria-live="polite">Gravity is off.</p>
             </div>
             <div id="mesh-editor">
+              <label for="mesh-element-type">Element</label>
+              <select id="mesh-element-type">
+                <option value="tet4" selected>Tet4 (debug/reference)</option>
+                <option value="tet10">Tet10 (mesh preview)</option>
+              </select>
               <label for="mesh-preset">Density</label>
               <select id="mesh-preset">
                 <option value="coarse">Coarse</option><option value="normal" selected>Normal</option>

@@ -79,10 +79,13 @@
       elementType: 'tet4',
       nodePositionsM: new Float64Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]),
       elementConnectivity: new Uint32Array([0, 1, 2, 3]),
-      boundaryFaces: { triangleConnectivity: new Uint32Array([0, 2, 1]), faceRanges: [{ faceId: 'opaque-face', start: 0, count: 3 }] },
+      boundaryFaces: { solverElementType: 'tri3', solverConnectivity: new Uint32Array([0, 2, 1]),
+        solverFaceRanges: [{ faceId: 'opaque-face', start: 0, count: 3 }],
+        triangleConnectivity: new Uint32Array([0, 2, 1]), faceRanges: [{ faceId: 'opaque-face', start: 0, count: 3 }] },
       geometryFaceMap: { 'opaque-face': { faceId: 'opaque-face', start: 0, count: 3 } },
-      statistics: { nodeCount: 4, elementCount: 1, boundaryTriangleCount: 1, minCharacteristicSizeM: 1, maxCharacteristicSizeM: Math.sqrt(2) },
-      quality: { metric: 'gamma', minimum: 0.7, p05: 0.7, median: 0.7, poorElementCount: 0, invertedElementCount: 0, nearZeroJacobianCount: 0, warning: null },
+      statistics: { nodeCount: 4, elementCount: 1, boundaryTriangleCount: 1, boundaryElementCount: 1, minCharacteristicSizeM: 1, maxCharacteristicSizeM: Math.sqrt(2) },
+      quality: { metric: 'gamma', minimum: 0.7, p05: 0.7, median: 0.7, poorElementCount: 0,
+        minimumJacobian: 1, maximumEdgeRatio: Math.sqrt(2), invertedElementCount: 0, nearZeroJacobianCount: 0, warning: null },
       memoryInputs: { nodeCount: 4, elementCount: 1, degreeOfFreedomCount: 12, connectivityEntries: 4, boundaryConnectivityEntries: 3 }
     };
   }

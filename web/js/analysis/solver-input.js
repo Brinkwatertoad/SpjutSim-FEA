@@ -21,15 +21,23 @@
 
   function selectedBoundary(mesh, faceIds) {
     var connectivity = mesh.boundaryFaces.triangleConnectivity;
+    var solverConnectivity = mesh.boundaryFaces.solverConnectivity;
+    var solverRanges = mesh.boundaryFaces.solverFaceRanges;
     var selectedConnectivity = [];
+    var selectedSolverConnectivity = [];
     var areas = [];
     var normals = [];
     var nodes = new Set();
     faceIds.forEach(function (faceId) {
       var range = mesh.geometryFaceMap[faceId];
+      var solverRange = solverRanges.find(function (candidate) { return candidate.faceId === faceId; });
       var offset;
       var triangle;
-      if (!range) { throw new Error('Boundary mapping was lost for CAD face ' + faceId + '.'); }
+      if (!range || !solverRange) { throw new Error('Boundary mapping was lost for CAD face ' + faceId + '.'); }
+      for (offset = solverRange.start; offset < solverRange.start + solverRange.count; offset += 1) {
+        selectedSolverConnectivity.push(solverConnectivity[offset]);
+        nodes.add(solverConnectivity[offset]);
+      }
       for (offset = range.start; offset < range.start + range.count; offset += 3) {
         selectedConnectivity.push(connectivity[offset], connectivity[offset + 1], connectivity[offset + 2]);
         nodes.add(connectivity[offset]); nodes.add(connectivity[offset + 1]); nodes.add(connectivity[offset + 2]);
@@ -39,6 +47,8 @@
       }
     });
     return {
+      surfaceElementType: mesh.boundaryFaces.solverElementType,
+      surfaceConnectivity: new Uint32Array(selectedSolverConnectivity),
       triangleConnectivity: new Uint32Array(selectedConnectivity),
       triangleAreasM2: new Float64Array(areas),
       outwardNormals: new Float64Array(normals),
