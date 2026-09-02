@@ -4,6 +4,12 @@ Before resuming the numbered roadmap, complete the
 [priority authoring remediation](00-priority-authoring-remediation.md) for
 selection clearing, support/load entry, and the material catalog.
 
+The current release priority is now [Task 11: Complete priority release
+features](11-priority-release-features.md). Its compact setup inspector is the
+first deliverable and supersedes the scattered authoring layout assumed by the
+older plans. Follow the approved design and package plans linked from Task 11
+before returning to deferred solver breadth.
+
 Execute these plans in order. Tasks 01–05 establish the portable geometry and
 meshing path. Tasks 06–10 complete the first trusted Tet4 browser vertical
 slice, including viewport interaction and initial result visualization.
