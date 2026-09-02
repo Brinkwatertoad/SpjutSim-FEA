@@ -16,6 +16,23 @@ function validCadSource(message) {
     message.sourceBytes instanceof ArrayBuffer && message.sourceBytes.byteLength > 0;
 }
 
+function validOrientation(orientation) {
+  var matrix = orientation && orientation.rotation;
+  var row;
+  var column;
+  var dot;
+  if (!Array.isArray(matrix) || matrix.length !== 9 || matrix.some(function (value) { return !Number.isFinite(value); })) { return false; }
+  for (row = 0; row < 3; row += 1) {
+    for (column = 0; column < 3; column += 1) {
+      dot = matrix[row * 3] * matrix[column * 3] + matrix[row * 3 + 1] * matrix[column * 3 + 1] + matrix[row * 3 + 2] * matrix[column * 3 + 2];
+      if (Math.abs(dot - (row === column ? 1 : 0)) > 1e-10) { return false; }
+    }
+  }
+  return Math.abs(matrix[0] * (matrix[4] * matrix[8] - matrix[5] * matrix[7]) -
+    matrix[1] * (matrix[3] * matrix[8] - matrix[5] * matrix[6]) +
+    matrix[2] * (matrix[3] * matrix[7] - matrix[4] * matrix[6]) - 1) <= 1e-10;
+}
+
 function workerError(code, stage, userMessage, developerMessage, recoverable) {
   return {
     code: code,
@@ -73,7 +90,7 @@ function validateRequest(message) {
   }
   if (message.type === 'mesh') {
     if (!validCadSource(message) || typeof message.geometryId !== 'string' || message.geometryId.length === 0 ||
-        !Array.isArray(message.faceIds) || message.faceIds.length === 0 ||
+        !validOrientation(message.orientation) || !Array.isArray(message.faceIds) || message.faceIds.length === 0 ||
         message.faceIds.some(function (faceId) { return typeof faceId !== 'string' || faceId.length === 0; }) ||
         !message.settings || message.settings.elementType !== 'tet4' ||
         !Number.isFinite(message.settings.minSizeM) || !Number.isFinite(message.settings.maxSizeM) ||
@@ -567,6 +584,19 @@ function meshStatistics(positions, connectivity, gammaQualities, diagonalM) {
   };
 }
 
+function rotatePositionsInPlace(positions, rotation) {
+  var index;
+  var x;
+  var y;
+  var z;
+  for (index = 0; index < positions.length; index += 3) {
+    x = positions[index]; y = positions[index + 1]; z = positions[index + 2];
+    positions[index] = rotation[0] * x + rotation[1] * y + rotation[2] * z;
+    positions[index + 1] = rotation[3] * x + rotation[4] * y + rotation[5] * z;
+    positions[index + 2] = rotation[6] * x + rotation[7] * y + rotation[8] * z;
+  }
+}
+
 function generateMesh(gmsh, message) {
   var temporaryPath = '/spjutsim-mesh-' + message.requestId.replace(/[^A-Za-z0-9_-]/g, '_') + '.' + message.sourceFormat;
   var restored;
@@ -595,6 +625,7 @@ function generateMesh(gmsh, message) {
     nodes = denseNodeMap(gmsh);
     tetrahedra = extractElementConnectivity(gmsh.model.mesh.getElements(3, restored.solidTag), 4, 4, nodes.indexByNodeTag, 'MESH_EXTRACTION_FAILED');
     boundary = extractBoundaryFaces(gmsh, restored.surfaceTags, message.faceIds, nodes.indexByNodeTag);
+    rotatePositionsInPlace(nodes.positions, message.orientation.rotation);
     qualityResult = gmsh.model.mesh.getElementQualities(tetrahedra.elementTags, 'gamma');
     gammaQualities = Array.prototype.slice.call((qualityResult && qualityResult.elementsQuality) || qualityResult || []);
     if (gammaQualities.length !== tetrahedra.elementTags.length || gammaQualities.some(function (value) { return !Number.isFinite(value); })) {

@@ -193,7 +193,9 @@
             protocol: root.SpjutsimFEA.WORKER_PROTOCOL_VERSION,
             type: 'mesh', requestId: requestId, geometryId: request.geometry.geometryId,
             sourceName: request.geometry.sourceName, sourceFormat: request.geometry.sourceFormat,
-            faceIds: request.geometry.faceIds.slice(), settings: resolvedSettings, sourceBytes: transferBytes
+            faceIds: request.geometry.faceIds.slice(), settings: resolvedSettings,
+            orientation: { rotation: request.geometry.orientation.rotation.slice(), operations: request.geometry.orientation.operations.slice() },
+            sourceBytes: transferBytes
           }, [transferBytes]);
         } catch (error) {
           finish(clientFailure('MESHER_MESSAGE_FAILED', 'The geometry engine could not receive the mesh request.', error && error.message, 'mesh'));

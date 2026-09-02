@@ -160,6 +160,30 @@
     this.notify();
   };
 
+  AppController.prototype.applyGeometryRotation = function (rotation, operationLabel) {
+    var oriented;
+    var validation;
+    if (!this.document.geometry) { throw new Error('Import geometry before changing model orientation.'); }
+    oriented = root.SpjutsimFEA.applyRotationToGeometry(this.document.geometry, rotation, operationLabel);
+    validation = root.SpjutsimFEA.validateGeometryModel(oriented);
+    if (!validation.valid) { throw new Error('Invalid oriented geometry: ' + validation.reason); }
+    this.document.geometry = oriented;
+    this.document.mesh = null;
+    this.document.meshMetadata = null;
+    this.document.meshGeneration = { status: 'idle', error: null, progress: null };
+    this.document.viewportPresentation = Object.assign({}, this.document.viewportPresentation, { mode: 'model' });
+    this.invalidateResults('orientation');
+    this.notify();
+    return oriented.orientation;
+  };
+
+  AppController.prototype.rotateGeometryAroundGlobalAxis = function (axis, degrees) {
+    var rotation = root.SpjutsimFEA.axisRotationMatrix(axis, degrees);
+    var normalized = Number(Number(degrees).toPrecision(8));
+    var label = axis.toUpperCase() + ' ' + (normalized >= 0 ? '+' : '−') + Math.abs(normalized) + '°';
+    return this.applyGeometryRotation(rotation, label);
+  };
+
   /** Replace the UI-only set of selected CAD faces. */
   AppController.prototype.replaceSelectedFaces = function (faceIds) {
     this.document.selectedFaceIds = validatedFaceIds(this.document.geometry, faceIds);

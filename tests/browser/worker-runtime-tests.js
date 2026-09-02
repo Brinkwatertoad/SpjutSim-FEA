@@ -65,10 +65,10 @@
       geometryId: 'geometry-test', sourceName: 'cube.step', sourceFormat: 'step', orientation: api.identityRigidOrientation(),
       faceIds: ['opaque-face'], boundingBoxM: { minM: [0, 0, 0], maxM: [1, 1, 1] }, volumeM3: 1,
       preview: {
-        positionsM: new Float64Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
-        normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
-        indices: new Uint32Array([0, 1, 2]),
-        faceRanges: [{ faceId: 'opaque-face', start: 0, count: 3 }],
+        positionsM: new Float64Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]),
+        normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]),
+        indices: new Uint32Array([0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3]),
+        faceRanges: [{ faceId: 'opaque-face', start: 0, count: 12 }],
         featureEdges: { positionsM: new Float64Array([0, 0, 0, 1, 0, 0]), indices: new Uint32Array([0, 1]) }
       }
     };
@@ -154,7 +154,7 @@
     controller.replaceSelectedFaces(['opaque-face']);
     controller.replaceGeometry(validGeometry(), { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([2]).buffer });
     assert(controller.document.selectedFaceIds.length === 0, 'geometry replacement retained selected faces');
-    geometry.preview.indices[2] = 3;
+    geometry.preview.indices[2] = 4;
     assert(!api.validateGeometryModel(geometry).valid, 'out-of-range preview index was accepted');
     assert(api.sourceFormatForFilename('MODEL.STP') === 'step', 'STP format detection failed');
     assert(api.sourceFormatForFilename('model.IGES') === 'iges' && api.sourceFormatForFilename('model.igs') === 'iges', 'IGES format detection failed');
@@ -178,6 +178,30 @@
       { faceId: 'face-a', start: 3, count: 3 }
     ];
     assert(!api.validateGeometryModel(geometry).valid, 'duplicate preview FaceId ranges were accepted');
+  }
+
+  function testOrientationInvalidationPreservesAuthoredSetup() {
+    var controller = new api.AppController({ document: api.createAnalysisDocument() });
+    var source = { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([8]).buffer };
+    controller.replaceGeometry(validGeometry(), source);
+    controller.replaceSelectedFaces(['opaque-face']);
+    controller.document.material = { name: 'Test', youngsModulusPa: 1e9, poissonsRatio: 0.25 };
+    controller.document.boundaryConditions = [{ id: 'support-1', name: 'Support 1', type: 'fixed', faceIds: ['opaque-face'] }];
+    controller.document.loads = [{ id: 'load-1', name: 'Load 1', type: 'total-force', forceN: [1, 2, 3], faceIds: ['opaque-face'] }];
+    controller.completeMeshGeneration(validVolumeMesh());
+    controller.document.results = { solved: true };
+    var revision = controller.document.analysisRevision;
+    var sourceReference = controller.geometrySource;
+    controller.rotateGeometryAroundGlobalAxis('z', 90);
+    assert(controller.document.geometry.orientation.operations.join('') === 'Z +90°', 'controller did not update geometry orientation');
+    assert(controller.document.material.name === 'Test' && controller.document.boundaryConditions.length === 1 && controller.document.loads.length === 1,
+      'orientation discarded authored material, supports, or loads');
+    assert(controller.document.selectedFaceIds.join('|') === 'opaque-face', 'orientation discarded selected CAD faces');
+    assert(controller.geometrySource === sourceReference, 'orientation replaced the canonical CAD source');
+    assert(controller.document.mesh === null && controller.document.meshMetadata === null && controller.document.results === null,
+      'orientation retained stale mesh or results');
+    assert(controller.document.analysisRevision === revision + 1 && controller.document.resultInvalidation.reason === 'orientation',
+      'orientation did not advance the analysis revision with the correct reason');
   }
 
   function testCustomMeshPresetCanBeEntered() {
@@ -319,6 +343,8 @@
       assert(api.validateVolumeMeshResult(mesh, geometry.faceIds).valid, 'valid volume mesh contract was rejected');
       assert(posted.sourceBytes !== original, 'canonical CAD bytes were transferred directly for meshing');
       assert(posted.sourceFormat === 'step', 'geometry source format was not sent for remeshing');
+      assert(posted.orientation && posted.orientation.rotation.join(',') === geometry.orientation.rotation.join(','),
+        'geometry orientation was not sent for remeshing');
       assert(original.byteLength === 3, 'canonical CAD bytes were detached by meshing');
       mesh.boundaryFaces.triangleConnectivity[2] = 4;
       assert(!api.validateVolumeMeshResult(mesh, geometry.faceIds).valid, 'out-of-range boundary connectivity was accepted');
@@ -364,6 +390,7 @@
     testResponseValidation();
     testGeometryContractAndInvalidation();
     testPreviewRequiresOneRangePerFace();
+    testOrientationInvalidationPreservesAuthoredSetup();
     testCustomMeshPresetCanBeEntered();
     testDisplayStyleIsAvailableInModelView();
     testViewportCameraNavigation();

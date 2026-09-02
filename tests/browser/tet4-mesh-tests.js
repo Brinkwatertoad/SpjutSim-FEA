@@ -73,6 +73,23 @@
         });
       }, Promise.resolve()).then(function () {
         assert(counts[1] > counts[0] && counts[2] > counts[1], 'finer presets did not increase mesh resolution');
+        var oriented = api.rotateGeometryAroundGlobalAxis(geometry, 'z', 90);
+        return client.generateMesh({ geometry: oriented, settings: { preset: 'coarse', elementType: 'tet4' }, sourceBytes: sourceBytes }).then(function (mesh) {
+          var xs = []; var ys = []; var zs = []; var index;
+          for (index = 0; index < mesh.nodePositionsM.length; index += 3) {
+            xs.push(mesh.nodePositionsM[index]); ys.push(mesh.nodePositionsM[index + 1]); zs.push(mesh.nodePositionsM[index + 2]);
+          }
+          assert(Math.abs(Math.min.apply(null, xs) + 1) < 2e-7 && Math.abs(Math.max.apply(null, xs)) < 2e-7 &&
+            Math.abs(Math.min.apply(null, ys)) < 2e-7 && Math.abs(Math.max.apply(null, ys) - 1) < 2e-7 &&
+            Math.abs(Math.min.apply(null, zs)) < 2e-7 && Math.abs(Math.max.apply(null, zs) - 1) < 2e-7,
+          'oriented mesh coordinates did not match the rotated global frame');
+          assert(mesh.boundaryFaces.faceRanges.map(function (range) { return range.faceId; }).sort().join('|') === faceSet,
+            'FaceId set changed after orientation');
+          for (index = 0; index < mesh.elementConnectivity.length; index += 4) {
+            assert(signedSixVolume(mesh.nodePositionsM, mesh.elementConnectivity[index], mesh.elementConnectivity[index + 1], mesh.elementConnectivity[index + 2], mesh.elementConnectivity[index + 3]) > 0,
+              'orientation inverted Tet4 connectivity');
+          }
+        });
       });
     });
   }).then(function () {
