@@ -38,7 +38,7 @@
   }
 
   function validateViewportPresentation(presentation, meshAvailable, resultsAvailable) {
-    var fields = ['vonMises', 'maxPrincipal', 'minPrincipal', 'displacementMagnitude', 'ux', 'uy', 'uz'];
+    var fields = ['vonMises', 'factorOfSafety', 'maxPrincipal', 'minPrincipal', 'displacementMagnitude', 'ux', 'uy', 'uz'];
     var deformationModes = ['undeformed', 'true-scale', 'auto', 'user'];
     if (!presentation || typeof presentation !== 'object' || Array.isArray(presentation) ||
         ['model', 'mesh', 'stress', 'deformation'].indexOf(presentation.mode) < 0 ||
@@ -539,7 +539,7 @@
     if (revision !== this.document.analysisRevision || this.document.solveExecution.status !== 'running') { return false; }
     var validation = root.SpjutsimFEA.validateResultModel(result, revision);
     if (!validation.valid) { throw new Error('Invalid solve result: ' + validation.reason); }
-    this.document.results = result;
+    this.document.results = root.SpjutsimFEA.decorateResultWithTrust(result, this.document.material);
     this.document.solveExecution = { status: 'succeeded', error: null, progress: null, analysisRevision: revision };
     this.document.resultInvalidation = null;
     this.document.viewportPresentation = Object.assign({}, this.document.viewportPresentation, {

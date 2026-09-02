@@ -740,6 +740,7 @@
     if (!this.resultModel) { return null; }
     var fields = {
       vonMises: this.resultModel.surfaceFields.vonMisesPa,
+      factorOfSafety: this.resultModel.surfaceFields.factorOfSafety,
       maxPrincipal: this.resultModel.surfaceFields.maxPrincipalPa,
       minPrincipal: this.resultModel.surfaceFields.minPrincipalPa,
       displacementMagnitude: this.resultModel.surfaceFields.displacementMagnitudeM,
@@ -938,7 +939,7 @@
     var axis;
     var fieldDefinitions = {
       vonMises: ['von Mises stress', 'MPa', 1e6], maxPrincipal: ['maximum principal stress', 'MPa', 1e6],
-      minPrincipal: ['minimum principal stress', 'MPa', 1e6], displacementMagnitude: ['displacement magnitude', 'mm', 1e-3],
+      factorOfSafety: ['factor of safety (approximate, clipped contour)', '', 1], minPrincipal: ['minimum principal stress', 'MPa', 1e6], displacementMagnitude: ['displacement magnitude', 'mm', 1e-3],
       ux: ['Ux', 'mm', 1e-3], uy: ['Uy', 'mm', 1e-3], uz: ['Uz', 'mm', 1e-3]
     };
     var definition = fieldDefinitions[this.presentation.field] || fieldDefinitions.vonMises;

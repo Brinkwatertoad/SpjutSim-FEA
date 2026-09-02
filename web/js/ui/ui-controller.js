@@ -390,7 +390,7 @@
     var mode = this.viewportMode ? this.viewportMode.value : 'model';
     var field = this.resultField ? this.resultField.value : current.field;
     var deformationMode = this.deformationMode ? this.deformationMode.value : current.deformationMode;
-    if (mode === 'stress' && ['vonMises', 'maxPrincipal', 'minPrincipal'].indexOf(field) < 0) { field = 'vonMises'; }
+    if (mode === 'stress' && ['vonMises', 'factorOfSafety', 'maxPrincipal', 'minPrincipal'].indexOf(field) < 0) { field = 'vonMises'; }
     if (mode === 'deformation' && ['displacementMagnitude', 'ux', 'uy', 'uz'].indexOf(field) < 0) { field = 'displacementMagnitude'; }
     try {
       this.controller.replaceViewportPresentation({
@@ -424,8 +424,9 @@
       this.resultField.value = presentation.field || (presentation.mode === 'deformation' ? 'displacementMagnitude' : 'vonMises');
       this.resultField.disabled = !resultsAvailable || (presentation.mode !== 'stress' && presentation.mode !== 'deformation');
       Array.from(this.resultField.options).forEach(function (option) {
-        var stress = ['vonMises', 'maxPrincipal', 'minPrincipal'].indexOf(option.value) >= 0;
+        var stress = ['vonMises', 'factorOfSafety', 'maxPrincipal', 'minPrincipal'].indexOf(option.value) >= 0;
         option.hidden = presentation.mode === 'stress' ? !stress : (presentation.mode === 'deformation' ? stress : false);
+        option.disabled = option.value === 'factorOfSafety' && !(documentState.results && documentState.results.factorOfSafety);
       });
     }
     if (this.deformationMode) { this.deformationMode.value = presentation.deformationMode || 'undeformed'; this.deformationMode.disabled = !resultsAvailable; }
@@ -528,6 +529,7 @@
   };
 
   function formatNumber(value, unit) {
+    if (value === Infinity) { return '∞' + (unit ? ' ' + unit : ''); }
     if (!Number.isFinite(value)) { return '—'; }
     return value.toLocaleString(undefined, { maximumSignificantDigits: 5 }) + (unit ? ' ' + unit : '');
   }
@@ -583,21 +585,33 @@
     if (this.resultsSummary) { this.resultsSummary.hidden = !result; }
     if (this.diagnosticsSummary) { this.diagnosticsSummary.hidden = !result; }
     if (!result) { return; }
-    replaceDefinitionList(this.resultsValues, [
+    var entries = [
+      ['Element', result.elementType.toUpperCase()],
+      ['System', result.meshStatistics.nodeCount + ' nodes / ' + result.meshStatistics.elementCount + ' elements / ' + result.meshStatistics.nodeCount * 3 + ' DOF'],
       ['Max displacement', formatNumber(result.extrema.maxDisplacement.valueM * 1000, 'mm')],
       ['Raw von Mises max', formatNumber(result.extrema.rawVonMisesMax.valuePa / 1e6, 'MPa')],
       ['Displayed VM max', formatNumber(result.extrema.displayedVonMisesMax.valuePa / 1e6, 'MPa')],
       ['Max principal', formatNumber(result.extrema.rawMaxPrincipal.valuePa / 1e6, 'MPa')],
       ['Min principal', formatNumber(result.extrema.rawMinPrincipal.valuePa / 1e6, 'MPa')],
       ['Applied force', result.equilibrium.totalAppliedForceN.map(function (v) { return formatNumber(v, 'N'); }).join(', ')],
-      ['Reaction', result.equilibrium.totalReactionN.map(function (v) { return formatNumber(v, 'N'); }).join(', ')]
-    ]);
+      ['Reaction', result.equilibrium.totalReactionN.map(function (v) { return formatNumber(v, 'N'); }).join(', ')],
+      ['Strain energy', formatNumber(result.solverStatistics.strainEnergyJ, 'J')],
+      ['Convergence', result.convergenceStatus === 'not-run' ? 'Not studied' : result.convergenceStatus],
+      ['Assumptions', result.assumptions.join(', ')]
+    ];
+    if (result.factorOfSafety) {
+      entries.splice(7, 0,
+        ['Raw minimum FoS', formatNumber(result.factorOfSafety.rawMinimum.value)],
+        ['Displayed minimum FoS', formatNumber(result.factorOfSafety.displayedMinimum)],
+        ['FoS criterion', 'von Mises yield · ' + formatNumber(result.factorOfSafety.strength.valuePa / 1e6, 'MPa')]);
+    }
+    replaceDefinitionList(this.resultsValues, entries);
     replaceDefinitionList(this.diagnosticsValues, [
       ['Iterations', String(result.solverStatistics.iterations)],
       ['Solver residual', formatNumber(result.solverStatistics.finalRelativeResidual)],
       ['Force balance', formatNumber(result.equilibrium.relativeResidual)],
       ['Solve time', formatNumber(result.solverStatistics.solveDurationMs, 'ms')],
-      ['Mesh', result.meshStatistics.nodeCount + ' nodes / ' + result.meshStatistics.elementCount + ' elements'],
+      ['Mesh', result.meshStatistics.nodeCount + ' nodes / ' + result.meshStatistics.elementCount + ' ' + result.elementType.toUpperCase() + ' elements'],
       ['WASM memory', formatBytes(result.solverStatistics.wasmMemoryBytes)],
       ['Warnings', result.warnings.length ? result.warnings.join(' ') : 'None']
     ]);
@@ -608,7 +622,7 @@
     var presentation = documentState.viewportPresentation || {};
     var definitions = {
       vonMises: ['von Mises stress', 'MPa', 1e6], maxPrincipal: ['maximum principal stress', 'MPa', 1e6],
-      minPrincipal: ['minimum principal stress', 'MPa', 1e6], displacementMagnitude: ['displacement magnitude', 'mm', 1e-3],
+      factorOfSafety: ['factor of safety (contour clipped)', '', 1], minPrincipal: ['minimum principal stress', 'MPa', 1e6], displacementMagnitude: ['displacement magnitude', 'mm', 1e-3],
       ux: ['Ux', 'mm', 1e-3], uy: ['Uy', 'mm', 1e-3], uz: ['Uz', 'mm', 1e-3]
     };
     var definition = definitions[presentation.field];

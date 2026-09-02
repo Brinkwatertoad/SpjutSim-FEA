@@ -143,6 +143,13 @@ viewport display and picking. Tet4 remains available as a debug/reference
 option. The native/WASM result contract retains four Tet10 recovery samples per
 element alongside separately named element-averaged smoothing fields.
 
+When a tensile or compressive yield strength is supplied, completed results add
+a von-Mises-yield factor of safety. Raw recovery-sample and approximate smoothed
+surface minima remain separately labeled; the FoS contour is capped at 10 for
+color mapping without changing the engineering values. Result summaries state
+the linear-elastic, small-strain, static, single-isotropic-solid assumptions and
+report single solves as `Not studied` for convergence.
+
 Loads and supports are shown at deterministic, area-aware samples across their
 actual selected surfaces. Load-arrow tips touch the surface; all vector arrows
 use thin cylinder shafts with cone heads. Default load/support roles are red and

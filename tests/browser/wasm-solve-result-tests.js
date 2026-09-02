@@ -34,7 +34,7 @@
     documentState.mesh = tetraMesh();
     documentState.meshMetadata = { statistics: documentState.mesh.statistics, quality: documentState.mesh.quality,
       memoryInputs: documentState.mesh.memoryInputs };
-    documentState.material = { youngsModulusPa: 210e9, poissonsRatio: 0.3, densityKgM3: 7850 };
+    documentState.material = { youngsModulusPa: 210e9, poissonsRatio: 0.3, densityKgM3: 7850, tensileYieldPa: 250e6 };
     documentState.boundaryConditions = [{ id: 'support-1', name: 'Fixed', type: 'support', faceIds: ['fixed'], componentsM: { x: 0, y: 0, z: 0 } }];
     documentState.loads = [{ id: 'load-1', name: 'Load', type: 'total-force', faceIds: ['loaded'], forceN: [0, 0, -1000] }];
     return documentState;
@@ -65,6 +65,10 @@
     assert(result.extrema.rawVonMisesMax.valuePa > 0, 'raw stress peak was not recovered');
     assert(result.extrema.displayedVonMisesMax.valuePa > 0, 'smoothed surface stress was not prepared');
     assert(controller.completeSolve(revision, result), 'current solve result was discarded');
+    assert(documentState.results.factorOfSafety && documentState.results.factorOfSafety.rawMinimum.value > 0,
+      'yield-based factor of safety was not added to the trusted result');
+    assert(documentState.results.convergenceStatus === 'not-run' && documentState.results.assumptions.length === 4,
+      'single-solve trust metadata was incomplete');
     assert(documentState.viewportPresentation.mode === 'stress' && documentState.viewportPresentation.field === 'vonMises',
       'Stress/von Mises was not activated after solve');
     controller.replaceViewportPresentation(Object.assign({}, documentState.viewportPresentation, { mode: 'mesh' }));
