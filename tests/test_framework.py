@@ -319,6 +319,9 @@ class FrameworkTests(unittest.TestCase):
         for inspector_id in ('setup-inspector', 'setup-inspector-model-list', 'setup-inspector-material-list', 'setup-inspector-support-list',
                              'setup-inspector-load-list', 'setup-inspector-form-stash'):
             self.assertIn(inspector_id, index)
+        for appearance_id in ('settings-tab-appearance', 'settings-panel-appearance', 'color-scheme-select',
+                              'color-scheme-import-input', 'color-scheme-export-button'):
+            self.assertIn(appearance_id, index)
         for legacy_section_id in ('material-tool', 'supports-tool', 'loads-tool'):
             self.assertNotIn(f'id="{legacy_section_id}"', index)
         self.assertTrue(harness.is_file())

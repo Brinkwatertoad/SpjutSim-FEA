@@ -1603,8 +1603,9 @@ snapshot to the analysis. Replacing or deleting a user entry must be explicit;
 built-in entries cannot be modified or deleted. User-created entries default
 their Source metadata to `User`, following the SpjutSim-Truss convention.
 
-Material authoring is reached by selecting the compact Model row. Applying or
-removing a material updates that row immediately and announces the outcome.
+Material authoring is reached by selecting the compact Material row immediately
+below Model. Applying or removing a material updates that row immediately and
+announces the outcome.
 
 #### 15.2.2 Support and load authoring
 
@@ -1658,6 +1659,22 @@ At minimum preserve/use semantic roles for:
 - support.
 
 Three.js materials/glyphs should obtain these colors from resolved application theme values so viewport semantics remain consistent with the rest of the UI.
+
+Color-scheme data uses the copied SpjutSim UI Kit portable library contract.
+Ship FEA Classic (the original FEA appearance), Light Mode, Dark Mode, and Vivid
+as ordered factory schemes. Persist one active scheme identifier plus the
+versioned library overlay; corrupt or unavailable storage falls back safely and
+must not prevent in-memory use.
+
+The shared eight authored roles are `appBackground`, `surface`, `text`,
+`accent`, `danger`, `canvasBackground`, `canvasGeometry`, and `selection`.
+Resolve derived roles through the portable contract. The `fea` extension
+namespace requires `load`, `support`, `axisX`, `axisY`, and `axisZ`; portable
+imports that omit them receive deterministic FEA Classic fallbacks. Appearance
+settings select schemes and import/export strict portable version-3 documents
+using the `.spjutsim-color-scheme.json` suffix. Applying a scheme updates CSS
+roles and therefore causes the viewport's theme observer to rebuild semantic
+Three.js materials. Numerical result colormaps remain unchanged.
 
 Result contour colormaps are separate from UI theme roles; they must remain numerically meaningful and include a legend.
 

@@ -33,7 +33,8 @@ have distinct numerical/browser acceptance evidence.
 - Complete: Truss-compatible deformation animation.
 - Complete: single-hierarchy Setup pane with Model-owned CAD import.
 - Complete: transactional replacement-model setup transfer.
-- Next: UI Kit-compatible factory/imported color schemes.
+- Complete: UI Kit-compatible factory/imported color schemes.
+- Complete: release regression and direct-local verification.
 
 ## Constraints
 

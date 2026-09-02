@@ -1,6 +1,8 @@
 (function (root) {
   'use strict';
   var api = root.SpjutsimFEA;
+  var colorSchemes = new api.FEAColorSchemes((function () { try { return root.localStorage; } catch (error) { return null; } }()), document.documentElement);
+  colorSchemes.bindControls();
   var app = new api.AppController({ document: api.createAnalysisDocument() });
   var ui = new api.UIController(app);
   var viewport = new api.ViewportController(document.getElementById('viewport'));

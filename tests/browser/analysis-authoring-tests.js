@@ -344,6 +344,43 @@
     'completed replacement transfer was not installed atomically');
   }
 
+  function testFEAColorSchemes() {
+    var storage = memoryStorage();
+    var rootElement = document.createElement('div');
+    var schemes = new api.FEAColorSchemes(storage, rootElement);
+    var factories = api.FACTORY_COLOR_SCHEMES;
+    assert(factories.map(function (entry) { return entry.id; }).join('|') === 'fea-classic|light|dark|vivid',
+      'FEA factory color schemes did not retain the approved source order');
+    assert(schemes.activeEntry().id === 'fea-classic' && schemes.activePalette().extensions.fea.load === '#ef4444' &&
+      schemes.activePalette().extensions.fea.support === '#22c55e',
+    'FEA Classic did not preserve the existing load/support semantic colors');
+    schemes.select('light');
+    assert(rootElement.dataset.colorScheme === 'light' && rootElement.style.getPropertyValue('--ui-color-bg') === '#f6f4ef' &&
+      rootElement.style.getPropertyValue('--ui-color-axis-z') !== '',
+    'selected scheme did not apply shared and FEA extension roles to CSS');
+    assert(storage.getItem('spjutsim-fea-color-scheme-active') === 'light', 'active color scheme was not persisted');
+    var imported = schemes.importDocument({
+      format: 'spjutsim-color-schemes', version: 3,
+      schemes: [{ id: 'portable-test', label: 'Portable test', authored: {
+        appBackground: '#101010', surface: '#202020', text: '#f0f0f0', accent: '#abcdef', danger: '#ff0000',
+        canvasBackground: '#080808', canvasGeometry: '#dddddd', selection: '#00aaff'
+      } }]
+    });
+    assert(imported.importedSchemeIds.length === 1 && schemes.activeEntry().custom &&
+      schemes.activePalette().extensions.fea.load === '#ef4444',
+    'portable import did not become active or receive deterministic FEA role fallbacks');
+    var exported = schemes.exportActive();
+    assert(exported.filename.indexOf('.spjutsim-color-scheme.json') > 0 &&
+      api.PortableUIColorSchemes.parseSchemeDocument(exported.text).version === 3,
+    'active scheme did not export as a portable version-3 document');
+    expectError(function () { schemes.importDocument({ format: 'wrong', version: 3, schemes: [] }); }, 'Unsupported portable');
+    var failingStorage = { getItem: function () { return null; }, setItem: function () { throw new Error('blocked'); } };
+    var inMemory = new api.FEAColorSchemes(failingStorage, document.createElement('div'));
+    inMemory.select('dark');
+    assert(inMemory.activeEntry().id === 'dark' && inMemory.storageWarning.indexOf('active') !== -1,
+      'storage failure prevented an in-memory color scheme change');
+  }
+
   function testSetupInspectorSummaries() {
     var state = api.createAnalysisDocument();
     state.geometry = cubeGeometry('cube-summary');
@@ -682,6 +719,7 @@
     testDistributedSurfaceGlyphSampling();
     testDeformationAnimationCycle();
     testReplacementMigrationContract();
+    testFEAColorSchemes();
     testSetupInspectorSummaries();
     testSetupInspectorMarkup();
     expectError(testControllerAndProjection, 'only once');

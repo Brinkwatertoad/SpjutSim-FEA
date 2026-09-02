@@ -139,4 +139,11 @@ green. A compact labeled, theme-colored XYZ triad remains fixed and fully inside
 the lower-left viewport corner while rotating with the camera; its pixel-space
 layout preserves label proportions across resize and aspect-ratio changes.
 
+Settings → Appearance provides FEA Classic, Light Mode, Dark Mode, and Vivid
+schemes using the UI Kit portable color contract. Scheme changes apply live to
+the interface and semantic viewport colors, persist locally when storage is
+available, and support portable version-3 JSON import/export. Imported schemes
+that omit FEA-specific load, support, or XYZ roles receive the documented FEA
+Classic fallbacks.
+
 See `spec.md` for the product specification and `UI_FOUNDATION.md` for the UI-kit provenance pin.

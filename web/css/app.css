@@ -92,6 +92,9 @@ h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing
 .fea-controls-settings { display: grid; gap: 12px; }
 .fea-controls-settings > p { margin: 0 0 4px; color: var(--ui-color-text-muted, #aeb4bf); font-size: 13px; }
 .fea-controls-settings input[type="number"], .fea-controls-settings select { width: 100%; max-width: 180px; }
+.fea-appearance-settings { display: grid; gap: 12px; }
+.fea-appearance-settings > p { margin: 0; color: var(--ui-color-text-muted, #aeb4bf); font-size: 13px; }
+.fea-appearance-settings select { min-width: 180px; }
 .fea-replacement-dialog { width: min(960px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; padding: 16px; border: 1px solid var(--border, #3a3e46); border-radius: 8px; background: var(--surface, #202329); color: var(--text, #f2f3f5); }
 .fea-replacement-header, .fea-replacement-actions { display: flex; align-items: center; gap: 8px; }
 .fea-replacement-header { justify-content: space-between; }

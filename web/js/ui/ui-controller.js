@@ -55,7 +55,9 @@
     this.closeSettingsButton = document.getElementById('close-settings-button');
     this.resetNavigationSettingsButton = document.getElementById('reset-navigation-settings-button');
     this.settingsTabControls = document.getElementById('settings-tab-controls');
+    this.settingsTabAppearance = document.getElementById('settings-tab-appearance');
     this.settingsPanelControls = document.getElementById('settings-panel-controls');
+    this.settingsPanelAppearance = document.getElementById('settings-panel-appearance');
     this.navigationRotateButton = document.getElementById('navigation-rotate-button');
     this.navigationPanButton = document.getElementById('navigation-pan-button');
     this.navigationReverseZoom = document.getElementById('navigation-reverse-zoom');
@@ -252,8 +254,14 @@
       });
     }
     if (this.settingsTabControls && this.settingsPanelControls && root.PortableUISettingsHub) {
+      var settingsKeys = ['controls'];
+      var settingsTabs = [this.settingsTabControls];
+      var settingsPanels = [this.settingsPanelControls];
+      if (this.settingsTabAppearance && this.settingsPanelAppearance) {
+        settingsKeys.push('appearance'); settingsTabs.push(this.settingsTabAppearance); settingsPanels.push(this.settingsPanelAppearance);
+      }
       this.settingsHub = root.PortableUISettingsHub.createSettingsHub({
-        keys: ['controls'], tabs: [this.settingsTabControls], panels: [this.settingsPanelControls]
+        keys: settingsKeys, tabs: settingsTabs, panels: settingsPanels
       });
     }
     if (this.closeSettingsButton) { this.closeSettingsButton.addEventListener('click', function () { self.closeSettings(); }); }

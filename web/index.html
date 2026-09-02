@@ -195,6 +195,7 @@
       <div class="ui-settings-hub">
         <div class="ui-settings-hub-nav" role="tablist" aria-label="Settings categories">
           <button id="settings-tab-controls" type="button" role="tab" aria-selected="true" aria-controls="settings-panel-controls" tabindex="0">Controls</button>
+          <button id="settings-tab-appearance" type="button" role="tab" aria-selected="false" aria-controls="settings-panel-appearance" tabindex="-1">Appearance</button>
         </div>
         <div class="ui-settings-hub-content">
           <div id="settings-panel-controls" role="tabpanel" aria-labelledby="settings-tab-controls">
@@ -207,6 +208,15 @@
               <label class="ui-settings-row" for="navigation-pan-sensitivity"><span>Pan sensitivity</span><input id="navigation-pan-sensitivity" type="number" min="0.1" max="4" step="0.1"></label>
               <label class="ui-settings-row" for="navigation-zoom-sensitivity"><span>Zoom sensitivity</span><input id="navigation-zoom-sensitivity" type="number" min="0.0001" max="0.01" step="0.0001"></label>
               <label class="ui-settings-row" for="navigation-arrow-step"><span>Arrow rotation step (radians)</span><input id="navigation-arrow-step" type="number" min="0.02" max="1" step="0.01"></label>
+            </section>
+          </div>
+          <div id="settings-panel-appearance" role="tabpanel" aria-labelledby="settings-tab-appearance" hidden>
+            <section class="ui-settings-section fea-appearance-settings">
+              <p>Color schemes affect interface and viewport presentation only.</p>
+              <label class="ui-settings-row" for="color-scheme-select"><span>Color scheme</span><select id="color-scheme-select"></select></label>
+              <div class="fea-setup-actions"><button id="color-scheme-import-button" type="button">Import…</button><button id="color-scheme-export-button" type="button">Export…</button></div>
+              <input id="color-scheme-import-input" type="file" accept=".json,.spjutsim-color-scheme.json" hidden>
+              <p id="color-scheme-status" role="status" aria-live="polite"></p>
             </section>
           </div>
         </div>
@@ -227,6 +237,7 @@
     </section>
   </div>
   <script src="ui/color-schemes.js"></script>
+  <script src="js/ui/fea-color-schemes.js"></script>
   <script src="ui/custom-select.js"></script>
   <script src="ui/overflow-menu.js"></script>
   <script src="ui/settings-hub.js"></script>
