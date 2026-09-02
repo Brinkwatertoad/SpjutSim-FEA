@@ -34,7 +34,9 @@ have distinct numerical/browser acceptance evidence.
 - Complete: single-hierarchy Setup pane with Model-owned CAD import.
 - Complete: transactional replacement-model setup transfer.
 - Complete: UI Kit-compatible factory/imported color schemes.
-- Complete: release regression and direct-local verification.
+- In progress: final release regression and direct-local verification. Current
+  follow-up coverage requires Mesh to become an in-place Setup row with an
+  explicit delete action before this item can be marked complete.
 
 ## Constraints
 

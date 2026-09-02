@@ -1,36 +1,37 @@
 # Near-term development plans
 
-Before resuming the numbered roadmap, complete the
-[priority authoring remediation](00-priority-authoring-remediation.md) for
-selection clearing, support/load entry, and the material catalog.
+Tasks 01–10 established the portable geometry path and the first trusted Tet4
+browser vertical slice. Task 11 then consolidated the priority authoring and
+presentation work. Its feature packages are implemented; a final compact-Mesh
+row/delete-mesh regression follow-up is still in progress and remains the gate
+before the production-element roadmap begins.
 
-The current release priority is now [Task 11: Complete priority release
-features](11-priority-release-features.md). Its compact setup inspector is the
-first deliverable and supersedes the scattered authoring layout assumed by the
-older plans. Follow the approved design and package plans linked from Task 11
-before returning to deferred solver breadth.
-
-Execute these plans in order. Tasks 01–05 establish the portable geometry and
-meshing path. Tasks 06–10 complete the first trusted Tet4 browser vertical
-slice, including viewport interaction and initial result visualization.
+Execute the remaining plans in order. Tasks 12–13 complete Milestone 3 by
+making Tet10 the production mesh/solve path and calibrating its resource model.
+Tasks 14–15 complete the remaining Milestone 4 trust layer and v1.0 release
+evidence.
 
 1. [x] [Complete the portable runtime foundation](01-portable-runtime-foundation.md)
 2. [x] [Prove the Gmsh local-runtime path](02-gmsh-local-runtime-spike.md)
 3. [x] [Implement STEP import and the geometry contract](03-step-import-and-geometry.md)
 4. [x] [Render geometry and select CAD faces](04-preview-rendering-and-face-selection.md)
 5. [x] [Generate and extract a Tet4 mesh](05-tet4-mesh-extraction.md)
-6. [Complete viewport navigation and settings](06-viewport-navigation-and-settings.md)
-7. [Validate and render CAD and mesh surfaces](07-surface-and-mesh-visualization.md)
-8. [Author material, supports, and loads](08-material-support-and-load-authoring.md)
-9. [Implement the trusted Tet4 solver and preflight model](09-trusted-tet4-solver-and-preflight.md)
-10. [Integrate WASM solve and first result views](10-wasm-solve-and-result-views.md)
+6. [x] [Complete viewport navigation and settings](06-viewport-navigation-and-settings.md)
+7. [x] [Validate and render CAD and mesh surfaces](07-surface-and-mesh-visualization.md)
+8. [x] [Author material, supports, and loads](08-material-support-and-load-authoring.md)
+9. [x] [Implement the trusted Tet4 solver and preflight model](09-trusted-tet4-solver-and-preflight.md)
+10. [x] [Integrate WASM solve and first result views](10-wasm-solve-and-result-views.md)
+11. [ ] [Complete priority release features](11-priority-release-features.md) — feature packages complete; final regression follow-up in progress
+12. [ ] [Generate production Tet10 meshes](12-production-tet10-meshing.md)
+13. [ ] [Solve Tet10 models and calibrate resource use](13-tet10-solver-and-resource-calibration.md)
+14. [ ] [Complete factor-of-safety and result trust views](14-factor-of-safety-and-result-trust.md)
+15. [ ] [Deliver convergence, validation, and the v1.0 release gate](15-convergence-validation-and-v1-release.md)
 
 Each task should leave the repository usable from both `file://` and the
 optional HTTP server.
 
-These plans stop at the validated Tet4 vertical slice. Tet10 production
-analysis, calibrated resource limits, complete factor-of-safety/reporting, and
-the convergence/trust workflow remain later work required for v1.0.
-
-The plans defer choices that `spec.md` explicitly leaves benchmark-dependent,
-including production meshing options, quality thresholds, and threaded WASM.
+Do not mark Task 15 complete merely because features exist. Its analytical,
+reference-solver, CAD-corpus, browser-resource, licensing, and direct-local
+acceptance evidence must all pass. Benchmark-dependent choices—quality warning
+thresholds, memory safety factor, solver/preconditioner tuning, and any threaded
+WASM build—are resolved only from the measurements named in Tasks 12–15.
