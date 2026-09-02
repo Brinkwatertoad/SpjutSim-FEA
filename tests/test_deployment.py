@@ -26,6 +26,11 @@ class DeploymentTests(unittest.TestCase):
         ]
         self.assertEqual(oversized, [])
 
+    def test_browser_tab_uses_the_synchronized_fea_icon(self):
+        html = (ROOT / 'web/index.html').read_text(encoding='utf-8')
+        self.assertIn('<link rel="icon" href="assets/icons/fea.svg" type="image/svg+xml">', html)
+        self.assertTrue((ROOT / 'web/assets/icons/fea.svg').is_file())
+
     def test_cloudflare_headers_allow_local_wasm_workers_and_isolate_http(self):
         headers = (ROOT / 'web/_headers').read_text(encoding='utf-8')
         self.assertIn("script-src 'self' 'wasm-unsafe-eval'", headers)

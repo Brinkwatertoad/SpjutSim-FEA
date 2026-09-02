@@ -38,5 +38,6 @@ This file governs the repository unless a more specific `AGENTS.md` exists deepe
 - Keep numerical tolerances explicit and physically justified. Preserve validation, convergence checks, diagnostics, units, precision, and determinism while optimizing.
 - Validate inputs at user, worker, WASM/native, geometry, mesh, and solver boundaries. User-visible failures need stable, actionable errors; solver actions and fallbacks must not be silent.
 - Run focused tests during implementation and the complete applicable suite before handoff. Follow `README.md` for commands, and test direct `file://` startup when changing asset loading, workers, WASM packaging, or script ordering.
+- `web/assets/icons/fea.svg` is synchronized with the central SpjutSim website. After editing either copy, run `npm run sync:icons` from the sibling `SpjutSim` checkout.
 - Review the complete diff once for correctness, unnecessary work, peak-memory regressions, boundary violations, error handling, accessibility, and unintended vendor/generated changes.
 - Update `spec.md` when changing requirements, architecture, protocols, numerical methods, performance targets, or acceptance criteria. Update `README.md` when setup, build, run, or test instructions change.
