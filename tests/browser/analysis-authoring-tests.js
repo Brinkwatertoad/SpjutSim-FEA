@@ -344,16 +344,18 @@
     assert(supportTrigger.getAttribute('aria-expanded') === 'true', 'selected setup row did not expose expanded state');
     assert(supportTrigger.getAttribute('aria-label').indexOf('Support 1') !== -1 && supportTrigger.getAttribute('aria-label').indexOf('1 face') !== -1,
       'setup row accessible name omitted its item summary');
-    authoring.resetSupportForm();
-    assert(document.getElementById('support-list').querySelector('button') && document.getElementById('load-list').querySelector('button'),
-      'authored items were not exposed as keyboard-focusable buttons');
-
-    assert(document.getElementById('support-form').compareDocumentPosition(document.getElementById('support-list')) & Node.DOCUMENT_POSITION_FOLLOWING,
-      'support list was not ordered below its form');
-    assert(document.getElementById('support-status').compareDocumentPosition(document.getElementById('support-list')) & Node.DOCUMENT_POSITION_FOLLOWING,
-      'support list was not ordered below feedback');
-    assert(document.getElementById('load-form').compareDocumentPosition(document.getElementById('load-list')) & Node.DOCUMENT_POSITION_FOLLOWING,
-      'load list was not ordered below its form');
+    assert(document.getElementById('support-form').closest('[data-setup-editor-host]'), 'support form was not mounted in the selected row');
+    supportTrigger.focus();
+    document.getElementById('cancel-support-edit').click();
+    assert(!document.getElementById('support-form').closest('[data-setup-editor-host]'), 'cancel did not close the inline support editor');
+    assert(document.activeElement && document.activeElement.dataset.itemId !== 'support-1' &&
+      document.activeElement.closest('[data-item-id="support-1"]'), 'cancel did not return focus to the support row');
+    supportTrigger = document.querySelector('[data-setup-kind="support"][data-item-id="support-1"] [data-setup-row-trigger]');
+    supportTrigger.click();
+    document.getElementById('setup-add-load-button').click();
+    assert(document.getElementById('load-form').closest('[data-setup-editor-host]'), 'load add form was not mounted inline');
+    assert(!document.getElementById('support-form').closest('[data-setup-editor-host]'), 'two inline editors remained mounted');
+    authoring.closeInspectorRow({ cancelEdit: true });
 
     document.getElementById('support-type').value = 'prescribed-displacement';
     document.getElementById('support-type').dispatchEvent(new Event('change'));
@@ -368,6 +370,22 @@
     assert(document.getElementById('load-type').value === 'pressure', 'load edit did not show the item type');
     authoring.resetLoadForm();
     assert(document.getElementById('load-type').value === 'total-force', 'load add mode did not restore its remembered type');
+
+    var loadItemId = state.loads[0].id;
+    var loadTrigger = document.querySelector('[data-setup-kind="load"][data-item-id="' + loadItemId + '"] [data-setup-row-trigger]');
+    loadTrigger.focus(); loadTrigger.click();
+    document.getElementById('load-pressure').value = '2.25';
+    document.getElementById('load-form').requestSubmit();
+    assert(state.loads[0].pressurePa === 2.25e6, 'inline load save did not update the controller state');
+    assert(!document.getElementById('load-form').closest('[data-setup-editor-host]'), 'successful save did not close the inline editor');
+    assert(document.activeElement && document.activeElement.closest('[data-item-id="' + loadItemId + '"]'), 'save did not return focus to the updated row');
+
+    document.querySelector('[data-setup-kind="load"][data-item-id="' + loadItemId + '"] [data-setup-row-trigger]').click();
+    var removeLoad = document.getElementById('remove-load-item-button');
+    assert(removeLoad, 'inline load editor omitted its remove action');
+    removeLoad.click();
+    assert(state.loads.length === 0, 'inline remove action did not delete the load');
+    assert(document.activeElement === document.getElementById('setup-add-load-button'), 'deleting a row did not return focus to the load add action');
   }
 
   try {

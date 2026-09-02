@@ -14,18 +14,18 @@
     this.removeSavedMaterialButton = byId('remove-saved-material-button');
     this.removeMaterialButton = byId('remove-material-button');
     this.supportForm = byId('support-form');
-    this.supportList = byId('support-list');
     this.supportStatus = byId('support-status');
     this.supportType = byId('support-type');
     this.prescribedFields = byId('prescribed-displacement-fields');
     this.cancelSupportEdit = byId('cancel-support-edit');
+    this.removeSupportItemButton = byId('remove-support-item-button');
     this.loadForm = byId('load-form');
-    this.loadList = byId('load-list');
     this.loadStatus = byId('load-status');
     this.loadType = byId('load-type');
     this.pressureFields = byId('pressure-fields');
     this.forceFields = byId('force-fields');
     this.cancelLoadEdit = byId('cancel-load-edit');
+    this.removeLoadItemButton = byId('remove-load-item-button');
     this.gravityForm = byId('gravity-form');
     this.gravityStatus = byId('gravity-status');
     this.setupInspectorStatus = byId('setup-inspector-status');
@@ -33,6 +33,8 @@
     this.setupSupportList = byId('setup-inspector-support-list');
     this.setupLoadList = byId('setup-inspector-load-list');
     this.setupFormStash = byId('setup-inspector-form-stash');
+    this.addSupportButton = byId('setup-add-support-button');
+    this.addLoadButton = byId('setup-add-load-button');
     this.activeInspectorKind = null;
     this.activeInspectorItemId = null;
     this.activeInspectorFocusReturn = null;
@@ -97,7 +99,8 @@
       if (!self.editingSupportId) { self.lastSupportType = self.supportType.value; }
       self.renderSupportType();
     });
-    this.cancelSupportEdit.addEventListener('click', function () { self.resetSupportForm(); });
+    this.cancelSupportEdit.addEventListener('click', function () { self.closeInspectorRow({ restoreFocus: true, cancelEdit: true }); });
+    this.removeSupportItemButton.addEventListener('click', function () { self.removeActiveSupport(); });
     ['ux', 'uy', 'uz'].forEach(function (axis) {
       byId('support-' + axis + '-enabled').addEventListener('change', function () { self.renderSupportComponents(); });
     });
@@ -106,8 +109,15 @@
       if (!self.editingLoadId) { self.lastLoadType = self.loadType.value; }
       self.renderLoadType();
     });
-    this.cancelLoadEdit.addEventListener('click', function () { self.resetLoadForm(); });
+    this.cancelLoadEdit.addEventListener('click', function () { self.closeInspectorRow({ restoreFocus: true, cancelEdit: true }); });
+    this.removeLoadItemButton.addEventListener('click', function () { self.removeActiveLoad(); });
     this.gravityForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveGravity(); });
+    if (this.addSupportButton) {
+      this.addSupportButton.addEventListener('click', function () { self.openInspectorRow('support', 'new', self.addSupportButton); });
+    }
+    if (this.addLoadButton) {
+      this.addLoadButton.addEventListener('click', function () { self.openInspectorRow('load', 'new', self.addLoadButton); });
+    }
     this.renderSupportType();
     this.renderLoadType();
     this.renderMaterialCatalogOptions();
@@ -234,7 +244,7 @@
       this.materialFeedback = validation.warnings.length
         ? { warning: true, message: validation.warnings[0].message }
         : (saved && saved.storageWarning ? { warning: true, message: saved.storageWarning } : { message: entry ? 'Material applied as an analysis snapshot.' : 'Custom material saved and applied in SI units.' });
-      this.render(this.controller.document);
+      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false });
     } catch (error) {
       this.materialFeedback = { error: true, message: error.message };
       this.render(this.controller.document);
@@ -320,7 +330,20 @@
       else { this.controller.createBoundaryCondition(support); }
       this.supportFeedback = { message: this.editingSupportId ? 'Support updated.' : 'Support added.' };
       this.resetSupportForm(false);
+      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false });
+    } catch (error) {
+      this.supportFeedback = { error: true, message: error.message };
       this.render(this.controller.document);
+    }
+  };
+
+  AnalysisAuthoringUI.prototype.removeActiveSupport = function () {
+    if (!this.editingSupportId) { return; }
+    try {
+      this.controller.removeBoundaryCondition(this.editingSupportId);
+      this.supportFeedback = { message: 'Support removed.' };
+      this.resetSupportForm(false);
+      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false });
     } catch (error) {
       this.supportFeedback = { error: true, message: error.message };
       this.render(this.controller.document);
@@ -349,31 +372,9 @@
     this.supportType.value = this.lastSupportType;
     this.supportForm.querySelector('button[type="submit"]').textContent = 'Add support';
     this.cancelSupportEdit.hidden = true;
+    this.removeSupportItemButton.hidden = true;
     this.renderSupportType();
     if (renderNow !== false) { this.render(this.controller.document); }
-  };
-
-  AnalysisAuthoringUI.prototype.renderAnalysisList = function (list, items, select, remove) {
-    list.replaceChildren();
-    if (!items.length) {
-      var empty = document.createElement('li');
-      empty.className = 'fea-empty-list';
-      empty.textContent = 'None defined.';
-      list.append(empty);
-      return;
-    }
-    items.forEach(function (item) {
-      var row = document.createElement('li');
-      var choose = document.createElement('button');
-      var deleteButton = document.createElement('button');
-      choose.type = 'button'; choose.textContent = item.name + ' · ' + item.faceIds.length + (item.faceIds.length === 1 ? ' face' : ' faces');
-      choose.setAttribute('aria-label', 'Select and edit ' + item.name);
-      choose.addEventListener('click', function () { select(item.id); });
-      deleteButton.type = 'button'; deleteButton.textContent = 'Remove'; deleteButton.dataset.actionIntent = 'danger';
-      deleteButton.setAttribute('aria-label', 'Remove ' + item.name);
-      deleteButton.addEventListener('click', function () { remove(item.id); });
-      row.append(choose, deleteButton); list.append(row);
-    });
   };
 
   AnalysisAuthoringUI.prototype.renderSupports = function (documentState) {
@@ -381,10 +382,8 @@
     if (this.editingSupportId && !documentState.boundaryConditions.some(function (item) { return item.id === self.editingSupportId; })) {
       this.resetSupportForm(false);
     }
-    this.renderAnalysisList(this.supportList, documentState.boundaryConditions,
-      function (id) { self.beginSupportEdit(id); },
-      function (id) { try { self.controller.removeBoundaryCondition(id); if (self.editingSupportId === id) { self.resetSupportForm(false); } self.supportFeedback = null; self.render(self.controller.document); } catch (error) { self.supportFeedback = { error: true, message: error.message }; self.render(self.controller.document); } });
     Array.from(this.supportForm.elements).forEach(function (control) { control.disabled = !documentState.geometry; });
+    this.removeSupportItemButton.hidden = !this.editingSupportId;
     this.renderSupportComponents();
     setFeedback(this.supportStatus, this.supportFeedback, !documentState.geometry
       ? 'Import geometry and select faces to add a support.'
@@ -414,7 +413,20 @@
       else { this.controller.createLoad(load); }
       this.loadFeedback = { message: this.editingLoadId ? 'Load updated.' : 'Load added.' };
       this.resetLoadForm(false);
+      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false });
+    } catch (error) {
+      this.loadFeedback = { error: true, message: error.message };
       this.render(this.controller.document);
+    }
+  };
+
+  AnalysisAuthoringUI.prototype.removeActiveLoad = function () {
+    if (!this.editingLoadId) { return; }
+    try {
+      this.controller.removeLoad(this.editingLoadId);
+      this.loadFeedback = { message: 'Load removed.' };
+      this.resetLoadForm(false);
+      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false });
     } catch (error) {
       this.loadFeedback = { error: true, message: error.message };
       this.render(this.controller.document);
@@ -440,6 +452,7 @@
     this.loadType.value = this.lastLoadType;
     this.loadForm.querySelector('button[type="submit"]').textContent = 'Add load';
     this.cancelLoadEdit.hidden = true;
+    this.removeLoadItemButton.hidden = true;
     this.renderLoadType();
     if (renderNow !== false) { this.render(this.controller.document); }
   };
@@ -449,10 +462,8 @@
     if (this.editingLoadId && !documentState.loads.some(function (item) { return item.id === self.editingLoadId; })) {
       this.resetLoadForm(false);
     }
-    this.renderAnalysisList(this.loadList, documentState.loads,
-      function (id) { self.beginLoadEdit(id); },
-      function (id) { try { self.controller.removeLoad(id); if (self.editingLoadId === id) { self.resetLoadForm(false); } self.loadFeedback = null; self.render(self.controller.document); } catch (error) { self.loadFeedback = { error: true, message: error.message }; self.render(self.controller.document); } });
     Array.from(this.loadForm.elements).forEach(function (control) { control.disabled = !documentState.geometry; });
+    this.removeLoadItemButton.hidden = !this.editingLoadId;
     setFeedback(this.loadStatus, this.loadFeedback, !documentState.geometry
       ? 'Import geometry and select faces to add a load.'
       : (documentState.loads.length ? documentState.loads.length + ' load item(s) defined.' : 'Select one or more faces, then add a load.'));
@@ -484,23 +495,80 @@
   };
 
   AnalysisAuthoringUI.prototype.openInspectorRow = function (kind, itemId, opener) {
+    if (this.activeInspectorKind === kind && this.activeInspectorItemId === itemId) {
+      this.closeInspectorRow({ restoreFocus: true, cancelEdit: true });
+      return;
+    }
+    if (this.activeInspectorKind === 'support') { this.resetSupportForm(false); }
+    if (this.activeInspectorKind === 'load') { this.resetLoadForm(false); }
+    this.returnEditorsToStash();
+    if (kind === 'support' && itemId === 'new') { this.resetSupportForm(false); }
+    if (kind === 'load' && itemId === 'new') { this.resetLoadForm(false); }
     this.activeInspectorKind = kind;
     this.activeInspectorItemId = itemId;
     this.activeInspectorFocusReturn = opener || null;
-    if (kind === 'support') { this.beginSupportEdit(itemId); }
-    else if (kind === 'load') { this.beginLoadEdit(itemId); }
+    if (kind === 'support' && itemId !== 'new') { this.beginSupportEdit(itemId); }
+    else if (kind === 'load' && itemId !== 'new') { this.beginLoadEdit(itemId); }
     else { this.render(this.controller.document); }
+  };
+
+  AnalysisAuthoringUI.prototype.returnEditorsToStash = function () {
+    var stash = this.setupFormStash;
+    if (!stash) { return; }
+    ['material-editor', 'support-editor', 'load-editor', 'gravity-editor'].forEach(function (id) {
+      var editor = byId(id);
+      if (editor && editor.parentElement !== stash) { stash.append(editor); }
+    });
+  };
+
+  AnalysisAuthoringUI.prototype.closeInspectorRow = function (options) {
+    var kind = this.activeInspectorKind;
+    var itemId = this.activeInspectorItemId;
+    var restoreFocus = options && options.restoreFocus;
+    if (options && options.cancelEdit) {
+      if (kind === 'support') { this.resetSupportForm(false); }
+      if (kind === 'load') { this.resetLoadForm(false); }
+    }
+    this.returnEditorsToStash();
+    this.activeInspectorKind = null;
+    this.activeInspectorItemId = null;
+    this.activeInspectorFocusReturn = null;
+    this.render(this.controller.document);
+    if (restoreFocus) {
+      var selector = '[data-setup-kind="' + kind + '"][data-item-id="' + itemId + '"] [data-setup-row-trigger]';
+      var target = document.querySelector(selector);
+      if (!target) { target = kind === 'support' ? this.addSupportButton : (kind === 'load' ? this.addLoadButton : null); }
+      if (target) { target.focus(); }
+    }
+  };
+
+  AnalysisAuthoringUI.prototype.mountInlineEditor = function (kind, itemId) {
+    var host = document.querySelector('[data-setup-kind="' + kind + '"][data-item-id="' + itemId + '"] [data-setup-editor-host]');
+    var editor = byId(kind === 'model' ? 'material-editor' : (kind + '-editor'));
+    if (!host || !editor) { return; }
+    host.append(editor);
+    if (kind === 'load' && itemId === 'new') { host.append(byId('gravity-editor')); }
   };
 
   AnalysisAuthoringUI.prototype.renderSetupInspector = function (documentState) {
     var self = this;
     var groups;
     if (!this.setupModelList || !root.SpjutsimFEA.buildSetupInspectorRows) { return; }
+    this.returnEditorsToStash();
     groups = { model: this.setupModelList, support: this.setupSupportList, load: this.setupLoadList, gravity: this.setupLoadList };
-    Object.keys(groups).forEach(function (kind, index, kinds) {
-      if (kinds.indexOf(kind) === index) { groups[kind].replaceChildren(); }
-    });
-    root.SpjutsimFEA.buildSetupInspectorRows(documentState).forEach(function (definition) {
+    this.setupModelList.replaceChildren();
+    this.setupSupportList.replaceChildren();
+    this.setupLoadList.replaceChildren();
+    var definitions = root.SpjutsimFEA.buildSetupInspectorRows(documentState).slice();
+    if (this.activeInspectorItemId === 'new') {
+      definitions.push({
+        kind: this.activeInspectorKind, itemId: 'new',
+        primaryText: this.activeInspectorKind === 'support' ? 'New support' : 'New load',
+        secondaryText: this.activeInspectorKind === 'support' ? 'Selected CAD faces' : 'Pressure or total force',
+        metaText: 'Not saved', ariaLabel: this.activeInspectorKind === 'support' ? 'New support' : 'New load'
+      });
+    }
+    definitions.forEach(function (definition) {
       var list = groups[definition.kind];
       var item = document.createElement('li');
       var trigger = document.createElement('button');
@@ -541,6 +609,7 @@
         empty.className = 'fea-empty-list'; empty.textContent = emptyState.text; emptyState.list.append(empty);
       }
     });
+    if (this.activeInspectorKind) { this.mountInlineEditor(this.activeInspectorKind, this.activeInspectorItemId); }
   };
 
   AnalysisAuthoringUI.prototype.render = function (documentState) {

@@ -70,10 +70,9 @@
                   <label class="fea-component"><input id="support-uy-enabled" type="checkbox"><span>Uy</span><input id="support-uy" type="number" step="any" aria-label="Uy displacement in millimeters"></label>
                   <label class="fea-component"><input id="support-uz-enabled" type="checkbox"><span>Uz</span><input id="support-uz" type="number" step="any" aria-label="Uz displacement in millimeters"></label>
                 </fieldset>
-                <button class="ui-button-primary" type="submit">Add support</button><button id="cancel-support-edit" type="button" hidden>Cancel edit</button>
+                <button class="ui-button-primary" type="submit">Add support</button><button id="cancel-support-edit" type="button" hidden>Cancel edit</button><button id="remove-support-item-button" type="button" data-action-intent="danger" hidden>Remove support</button>
               </form>
               <p id="support-status" role="status" aria-live="polite">Import geometry and select faces to add a support.</p>
-              <ul id="support-list" class="fea-analysis-list" aria-label="Defined supports"></ul>
             </div>
             <div id="load-editor">
               <p class="fea-help">Positive pressure acts inward. Total force is distributed by face area.</p>
@@ -85,10 +84,9 @@
                   <label for="load-fy">Fy</label><input id="load-fy" type="number" step="any">
                   <label for="load-fz">Fz</label><input id="load-fz" type="number" step="any">
                 </fieldset>
-                <button class="ui-button-primary" type="submit">Add load</button><button id="cancel-load-edit" type="button" hidden>Cancel edit</button>
+                <button class="ui-button-primary" type="submit">Add load</button><button id="cancel-load-edit" type="button" hidden>Cancel edit</button><button id="remove-load-item-button" type="button" data-action-intent="danger" hidden>Remove load</button>
               </form>
               <p id="load-status" role="status" aria-live="polite">Import geometry and select faces to add a load.</p>
-              <ul id="load-list" class="fea-analysis-list" aria-label="Defined loads"></ul>
             </div>
             <div id="gravity-editor">
               <form id="gravity-form" class="fea-gravity-form" novalidate>
