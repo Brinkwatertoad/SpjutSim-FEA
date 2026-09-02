@@ -1709,14 +1709,28 @@ The preview mesh must preserve a face-to-triangle map for picking.
 
 ### 15.7 Loads/support glyphs
 
-Display:
+Distribute support and load glyphs deterministically over each selected face
+using triangle area and viewport-relative spacing, with one through twelve
+samples per usable face. Barycentric sample positions lie on actual preview or
+mesh triangles; do not use a face bounding-box center.
 
-- fixed-support symbols or highlighted faces;
-- pressure arrows/normals;
-- force arrows;
-- gravity direction indicator.
+Load and gravity arrows use thin cylindrical shafts and conical heads. A load
+arrow's tip touches its sampled surface point and its shaft extends opposite the
+applied direction. Pressure follows each triangle's inward local normal; total
+force keeps its normalized global direction. Support glyphs use the same
+primitive family and show the enabled global X/Y/Z components. Glyph count and
+size are visual only and never encode magnitude.
 
-Glyph scaling is visual only and must not imply magnitude without a numeric label.
+The default semantic load color is red and support color is green. Resolve both
+through theme roles and dispose replaced geometry/material resources.
+
+### 15.7.1 Viewport axis triad
+
+Render labeled X/Y/Z axes in a dedicated orthographic overlay at a fixed viewport
+corner. Apply inverse camera rotation so the triad follows view orientation but
+does not move with model pan, fit, or zoom. Clear depth between the model and
+overlay passes, exclude the overlay from picking, and resolve X/Y/Z colors from
+semantic theme roles.
 
 ### 15.8 Units
 

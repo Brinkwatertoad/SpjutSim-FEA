@@ -120,4 +120,10 @@ The compact Supports group continuously reports provisional preview or exact
 mesh rank across Tx/Ty/Tz/Rx/Ry/Rz, explicitly identifying free or coupled rigid
 motion. Native solver diagnostics remain the final singularity check.
 
+Loads and supports are shown at deterministic, area-aware samples across their
+actual selected surfaces. Load-arrow tips touch the surface; all vector arrows
+use thin cylinder shafts with cone heads. Default load/support roles are red and
+green. A labeled, theme-colored XYZ triad remains fixed in the lower-left
+viewport corner while rotating with the camera.
+
 See `spec.md` for the product specification and `UI_FOUNDATION.md` for the UI-kit provenance pin.
