@@ -118,7 +118,7 @@
   function testGeometryContractAndInvalidation() {
     var geometry = validGeometry();
     var controller = new api.AppController({ document: api.createAnalysisDocument() });
-    controller.document.boundaryConditions = [{ type: 'fixed' }];
+    controller.document.boundaryConditions = [{ type: 'support', componentsM: { x: 0, y: 0, z: 0 } }];
     controller.document.loads = [{ type: 'pressure' }];
     controller.document.meshMetadata = { nodeCount: 4 };
     controller.document.results = { displacement: 1 };
@@ -186,7 +186,7 @@
     controller.replaceGeometry(validGeometry(), source);
     controller.replaceSelectedFaces(['opaque-face']);
     controller.document.material = { name: 'Test', youngsModulusPa: 1e9, poissonsRatio: 0.25 };
-    controller.document.boundaryConditions = [{ id: 'support-1', name: 'Support 1', type: 'fixed', faceIds: ['opaque-face'] }];
+    controller.document.boundaryConditions = [{ id: 'support-1', name: 'Support 1', type: 'support', faceIds: ['opaque-face'], componentsM: { x: 0, y: 0, z: 0 } }];
     controller.document.loads = [{ id: 'load-1', name: 'Load 1', type: 'total-force', forceN: [1, 2, 3], faceIds: ['opaque-face'] }];
     controller.completeMeshGeneration(validVolumeMesh());
     controller.document.results = { solved: true };

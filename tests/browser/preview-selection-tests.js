@@ -157,7 +157,7 @@
         'shaded-with-edges display style was not restored in Model view');
       overlayState = {
         geometry: geometry, mesh: mesh,
-        boundaryConditions: [{ id: 'support', name: 'Fixed', type: 'fixed', faceIds: [geometry.faceIds[0]] }],
+        boundaryConditions: [{ id: 'support', name: 'Fixed', type: 'support', faceIds: [geometry.faceIds[0]], componentsM: { x: 0, y: 0, z: 0 } }],
         loads: [{ id: 'load', name: 'Force', type: 'total-force', faceIds: [geometry.faceIds[1]], forceN: [1, 0, 0] }],
         gravity: { enabled: true, accelerationMS2: [0, 0, -9.80665] }
       };

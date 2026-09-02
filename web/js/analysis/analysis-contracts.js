@@ -3,7 +3,7 @@
 
   /** @typedef {'youngsModulusPa'|'densityKgM3'|'strengthPa'|'displacementM'|'pressurePa'|'forceN'} EngineeringQuantity */
   /** @typedef {{name?: string, youngsModulusPa: number, poissonsRatio: number, densityKgM3?: number, tensileYieldPa?: number, compressiveYieldPa?: number, ultimateTensilePa?: number, ultimateCompressivePa?: number}} IsotropicMaterial */
-  /** @typedef {{id: string, name: string, type: 'fixed'|'prescribed-displacement', faceIds: string[], uxM?: number, uyM?: number, uzM?: number}} BoundaryCondition */
+  /** @typedef {{id: string, name: string, type: 'support', faceIds: string[], componentsM: {x?: number, y?: number, z?: number}}} BoundaryCondition */
   /** @typedef {{id: string, name: string, type: 'pressure'|'total-force', faceIds: string[], pressurePa?: number, direction?: 'surface-normal', forceN?: number[]}} SurfaceLoad */
   /** @typedef {{enabled: boolean, accelerationMS2: number[]}} GravityLoad */
 
@@ -124,24 +124,32 @@
     var value = base.value;
     var constrainedCount = 0;
     var errors = base.errors;
-    if (!item || (item.type !== 'fixed' && item.type !== 'prescribed-displacement')) {
-      errors.push(issue('INVALID_SUPPORT_TYPE', 'Choose Fixed or Prescribed displacement.', 'type'));
+    if (!item || item.type !== 'support') {
+      errors.push(issue('INVALID_SUPPORT_TYPE', 'Enter a component-based support.', 'type'));
       return result(value, errors);
     }
-    value.type = item.type;
-    if (item.type === 'prescribed-displacement') {
-      ['uxM', 'uyM', 'uzM'].forEach(function (component) {
-        if (item[component] === undefined) { return; }
-        constrainedCount += 1;
-        if (!Number.isFinite(item[component])) {
-          errors.push(issue('INVALID_DISPLACEMENT_COMPONENT', 'Every enabled displacement component needs a finite value.', component));
-        } else {
-          value[component] = item[component];
-        }
-      });
-      if (constrainedCount === 0) {
-        errors.push(issue('DISPLACEMENT_COMPONENT_REQUIRED', 'Enable and enter at least one prescribed displacement component.', 'type'));
+    value.type = 'support';
+    value.componentsM = {};
+    if (!item.componentsM || typeof item.componentsM !== 'object' || Array.isArray(item.componentsM)) {
+      errors.push(issue('DISPLACEMENT_COMPONENT_REQUIRED', 'Enable and enter at least one support component.', 'componentsM'));
+      return result(value, errors);
+    }
+    Object.keys(item.componentsM).forEach(function (axis) {
+      if (['x', 'y', 'z'].indexOf(axis) === -1) {
+        errors.push(issue('INVALID_DISPLACEMENT_COMPONENT', 'Support components must use global X, Y, or Z.', 'componentsM'));
       }
+    });
+    ['x', 'y', 'z'].forEach(function (axis) {
+      if (item.componentsM[axis] === undefined) { return; }
+      constrainedCount += 1;
+      if (!Number.isFinite(item.componentsM[axis])) {
+        errors.push(issue('INVALID_DISPLACEMENT_COMPONENT', 'Every enabled support component needs a finite value.', 'componentsM.' + axis));
+      } else {
+        value.componentsM[axis] = item.componentsM[axis];
+      }
+    });
+    if (constrainedCount === 0) {
+      errors.push(issue('DISPLACEMENT_COMPONENT_REQUIRED', 'Enable and enter at least one support component.', 'componentsM'));
     }
     return result(value, errors);
   }

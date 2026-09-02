@@ -29,8 +29,8 @@
     }).sort(function (a, b) { return maximum ? b.coordinate - a.coordinate : a.coordinate - b.coordinate; })[0].faceId;
   }
   function addPrescribed(faceId, component) {
-    var definition = { name: component.toUpperCase() + ' symmetry', type: 'prescribed-displacement' };
-    definition[component + 'M'] = 0;
+    var definition = { name: component.toUpperCase() + ' symmetry', type: 'support', componentsM: {} };
+    definition.componentsM[component.slice(1)] = 0;
     controller.replaceSelectedFaces([faceId]);
     controller.createBoundaryCondition(definition);
   }

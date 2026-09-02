@@ -313,8 +313,8 @@
   };
 
   AnalysisAuthoringUI.prototype.renderSupportType = function () {
-    var prescribed = this.supportType.value === 'prescribed-displacement';
-    this.prescribedFields.hidden = !prescribed;
+    var custom = this.supportType.value === 'custom';
+    this.prescribedFields.hidden = !custom;
     this.renderSupportComponents();
   };
 
@@ -327,13 +327,16 @@
 
   AnalysisAuthoringUI.prototype.readSupport = function () {
     var support = {
-      type: this.supportType.value,
+      type: 'support',
+      componentsM: {},
       faceIds: this.controller.document.selectedFaceIds.slice()
     };
-    if (support.type === 'prescribed-displacement') {
+    if (this.supportType.value === 'fixed') {
+      support.componentsM = { x: 0, y: 0, z: 0 };
+    } else {
       ['ux', 'uy', 'uz'].forEach(function (axis) {
         if (byId('support-' + axis + '-enabled').checked) {
-          support[axis + 'M'] = root.SpjutsimFEA.displayToSI('displacementM', readNumber('support-' + axis, axis.toUpperCase() + ' displacement'));
+          support.componentsM[axis.slice(1)] = root.SpjutsimFEA.displayToSI('displacementM', readNumber('support-' + axis, axis.toUpperCase() + ' displacement'));
         }
       });
     }
@@ -372,9 +375,9 @@
     if (!item) { return; }
     this.editingSupportId = id;
     this.controller.selectBoundaryCondition(id);
-    this.supportType.value = item.type;
+    this.supportType.value = ['x', 'y', 'z'].every(function (axis) { return item.componentsM[axis] === 0; }) ? 'fixed' : 'custom';
     ['ux', 'uy', 'uz'].forEach(function (axis) {
-      var value = item[axis + 'M'];
+      var value = item.componentsM[axis.slice(1)];
       byId('support-' + axis + '-enabled').checked = value !== undefined;
       byId('support-' + axis).value = value === undefined ? '' : String(root.SpjutsimFEA.siToDisplay('displacementM', value));
     });

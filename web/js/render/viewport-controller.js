@@ -727,7 +727,7 @@
       var direction = new root.THREE.Vector3().fromArray(descriptor.direction).normalize();
       var position = new root.THREE.Vector3().fromArray(descriptor.positionM);
       var object;
-      if (descriptor.type === 'fixed') {
+      if (descriptor.type === 'support') {
         object = new root.THREE.Mesh(
           new root.THREE.ConeGeometry(glyphLength * 0.22, glyphLength * 0.5, 10),
           new root.THREE.MeshBasicMaterial({ color: supportColor, depthTest: false })
@@ -738,7 +738,7 @@
         if (descriptor.type === 'pressure') { position.addScaledVector(direction, -glyphLength * 0.8); }
         object = new root.THREE.ArrowHelper(
           direction, position, glyphLength,
-          descriptor.type === 'prescribed-displacement' ? supportColor : loadColor,
+          loadColor,
           glyphLength * 0.32, glyphLength * 0.16
         );
         object.line.material.depthTest = false;

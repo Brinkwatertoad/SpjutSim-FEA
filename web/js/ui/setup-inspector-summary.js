@@ -36,17 +36,14 @@
   }
 
   function summarizeSupportRow(item) {
-    var components;
-    if (item.type === 'fixed') {
-      components = 'Fixed · X, Y, Z';
-    } else {
-      components = ['x', 'y', 'z'].filter(function (axis) {
-        return item['u' + axis + 'M'] !== undefined;
-      }).map(function (axis) {
-        var valueMm = root.SpjutsimFEA.siToDisplay('displacementM', item['u' + axis + 'M']);
-        return axis.toUpperCase() + ' ' + formatNumber(valueMm) + ' mm';
-      }).join(' · ');
-    }
+    var fixed = ['x', 'y', 'z'].every(function (axis) { return item.componentsM[axis] === 0; });
+    var components = ['x', 'y', 'z'].filter(function (axis) {
+      return item.componentsM[axis] !== undefined;
+    }).map(function (axis) {
+      var valueMm = root.SpjutsimFEA.siToDisplay('displacementM', item.componentsM[axis]);
+      return axis.toUpperCase() + ' ' + formatNumber(valueMm) + ' mm';
+    }).join(' · ');
+    if (fixed) { components = 'Fixed · X, Y, Z'; }
     return row('support', item.id, item.name, components, faceCountText(item.faceIds));
   }
 

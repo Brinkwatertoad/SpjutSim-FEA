@@ -61,9 +61,24 @@ function validateInput(input) {
     throw diagnostic('MATERIAL_INVALID', 'preflight', 'Enter valid isotropic material properties before solving.');
   }
   input.boundaryConditions.forEach(function (condition) {
-    if (!(condition.nodeIndices instanceof Uint32Array) || !condition.nodeIndices.length) {
+    var componentCount = 0;
+    if (!condition || condition.type !== 'support' || !condition.componentsM ||
+        typeof condition.componentsM !== 'object' || Array.isArray(condition.componentsM)) {
+      throw diagnostic('INVALID_CONSTRAINT', 'preflight', 'A support has invalid global components.');
+    }
+    ['x', 'y', 'z'].forEach(function (axis) {
+      if (condition.componentsM[axis] === undefined) { return; }
+      componentCount += 1;
+      if (!Number.isFinite(condition.componentsM[axis])) {
+        throw diagnostic('INVALID_CONSTRAINT', 'preflight', 'A support component is not finite.');
+      }
+    });
+    if (!componentCount || !(condition.nodeIndices instanceof Uint32Array) || !condition.nodeIndices.length) {
       throw diagnostic('INVALID_CONSTRAINT', 'preflight', 'A support has no mesh nodes.');
     }
+    condition.nodeIndices.forEach(function (node) {
+      if (node >= nodeCount) { throw diagnostic('MESH_INVALID_INDEX', 'preflight', 'A support references a missing mesh node.'); }
+    });
   });
   input.loads.forEach(function (load) {
     if (!(load.triangleConnectivity instanceof Uint32Array) || !load.triangleConnectivity.length ||
@@ -112,8 +127,8 @@ function checkNative(Module, context, status, stage) {
 function buildConstraints(input) {
   var entries = [];
   input.boundaryConditions.forEach(function (condition) {
-    var components = condition.type === 'fixed' ? [[0, 0], [1, 0], [2, 0]] :
-      [[0, condition.uxM], [1, condition.uyM], [2, condition.uzM]].filter(function (item) { return item[1] !== undefined; });
+    var components = [[0, condition.componentsM.x], [1, condition.componentsM.y], [2, condition.componentsM.z]]
+      .filter(function (item) { return item[1] !== undefined; });
     condition.nodeIndices.forEach(function (node) {
       components.forEach(function (component) { entries.push([node * 3 + component[0], component[1]]); });
     });

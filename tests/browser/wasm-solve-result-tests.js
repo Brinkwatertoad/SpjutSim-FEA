@@ -32,7 +32,7 @@
     documentState.meshMetadata = { statistics: documentState.mesh.statistics, quality: documentState.mesh.quality,
       memoryInputs: documentState.mesh.memoryInputs };
     documentState.material = { youngsModulusPa: 210e9, poissonsRatio: 0.3, densityKgM3: 7850 };
-    documentState.boundaryConditions = [{ id: 'support-1', name: 'Fixed', type: 'fixed', faceIds: ['fixed'] }];
+    documentState.boundaryConditions = [{ id: 'support-1', name: 'Fixed', type: 'support', faceIds: ['fixed'], componentsM: { x: 0, y: 0, z: 0 } }];
     documentState.loads = [{ id: 'load-1', name: 'Load', type: 'total-force', faceIds: ['loaded'], forceN: [0, 0, -1000] }];
     return documentState;
   }

@@ -87,6 +87,18 @@
     assert(!api.validateKnownFaceIds(['face-x-', 'face-x-'], ['face-x-']).valid, 'duplicate faces were accepted');
     assert(!api.validateKnownFaceIds(['missing'], ['face-x-']).valid, 'unknown faces were accepted');
     assert(!api.validateGravity({ enabled: true, accelerationMS2: [0, 0, -9.8] }, null).valid, 'gravity did not require density');
+    var oneAxis = api.validateBoundaryCondition({ id: 'support-x', name: 'Support X', type: 'support',
+      faceIds: ['face-x-'], componentsM: { x: 0.001 } }, ['face-x-']);
+    var twoAxis = api.validateBoundaryCondition({ id: 'support-yz', name: 'Support YZ', type: 'support',
+      faceIds: ['face-x-'], componentsM: { y: 0, z: -0.002 } }, ['face-x-']);
+    assert(oneAxis.valid && oneAxis.value.componentsM.x === 0.001 && twoAxis.valid && twoAxis.value.componentsM.z === -0.002,
+      'one- and two-axis component supports were not retained in SI units');
+    assert(!api.validateBoundaryCondition({ id: 'empty', name: 'Empty', type: 'support', faceIds: ['face-x-'], componentsM: {} }, ['face-x-']).valid,
+      'support without an enabled component was accepted');
+    assert(!api.validateBoundaryCondition({ id: 'bad', name: 'Bad', type: 'support', faceIds: ['face-x-'], componentsM: { x: NaN } }, ['face-x-']).valid,
+      'non-finite support component was accepted');
+    assert(!api.validateBoundaryCondition({ id: 'legacy', name: 'Legacy', type: 'fixed', faceIds: ['face-x-'] }, ['face-x-']).valid,
+      'legacy fixed support contract was accepted');
   }
 
   function testRigidOrientationContracts() {
@@ -209,8 +221,8 @@
     state.geometry = cubeGeometry('cube-summary');
     state.material = { name: 'Steel A36', youngsModulusPa: 200e9, poissonsRatio: 0.3, densityKgM3: 7850 };
     state.boundaryConditions = [
-      { id: 'support-1', name: 'Support 1', type: 'fixed', faceIds: ['face-x-', 'face-y-'] },
-      { id: 'support-2', name: 'Support 2', type: 'prescribed-displacement', faceIds: ['face-z-'], uxM: 0, uzM: 0.001 }
+      { id: 'support-1', name: 'Support 1', type: 'support', faceIds: ['face-x-', 'face-y-'], componentsM: { x: 0, y: 0, z: 0 } },
+      { id: 'support-2', name: 'Support 2', type: 'support', faceIds: ['face-z-'], componentsM: { x: 0, z: 0.001 } }
     ];
     state.loads = [
       { id: 'load-1', name: 'Load 1', type: 'pressure', faceIds: ['face-x+'], pressurePa: 1.5e6 },
@@ -266,20 +278,20 @@
     var pressureId;
     var forceId;
     controller.replaceGeometry(geometry, { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([1]).buffer });
-    expectError(function () { controller.createBoundaryCondition({ name: 'Empty', type: 'fixed' }); }, 'Select at least one');
+    expectError(function () { controller.createBoundaryCondition({ name: 'Empty', type: 'support', componentsM: { x: 0 } }); }, 'Select at least one');
     controller.replaceMaterial({ name: 'Steel', youngsModulusPa: 210e9, poissonsRatio: 0.3, densityKgM3: 7850 });
     controller.completeMeshGeneration(mesh);
     meshReference = documentState.mesh;
     documentState.results = { displacement: true };
     controller.replaceSelectedFaces(['face-x-']);
-    fixedId = controller.createBoundaryCondition({ name: 'Fixed end', type: 'fixed' });
+    fixedId = controller.createBoundaryCondition({ name: 'Fixed end', type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
     assert(documentState.mesh === meshReference && documentState.results === null, 'support edit invalidated mesh or retained results');
     controller.replaceSelectedFaces(['face-x+']);
-    prescribedId = controller.createBoundaryCondition({ name: 'Guide', type: 'prescribed-displacement', uyM: 0 });
+    prescribedId = controller.createBoundaryCondition({ name: 'Guide', type: 'support', componentsM: { y: 0 } });
     expectError(function () {
-      controller.replaceBoundaryCondition(prescribedId, { faceIds: ['face-x+'], name: 'Incomplete', type: 'prescribed-displacement' });
-    }, 'at least one prescribed');
-    controller.replaceBoundaryCondition(prescribedId, { faceIds: ['face-x+', 'face-x+'], name: 'Duplicate', type: 'fixed' });
+      controller.replaceBoundaryCondition(prescribedId, { faceIds: ['face-x+'], name: 'Incomplete', type: 'support', componentsM: {} });
+    }, 'at least one support');
+    controller.replaceBoundaryCondition(prescribedId, { faceIds: ['face-x+', 'face-x+'], name: 'Duplicate', type: 'support', componentsM: { x: 0 } });
   }
 
   function testGeneratedNamesAndSequences() {
@@ -290,13 +302,13 @@
     var load1;
     controller.replaceGeometry(cubeGeometry('cube-names'), { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([7]).buffer });
     controller.replaceSelectedFaces(['face-x-']);
-    support1 = controller.createBoundaryCondition({ name: 'Ignored', type: 'fixed' });
-    support2 = controller.createBoundaryCondition({ type: 'fixed' });
+    support1 = controller.createBoundaryCondition({ name: 'Ignored', type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
+    support2 = controller.createBoundaryCondition({ type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
     controller.removeBoundaryCondition(support1);
     assert(state.boundaryConditions[0].name === 'Support 2', 'support deletion reused or changed a generated number');
-    controller.createBoundaryCondition({ type: 'fixed' });
+    controller.createBoundaryCondition({ type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
     assert(state.boundaryConditions[1].name === 'Support 3', 'support sequence was not monotonic');
-    controller.replaceBoundaryCondition(support2, { name: 'Renamed', type: 'fixed' });
+    controller.replaceBoundaryCondition(support2, { name: 'Renamed', type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
     assert(state.boundaryConditions[0].name === 'Support 2', 'editing changed a generated support name');
     controller.replaceSelectedFaces(['face-x+']);
     load1 = controller.createLoad({ name: 'Ignored', type: 'pressure', pressurePa: 1e6 });
@@ -318,8 +330,8 @@
     controller.replaceGeometry(geometry, { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([2]).buffer });
     controller.replaceMaterial({ name: 'Steel', youngsModulusPa: 210e9, poissonsRatio: 0.3, densityKgM3: 7850 });
     controller.completeMeshGeneration(mesh);
-    controller.replaceSelectedFaces(['face-x-']); ids.fixed = controller.createBoundaryCondition({ name: 'Fixed', type: 'fixed' });
-    controller.replaceSelectedFaces(['face-x+']); ids.prescribed = controller.createBoundaryCondition({ name: 'Prescribed', type: 'prescribed-displacement', uxM: 0.001 });
+    controller.replaceSelectedFaces(['face-x-']); ids.fixed = controller.createBoundaryCondition({ name: 'Fixed', type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
+    controller.replaceSelectedFaces(['face-x+']); ids.prescribed = controller.createBoundaryCondition({ name: 'Prescribed', type: 'support', componentsM: { x: 0.001 } });
     controller.selectBoundaryCondition(ids.fixed);
     assert(state.selectedFaceIds[0] === 'face-x-', 'support face highlight did not round trip');
     controller.replaceSelectedFaces(['face-y-']); ids.pressure = controller.createLoad({ name: 'Pressure', type: 'pressure', pressurePa: 2e6 });
@@ -340,7 +352,7 @@
     controller.completeMeshGeneration(cubeMesh());
     assert(api.buildAnalysisGlyphDescriptors(state).length === glyphs.length, 'glyphs were not stable across remeshes');
     var allFacesState = Object.assign({}, state, {
-      boundaryConditions: [{ id: 'all-faces', name: 'All faces', type: 'fixed', faceIds: geometry.faceIds.slice() }],
+      boundaryConditions: [{ id: 'all-faces', name: 'All faces', type: 'support', faceIds: geometry.faceIds.slice(), componentsM: { x: 0, y: 0, z: 0 } }],
       loads: [], gravity: { enabled: false, accelerationMS2: [0, 0, -9.80665] }
     });
     var expectedNormals = [[-1, 0, 0], [1, 0, 0], [0, -1, 0], [0, 1, 0], [0, 0, -1], [0, 0, 1]];
@@ -442,13 +454,31 @@
     assert(!document.getElementById('support-form').closest('[data-setup-editor-host]'), 'two inline editors remained mounted');
     authoring.closeInspectorRow({ cancelEdit: true });
 
-    document.getElementById('support-type').value = 'prescribed-displacement';
+    document.getElementById('support-type').value = 'custom';
     document.getElementById('support-type').dispatchEvent(new Event('change'));
     authoring.beginSupportEdit(state.boundaryConditions[0].id);
     assert(document.getElementById('support-type').value === 'fixed', 'support edit did not show the item type');
     authoring.resetSupportForm();
-    assert(document.getElementById('support-type').value === 'prescribed-displacement', 'support add mode did not restore its remembered type');
+    assert(document.getElementById('support-type').value === 'custom', 'support add mode did not restore its remembered type');
     assert(document.getElementById('load-type').value === 'pressure', 'support type memory interfered with the load type');
+    supportTrigger = document.querySelector('[data-setup-kind="support"][data-item-id="support-1"] [data-setup-row-trigger]');
+    supportTrigger.click();
+    document.getElementById('support-type').value = 'custom';
+    document.getElementById('support-type').dispatchEvent(new Event('change'));
+    document.getElementById('support-ux-enabled').checked = false;
+    document.getElementById('support-ux-enabled').dispatchEvent(new Event('change'));
+    document.getElementById('support-uy-enabled').checked = true;
+    document.getElementById('support-uy-enabled').dispatchEvent(new Event('change'));
+    document.getElementById('support-uy').value = '0';
+    document.getElementById('support-uz-enabled').checked = true;
+    document.getElementById('support-uz-enabled').dispatchEvent(new Event('change'));
+    document.getElementById('support-uz').value = '1.25';
+    document.getElementById('support-form').requestSubmit();
+    assert(state.boundaryConditions[0].type === 'support' && state.boundaryConditions[0].componentsM.x === undefined &&
+      state.boundaryConditions[0].componentsM.y === 0 && state.boundaryConditions[0].componentsM.z === 0.00125,
+    'custom two-axis support did not save the enabled global components');
+    assert(document.querySelector('[data-setup-kind="support"][data-item-id="support-1"] .fea-setup-row-summary').textContent === 'Y 0 mm · Z 1.25 mm',
+      'compact support row did not show its component values');
     document.getElementById('load-type').value = 'total-force';
     document.getElementById('load-type').dispatchEvent(new Event('change'));
     authoring.beginLoadEdit(state.loads[0].id);
@@ -473,8 +503,8 @@
     assert(document.activeElement === document.getElementById('setup-add-load-button'), 'deleting a row did not return focus to the load add action');
     assert(document.getElementById('setup-inspector-status').textContent === 'Load removed.', 'load removal was not announced');
 
-    controller.replaceSelectedFaces(['face-y-']); controller.createBoundaryCondition({ type: 'fixed' });
-    controller.replaceSelectedFaces(['face-z-']); controller.createBoundaryCondition({ type: 'fixed' });
+    controller.replaceSelectedFaces(['face-y-']); controller.createBoundaryCondition({ type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
+    controller.replaceSelectedFaces(['face-z-']); controller.createBoundaryCondition({ type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
     controller.replaceSelectedFaces(['face-y+']); controller.createLoad({ type: 'pressure', pressurePa: 2e6 });
     controller.replaceSelectedFaces(['face-z+']); controller.createLoad({ type: 'total-force', forceN: [0, 0, -500] });
     controller.replaceGravity({ enabled: true, accelerationMS2: [0, 0, -9.80665] });
