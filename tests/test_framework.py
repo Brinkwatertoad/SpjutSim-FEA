@@ -307,6 +307,11 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn("--ui-color-support", viewport)
         for element_id in ('material-form', 'support-form', 'load-form', 'gravity-form'):
             self.assertIn(element_id, index)
+        for inspector_id in ('setup-inspector', 'setup-inspector-model-list', 'setup-inspector-support-list',
+                             'setup-inspector-load-list', 'setup-inspector-form-stash'):
+            self.assertIn(inspector_id, index)
+        for legacy_section_id in ('material-tool', 'supports-tool', 'loads-tool'):
+            self.assertNotIn(f'id="{legacy_section_id}"', index)
         self.assertTrue(harness.is_file())
         self.assertIn('positive pressure did not integrate inward', coverage)
         self.assertIn('total force was divided by nodes instead of integrated by area', coverage)

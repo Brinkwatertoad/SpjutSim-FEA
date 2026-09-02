@@ -15,6 +15,21 @@ button { font: inherit; }
 .fea-tools .fea-component input[type="checkbox"], .fea-tools .fea-inline-check input { width: auto; }
 .fea-tools .fea-component span { color: var(--ui-color-text, #f4f1ea); }
 .fea-tools .fea-inline-check { display: flex; align-items: center; gap: 7px; }
+.fea-visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
+.fea-setup-inspector { position: sticky; top: 0; z-index: 2; margin: 0 -6px 10px; padding: 8px 6px !important; border: 1px solid var(--border, #3a3e46) !important; border-radius: 6px; background: var(--surface, #202329); }
+.fea-setup-heading, .fea-setup-group-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.fea-setup-heading h2, .fea-setup-group h3 { margin: 0; }
+.fea-setup-group { margin-top: 7px; }
+.fea-setup-group h3 { color: var(--secondary-text, #aeb4bf); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; }
+.fea-setup-group-heading button { min-height: 22px; padding: 1px 7px; font-size: 11px; }
+.fea-setup-list { display: grid; gap: 3px; margin: 3px 0 0; padding: 0; list-style: none; }
+.fea-setup-row { min-width: 0; border: 1px solid var(--ui-color-border-soft, #374151); border-radius: 4px; background: var(--app-background, #17191d); }
+.fea-setup-row-button { display: grid; width: 100%; min-width: 0; padding: 4px 6px; text-align: left; background: transparent; color: inherit; }
+.fea-setup-row-summary, .fea-setup-row-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fea-setup-row-summary { font-size: 11px; }
+.fea-setup-row-meta { color: var(--secondary-text, #aeb4bf); font-size: 10px; }
+.fea-setup-editor { padding: 7px; border-top: 1px solid var(--ui-color-border-soft, #374151); }
+.fea-setup-actions { display: flex; gap: 5px; }
 .fea-analysis-list { display: grid; gap: 5px; margin: 7px 0; padding: 0; list-style: none; }
 .fea-analysis-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px; }
 .fea-analysis-list li button:first-child { overflow: hidden; text-align: left; text-overflow: ellipsis; white-space: nowrap; }

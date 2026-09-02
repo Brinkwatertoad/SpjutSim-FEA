@@ -193,6 +193,20 @@
     assert(api.buildSetupInspectorRows(state).length === 5, 'disabled gravity was included as a setup row');
   }
 
+  function testSetupInspectorMarkup() {
+    [
+      'setup-inspector', 'setup-inspector-status', 'setup-inspector-model-list',
+      'setup-inspector-support-list', 'setup-inspector-load-list',
+      'setup-inspector-form-stash', 'setup-add-support-button', 'setup-add-load-button'
+    ].forEach(function (id) {
+      assert(document.getElementById(id), 'missing inspector node #' + id);
+    });
+    assert(document.querySelectorAll('#material-form').length === 1, 'material form was duplicated');
+    assert(document.querySelectorAll('#support-form').length === 1, 'support form was duplicated');
+    assert(document.querySelectorAll('#load-form').length === 1, 'load form was duplicated');
+    assert(document.querySelectorAll('#gravity-form').length === 1, 'gravity form was duplicated');
+  }
+
   function testControllerAndProjection() {
     var geometry = cubeGeometry('cube-a');
     var documentState = api.createAnalysisDocument();
@@ -348,6 +362,7 @@
     testMaterialCatalog();
     testSymmetricCurvedFaceGlyph();
     testSetupInspectorSummaries();
+    testSetupInspectorMarkup();
     expectError(testControllerAndProjection, 'only once');
     testGeneratedNamesAndSequences();
     runCompleteControllerProjectionTest();
