@@ -122,11 +122,11 @@
     controller.document.loads = [{ type: 'pressure' }];
     controller.document.meshMetadata = { nodeCount: 4 };
     controller.document.results = { displacement: 1 };
-    controller.replaceGeometry(geometry, { sourceName: 'cube.step', stepBytes: new Uint8Array([1]).buffer });
+    controller.replaceGeometry(geometry, { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([1]).buffer });
     assert(api.validateGeometryModel(geometry).valid, 'valid geometry contract was rejected');
     assert(controller.document.boundaryConditions.length === 0 && controller.document.loads.length === 0, 'geometry replacement retained boundary state');
     assert(controller.document.meshMetadata === null && controller.document.results === null, 'geometry replacement retained derived state');
-    assert(controller.stepSource.stepBytes.byteLength === 1, 'canonical STEP source was not retained');
+    assert(controller.geometrySource.sourceBytes.byteLength === 1 && controller.geometrySource.sourceFormat === 'step', 'canonical CAD source was not retained');
     controller.replaceSelectedFaces(['opaque-face']);
     controller.beginMeshGeneration();
     var mesh = validVolumeMesh();
@@ -152,11 +152,17 @@
       assert(error.message === 'Unknown CAD face identifier.', 'unknown FaceId did not report a stable error');
     }
     controller.replaceSelectedFaces(['opaque-face']);
-    controller.replaceGeometry(validGeometry(), { sourceName: 'cube.step', stepBytes: new Uint8Array([2]).buffer });
+    controller.replaceGeometry(validGeometry(), { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([2]).buffer });
     assert(controller.document.selectedFaceIds.length === 0, 'geometry replacement retained selected faces');
     geometry.preview.indices[2] = 3;
     assert(!api.validateGeometryModel(geometry).valid, 'out-of-range preview index was accepted');
-    assert(api.isStepFilename('MODEL.STP') && !api.isStepFilename('model.iges'), 'STEP extension filtering is incorrect');
+    assert(api.sourceFormatForFilename('MODEL.STP') === 'step', 'STP format detection failed');
+    assert(api.sourceFormatForFilename('model.IGES') === 'iges' && api.sourceFormatForFilename('model.igs') === 'iges', 'IGES format detection failed');
+    assert(api.sourceFormatForFilename('model.BREP') === 'brep' && api.sourceFormatForFilename('model.obj') === null, 'BREP or unsupported format detection failed');
+    assert(api.validateImportRequest({ sourceName: 'model.igs', sourceFormat: 'iges', sourceBytes: new Uint8Array([1]).buffer }).valid,
+      'valid IGES import request was rejected');
+    assert(!api.validateImportRequest({ sourceName: 'model.igs', sourceFormat: 'step', sourceBytes: new Uint8Array([1]).buffer }).valid,
+      'source extension/format mismatch was accepted');
   }
 
   function testPreviewRequiresOneRangePerFace() {
@@ -177,7 +183,7 @@
   function testCustomMeshPresetCanBeEntered() {
     var controller = new api.AppController({ document: api.createAnalysisDocument() });
     var ui = new api.UIController(controller);
-    controller.replaceGeometry(validGeometry(), { sourceName: 'cube.step', stepBytes: new Uint8Array([1]).buffer });
+    controller.replaceGeometry(validGeometry(), { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([1]).buffer });
     ui.render(controller.document);
     ui.meshPreset.value = 'custom';
     ui.meshMinSize.value = '';
@@ -206,7 +212,7 @@
     var cameraBefore;
     var distanceBefore;
     viewport.setGeometryPreview(validGeometry());
-    controller.replaceGeometry(validGeometry(), { sourceName: 'cube.step', stepBytes: new Uint8Array([9]).buffer });
+    controller.replaceGeometry(validGeometry(), { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([9]).buffer });
     controller.replaceSelectedFaces([faceId]);
     var revisionBeforeSelectionClear = controller.document.analysisRevision;
     viewport.setFacePickHandler(function (pickedFaceId) {
@@ -284,10 +290,11 @@
     };
     api.startLocalWorker = function () { return Promise.resolve(worker); };
     return new api.MesherClient().importGeometry({
-      geometryId: 'geometry-test', sourceName: 'cube.step', stepBytes: original
+      geometryId: 'geometry-test', sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: original
     }).then(function () {
-      assert(posted.stepBytes !== original, 'canonical STEP bytes were transferred directly');
-      assert(original.byteLength === 3, 'canonical STEP bytes were detached');
+      assert(posted.sourceBytes !== original, 'canonical CAD bytes were transferred directly');
+      assert(posted.sourceFormat === 'step', 'source format was not sent to the mesher');
+      assert(original.byteLength === 3, 'canonical CAD bytes were detached');
     }).finally(function () { api.startLocalWorker = originalStartWorker; });
   }
 
@@ -307,11 +314,12 @@
     };
     api.startLocalWorker = function () { return Promise.resolve(worker); };
     return new api.MesherClient().generateMesh({
-      geometry: geometry, settings: { preset: 'normal', elementType: 'tet4' }, stepBytes: original
+      geometry: geometry, settings: { preset: 'normal', elementType: 'tet4' }, sourceBytes: original
     }).then(function (mesh) {
       assert(api.validateVolumeMeshResult(mesh, geometry.faceIds).valid, 'valid volume mesh contract was rejected');
-      assert(posted.stepBytes !== original, 'canonical STEP bytes were transferred directly for meshing');
-      assert(original.byteLength === 3, 'canonical STEP bytes were detached by meshing');
+      assert(posted.sourceBytes !== original, 'canonical CAD bytes were transferred directly for meshing');
+      assert(posted.sourceFormat === 'step', 'geometry source format was not sent for remeshing');
+      assert(original.byteLength === 3, 'canonical CAD bytes were detached by meshing');
       mesh.boundaryFaces.triangleConnectivity[2] = 4;
       assert(!api.validateVolumeMeshResult(mesh, geometry.faceIds).valid, 'out-of-range boundary connectivity was accepted');
       mesh = validVolumeMesh();
@@ -332,7 +340,7 @@
         editorOpen = false; keyEvent.preventDefault(); return true;
       }
     };
-    controller.replaceGeometry(validGeometry(), { sourceName: 'cube.step', stepBytes: new Uint8Array([1]).buffer });
+    controller.replaceGeometry(validGeometry(), { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([1]).buffer });
     controller.replaceSelectedFaces(['opaque-face']);
     ui.start();
     document.dispatchEvent(event);

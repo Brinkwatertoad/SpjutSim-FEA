@@ -217,7 +217,7 @@
     var prescribedId;
     var pressureId;
     var forceId;
-    controller.replaceGeometry(geometry, { sourceName: 'cube.step', stepBytes: new Uint8Array([1]).buffer });
+    controller.replaceGeometry(geometry, { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([1]).buffer });
     expectError(function () { controller.createBoundaryCondition({ name: 'Empty', type: 'fixed' }); }, 'Select at least one');
     controller.replaceMaterial({ name: 'Steel', youngsModulusPa: 210e9, poissonsRatio: 0.3, densityKgM3: 7850 });
     controller.completeMeshGeneration(mesh);
@@ -240,7 +240,7 @@
     var support1;
     var support2;
     var load1;
-    controller.replaceGeometry(cubeGeometry('cube-names'), { sourceName: 'cube.step', stepBytes: new Uint8Array([7]).buffer });
+    controller.replaceGeometry(cubeGeometry('cube-names'), { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([7]).buffer });
     controller.replaceSelectedFaces(['face-x-']);
     support1 = controller.createBoundaryCondition({ name: 'Ignored', type: 'fixed' });
     support2 = controller.createBoundaryCondition({ type: 'fixed' });
@@ -267,7 +267,7 @@
     var pressureSum;
     var forceSum;
     var glyphs;
-    controller.replaceGeometry(geometry, { sourceName: 'cube.step', stepBytes: new Uint8Array([2]).buffer });
+    controller.replaceGeometry(geometry, { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([2]).buffer });
     controller.replaceMaterial({ name: 'Steel', youngsModulusPa: 210e9, poissonsRatio: 0.3, densityKgM3: 7850 });
     controller.completeMeshGeneration(mesh);
     controller.replaceSelectedFaces(['face-x-']); ids.fixed = controller.createBoundaryCondition({ name: 'Fixed', type: 'fixed' });
@@ -306,7 +306,7 @@
     expectError(function () { controller.removeLoad('missing'); }, 'Unknown load');
     controller.replaceGravity({ enabled: false, accelerationMS2: [0, 0, -9.80665] });
     controller.clearMaterial();
-    controller.replaceGeometry(cubeGeometry('cube-c'), { sourceName: 'cube.step', stepBytes: new Uint8Array([3]).buffer });
+    controller.replaceGeometry(cubeGeometry('cube-c'), { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([3]).buffer });
     assert(state.boundaryConditions.length === 0 && state.loads.length === 0 && state.mesh === null,
       'geometry replacement did not clear face-dependent analysis items');
   }
@@ -316,7 +316,7 @@
     var controller = new api.AppController({ document: state });
     try { root.localStorage.removeItem(api.MATERIAL_CATALOG_STORAGE_KEY); } catch (error) { /* Storage may be unavailable in hardened browser profiles. */ }
     var authoring = new api.AnalysisAuthoringUI(controller);
-    controller.replaceGeometry(cubeGeometry('cube-ui'), { sourceName: 'cube.step', stepBytes: new Uint8Array([4]).buffer });
+    controller.replaceGeometry(cubeGeometry('cube-ui'), { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([4]).buffer });
     authoring.start();
     controller.subscribe(function (documentState) { authoring.render(documentState); });
     document.getElementById('material-name').value = 'Keyboard steel';

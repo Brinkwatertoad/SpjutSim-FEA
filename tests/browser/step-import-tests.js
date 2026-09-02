@@ -19,11 +19,11 @@
     });
   }
 
-  readFixture('generated-unit-cube-m.step').then(function (stepBytes) {
+  readFixture('generated-unit-cube-m.step').then(function (sourceBytes) {
     return client.importGeometry({
       geometryId: 'step-import-test-cube',
       sourceName: 'generated-unit-cube-m.step',
-      stepBytes: stepBytes
+      sourceFormat: 'step', sourceBytes: sourceBytes
     });
   }).then(function (geometry) {
     var bounds = geometry.boundingBoxM;
@@ -33,11 +33,11 @@
     assert(bounds.maxM.every(function (value) { return approximately(value, 1, 2e-7); }), 'expected meter-based upper bounds');
     assert(api.validateGeometryModel(geometry).valid, 'returned geometry did not satisfy the public contract');
     return readFixture('generated-two-unit-cubes-m.step');
-  }).then(function (stepBytes) {
+  }).then(function (sourceBytes) {
     return client.importGeometry({
       geometryId: 'step-import-test-two-cubes',
       sourceName: 'generated-two-unit-cubes-m.step',
-      stepBytes: stepBytes
+      sourceFormat: 'step', sourceBytes: sourceBytes
     }).then(function () {
       throw new Error('two-solid fixture was accepted');
     }).catch(function (error) {
@@ -45,11 +45,11 @@
     });
   }).then(function () {
     return readFixture('invalid-step-text.step');
-  }).then(function (stepBytes) {
+  }).then(function (sourceBytes) {
     return client.importGeometry({
       geometryId: 'step-import-test-invalid',
       sourceName: 'invalid-step-text.step',
-      stepBytes: stepBytes
+      sourceFormat: 'step', sourceBytes: sourceBytes
     }).then(function () {
       throw new Error('invalid STEP fixture was accepted');
     }).catch(function (error) {

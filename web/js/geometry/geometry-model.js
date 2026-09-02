@@ -35,7 +35,7 @@
    * @typedef {Object} GeometryModel
    * @property {string} geometryId
    * @property {string} sourceName
-   * @property {'step'} sourceFormat
+   * @property {'step'|'iges'|'brep'} sourceFormat
    * @property {FaceId[]} faceIds
    * @property {BoundingBoxM} boundingBoxM
    * @property {number=} volumeM3
@@ -50,19 +50,38 @@
     return { valid: valid, reason: reason || null };
   }
 
-  function isStepFilename(name) {
-    return typeof name === 'string' && /\.(step|stp)$/i.test(name.trim());
+  var SUPPORTED_CAD_FORMATS = Object.freeze({
+    step: Object.freeze({ format: 'step', extensions: Object.freeze(['step', 'stp']), label: 'STEP' }),
+    iges: Object.freeze({ format: 'iges', extensions: Object.freeze(['iges', 'igs']), label: 'IGES' }),
+    brep: Object.freeze({ format: 'brep', extensions: Object.freeze(['brep']), label: 'OpenCASCADE BREP' })
+  });
+
+  function sourceFormatForFilename(name) {
+    var match;
+    var extension;
+    var format;
+    if (typeof name !== 'string') { return null; }
+    match = name.trim().match(/\.([^.]+)$/);
+    if (!match) { return null; }
+    extension = match[1].toLowerCase();
+    format = Object.keys(SUPPORTED_CAD_FORMATS).find(function (candidate) {
+      return SUPPORTED_CAD_FORMATS[candidate].extensions.indexOf(extension) !== -1;
+    });
+    return format || null;
   }
 
   function validateImportRequest(request) {
     if (!request || typeof request !== 'object' || Array.isArray(request)) {
       return validation(false, 'invalid-request');
     }
-    if (!isStepFilename(request.sourceName)) {
+    if (!sourceFormatForFilename(request.sourceName)) {
       return validation(false, 'unsupported-extension');
     }
-    if (!(request.stepBytes instanceof ArrayBuffer) || request.stepBytes.byteLength === 0) {
-      return validation(false, 'invalid-step-bytes');
+    if (!SUPPORTED_CAD_FORMATS[request.sourceFormat] || sourceFormatForFilename(request.sourceName) !== request.sourceFormat) {
+      return validation(false, 'source-format-mismatch');
+    }
+    if (!(request.sourceBytes instanceof ArrayBuffer) || request.sourceBytes.byteLength === 0) {
+      return validation(false, 'invalid-source-bytes');
     }
     if (request.geometryId !== undefined && (typeof request.geometryId !== 'string' || request.geometryId.length === 0)) {
       return validation(false, 'invalid-geometry-id');
@@ -145,8 +164,8 @@
     var preview;
     if (!model || typeof model !== 'object' || Array.isArray(model) ||
         typeof model.geometryId !== 'string' || model.geometryId.length === 0 ||
-        typeof model.sourceName !== 'string' || !isStepFilename(model.sourceName) ||
-        model.sourceFormat !== 'step' || !Array.isArray(model.faceIds) || model.faceIds.length === 0 ||
+        typeof model.sourceName !== 'string' || sourceFormatForFilename(model.sourceName) !== model.sourceFormat ||
+        !SUPPORTED_CAD_FORMATS[model.sourceFormat] || !Array.isArray(model.faceIds) || model.faceIds.length === 0 ||
         model.faceIds.some(function (faceId) { return typeof faceId !== 'string' || faceId.length === 0; }) ||
         new Set(model.faceIds).size !== model.faceIds.length) {
       return validation(false, 'invalid-geometry-model');
@@ -165,7 +184,8 @@
   }
 
   root.SpjutsimFEA = root.SpjutsimFEA || {};
-  root.SpjutsimFEA.isStepFilename = isStepFilename;
+  root.SpjutsimFEA.SUPPORTED_CAD_FORMATS = SUPPORTED_CAD_FORMATS;
+  root.SpjutsimFEA.sourceFormatForFilename = sourceFormatForFilename;
   root.SpjutsimFEA.validateImportRequest = validateImportRequest;
   root.SpjutsimFEA.validateBoundingBoxM = validateBoundingBoxM;
   root.SpjutsimFEA.validatePreview = validatePreview;

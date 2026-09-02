@@ -284,13 +284,13 @@
   };
   UIController.prototype.render = function (documentState) {
     var state = documentState.geometryImport || { status: 'idle' };
-    var message = 'Choose a STEP solid to begin.';
+    var message = 'Choose a STEP, IGES, or BREP solid to begin.';
     if (state.status === 'importing') {
-      message = (state.progress && state.progress.userMessage) || 'Importing STEP geometry…';
+      message = (state.progress && state.progress.userMessage) || 'Importing CAD geometry…';
     } else if (state.status === 'succeeded' && documentState.geometry) {
       message = documentState.geometry.sourceName + ': ' + documentState.geometry.faceIds.length + ' faces imported.';
     } else if (state.status === 'failed') {
-      message = (state.error && state.error.userMessage) || 'The STEP file could not be imported.';
+      message = (state.error && state.error.userMessage) || 'The CAD file could not be imported.';
     }
     if (this.geometryStatus) { this.geometryStatus.textContent = message; }
     if (this.importButton) { this.importButton.disabled = state.status === 'importing'; }

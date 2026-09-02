@@ -14,7 +14,7 @@
       <nav class="ui-menu-bar" id="application-menu" aria-label="Application menus">
         <div class="ui-menu-group" data-ui-menu-group data-open="false">
           <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">File</button>
-          <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="import-step">Import STEP…</button></div>
+          <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="import-step">Import CAD…</button></div>
         </div>
         <div class="ui-menu-group" data-ui-menu-group data-open="false">
           <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">View</button>
@@ -104,9 +104,9 @@
         </section>
         <section>
           <h2>Geometry</h2>
-          <button id="import-step-button" type="button">Import STEP…</button>
-          <input id="import-step-input" type="file" accept=".step,.stp" hidden>
-          <p id="geometry-status">Choose a STEP solid to begin.</p>
+          <button id="import-step-button" type="button">Import CAD…</button>
+          <input id="import-step-input" type="file" accept=".step,.stp,.iges,.igs,.brep" hidden>
+          <p id="geometry-status">Choose a STEP, IGES, or BREP solid to begin.</p>
           <p id="face-selection-status" role="status" aria-live="polite">Import geometry to select faces.</p>
           <button id="clear-face-selection-button" type="button" disabled>Clear selected faces</button>
         </section>

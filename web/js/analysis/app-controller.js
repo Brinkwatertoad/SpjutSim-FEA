@@ -4,7 +4,7 @@
   function AppController(options) {
     this.document = options.document;
     this.listeners = [];
-    this.stepSource = null;
+    this.geometrySource = null;
     this.nextAnalysisItemSequence = 1;
     this.nextSupportNameSequence = 1;
     this.nextLoadNameSequence = 1;
@@ -126,10 +126,12 @@
     if (!validation.valid) {
       throw new Error('Invalid geometry model: ' + validation.reason);
     }
-    if (!source || typeof source.sourceName !== 'string' || !(source.stepBytes instanceof ArrayBuffer) || source.stepBytes.byteLength === 0) {
-      throw new Error('A non-empty canonical STEP source is required.');
+    if (!source || typeof source.sourceName !== 'string' || source.sourceFormat !== geometry.sourceFormat ||
+        root.SpjutsimFEA.sourceFormatForFilename(source.sourceName) !== source.sourceFormat ||
+        !(source.sourceBytes instanceof ArrayBuffer) || source.sourceBytes.byteLength === 0) {
+      throw new Error('A non-empty canonical CAD source matching the geometry format is required.');
     }
-    this.stepSource = { sourceName: source.sourceName, stepBytes: source.stepBytes };
+    this.geometrySource = { sourceName: source.sourceName, sourceFormat: source.sourceFormat, sourceBytes: source.sourceBytes };
     this.document.geometry = geometry;
     this.document.selectedFaceIds = [];
     this.document.boundaryConditions = [];
@@ -144,7 +146,7 @@
   };
 
   AppController.prototype.clearGeometry = function () {
-    this.stepSource = null;
+    this.geometrySource = null;
     this.document.geometry = null;
     this.document.selectedFaceIds = [];
     this.document.boundaryConditions = [];
@@ -311,7 +313,7 @@
   };
 
   AppController.prototype.beginMeshGeneration = function () {
-    if (!this.document.geometry || !this.stepSource) { throw new Error('Import geometry before generating a mesh.'); }
+    if (!this.document.geometry || !this.geometrySource) { throw new Error('Import geometry before generating a mesh.'); }
     this.document.meshGeneration = { status: 'generating', error: null, progress: null };
     this.notify();
   };

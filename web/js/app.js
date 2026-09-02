@@ -26,16 +26,17 @@
     return error;
   }
 
-  function importStepFile(file) {
+  function importCadFile(file) {
     var client;
     var geometryId;
+    var sourceFormat = api.sourceFormatForFilename(file.name);
     if (activeImport) { activeImport.cancel(); }
     if (activeMesh) { activeMesh.cancel(); }
     disposeSolver();
     app.discardSolvePreflight();
-    if (!api.isStepFilename(file.name)) {
+    if (!sourceFormat) {
       app.beginGeometryImport(file.name);
-      app.failGeometryImport(importFailure('INVALID_STEP_EXTENSION', 'Choose a file with a .step or .stp extension.'));
+      app.failGeometryImport(importFailure('INVALID_CAD_EXTENSION', 'Choose a STEP, IGES, or OpenCASCADE BREP file.'));
       return;
     }
     app.beginGeometryImport(file.name);
@@ -45,13 +46,14 @@
       onError: function () {}
     });
     activeImport = client;
-    file.arrayBuffer().then(function (stepBytes) {
+    file.arrayBuffer().then(function (sourceBytes) {
       return client.importGeometry({
         geometryId: geometryId,
         sourceName: file.name,
-        stepBytes: stepBytes
+        sourceFormat: sourceFormat,
+        sourceBytes: sourceBytes
       }).then(function (geometry) {
-        app.replaceGeometry(geometry, { sourceName: file.name, stepBytes: stepBytes });
+        app.replaceGeometry(geometry, { sourceName: file.name, sourceFormat: sourceFormat, sourceBytes: sourceBytes });
       });
     }).catch(function (error) {
       if (activeImport === client) { app.failGeometryImport(error); }
@@ -63,7 +65,7 @@
 
   function generateMesh() {
     var client;
-    if (!app.document.geometry || !app.stepSource) { return; }
+    if (!app.document.geometry || !app.geometrySource) { return; }
     if (activeMesh) { activeMesh.cancel(); }
     disposeSolver();
     app.discardSolvePreflight();
@@ -71,7 +73,7 @@
     client = new api.MesherClient({ onProgress: function (progress) { app.reportMeshProgress(progress); } });
     activeMesh = client;
     client.generateMesh({
-      geometry: app.document.geometry, settings: app.document.meshSettings, stepBytes: app.stepSource.stepBytes
+      geometry: app.document.geometry, settings: app.document.meshSettings, sourceBytes: app.geometrySource.sourceBytes
     }).then(function (mesh) {
       if (activeMesh === client) { app.completeMeshGeneration(mesh); }
     }).catch(function (error) {
@@ -166,7 +168,7 @@
     viewport.setSelectedFaceIds(documentState.selectedFaceIds || []);
     viewport.setAnalysisOverlay(documentState);
   });
-  ui.setImportHandler(importStepFile);
+  ui.setImportHandler(importCadFile);
   ui.setMeshHandlers(generateMesh, function () { if (activeMesh) { activeMesh.cancel(); } });
   ui.setSolveHandlers(prepareSolve, solve, cancelSolve);
   viewport.setProbeHandler(function (probe) { ui.renderProbe(probe); });

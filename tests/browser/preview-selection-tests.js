@@ -66,7 +66,7 @@
     var selectedFaceId = geometry.faceIds[0];
     var oldRenderGeometry;
     var oldRenderGeometryDisposed = false;
-    controller.replaceGeometry(geometry, { sourceName: geometry.sourceName, stepBytes: new Uint8Array([1]).buffer });
+    controller.replaceGeometry(geometry, { sourceName: geometry.sourceName, sourceFormat: geometry.sourceFormat, sourceBytes: new Uint8Array([1]).buffer });
     viewport.setFacePickHandler(function (faceId, additive) {
       if (!faceId) { controller.clearSelectedFaces(); }
       else if (additive) { controller.toggleSelectedFace(faceId); }
@@ -112,7 +112,7 @@
     viewport.setSelectedFaceIds(controller.document.selectedFaceIds);
     assert(!viewport.selectedFaceIds.has(selectedFaceId), 'toggle selection was not reflected in the viewport');
     controller.replaceSelectedFaces([selectedFaceId]);
-    controller.replaceGeometry(geometry, { sourceName: geometry.sourceName, stepBytes: new Uint8Array([2]).buffer });
+    controller.replaceGeometry(geometry, { sourceName: geometry.sourceName, sourceFormat: geometry.sourceFormat, sourceBytes: new Uint8Array([2]).buffer });
     assert(controller.document.selectedFaceIds.length === 0, 'geometry replacement retained selection');
     oldRenderGeometry = viewport.previewMesh.geometry;
     oldRenderGeometry.addEventListener('dispose', function () { oldRenderGeometryDisposed = true; });
@@ -121,9 +121,9 @@
     assert(oldRenderGeometryDisposed, 'geometry replacement did not dispose the previous GPU geometry');
   }
 
-  function testMeshDisplay(geometry, stepBytes) {
+  function testMeshDisplay(geometry, sourceBytes) {
     return client.generateMesh({
-      geometry: geometry, settings: { preset: 'coarse', elementType: 'tet4' }, stepBytes: stepBytes
+      geometry: geometry, settings: { preset: 'coarse', elementType: 'tet4' }, sourceBytes: sourceBytes
     }).then(function (mesh) {
       var lineGeometry;
       var disposed = false;
@@ -177,9 +177,9 @@
   }
 
   function testCurvedFixtures() {
-    return readFixture('generated-cylinder-r0_5-h1-m.step').then(function (stepBytes) {
+    return readFixture('generated-cylinder-r0_5-h1-m.step').then(function (sourceBytes) {
       return client.importGeometry({
-        geometryId: 'preview-cylinder', sourceName: 'generated-cylinder-r0_5-h1-m.step', stepBytes: stepBytes
+        geometryId: 'preview-cylinder', sourceName: 'generated-cylinder-r0_5-h1-m.step', sourceFormat: 'step', sourceBytes: sourceBytes
       });
     }).then(function (cylinder) {
       var maximumRadialDeviation = 0;
@@ -197,9 +197,9 @@
       }
       assert(maximumRadialDeviation < 0.002, 'cylinder preview exceeded the chord-deviation target');
       return readFixture('generated-sphere-r0_5-m.step');
-    }).then(function (stepBytes) {
+    }).then(function (sourceBytes) {
       return client.importGeometry({
-        geometryId: 'preview-sphere', sourceName: 'generated-sphere-r0_5-m.step', stepBytes: stepBytes
+        geometryId: 'preview-sphere', sourceName: 'generated-sphere-r0_5-m.step', sourceFormat: 'step', sourceBytes: sourceBytes
       });
     }).then(function (sphere) {
       assert(sphere.faceIds.length === 1, 'multiply-curved sphere did not retain one CAD face');
@@ -210,16 +210,16 @@
   }
 
   testCoordinateConversion();
-  readFixture('generated-unit-cube-m.step').then(function (stepBytes) {
+  readFixture('generated-unit-cube-m.step').then(function (sourceBytes) {
     return client.importGeometry({
-      geometryId: 'preview-selection-cube', sourceName: 'generated-unit-cube-m.step', stepBytes: stepBytes
-    }).then(function (geometry) { return { geometry: geometry, stepBytes: stepBytes }; });
+      geometryId: 'preview-selection-cube', sourceName: 'generated-unit-cube-m.step', sourceFormat: 'step', sourceBytes: sourceBytes
+    }).then(function (geometry) { return { geometry: geometry, sourceBytes: sourceBytes }; });
   }).then(function (imported) {
     var geometry = imported.geometry;
     viewport.setGeometryPreview(geometry);
     selectEveryFace(geometry);
     testSelectionAndResize(geometry);
-    return testMeshDisplay(geometry, imported.stepBytes);
+    return testMeshDisplay(geometry, imported.sourceBytes);
   }).then(function () {
     return testCurvedFixtures();
   }).then(function () {

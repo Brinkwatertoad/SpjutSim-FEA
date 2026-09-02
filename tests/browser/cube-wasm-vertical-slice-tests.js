@@ -38,12 +38,12 @@
   fetch('../fixtures/generated-unit-cube-m.step').then(function (response) { return response.arrayBuffer(); }).then(function (bytes) {
     sourceBytes = bytes;
     controller.beginGeometryImport('generated-unit-cube-m.step');
-    return mesher.importGeometry({ geometryId: 'cube-wasm-slice', sourceName: 'generated-unit-cube-m.step', stepBytes: bytes });
+    return mesher.importGeometry({ geometryId: 'cube-wasm-slice', sourceName: 'generated-unit-cube-m.step', sourceFormat: 'step', sourceBytes: bytes });
   }).then(function (geometry) {
-    controller.replaceGeometry(geometry, { sourceName: geometry.sourceName, stepBytes: sourceBytes });
+    controller.replaceGeometry(geometry, { sourceName: geometry.sourceName, sourceFormat: geometry.sourceFormat, sourceBytes: sourceBytes });
     controller.replaceMaterial({ name: 'Patch material', youngsModulusPa: 1e9, poissonsRatio: 0.25, densityKgM3: 1000 });
     controller.beginMeshGeneration();
-    return mesher.generateMesh({ geometry: geometry, settings: { preset: 'coarse', elementType: 'tet4' }, stepBytes: sourceBytes });
+    return mesher.generateMesh({ geometry: geometry, settings: { preset: 'coarse', elementType: 'tet4' }, sourceBytes: sourceBytes });
   }).then(function (mesh) {
     controller.completeMeshGeneration(mesh);
     mesher.dispose();

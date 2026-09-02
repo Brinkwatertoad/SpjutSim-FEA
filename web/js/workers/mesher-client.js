@@ -48,13 +48,13 @@
     var self = this;
     var validation = root.SpjutsimFEA.validateImportRequest(request);
     if (!validation.valid) {
-      return Promise.reject(clientFailure('INVALID_IMPORT_REQUEST', 'Choose a non-empty .step or .stp file.', validation.reason));
+      return Promise.reject(clientFailure('INVALID_IMPORT_REQUEST', 'Choose a non-empty STEP, IGES, or BREP file.', validation.reason));
     }
     return this.ensureWorker().then(function (worker) {
       return new Promise(function (resolve, reject) {
         var requestId = self.requestId();
         var settled = false;
-        var transferBytes = request.stepBytes.slice(0);
+        var transferBytes = request.sourceBytes.slice(0);
 
         function finish(error, result) {
           if (settled) { return; }
@@ -98,7 +98,7 @@
           finish(null, message.result);
         };
         worker.onerror = function (event) {
-          finish(clientFailure('MESHER_OPERATION_FAILED', 'The geometry engine stopped while importing the STEP file.', event.message || null));
+          finish(clientFailure('MESHER_OPERATION_FAILED', 'The geometry engine stopped while importing the CAD file.', event.message || null));
         };
         worker.onmessageerror = function () {
           finish(clientFailure('MESHER_MESSAGE_FAILED', 'The geometry engine could not return the imported geometry.'));
@@ -110,10 +110,11 @@
             requestId: requestId,
             geometryId: request.geometryId || root.SpjutsimFEA.createGeometryId(),
             sourceName: request.sourceName,
-            stepBytes: transferBytes
+            sourceFormat: request.sourceFormat,
+            sourceBytes: transferBytes
           }, [transferBytes]);
         } catch (error) {
-          finish(clientFailure('MESHER_MESSAGE_FAILED', 'The geometry engine could not receive the STEP file.', error && error.message));
+          finish(clientFailure('MESHER_MESSAGE_FAILED', 'The geometry engine could not receive the CAD file.', error && error.message));
         }
       });
     });
@@ -129,8 +130,8 @@
       return Promise.reject(clientFailure('INVALID_MESH_REQUEST', 'Choose valid Tet4 mesh settings.', 'Mesh request must be an object.', 'mesh'));
     }
     geometryValidation = root.SpjutsimFEA.validateGeometryModel(request.geometry);
-    if (!geometryValidation.valid || !(request.stepBytes instanceof ArrayBuffer) || request.stepBytes.byteLength === 0) {
-      return Promise.reject(clientFailure('INVALID_MESH_REQUEST', 'The geometry must be re-imported before meshing.', geometryValidation.reason || 'missing-step-bytes', 'mesh'));
+    if (!geometryValidation.valid || !(request.sourceBytes instanceof ArrayBuffer) || request.sourceBytes.byteLength === 0) {
+      return Promise.reject(clientFailure('INVALID_MESH_REQUEST', 'The geometry must be re-imported before meshing.', geometryValidation.reason || 'missing-source-bytes', 'mesh'));
     }
     settingsValidation = root.SpjutsimFEA.validateMeshSettings(request.settings, request.geometry.boundingBoxM);
     if (!settingsValidation.valid) {
@@ -141,7 +142,7 @@
       return new Promise(function (resolve, reject) {
         var requestId = self.requestId();
         var settled = false;
-        var transferBytes = request.stepBytes.slice(0);
+        var transferBytes = request.sourceBytes.slice(0);
 
         function finish(error, result) {
           if (settled) { return; }
@@ -191,8 +192,8 @@
           worker.postMessage({
             protocol: root.SpjutsimFEA.WORKER_PROTOCOL_VERSION,
             type: 'mesh', requestId: requestId, geometryId: request.geometry.geometryId,
-            sourceName: request.geometry.sourceName, faceIds: request.geometry.faceIds.slice(),
-            settings: resolvedSettings, stepBytes: transferBytes
+            sourceName: request.geometry.sourceName, sourceFormat: request.geometry.sourceFormat,
+            faceIds: request.geometry.faceIds.slice(), settings: resolvedSettings, sourceBytes: transferBytes
           }, [transferBytes]);
         } catch (error) {
           finish(clientFailure('MESHER_MESSAGE_FAILED', 'The geometry engine could not receive the mesh request.', error && error.message, 'mesh'));

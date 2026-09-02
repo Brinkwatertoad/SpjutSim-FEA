@@ -55,8 +55,8 @@
     }
   }
 
-  readFixture().then(function (stepBytes) {
-    return client.importGeometry({ geometryId: 'tet4-cube', sourceName: 'generated-unit-cube-m.step', stepBytes: stepBytes }).then(function (geometry) {
+  readFixture().then(function (sourceBytes) {
+    return client.importGeometry({ geometryId: 'tet4-cube', sourceName: 'generated-unit-cube-m.step', sourceFormat: 'step', sourceBytes: sourceBytes }).then(function (geometry) {
       var faceSet = geometry.faceIds.slice().sort().join('|');
       var counts = [];
       var settings = [
@@ -65,7 +65,7 @@
       ];
       return settings.reduce(function (sequence, setting) {
         return sequence.then(function () {
-          return client.generateMesh({ geometry: geometry, settings: setting, stepBytes: stepBytes }).then(function (mesh) {
+          return client.generateMesh({ geometry: geometry, settings: setting, sourceBytes: sourceBytes }).then(function (mesh) {
             verifyMesh(mesh, geometry.faceIds);
             assert(mesh.boundaryFaces.faceRanges.map(function (range) { return range.faceId; }).sort().join('|') === faceSet, 'FaceId set changed after remeshing');
             counts.push(mesh.statistics.elementCount);
