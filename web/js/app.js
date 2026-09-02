@@ -136,7 +136,7 @@
 
   function setText(id, value) { document.getElementById(id).textContent = value; }
   setText('launch-mode', location.protocol === 'file:' ? 'Direct local file' : (root.crossOriginIsolated ? 'HTTP, isolated' : 'HTTP, portable'));
-  root.addEventListener('pagehide', function () { if (activeMesh) { activeMesh.cancel(); } disposeSolver(); viewport.dispose(); }, { once: true });
+  root.addEventListener('pagehide', function () { if (activeMesh) { activeMesh.cancel(); } disposeSolver(); ui.dispose(); viewport.dispose(); }, { once: true });
   viewport.setFacePickHandler(function (faceId, additive) {
     if (!faceId) {
       app.clearSelectedFaces();

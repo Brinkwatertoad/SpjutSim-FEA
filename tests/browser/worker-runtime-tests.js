@@ -286,6 +286,13 @@
       deformationMode: 'user', deformationScale: 10, userDeformationScale: 10 });
     assert(Math.abs(viewport.resultSurface.geometry.getAttribute('position').array[3] - 1.1) < 1e-6,
       'user deformation scale was not applied');
+    viewport.setDeformationAnimationMultiplier(0);
+    assert(Math.abs(viewport.resultSurface.geometry.getAttribute('position').array[3] - 1) < 1e-6,
+      'zero animation multiplier did not restore the undeformed shape');
+    viewport.setDeformationAnimationMultiplier(0.5);
+    assert(Math.abs(viewport.resultSurface.geometry.getAttribute('position').array[3] - 1.05) < 1e-6,
+      'animation multiplier did not interpolate the deformation');
+    viewport.setDeformationAnimationMultiplier(1);
     assert(viewport.resultDisplay.userData.lines.visible, 'compatible result view hid the requested mesh overlay');
     assert(JSON.stringify(viewport.captureViewState()) === JSON.stringify(viewState), 'result mode switches changed the camera');
     var resultGeometry = viewport.resultSurface.geometry;
@@ -295,6 +302,64 @@
     viewport.setResultModel(null);
     assert(disposedResultGeometry && viewport.resultSurface === null, 'result GPU buffers were not disposed on invalidation');
     viewport.dispose();
+  }
+
+  function testDeformationAnimationControls() {
+    var controller = new api.AppController({ document: api.createAnalysisDocument() });
+    var ui = new api.UIController(controller);
+    var originalRequestAnimationFrame = root.requestAnimationFrame;
+    var originalCancelAnimationFrame = root.cancelAnimationFrame;
+    var scheduledFrame = null;
+    var effectiveMultiplier = null;
+    var revision;
+    var viewport = {
+      setNavigationPreferences: function () {},
+      setDeformationAnimationMultiplier: function (multiplier) { effectiveMultiplier = multiplier; }
+    };
+    controller.document.mesh = validVolumeMesh();
+    controller.document.results = validResultModel();
+    controller.document.viewportPresentation = {
+      mode: 'deformation', displayStyle: 'lines', field: 'displacementMagnitude', meshOverlay: false,
+      deformationMode: 'user', deformationScale: 200, userDeformationScale: 200
+    };
+    root.requestAnimationFrame = function (callback) { scheduledFrame = callback; return 17; };
+    root.cancelAnimationFrame = function () {};
+    try {
+      ui.setViewportController(viewport);
+      ui.renderViewportPresentation(controller.document);
+      revision = controller.document.analysisRevision;
+      assert(!ui.deformationAnimationToggle.hidden && !ui.deformationAnimationToggle.disabled,
+        'deformation animation controls were unavailable for solved deformation results');
+      ui.startDeformationAnimation();
+      assert(ui.deformationAnimating && ui.deformationAnimationToggle.textContent === 'Stop' &&
+        ui.deformationAnimationToggle.getAttribute('aria-pressed') === 'true',
+      'Play did not expose the active Stop state');
+      scheduledFrame(100);
+      scheduledFrame(700);
+      assert(Math.abs(effectiveMultiplier - 0.5) < 1e-12 && ui.deformationScaleReadout.textContent === 'x100',
+        'animation did not interpolate the selected scale in the viewport and readout');
+      assert(controller.document.analysisRevision === revision && controller.document.viewportPresentation.deformationScale === 200,
+        'animation mutated analysis state or the selected deformation scale');
+      ui.stopDeformationAnimation();
+      assert(!ui.deformationAnimating && effectiveMultiplier === 1 && ui.deformationScale.value === '200' &&
+        ui.deformationAnimationToggle.textContent === 'Play' && ui.deformationScaleReadout.textContent === 'x200',
+      'Stop did not restore the selected deformation scale and Play state');
+      ui.startDeformationAnimation();
+      controller.document.viewportPresentation.mode = 'stress';
+      ui.renderViewportPresentation(controller.document);
+      assert(!ui.deformationAnimating && effectiveMultiplier === 1 && ui.deformationAnimationToggle.hidden,
+        'leaving Deformation view did not stop and hide the animation');
+      controller.document.viewportPresentation.mode = 'deformation';
+      controller.document.viewportPresentation.deformationMode = 'undeformed';
+      controller.document.viewportPresentation.deformationScale = 0;
+      ui.renderViewportPresentation(controller.document);
+      assert(ui.deformationAnimationToggle.disabled,
+        'undeformed shape mode left the animation control enabled');
+    } finally {
+      ui.dispose();
+      root.requestAnimationFrame = originalRequestAnimationFrame;
+      root.cancelAnimationFrame = originalCancelAnimationFrame;
+    }
   }
 
   function testMesherClientUsesDedicatedTransferCopy() {
@@ -394,6 +459,7 @@
     testCustomMeshPresetCanBeEntered();
     testDisplayStyleIsAvailableInModelView();
     testViewportCameraNavigation();
+    testDeformationAnimationControls();
     testEscapeClearsFaceSelection();
     return testSolverTimeoutTerminatesWorker().then(testMesherClientUsesDedicatedTransferCopy).then(testMeshContractAndDedicatedTransferCopy);
   }).then(function () {

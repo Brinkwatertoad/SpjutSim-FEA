@@ -20,6 +20,8 @@
     this.resultField = document.getElementById('result-field');
     this.deformationMode = document.getElementById('deformation-mode');
     this.deformationScale = document.getElementById('deformation-scale');
+    this.deformationScaleReadout = document.getElementById('deformation-scale-readout');
+    this.deformationAnimationToggle = document.getElementById('deformation-animation-toggle');
     this.meshOverlay = document.getElementById('mesh-overlay');
     this.preflightButton = document.getElementById('preflight-button');
     this.solveButton = document.getElementById('solve-button');
@@ -66,6 +68,10 @@
     this.settingsShortcut = this.resolveSettingsShortcut();
     this.settingsMenuShortcut = document.querySelector('[data-ui-menu-action="settings"] .ui-menu-shortcut');
     this.analysisAuthoring = root.SpjutsimFEA.AnalysisAuthoringUI ? new root.SpjutsimFEA.AnalysisAuthoringUI(controller) : null;
+    this.deformationAnimating = false;
+    this.deformationAnimationFrame = null;
+    this.deformationAnimationElapsedMs = 0;
+    this.deformationAnimationLastTimestamp = null;
   }
 
   UIController.prototype.loadNavigationPreferences = function () {
@@ -218,7 +224,13 @@
     }
     if (this.resultField) { this.resultField.addEventListener('change', function () { self.updateViewportPresentation(); }); }
     if (this.deformationMode) { this.deformationMode.addEventListener('change', function () { self.updateViewportPresentation(); }); }
-    if (this.deformationScale) { this.deformationScale.addEventListener('change', function () { self.updateViewportPresentation(); }); }
+    if (this.deformationScale) {
+      this.deformationScale.addEventListener('input', function () {
+        if (self.deformationMode) { self.deformationMode.value = 'user'; }
+        self.updateViewportPresentation();
+      });
+    }
+    if (this.deformationAnimationToggle) { this.deformationAnimationToggle.addEventListener('click', function () { self.toggleDeformationAnimation(); }); }
     if (this.meshOverlay) { this.meshOverlay.addEventListener('change', function () { self.updateViewportPresentation(); }); }
     if (this.preflightButton) { this.preflightButton.addEventListener('click', function () { if (self.preflightHandler) { self.preflightHandler(); } }); }
     if (this.solveButton) { this.solveButton.addEventListener('click', function () { if (self.solveHandler) { self.solveHandler(); } }); }
@@ -395,13 +407,81 @@
       });
     }
     if (this.deformationMode) { this.deformationMode.value = presentation.deformationMode || 'undeformed'; this.deformationMode.disabled = !resultsAvailable; }
+    var deformationVisible = resultsAvailable && presentation.mode === 'deformation';
+    if ((!deformationVisible || !(presentation.deformationScale > 0)) && this.deformationAnimating) { this.stopDeformationAnimation(); }
     if (this.deformationScale) {
-      this.deformationScale.value = Number.isFinite(presentation.userDeformationScale) ? presentation.userDeformationScale : 1;
-      this.deformationScale.hidden = presentation.deformationMode !== 'user';
+      this.deformationScale.value = Number.isFinite(presentation.userDeformationScale) ? presentation.userDeformationScale : 100;
+      this.deformationScale.hidden = !deformationVisible;
+    }
+    if (this.deformationScaleReadout) {
+      this.deformationScaleReadout.hidden = !deformationVisible;
+      if (!this.deformationAnimating) { this.deformationScaleReadout.textContent = 'x' + Number(presentation.deformationScale || 0).toLocaleString(undefined, { maximumSignificantDigits: 4 }); }
+    }
+    if (this.deformationAnimationToggle) {
+      this.deformationAnimationToggle.hidden = !deformationVisible;
+      this.deformationAnimationToggle.disabled = !deformationVisible || !(presentation.deformationScale > 0);
     }
     if (this.meshOverlay) { this.meshOverlay.checked = presentation.meshOverlay === true; this.meshOverlay.disabled = !meshAvailable || !resultsAvailable; }
     this.renderLegend(documentState);
   };
+
+  UIController.prototype.updateDeformationAnimationToggle = function () {
+    if (!this.deformationAnimationToggle) { return; }
+    this.deformationAnimationToggle.textContent = this.deformationAnimating ? 'Stop' : 'Play';
+    this.deformationAnimationToggle.setAttribute('aria-pressed', this.deformationAnimating ? 'true' : 'false');
+    this.deformationAnimationToggle.setAttribute('aria-label', (this.deformationAnimating ? 'Stop' : 'Play') + ' deformed shape animation');
+  };
+
+  UIController.prototype.stepDeformationAnimation = function (timestamp) {
+    var self = this;
+    var multiplier;
+    if (!this.deformationAnimating) { return; }
+    if (!document.hidden) {
+      if (this.deformationAnimationLastTimestamp !== null) {
+        this.deformationAnimationElapsedMs += timestamp - this.deformationAnimationLastTimestamp;
+      }
+      this.deformationAnimationLastTimestamp = timestamp;
+      multiplier = root.SpjutsimFEA.deformationAnimationMultiplier(this.deformationAnimationElapsedMs);
+      if (this.viewport) { this.viewport.setDeformationAnimationMultiplier(multiplier); }
+      if (this.deformationScaleReadout) {
+        this.deformationScaleReadout.textContent = 'x' + (this.controller.document.viewportPresentation.deformationScale * multiplier)
+          .toLocaleString(undefined, { maximumSignificantDigits: 4 });
+      }
+    } else {
+      this.deformationAnimationLastTimestamp = null;
+    }
+    this.deformationAnimationFrame = root.requestAnimationFrame(function (nextTimestamp) { self.stepDeformationAnimation(nextTimestamp); });
+  };
+
+  UIController.prototype.startDeformationAnimation = function () {
+    var self = this;
+    var presentation = this.controller.document.viewportPresentation;
+    if (this.deformationAnimating || !this.controller.document.results || presentation.mode !== 'deformation' || !(presentation.deformationScale > 0)) { return; }
+    this.deformationAnimating = true;
+    this.deformationAnimationElapsedMs = 0;
+    this.deformationAnimationLastTimestamp = null;
+    this.updateDeformationAnimationToggle();
+    this.deformationAnimationFrame = root.requestAnimationFrame(function (timestamp) { self.stepDeformationAnimation(timestamp); });
+  };
+
+  UIController.prototype.stopDeformationAnimation = function () {
+    if (this.deformationAnimationFrame !== null) { root.cancelAnimationFrame(this.deformationAnimationFrame); }
+    this.deformationAnimationFrame = null;
+    this.deformationAnimationLastTimestamp = null;
+    this.deformationAnimating = false;
+    if (this.viewport) { this.viewport.setDeformationAnimationMultiplier(1); }
+    this.updateDeformationAnimationToggle();
+    if (this.deformationScaleReadout) {
+      this.deformationScaleReadout.textContent = 'x' + Number(this.controller.document.viewportPresentation.deformationScale || 0)
+        .toLocaleString(undefined, { maximumSignificantDigits: 4 });
+    }
+  };
+
+  UIController.prototype.toggleDeformationAnimation = function () {
+    if (this.deformationAnimating) { this.stopDeformationAnimation(); } else { this.startDeformationAnimation(); }
+  };
+
+  UIController.prototype.dispose = function () { this.stopDeformationAnimation(); };
 
   UIController.prototype.resolveDeformationScale = function (mode) {
     var result = this.controller.document.results;

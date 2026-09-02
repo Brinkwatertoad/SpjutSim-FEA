@@ -160,7 +160,9 @@
           </select>
           <label for="deformation-mode">Shape</label>
           <select id="deformation-mode" aria-label="Deformation scale mode" disabled><option value="undeformed">Undeformed</option><option value="true-scale">True scale</option><option value="auto">Auto</option><option value="user">User scale</option></select>
-          <input id="deformation-scale" type="number" min="0" step="any" value="1" aria-label="User deformation scale" hidden>
+          <button id="deformation-animation-toggle" type="button" aria-label="Play deformed shape animation" aria-pressed="false" hidden>Play</button>
+          <input id="deformation-scale" type="range" min="1" max="1000" step="1" value="100" aria-label="Deformed shape scale multiplier" hidden>
+          <output id="deformation-scale-readout" for="deformation-scale" hidden>x100</output>
           <label class="fea-overlay-check" for="mesh-overlay"><input id="mesh-overlay" type="checkbox" disabled> Mesh overlay</label>
           <button id="fit-view-button" type="button">Fit model</button>
           <button id="reset-view-button" type="button">Reset view</button>
@@ -235,6 +237,7 @@
   <script src="js/analysis/app-controller.js"></script>
   <script src="js/render/viewport-navigation.js"></script>
   <script src="js/render/analysis-glyphs.js"></script>
+  <script src="js/render/deformation-animation.js"></script>
   <script src="js/render/viewport-controller.js"></script>
   <script src="js/ui/setup-inspector-summary.js"></script>
   <script src="js/ui/analysis-authoring-ui.js"></script>

@@ -103,7 +103,10 @@ transferable result models with raw and smoothed stress fields, reactions,
 equilibrium and solver diagnostics. The viewport supports Model, Mesh, Stress,
 and Deformation presentation (including legends, scale modes, mesh overlay, and
 approximate probes), defaults to von Mises stress after solve, and disposes stale
-result resources after upstream engineering edits.
+result resources after upstream engineering edits. Deformation view includes a
+Truss-compatible Play/Stop animation, an exaggeration slider, and a live scale
+readout; animation is presentation-only and returns to the selected full scale
+when stopped.
 
 The compact Model editor can rotate the part around a global X, Y, or Z axis by
 an adjustable angle (90 degrees by default), reset the imported orientation, or
@@ -123,7 +126,8 @@ motion. Native solver diagnostics remain the final singularity check.
 Loads and supports are shown at deterministic, area-aware samples across their
 actual selected surfaces. Load-arrow tips touch the surface; all vector arrows
 use thin cylinder shafts with cone heads. Default load/support roles are red and
-green. A labeled, theme-colored XYZ triad remains fixed in the lower-left
-viewport corner while rotating with the camera.
+green. A compact labeled, theme-colored XYZ triad remains fixed and fully inside
+the lower-left viewport corner while rotating with the camera; its pixel-space
+layout preserves label proportions across resize and aspect-ratio changes.
 
 See `spec.md` for the product specification and `UI_FOUNDATION.md` for the UI-kit provenance pin.

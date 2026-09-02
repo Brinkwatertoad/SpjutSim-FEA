@@ -30,7 +30,8 @@ have distinct numerical/browser acceptance evidence.
 - Complete: STEP/IGES/BREP import and model orientation.
 - Complete: component-based X/Y/Z supports and six-mode rigid-body diagnostics.
 - Complete: distributed surface-contacting glyphs and a corner XYZ triad.
-- Next: Truss-compatible deformation animation.
+- Complete: Truss-compatible deformation animation.
+- Next: transactional replacement-model setup transfer.
 
 ## Constraints
 

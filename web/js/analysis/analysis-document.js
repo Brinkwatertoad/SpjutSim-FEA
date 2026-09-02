@@ -18,7 +18,7 @@
       meshMetadata: null,
       viewportPresentation: {
         mode: 'model', displayStyle: 'lines', field: 'vonMises', meshOverlay: false,
-        deformationMode: 'undeformed', deformationScale: 0, userDeformationScale: 1
+        deformationMode: 'undeformed', deformationScale: 0, userDeformationScale: 100
       },
       solveSettings: { relativeTolerance: 1e-8, equilibriumTolerance: 1e-6, maxIterations: 0 },
       solvePreflight: { status: 'idle', result: null, error: null, progress: null, analysisRevision: null },

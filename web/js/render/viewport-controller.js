@@ -30,6 +30,7 @@
     head.position.copy(tip).addScaledVector(unit, -headLength / 2);
     group.name = name || 'vector-glyph';
     group.userData.tipPositionM = tip.toArray();
+    group.userData.tailPositionM = tip.clone().addScaledVector(unit, -length).toArray();
     group.add(shaft, head);
     return group;
   }
@@ -46,7 +47,7 @@
     texture = new root.THREE.CanvasTexture(canvas);
     sprite = new root.THREE.Sprite(new root.THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
     sprite.name = 'axis-triad-label-' + letter.toLowerCase();
-    sprite.scale.set(0.13, 0.13, 1);
+    sprite.scale.set(14, 14, 1);
     return sprite;
   }
 
@@ -100,8 +101,8 @@
     this.camera.position.set(2.8, 2.1, 3.4);
     this.camera.lookAt(0, 0, 0);
     this.axisTriadScene = new root.THREE.Scene();
-    this.axisTriadCamera = new root.THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 10);
-    this.axisTriadCamera.position.set(0, 0, 5);
+    this.axisTriadCamera = new root.THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 200);
+    this.axisTriadCamera.position.set(0, 0, 100);
     this.axisTriad = null;
     this.raycaster = new root.THREE.Raycaster();
     this.pointer = new root.THREE.Vector2();
@@ -127,6 +128,7 @@
     this.analysisOverlayState = null;
     this.themeObserver = null;
     this.presentation = { mode: 'model', displayStyle: 'lines' };
+    this.deformationAnimationMultiplier = 1;
     this.selectedFaceIds = new Set();
     this.facePickHandler = null;
     this.probeHandler = null;
@@ -195,16 +197,28 @@
     ];
     if (this.axisTriad) { this.axisTriadScene.remove(this.axisTriad); disposeObjectResources(this.axisTriad); }
     definitions.forEach(function (definition) {
-      var endpoint = definition[1].clone().multiplyScalar(0.25);
-      var arrow = cylinderConeArrow(definition[1], endpoint, 0.22, definition[2], 'axis-triad-' + definition[0]);
+      var endpoint = definition[1].clone().multiplyScalar(20);
+      var arrow = cylinderConeArrow(definition[1], endpoint, 20, definition[2], 'axis-triad-' + definition[0]);
       var label = axisLabel(definition[0].toUpperCase(), definition[2]);
-      label.position.copy(definition[1]).multiplyScalar(0.33);
+      label.position.copy(definition[1]).multiplyScalar(28);
       group.add(arrow, label);
     });
     group.name = 'axis-triad';
-    group.position.set(-0.72, -0.68, 0);
     this.axisTriadScene.add(group);
     this.axisTriad = group;
+    this.layoutAxisTriad(Math.max(1, this.canvas.clientWidth), Math.max(1, this.canvas.clientHeight));
+  };
+
+  ViewportController.prototype.layoutAxisTriad = function (width, height) {
+    var safeInset = 36;
+    this.axisTriadCamera.left = -width / 2;
+    this.axisTriadCamera.right = width / 2;
+    this.axisTriadCamera.top = height / 2;
+    this.axisTriadCamera.bottom = -height / 2;
+    this.axisTriadCamera.updateProjectionMatrix();
+    if (this.axisTriad) {
+      this.axisTriad.position.set(-width / 2 + safeInset, -height / 2 + safeInset, 0);
+    }
   };
 
   ViewportController.prototype.observeTheme = function () {
@@ -751,7 +765,7 @@
     colors = this.resultSurface.geometry.getAttribute('color');
     original = result.originalSurface.nodePositionsM;
     displacement = result.displacementM;
-    scale = Number(this.presentation.deformationScale) || 0;
+    scale = (Number(this.presentation.deformationScale) || 0) * this.deformationAnimationMultiplier;
     for (node = 0; node < field.length; node += 1) {
       position.array[node * 3] = original[node * 3] + displacement[node * 3] * scale;
       position.array[node * 3 + 1] = original[node * 3 + 1] + displacement[node * 3 + 1] * scale;
@@ -826,6 +840,15 @@
       deformationMode: 'undeformed', userDeformationScale: 1 }, presentation);
     this.updateResultPresentation();
     this.applyPresentation();
+    this.render();
+  };
+
+  ViewportController.prototype.setDeformationAnimationMultiplier = function (multiplier) {
+    if (!Number.isFinite(multiplier) || multiplier < 0 || multiplier > 1) {
+      throw new Error('Deformation animation multiplier must be between zero and one.');
+    }
+    this.deformationAnimationMultiplier = multiplier;
+    this.updateResultPresentation();
     this.render();
   };
 
@@ -956,6 +979,7 @@
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height, false);
+    this.layoutAxisTriad(width, height);
     this.render();
   };
 

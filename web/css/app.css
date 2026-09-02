@@ -68,6 +68,8 @@ h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing
 .fea-viewport-actions label { align-self: center; color: var(--ui-color-canvas-text, #dbeafe); font-size: 12px; }
 .fea-viewport-actions select { max-width: 152px; color: inherit; background: color-mix(in srgb, var(--ui-color-surface, #202329) 90%, transparent); border: 1px solid var(--border, #3a3e46); border-radius: 4px; }
 .fea-viewport-actions input[type="number"] { width: 72px; color: inherit; background: color-mix(in srgb, var(--ui-color-surface, #202329) 90%, transparent); border: 1px solid var(--border, #3a3e46); border-radius: 4px; }
+.fea-viewport-actions input[type="range"] { width: 96px; }
+.fea-viewport-actions output { min-width: 42px; align-self: center; color: var(--ui-color-canvas-text, #dbeafe); font-size: 12px; font-variant-numeric: tabular-nums; }
 .fea-viewport-actions .fea-overlay-check { display: flex; gap: 4px; }
 .fea-result-legend, .fea-probe { position: absolute; left: 12px; padding: 9px; border: 1px solid var(--border, #3a3e46); border-radius: 5px; background: color-mix(in srgb, var(--ui-color-surface, #202329) 92%, transparent); font-size: 11px; }
 .fea-result-legend { bottom: 34px; width: 190px; }

@@ -290,6 +290,15 @@
     }), 'distributed glyph samples did not lie on the selected surface with local normals');
   }
 
+  function testDeformationAnimationCycle() {
+    var multiplier = api.deformationAnimationMultiplier;
+    assert(near(multiplier(0), 1) && near(multiplier(600), 0.5) && near(multiplier(1200), 0) &&
+      near(multiplier(1800), 0.5) && near(multiplier(2400), 1),
+    'deformation animation did not follow the 2400 ms cosine round trip');
+    assert(near(multiplier(-600), 0.5) && near(multiplier(3000), 0.5),
+      'deformation animation did not wrap deterministically');
+  }
+
   function testSetupInspectorSummaries() {
     var state = api.createAnalysisDocument();
     state.geometry = cubeGeometry('cube-summary');
@@ -611,6 +620,7 @@
     testMaterialCatalog();
     testSymmetricCurvedFaceGlyph();
     testDistributedSurfaceGlyphSampling();
+    testDeformationAnimationCycle();
     testSetupInspectorSummaries();
     testSetupInspectorMarkup();
     expectError(testControllerAndProjection, 'only once');

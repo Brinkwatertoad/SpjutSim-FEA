@@ -1270,6 +1270,14 @@ Controls:
 
 The UI must always display the active deformation scale.
 
+Animation uses the same compact interaction as SpjutSim Truss-2D: a Play/Stop
+control, exaggeration slider, and live `xN` readout. The displayed shape follows
+`x + animationMultiplier * scale * u`, where the transient multiplier completes
+a smooth cosine round trip from full deformation through undeformed and back in
+2400 ms. Animation defaults off, pauses while the document is hidden, stops when
+Deformation view or current results become unavailable, and never mutates the
+analysis document or revision.
+
 ### 11.5 Color maps
 
 Each result field needs:
@@ -1730,7 +1738,9 @@ Render labeled X/Y/Z axes in a dedicated orthographic overlay at a fixed viewpor
 corner. Apply inverse camera rotation so the triad follows view orientation but
 does not move with model pan, fit, or zoom. Clear depth between the model and
 overlay passes, exclude the overlay from picking, and resolve X/Y/Z colors from
-semantic theme roles.
+semantic theme roles. Lay out the overlay in screen pixels so resizing or canvas
+aspect ratio cannot stretch the labels. All three arrow tails meet at one point;
+the complete rotated arrows and label boxes must remain inside the viewport.
 
 ### 15.8 Units
 

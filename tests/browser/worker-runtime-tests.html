@@ -20,8 +20,14 @@
   <button id="generate-mesh-button" type="button"></button>
   <button id="cancel-mesh-button" type="button"></button>
   <p id="mesh-status"></p>
-  <select id="viewport-mode"><option value="model">Model</option><option value="mesh">Mesh</option></select>
+  <select id="viewport-mode"><option value="model">Model</option><option value="mesh">Mesh</option><option value="stress">Stress</option><option value="deformation">Deformation</option></select>
   <select id="display-style"><option value="lines">Shaded with edges</option><option value="wireframe">Wireframe</option></select>
+  <select id="result-field"><option value="vonMises">von Mises</option><option value="displacementMagnitude">Displacement</option></select>
+  <select id="deformation-mode"><option value="undeformed">Undeformed</option><option value="true-scale">True scale</option><option value="auto">Auto</option><option value="user">User</option></select>
+  <button id="deformation-animation-toggle" type="button" aria-pressed="false" hidden>Play</button>
+  <input id="deformation-scale" type="range" min="1" max="1000" value="100" hidden>
+  <output id="deformation-scale-readout" hidden></output>
+  <input id="mesh-overlay" type="checkbox">
   <canvas id="viewport" style="width: 240px; height: 160px"></canvas>
   <script src="../../web/vendor/three/three.min.js"></script>
   <script src="../../web/ui/shell-behaviors.js"></script>
@@ -35,6 +41,7 @@
   <script src="../../web/js/analysis/analysis-document.js"></script>
   <script src="../../web/js/analysis/app-controller.js"></script>
   <script src="../../web/js/render/viewport-navigation.js"></script>
+  <script src="../../web/js/render/deformation-animation.js"></script>
   <script src="../../web/js/render/viewport-controller.js"></script>
   <script src="../../web/js/ui/ui-controller.js"></script>
   <script src="../../web/js/workers/local-worker-bootstrap.js"></script>
