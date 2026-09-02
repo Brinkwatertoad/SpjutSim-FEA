@@ -68,11 +68,21 @@
     return row('gravity', 'gravity', 'Gravity', '[' + gravity.accelerationMS2.map(formatNumber).join(', ') + '] m/s²', 'Body load');
   }
 
+  function summarizeMeshRow(documentState) {
+    var settings = documentState.meshSettings || { preset: 'normal' };
+    var preset = settings.preset.charAt(0).toUpperCase() + settings.preset.slice(1);
+    var metadata = documentState.meshMetadata;
+    if (!metadata) { return row('mesh', 'mesh', 'Mesh', 'Not generated', preset); }
+    return row('mesh', 'mesh', 'Mesh', metadata.statistics.elementCount + ' Tet4 elements',
+      metadata.statistics.nodeCount + ' nodes · ' + preset);
+  }
+
   function buildSetupInspectorRows(documentState) {
     var rows = [summarizeModelRow(documentState), summarizeMaterialRow(documentState)];
     documentState.boundaryConditions.forEach(function (item) { rows.push(summarizeSupportRow(item)); });
     documentState.loads.forEach(function (item) { rows.push(summarizeLoadRow(item)); });
     if (documentState.gravity && documentState.gravity.enabled) { rows.push(summarizeGravityRow(documentState.gravity)); }
+    rows.push(summarizeMeshRow(documentState));
     return Object.freeze(rows);
   }
 

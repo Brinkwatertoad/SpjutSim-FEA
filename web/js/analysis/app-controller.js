@@ -471,6 +471,16 @@
     this.notify();
   };
 
+  AppController.prototype.clearMesh = function () {
+    this.document.mesh = null;
+    this.document.meshMetadata = null;
+    this.refreshConstraintStability();
+    this.invalidateResults('mesh');
+    this.document.meshGeneration = { status: 'idle', error: null, progress: null };
+    this.document.viewportPresentation = { mode: 'model', displayStyle: this.document.viewportPresentation.displayStyle };
+    this.notify();
+  };
+
   AppController.prototype.failMeshGeneration = function (error) {
     this.document.meshGeneration = { status: 'failed', error: error && error.diagnostic ? error.diagnostic : error, progress: null };
     this.notify();

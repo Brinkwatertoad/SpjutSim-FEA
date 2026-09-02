@@ -14,6 +14,7 @@
     this.meshMaxSize = document.getElementById('mesh-max-size');
     this.generateMeshButton = document.getElementById('generate-mesh-button');
     this.cancelMeshButton = document.getElementById('cancel-mesh-button');
+    this.deleteMeshButton = document.getElementById('delete-mesh-button');
     this.meshStatus = document.getElementById('mesh-status');
     this.viewportMode = document.getElementById('viewport-mode');
     this.displayStyle = document.getElementById('display-style');
@@ -42,6 +43,7 @@
     this.customMeshSizes = null;
     this.generateMeshHandler = null;
     this.cancelMeshHandler = null;
+    this.deleteMeshHandler = null;
     this.preflightHandler = null;
     this.solveHandler = null;
     this.cancelSolveHandler = null;
@@ -181,9 +183,10 @@
   UIController.prototype.setImportHandler = function (handler) {
     this.importHandler = handler;
   };
-  UIController.prototype.setMeshHandlers = function (generate, cancel) {
+  UIController.prototype.setMeshHandlers = function (generate, cancel, remove) {
     this.generateMeshHandler = generate;
     this.cancelMeshHandler = cancel;
+    this.deleteMeshHandler = remove;
   };
   UIController.prototype.setSolveHandlers = function (preflight, solve, cancel) {
     this.preflightHandler = preflight;
@@ -217,6 +220,9 @@
     }
     if (this.cancelMeshButton) {
       this.cancelMeshButton.addEventListener('click', function () { if (self.cancelMeshHandler) { self.cancelMeshHandler(); } });
+    }
+    if (this.deleteMeshButton) {
+      this.deleteMeshButton.addEventListener('click', function () { if (self.deleteMeshHandler) { self.deleteMeshHandler(); } });
     }
     if (this.viewportMode) {
       this.viewportMode.addEventListener('change', function () { self.updateViewportPresentation(); });
@@ -369,7 +375,9 @@
     }
     if (this.meshStatus) { this.meshStatus.textContent = message; }
     if (this.generateMeshButton) { this.generateMeshButton.disabled = !hasGeometry || isGenerating; }
+    if (this.generateMeshButton) { this.generateMeshButton.textContent = documentState.mesh ? 'Regenerate mesh' : 'Generate mesh'; }
     if (this.cancelMeshButton) { this.cancelMeshButton.hidden = !isGenerating; }
+    if (this.deleteMeshButton) { this.deleteMeshButton.hidden = !documentState.mesh || isGenerating; }
   };
   UIController.prototype.updateViewportPresentation = function () {
     var current = this.controller.document.viewportPresentation || {};

@@ -394,10 +394,11 @@
       { id: 'load-2', name: 'Load 2', type: 'total-force', faceIds: ['face-y+'], forceN: [120, -30, 45] }
     ];
     state.gravity = { enabled: true, accelerationMS2: [0, 0, -9.80665] };
+    state.meshMetadata = { statistics: { elementCount: 42, nodeCount: 18 }, quality: {}, memoryInputs: {} };
 
     var rows = api.buildSetupInspectorRows(state);
     assert(rows.map(function (row) { return row.kind + ':' + row.itemId; }).join('|') ===
-      'model:model|material:material|support:support-1|support:support-2|load:load-1|load:load-2|gravity:gravity',
+      'model:model|material:material|support:support-1|support:support-2|load:load-1|load:load-2|gravity:gravity|mesh:mesh',
       'setup rows were not emitted in stable document order');
     assert(rows[0].primaryText === 'cube.step' && rows[0].secondaryText === 'STEP',
       'model row omitted source format');
@@ -410,22 +411,24 @@
     assert(rows[4].secondaryText === 'Pressure · 1.5 MPa', 'pressure row omitted display units');
     assert(rows[5].secondaryText === 'Force · [120, −30, 45] N', 'force row omitted vector or display units');
     assert(rows[6].secondaryText === '[0, 0, −9.80665] m/s²', 'gravity row omitted acceleration');
+    assert(rows[7].secondaryText === '42 Tet4 elements' && rows[7].metaText === '18 nodes · Normal',
+      'mesh row omitted generated mesh statistics or density');
     assert(rows.every(function (row) { return row.ariaLabel.indexOf(row.primaryText) !== -1; }),
       'setup row accessible label omitted its primary text');
 
     state.gravity.enabled = false;
-    assert(api.buildSetupInspectorRows(state).length === 6, 'disabled gravity was included as a setup row');
+    assert(api.buildSetupInspectorRows(state).length === 7, 'disabled gravity was included as a setup row');
   }
 
   function testSetupInspectorMarkup() {
     [
       'setup-inspector', 'setup-inspector-status', 'setup-inspector-model-list', 'setup-inspector-material-list',
-      'setup-inspector-support-list', 'setup-inspector-load-list',
+      'setup-inspector-support-list', 'setup-inspector-load-list', 'setup-inspector-mesh-list',
       'setup-inspector-form-stash', 'setup-add-support-button', 'setup-add-load-button',
       'constraint-stability-summary',
       'model-rotation-axis', 'model-rotation-angle', 'rotate-model-positive',
       'rotate-model-negative', 'reset-model-orientation', 'model-orientation-status',
-      'model-face-direction', 'orient-selected-face'
+      'model-face-direction', 'orient-selected-face', 'mesh-editor', 'delete-mesh-button'
     ].forEach(function (id) {
       assert(document.getElementById(id), 'missing inspector node #' + id);
     });
@@ -433,8 +436,10 @@
     assert(document.querySelectorAll('#support-form').length === 1, 'support form was duplicated');
     assert(document.querySelectorAll('#load-form').length === 1, 'load form was duplicated');
     assert(document.querySelectorAll('#gravity-form').length === 1, 'gravity form was duplicated');
-    assert(document.querySelector('.fea-tools > h1').textContent === 'Setup' && !document.querySelector('#setup-inspector h2'),
-      'left pane retained a nested Analysis/Setup hierarchy');
+    assert(document.querySelector('.fea-tools > h1').textContent === 'Setup' &&
+      Array.from(document.querySelectorAll('#setup-inspector h2')).map(function (heading) { return heading.textContent; }).join('|') ===
+        'Model|Material|Supports|Loads|Mesh',
+      'setup sections did not use the same heading hierarchy and style as Mesh');
     var emptyController = new api.AppController({ document: api.createAnalysisDocument() });
     var emptyAuthoring = new api.AnalysisAuthoringUI(emptyController);
     var importRequested = false;
@@ -445,6 +450,10 @@
     document.querySelector('[data-setup-kind="material"] [data-setup-row-trigger]').click();
     assert(document.getElementById('material-form').closest('[data-setup-kind="material"]'),
       'Material did not expand immediately below Model');
+    document.querySelector('[data-setup-kind="mesh"] [data-setup-row-trigger]').click();
+    assert(document.getElementById('mesh-editor').closest('[data-setup-kind="mesh"]') &&
+      document.querySelectorAll('[data-setup-kind="mesh"]').length === 1,
+      'the single Mesh row did not expand its editor in place');
     emptyAuthoring.closeInspectorRow({ cancelEdit: true });
   }
 
@@ -577,8 +586,14 @@
     document.getElementById('load-form').requestSubmit();
     assert(state.loads.length === 1 && state.loads[0].name === 'Load 1' && state.loads[0].pressurePa === 1.5e6, 'keyboard form submission did not add an auto-named pressure load');
     var inspectorRows = Array.from(document.querySelectorAll('[data-setup-row]'));
-    assert(inspectorRows.map(function (row) { return row.dataset.setupKind; }).join('|') === 'model|material|support|load',
-      'compact setup rows were not rendered in model/material/support/load order');
+    assert(inspectorRows.map(function (row) { return row.dataset.setupKind; }).join('|') === 'model|material|support|load|mesh',
+      'compact setup rows were not rendered in model/material/support/load/mesh order');
+    var compactSupportTrigger = document.querySelector('[data-setup-kind="support"] [data-setup-row-trigger]');
+    var supportLabelBounds = compactSupportTrigger.querySelector('strong').getBoundingClientRect();
+    var supportSummaryBounds = compactSupportTrigger.querySelector('.fea-setup-row-summary').getBoundingClientRect();
+    assert(supportSummaryBounds.top < supportLabelBounds.bottom &&
+      Math.abs(supportSummaryBounds.right - (compactSupportTrigger.getBoundingClientRect().right - 6)) <= 1,
+      'support label and constrained-component summary were not kept on one line');
     var modelTrigger = document.querySelector('[data-setup-kind="model"] [data-setup-row-trigger]');
     modelTrigger.click();
     assert(document.getElementById('model-rotation-angle').value === '90', 'model rotation did not default to 90 degrees');

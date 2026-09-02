@@ -42,6 +42,7 @@
     this.setupSupportList = byId('setup-inspector-support-list');
     this.constraintStabilitySummary = byId('constraint-stability-summary');
     this.setupLoadList = byId('setup-inspector-load-list');
+    this.setupMeshList = byId('setup-inspector-mesh-list');
     this.setupFormStash = byId('setup-inspector-form-stash');
     this.addSupportButton = byId('setup-add-support-button');
     this.addLoadButton = byId('setup-add-load-button');
@@ -628,7 +629,7 @@
   AnalysisAuthoringUI.prototype.returnEditorsToStash = function () {
     var stash = this.setupFormStash;
     if (!stash) { return; }
-    ['model-editor', 'material-editor', 'support-editor', 'load-editor', 'gravity-editor'].forEach(function (id) {
+    ['model-editor', 'material-editor', 'support-editor', 'load-editor', 'gravity-editor', 'mesh-editor'].forEach(function (id) {
       var editor = byId(id);
       if (editor && editor.parentElement !== stash) { stash.append(editor); }
     });
@@ -677,11 +678,12 @@
     var groups;
     if (!this.setupModelList || !root.SpjutsimFEA.buildSetupInspectorRows) { return; }
     this.returnEditorsToStash();
-    groups = { model: this.setupModelList, material: this.setupMaterialList, support: this.setupSupportList, load: this.setupLoadList, gravity: this.setupLoadList };
+    groups = { model: this.setupModelList, material: this.setupMaterialList, support: this.setupSupportList, load: this.setupLoadList, gravity: this.setupLoadList, mesh: this.setupMeshList };
     this.setupModelList.replaceChildren();
     this.setupMaterialList.replaceChildren();
     this.setupSupportList.replaceChildren();
     this.setupLoadList.replaceChildren();
+    this.setupMeshList.replaceChildren();
     var definitions = root.SpjutsimFEA.buildSetupInspectorRows(documentState).slice();
     if (this.activeInspectorItemId === 'new') {
       definitions.push({

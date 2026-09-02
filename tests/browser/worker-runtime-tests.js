@@ -133,6 +133,12 @@
     controller.completeMeshGeneration(mesh);
     assert(controller.document.mesh && controller.document.meshMetadata.statistics.elementCount === 1, 'valid volume mesh was not stored');
     assert(controller.document.viewportPresentation.mode === 'mesh', 'successful mesh did not activate Mesh view');
+    controller.document.boundaryConditions = [{ id: 'support-keep', name: 'Support 1', type: 'support', faceIds: ['opaque-face'], componentsM: { x: 0 } }];
+    controller.clearMesh();
+    assert(controller.document.mesh === null && controller.document.meshMetadata === null &&
+      controller.document.boundaryConditions.length === 1 && controller.document.viewportPresentation.mode === 'model',
+    'deleting the mesh did not preserve setup while clearing derived mesh state');
+    controller.completeMeshGeneration(mesh);
     controller.replaceViewportPresentation({ mode: 'model', displayStyle: 'wireframe' });
     assert(controller.document.viewportPresentation.displayStyle === 'wireframe', 'display style was not stored for Model view');
     assert(controller.document.mesh === mesh, 'presentation change invalidated mesh data');

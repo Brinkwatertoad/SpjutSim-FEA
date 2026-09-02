@@ -164,9 +164,9 @@ especially important for printed polymers. TPU also requires a prominent
 warning that a small-strain linear-isotropic model may be inappropriate for its
 normal large-deformation behavior. Do not ship guessed placeholder values.
 
-The active model and material are summarized together in the compact setup
-inspector. Selecting the Model row opens the one material editor in place; the
-application must not expose a second competing material form elsewhere in the
+The active model and material have adjacent rows in the compact setup inspector.
+Selecting either row opens its corresponding single editor in place; the
+application must not expose competing import or material forms elsewhere in the
 tools pane.
 
 The material-library architecture should follow the established SpjutSim-Truss
@@ -201,6 +201,11 @@ CAD faces and opens the one corresponding editor in place.
 ### Step 4 — Mesh
 
 The user selects a mesh preset or custom size and requests a mesh.
+
+Mesh uses one compact, expandable inspector row. Only one mesh exists at a time;
+the expanded row permits generation or regeneration and explicit deletion.
+Deleting a mesh clears derived mesh/result state while preserving the model,
+material, supports, loads, gravity, and current mesh settings.
 
 The application:
 
@@ -1573,18 +1578,22 @@ row whose existing editor expands in place. Supports and Loads follow.
 A typical model with a material, a few supports, and a few simple loads must fit
 together in the normal tools-pane viewport without requiring page scrolling.
 Each compact row includes the engineering value/components, display units, and
-face count needed to understand ordinary setup at a glance.
+face count needed to understand ordinary setup at a glance. Support/load names
+are left-aligned with their defining components or value right-aligned on the
+same line.
 
 Selecting a row opens its editor directly in that row. Compact Add actions open
 the same support or load form in place. The UI moves the single form node
 between the inactive form stash and active row; it must not clone forms, keep a
-parallel draft, or expose separate Material/Supports/Loads editing sections.
+parallel draft, or expose separate Material/Supports/Loads/Mesh editing sections.
 Save, cancel, delete, and Escape return focus to the logical row or Add action.
 Escape closes the inline editor before it clears transient face selection.
 
-Below the compact rows, retain focused Mesh and Solve Preflight tools. Expanded
-editors may use their own bounded overflow when necessary, but collapsed setup
-summaries remain compact and readable.
+Mesh is a single expandable row after Loads. It summarizes element/node counts
+after generation and offers modify/regenerate and delete actions in its one
+editor. Solve Preflight remains the focused tool below the compact rows.
+Expanded editors may use their own bounded overflow when necessary, but
+collapsed setup summaries remain compact and readable.
 
 The analysis state model remains authoritative. Controls render the state and dispatch commands; they do not own the engineering model.
 
@@ -1762,6 +1771,8 @@ overlay passes, exclude the overlay from picking, and resolve X/Y/Z colors from
 semantic theme roles. Lay out the overlay in screen pixels so resizing or canvas
 aspect ratio cannot stretch the labels. All three arrow tails meet at one point;
 the complete rotated arrows and label boxes must remain inside the viewport.
+Use 30-pixel axes, 21-pixel square label sprites, and a safe corner inset large
+enough to preserve a small margin at every tested rotation and viewport size.
 
 ### 15.8 Units
 

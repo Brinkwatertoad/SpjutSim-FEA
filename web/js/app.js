@@ -187,7 +187,10 @@
     viewport.setAnalysisOverlay(documentState);
   });
   ui.setImportHandler(importCadFile);
-  ui.setMeshHandlers(generateMesh, function () { if (activeMesh) { activeMesh.cancel(); } });
+  ui.setMeshHandlers(generateMesh, function () { if (activeMesh) { activeMesh.cancel(); } }, function () {
+    disposeSolver();
+    app.clearMesh();
+  });
   ui.setSolveHandlers(prepareSolve, solve, cancelSolve);
   viewport.setProbeHandler(function (probe) { ui.renderProbe(probe); });
   ui.start();

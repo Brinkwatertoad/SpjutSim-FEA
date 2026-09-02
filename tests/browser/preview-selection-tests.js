@@ -117,9 +117,9 @@
       assert(arrow.userData.tailPositionM.every(function (value) { return Math.abs(value) < 1e-12; }),
         'axis triad arrow tails did not meet at one origin');
       assert(arrow.getObjectByName('glyph-shaft').geometry.parameters.height +
-        arrow.getObjectByName('glyph-head').geometry.parameters.height === 20,
-      'axis triad was not reduced to the compact 20-pixel axis size');
-      assert(label.scale.x === label.scale.y, 'axis label aspect ratio was stretched');
+        arrow.getObjectByName('glyph-head').geometry.parameters.height === 30,
+      'axis triad did not use the requested 30-pixel axis size');
+      assert(label.scale.x === 21 && label.scale.y === 21, 'axis label was not enlarged without stretching');
     });
     var triadPosition = viewport.axisTriad.position.clone();
     var triadQuaternion = viewport.axisTriad.quaternion.clone();
@@ -147,14 +147,14 @@
     canvas.style.width = '360px';
     canvas.style.height = '240px';
     viewport.resize();
-    assert(viewport.axisTriad.position.x === -180 + 36 && viewport.axisTriad.position.y === -120 + 36,
+    assert(viewport.axisTriad.position.x === -180 + 56 && viewport.axisTriad.position.y === -120 + 56,
       'axis triad did not retain a safe corner margin after resize');
     selectEveryFace(geometry);
     assert(viewport.selectedFaceIds.has(selectedFaceId), 'camera movement changed the selected faces');
     canvas.style.width = '720px';
     canvas.style.height = '360px';
     viewport.resize();
-    assert(viewport.axisTriad.position.x === -360 + 36 && viewport.axisTriad.position.y === -180 + 36,
+    assert(viewport.axisTriad.position.x === -360 + 56 && viewport.axisTriad.position.y === -180 + 56,
       'axis triad left the viewport after a second aspect-ratio change');
     [
       [0, 0, 0], [Math.PI / 2, 0, 0], [0, Math.PI / 2, 0],
@@ -167,7 +167,7 @@
           .project(viewport.axisTriadCamera);
         var pixelX = (projected.x + 1) * 360;
         var pixelY = (1 - projected.y) * 180;
-        assert(pixelX >= 7 && pixelX <= 713 && pixelY >= 7 && pixelY <= 353,
+        assert(pixelX >= 11 && pixelX <= 709 && pixelY >= 11 && pixelY <= 349,
           'rotated ' + axis.toUpperCase() + ' label crossed the viewport edge');
       });
     });

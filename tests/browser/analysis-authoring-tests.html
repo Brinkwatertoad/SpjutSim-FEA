@@ -7,10 +7,11 @@
     <h1 id="setup-inspector-title">Setup</h1>
     <section id="setup-inspector" class="fea-setup-inspector" aria-labelledby="setup-inspector-title">
       <p id="setup-inspector-status" class="fea-visually-hidden" role="status" aria-live="polite"></p>
-      <div class="fea-setup-group"><h3>Model</h3><ul id="setup-inspector-model-list" class="fea-setup-list"></ul></div>
-      <div class="fea-setup-group"><h3>Material</h3><ul id="setup-inspector-material-list" class="fea-setup-list"></ul></div>
-      <div class="fea-setup-group"><div class="fea-setup-group-heading"><h3>Supports</h3><button id="setup-add-support-button" type="button">Add</button></div><p id="constraint-stability-summary" class="fea-constraint-stability" role="status" aria-live="polite"></p><ul id="setup-inspector-support-list" class="fea-setup-list"></ul></div>
-      <div class="fea-setup-group"><div class="fea-setup-group-heading"><h3>Loads</h3><button id="setup-add-load-button" type="button">Add</button></div><ul id="setup-inspector-load-list" class="fea-setup-list"></ul></div>
+      <div class="fea-setup-group"><h2>Model</h2><ul id="setup-inspector-model-list" class="fea-setup-list"></ul></div>
+      <div class="fea-setup-group"><h2>Material</h2><ul id="setup-inspector-material-list" class="fea-setup-list"></ul></div>
+      <div class="fea-setup-group"><div class="fea-setup-group-heading"><h2>Supports</h2><button id="setup-add-support-button" type="button">Add</button></div><p id="constraint-stability-summary" class="fea-constraint-stability" role="status" aria-live="polite"></p><ul id="setup-inspector-support-list" class="fea-setup-list"></ul></div>
+      <div class="fea-setup-group"><div class="fea-setup-group-heading"><h2>Loads</h2><button id="setup-add-load-button" type="button">Add</button></div><ul id="setup-inspector-load-list" class="fea-setup-list"></ul></div>
+      <div class="fea-setup-group"><h2>Mesh</h2><ul id="setup-inspector-mesh-list" class="fea-setup-list"></ul></div>
       <div id="setup-inspector-form-stash" hidden>
     <div id="model-editor">
     <button id="import-step-button" type="button">Import or replace CAD…</button><input id="import-step-input" type="file" hidden>
@@ -43,6 +44,11 @@
     <div id="gravity-editor">
     <form id="gravity-form"><input id="gravity-enabled" type="checkbox"><input id="gravity-x" value="0"><input id="gravity-y" value="0"><input id="gravity-z" value="-9.80665"><button type="submit">Apply gravity</button></form>
     <p id="gravity-status"></p></div>
+    <div id="mesh-editor">
+      <select id="mesh-preset"><option value="coarse">Coarse</option><option value="normal" selected>Normal</option><option value="fine">Fine</option><option value="custom">Custom</option></select>
+      <div id="mesh-custom-sizes" hidden><input id="mesh-min-size" type="number"><input id="mesh-max-size" type="number"></div>
+      <button id="generate-mesh-button" type="button">Generate mesh</button><button id="cancel-mesh-button" type="button" hidden>Cancel</button><button id="delete-mesh-button" type="button" hidden>Delete mesh</button><p id="mesh-status"></p>
+    </div>
       </div>
     </section>
   </aside>

@@ -1,5 +1,9 @@
 (function (root) {
   'use strict';
+  var AXIS_TRIAD_LENGTH_PX = 30;
+  var AXIS_TRIAD_LABEL_OFFSET_PX = 42;
+  var AXIS_TRIAD_LABEL_SIZE_PX = 21;
+  var AXIS_TRIAD_SAFE_INSET_PX = 56;
 
   function themeColor(name, fallback) {
     var value = root.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -47,7 +51,7 @@
     texture = new root.THREE.CanvasTexture(canvas);
     sprite = new root.THREE.Sprite(new root.THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
     sprite.name = 'axis-triad-label-' + letter.toLowerCase();
-    sprite.scale.set(14, 14, 1);
+    sprite.scale.set(AXIS_TRIAD_LABEL_SIZE_PX, AXIS_TRIAD_LABEL_SIZE_PX, 1);
     return sprite;
   }
 
@@ -197,10 +201,10 @@
     ];
     if (this.axisTriad) { this.axisTriadScene.remove(this.axisTriad); disposeObjectResources(this.axisTriad); }
     definitions.forEach(function (definition) {
-      var endpoint = definition[1].clone().multiplyScalar(20);
-      var arrow = cylinderConeArrow(definition[1], endpoint, 20, definition[2], 'axis-triad-' + definition[0]);
+      var endpoint = definition[1].clone().multiplyScalar(AXIS_TRIAD_LENGTH_PX);
+      var arrow = cylinderConeArrow(definition[1], endpoint, AXIS_TRIAD_LENGTH_PX, definition[2], 'axis-triad-' + definition[0]);
       var label = axisLabel(definition[0].toUpperCase(), definition[2]);
-      label.position.copy(definition[1]).multiplyScalar(28);
+      label.position.copy(definition[1]).multiplyScalar(AXIS_TRIAD_LABEL_OFFSET_PX);
       group.add(arrow, label);
     });
     group.name = 'axis-triad';
@@ -210,14 +214,13 @@
   };
 
   ViewportController.prototype.layoutAxisTriad = function (width, height) {
-    var safeInset = 36;
     this.axisTriadCamera.left = -width / 2;
     this.axisTriadCamera.right = width / 2;
     this.axisTriadCamera.top = height / 2;
     this.axisTriadCamera.bottom = -height / 2;
     this.axisTriadCamera.updateProjectionMatrix();
     if (this.axisTriad) {
-      this.axisTriad.position.set(-width / 2 + safeInset, -height / 2 + safeInset, 0);
+      this.axisTriad.position.set(-width / 2 + AXIS_TRIAD_SAFE_INSET_PX, -height / 2 + AXIS_TRIAD_SAFE_INSET_PX, 0);
     }
   };
 
