@@ -73,25 +73,90 @@
     return length > 0 ? [vector[0] / length, vector[1] / length, vector[2] / length] : [0, 0, 0];
   }
 
+  function faceTriangles(surface, faceId) {
+    var range = surface.faceMap[faceId];
+    var triangles = [];
+    var totalAreaM2 = 0;
+    var offset;
+    if (!range) { return { triangles: triangles, totalAreaM2: 0 }; }
+    for (offset = range.start; offset < range.start + range.count; offset += 3) {
+      var indices = [surface.indices[offset], surface.indices[offset + 1], surface.indices[offset + 2]];
+      var points = indices.map(function (node) {
+        return [surface.positionsM[node * 3], surface.positionsM[node * 3 + 1], surface.positionsM[node * 3 + 2]];
+      });
+      var ab = points[1].map(function (value, axis) { return value - points[0][axis]; });
+      var ac = points[2].map(function (value, axis) { return value - points[0][axis]; });
+      var cross = [ab[1] * ac[2] - ab[2] * ac[1], ab[2] * ac[0] - ab[0] * ac[2], ab[0] * ac[1] - ab[1] * ac[0]];
+      var twiceArea = Math.hypot(cross[0], cross[1], cross[2]);
+      if (!(twiceArea > 0) || !Number.isFinite(twiceArea)) { continue; }
+      totalAreaM2 += twiceArea / 2;
+      triangles.push({ points: points, areaM2: twiceArea / 2, cumulativeAreaM2: totalAreaM2,
+        outwardNormal: [cross[0] / twiceArea, cross[1] / twiceArea, cross[2] / twiceArea] });
+    }
+    return { triangles: triangles, totalAreaM2: totalAreaM2 };
+  }
+
+  function sampleFaceGlyphPoints(surface, faceId, options) {
+    var data = faceTriangles(surface, faceId);
+    var spacingM = Number(options && options.spacingM);
+    var minimum = Math.max(1, Number(options && options.minCount) || 1);
+    var maximum = Math.max(minimum, Number(options && options.maxCount) || 12);
+    var count;
+    var samples = [];
+    var index;
+    if (!(data.totalAreaM2 > 0)) { return samples; }
+    if (!(spacingM > 0)) { throw new Error('Surface glyph spacing must be greater than zero.'); }
+    count = Math.max(minimum, Math.min(maximum, Math.ceil(data.totalAreaM2 / (spacingM * spacingM))));
+    for (index = 0; index < count; index += 1) {
+      var targetArea = (index + 0.5) * data.totalAreaM2 / count;
+      var triangle = data.triangles.find(function (item) { return item.cumulativeAreaM2 >= targetArea; }) || data.triangles[data.triangles.length - 1];
+      var u = ((index + 1) * 0.7548776662466927) % 1;
+      var v = ((index + 1) * 0.5698402909980532) % 1;
+      var rootU = Math.sqrt(u);
+      var weights = [1 - rootU, rootU * (1 - v), rootU * v];
+      samples.push({
+        positionM: [0, 1, 2].map(function (axis) {
+          return triangle.points[0][axis] * weights[0] + triangle.points[1][axis] * weights[1] + triangle.points[2][axis] * weights[2];
+        }),
+        outwardNormal: triangle.outwardNormal.slice()
+      });
+    }
+    return samples;
+  }
+
+  function defaultGlyphSpacing(surface) {
+    var minimum = [Infinity, Infinity, Infinity];
+    var maximum = [-Infinity, -Infinity, -Infinity];
+    for (var index = 0; index < surface.positionsM.length; index += 3) {
+      for (var axis = 0; axis < 3; axis += 1) {
+        minimum[axis] = Math.min(minimum[axis], surface.positionsM[index + axis]);
+        maximum[axis] = Math.max(maximum[axis], surface.positionsM[index + axis]);
+      }
+    }
+    return Math.max(maximum[0] - minimum[0], maximum[1] - minimum[1], maximum[2] - minimum[2], 1e-6) * 0.5;
+  }
+
   function buildAnalysisGlyphDescriptors(documentState) {
     var surface = surfaceSource(documentState);
     var descriptors = [];
     if (!surface) { return descriptors; }
+    var sampling = { spacingM: defaultGlyphSpacing(surface), minCount: 1, maxCount: 12 };
     documentState.boundaryConditions.forEach(function (condition) {
       condition.faceIds.forEach(function (faceId) {
-        var face = faceCentroidNormal(surface, faceId);
-        if (face) { descriptors.push({ type: condition.type, itemId: condition.id, faceId: faceId, positionM: face.positionM, direction: face.outwardNormal }); }
+        sampleFaceGlyphPoints(surface, faceId, sampling).forEach(function (sample) {
+          descriptors.push({ type: condition.type, itemId: condition.id, faceId: faceId, positionM: sample.positionM,
+            direction: sample.outwardNormal, components: ['x', 'y', 'z'].filter(function (axis) { return condition.componentsM[axis] !== undefined; }) });
+        });
       });
     });
     documentState.loads.forEach(function (load) {
       load.faceIds.forEach(function (faceId) {
-        var face = faceCentroidNormal(surface, faceId);
-        var direction;
-        if (!face) { return; }
-        direction = load.type === 'pressure'
-          ? face.outwardNormal.map(function (value) { return -value; })
-          : normalized(load.forceN);
-        descriptors.push({ type: load.type, itemId: load.id, faceId: faceId, positionM: face.positionM, direction: direction });
+        sampleFaceGlyphPoints(surface, faceId, sampling).forEach(function (sample) {
+          var direction = load.type === 'pressure'
+            ? sample.outwardNormal.map(function (value) { return -value; })
+            : normalized(load.forceN);
+          descriptors.push({ type: load.type, itemId: load.id, faceId: faceId, positionM: sample.positionM, direction: direction });
+        });
       });
     });
     if (documentState.gravity && documentState.gravity.enabled && documentState.geometry) {
@@ -107,5 +172,6 @@
 
   root.SpjutsimFEA = root.SpjutsimFEA || {};
   root.SpjutsimFEA.faceCentroidNormal = faceCentroidNormal;
+  root.SpjutsimFEA.sampleFaceGlyphPoints = sampleFaceGlyphPoints;
   root.SpjutsimFEA.buildAnalysisGlyphDescriptors = buildAnalysisGlyphDescriptors;
 }(globalThis));

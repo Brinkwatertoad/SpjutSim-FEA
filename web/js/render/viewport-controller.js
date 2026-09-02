@@ -10,8 +10,44 @@
     if (Array.isArray(material)) {
       material.forEach(disposeMaterial);
     } else if (material && typeof material.dispose === 'function') {
+      if (material.map && typeof material.map.dispose === 'function') { material.map.dispose(); }
       material.dispose();
     }
+  }
+
+  function cylinderConeArrow(direction, tip, length, color, name) {
+    var unit = direction.clone().normalize();
+    var headLength = length * 0.28;
+    var shaftLength = length - headLength;
+    var material = new root.THREE.MeshBasicMaterial({ color: color, depthTest: false });
+    var shaft = new root.THREE.Mesh(new root.THREE.CylinderGeometry(length * 0.022, length * 0.022, shaftLength, 8), material);
+    var head = new root.THREE.Mesh(new root.THREE.ConeGeometry(length * 0.075, headLength, 10), material);
+    var group = new root.THREE.Group();
+    shaft.name = 'glyph-shaft'; head.name = 'glyph-head';
+    shaft.quaternion.setFromUnitVectors(new root.THREE.Vector3(0, 1, 0), unit);
+    head.quaternion.copy(shaft.quaternion);
+    shaft.position.copy(tip).addScaledVector(unit, -(headLength + shaftLength / 2));
+    head.position.copy(tip).addScaledVector(unit, -headLength / 2);
+    group.name = name || 'vector-glyph';
+    group.userData.tipPositionM = tip.toArray();
+    group.add(shaft, head);
+    return group;
+  }
+
+  function axisLabel(letter, color) {
+    var canvas = document.createElement('canvas');
+    var context;
+    var texture;
+    var sprite;
+    canvas.width = 64; canvas.height = 64;
+    context = canvas.getContext('2d');
+    context.font = 'bold 44px sans-serif'; context.textAlign = 'center'; context.textBaseline = 'middle';
+    context.fillStyle = color; context.fillText(letter, 32, 34);
+    texture = new root.THREE.CanvasTexture(canvas);
+    sprite = new root.THREE.Sprite(new root.THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
+    sprite.name = 'axis-triad-label-' + letter.toLowerCase();
+    sprite.scale.set(0.13, 0.13, 1);
+    return sprite;
   }
 
   function disposeObjectResources(object) {
@@ -51,6 +87,7 @@
 
     this.canvas = canvas;
     this.renderer = new root.THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+    this.renderer.autoClear = false;
     this.renderer.setPixelRatio(Math.min(root.devicePixelRatio || 1, 2));
     if ('outputColorSpace' in this.renderer) {
       this.renderer.outputColorSpace = root.THREE.SRGBColorSpace;
@@ -62,6 +99,10 @@
     this.camera = new root.THREE.PerspectiveCamera(40, 1, 0.01, 1000);
     this.camera.position.set(2.8, 2.1, 3.4);
     this.camera.lookAt(0, 0, 0);
+    this.axisTriadScene = new root.THREE.Scene();
+    this.axisTriadCamera = new root.THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 10);
+    this.axisTriadCamera.position.set(0, 0, 5);
+    this.axisTriad = null;
     this.raycaster = new root.THREE.Raycaster();
     this.pointer = new root.THREE.Vector2();
     this.resizeObserver = null;
@@ -109,6 +150,7 @@
     this.canvas.setAttribute('aria-keyshortcuts', 'ArrowLeft ArrowRight ArrowUp ArrowDown');
     this.addReferenceObjects();
     this.addLights();
+    this.rebuildAxisTriad();
     this.observeTheme();
     this.observeResize();
     this.synchronizeOrbitFromCamera();
@@ -132,7 +174,6 @@
       themeColor('--ui-color-grid-major', '#334155'),
       themeColor('--ui-color-grid-minor', '#1f2937')
     );
-    var axes = new root.THREE.AxesHelper(0.85);
     var geometry = new root.THREE.BoxGeometry(0.72, 0.72, 0.72);
     var material = new root.THREE.MeshStandardMaterial({
       color: themeColor('--ui-color-geometry', '#f4f1ea'),
@@ -142,7 +183,28 @@
     var referenceObject = new root.THREE.Mesh(geometry, material);
     referenceObject.name = 'reference-solid';
     referenceObject.position.y = 0.36;
-    this.scene.add(grid, axes, referenceObject);
+    this.scene.add(grid, referenceObject);
+  };
+
+  ViewportController.prototype.rebuildAxisTriad = function () {
+    var group = new root.THREE.Group();
+    var definitions = [
+      ['x', new root.THREE.Vector3(1, 0, 0), themeColor('--ui-color-axis-x', '#ef4444')],
+      ['y', new root.THREE.Vector3(0, 1, 0), themeColor('--ui-color-axis-y', '#22c55e')],
+      ['z', new root.THREE.Vector3(0, 0, 1), themeColor('--ui-color-axis-z', '#3b82f6')]
+    ];
+    if (this.axisTriad) { this.axisTriadScene.remove(this.axisTriad); disposeObjectResources(this.axisTriad); }
+    definitions.forEach(function (definition) {
+      var endpoint = definition[1].clone().multiplyScalar(0.25);
+      var arrow = cylinderConeArrow(definition[1], endpoint, 0.22, definition[2], 'axis-triad-' + definition[0]);
+      var label = axisLabel(definition[0].toUpperCase(), definition[2]);
+      label.position.copy(definition[1]).multiplyScalar(0.33);
+      group.add(arrow, label);
+    });
+    group.name = 'axis-triad';
+    group.position.set(-0.72, -0.68, 0);
+    this.axisTriadScene.add(group);
+    this.axisTriad = group;
   };
 
   ViewportController.prototype.observeTheme = function () {
@@ -151,6 +213,7 @@
     this.themeObserver = new root.MutationObserver(function () {
       self.scene.background.set(themeColor('--ui-color-canvas', '#111827'));
       self.rebuildAnalysisOverlay();
+      self.rebuildAxisTriad();
       self.render();
     });
     this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style', 'data-color-scheme', 'data-theme'] });
@@ -716,8 +779,8 @@
     var descriptors;
     var group;
     var glyphLength = Math.max(this.modelExtent * 0.14, 0.000001);
-    var loadColor = themeColor('--ui-color-load', '#fbbf24');
-    var supportColor = themeColor('--ui-color-support', '#c4b5fd');
+    var loadColor = themeColor('--ui-color-load', '#ef4444');
+    var supportColor = themeColor('--ui-color-support', '#22c55e');
     this.clearAnalysisOverlay();
     if (!this.analysisOverlayState) { return; }
     descriptors = root.SpjutsimFEA.buildAnalysisGlyphDescriptors(this.analysisOverlayState);
@@ -728,24 +791,18 @@
       var position = new root.THREE.Vector3().fromArray(descriptor.positionM);
       var object;
       if (descriptor.type === 'support') {
-        object = new root.THREE.Mesh(
-          new root.THREE.ConeGeometry(glyphLength * 0.22, glyphLength * 0.5, 10),
-          new root.THREE.MeshBasicMaterial({ color: supportColor, depthTest: false })
-        );
-        object.quaternion.setFromUnitVectors(new root.THREE.Vector3(0, 1, 0), direction);
-        object.position.copy(position).addScaledVector(direction, glyphLength * 0.24);
+        object = new root.THREE.Group();
+        object.name = 'analysis-glyph-support';
+        descriptor.components.forEach(function (axis) {
+          var axisDirection = axis === 'x' ? new root.THREE.Vector3(1, 0, 0) :
+            (axis === 'y' ? new root.THREE.Vector3(0, 1, 0) : new root.THREE.Vector3(0, 0, 1));
+          object.add(cylinderConeArrow(axisDirection, position, glyphLength * 0.52, supportColor, 'support-axis-' + axis));
+        });
       } else {
-        if (descriptor.type === 'pressure') { position.addScaledVector(direction, -glyphLength * 0.8); }
-        object = new root.THREE.ArrowHelper(
-          direction, position, glyphLength,
-          loadColor,
-          glyphLength * 0.32, glyphLength * 0.16
-        );
-        object.line.material.depthTest = false;
-        object.cone.material.depthTest = false;
+        object = cylinderConeArrow(direction, position, glyphLength, loadColor, 'analysis-glyph-' + descriptor.type);
       }
-      object.name = 'analysis-glyph-' + descriptor.type;
       object.userData.descriptor = descriptor;
+      object.userData.tipPositionM = descriptor.positionM.slice();
       object.renderOrder = 10;
       group.add(object);
     });
@@ -903,7 +960,11 @@
   };
 
   ViewportController.prototype.render = function () {
+    this.axisTriad.quaternion.copy(this.camera.quaternion).invert();
+    this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
+    this.renderer.clearDepth();
+    this.renderer.render(this.axisTriadScene, this.axisTriadCamera);
   };
 
   ViewportController.prototype.dispose = function () {
@@ -923,6 +984,10 @@
     if (this.themeObserver) { this.themeObserver.disconnect(); }
     this.activePointers.clear();
     this.scene.traverse(function (object) {
+      if (object.geometry && typeof object.geometry.dispose === 'function') { object.geometry.dispose(); }
+      disposeMaterial(object.material);
+    });
+    this.axisTriadScene.traverse(function (object) {
       if (object.geometry && typeof object.geometry.dispose === 'function') { object.geometry.dispose(); }
       disposeMaterial(object.material);
     });

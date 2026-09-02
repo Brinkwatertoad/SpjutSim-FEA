@@ -67,6 +67,11 @@
     var oldRenderGeometry;
     var oldRenderGeometryDisposed = false;
     controller.replaceGeometry(geometry, { sourceName: geometry.sourceName, sourceFormat: geometry.sourceFormat, sourceBytes: new Uint8Array([1]).buffer });
+    assert(viewport.axisTriadScene && viewport.axisTriad && viewport.axisTriad.getObjectByName('axis-triad-label-x') &&
+      viewport.axisTriad.getObjectByName('axis-triad-label-y') && viewport.axisTriad.getObjectByName('axis-triad-label-z'),
+    'viewport did not create a separate labeled XYZ triad overlay');
+    var triadPosition = viewport.axisTriad.position.clone();
+    var triadQuaternion = viewport.axisTriad.quaternion.clone();
     viewport.setFacePickHandler(function (faceId, additive) {
       if (!faceId) { controller.clearSelectedFaces(); }
       else if (additive) { controller.toggleSelectedFace(faceId); }
@@ -82,6 +87,8 @@
     assert(viewport.camera.position.distanceTo(cameraBeforeOrbit) > 0.01, 'orbit input did not move the camera');
     assert(viewport.camera.position.y > cameraBeforeOrbit.y, 'vertical orbit input used the unswapped pointer Y axis');
     assert(viewport.selectedFaceIds.has(selectedFaceId), 'orbit input changed the selected faces');
+    assert(viewport.axisTriad.position.equals(triadPosition) && !viewport.axisTriad.quaternion.equals(triadQuaternion),
+      'axis triad did not stay in its corner while rotating with the camera');
     var distanceBeforeZoom = viewport.camera.position.distanceTo(viewport.viewTarget);
     viewport.zoomByWheelDelta(-120);
     assert(viewport.camera.position.distanceTo(viewport.viewTarget) < distanceBeforeZoom, 'wheel input did not zoom the camera');
@@ -162,16 +169,24 @@
         gravity: { enabled: true, accelerationMS2: [0, 0, -9.80665] }
       };
       viewport.setAnalysisOverlay(overlayState);
-      assert(viewport.analysisOverlay.children.length === 3, 'analysis overlay did not create support, load, and gravity glyphs');
+      assert(viewport.analysisOverlay.children.length > 3, 'analysis overlay did not distribute support and load glyphs');
       oldLoadGlyph = viewport.analysisOverlay.getObjectByName('analysis-glyph-total-force');
-      oldLoadGlyph.line.geometry.addEventListener('dispose', function () { overlayGeometryDisposed = true; });
+      assert(oldLoadGlyph.getObjectByName('glyph-shaft').geometry.type === 'CylinderGeometry' &&
+        oldLoadGlyph.getObjectByName('glyph-head').geometry.type === 'ConeGeometry',
+      'load arrow did not use thin cylinder-and-cone geometry');
+      assert(oldLoadGlyph.userData.tipPositionM.every(function (value, axis) { return Math.abs(value - oldLoadGlyph.userData.descriptor.positionM[axis]) < 1e-12; }),
+        'load arrow tip did not touch its sampled surface point');
+      assert(viewport.analysisOverlay.getObjectByName('support-axis-x') && viewport.analysisOverlay.getObjectByName('support-axis-y') &&
+        viewport.analysisOverlay.getObjectByName('support-axis-z'), 'support glyph omitted enabled global-axis cues');
+      oldLoadGlyph.getObjectByName('glyph-shaft').geometry.addEventListener('dispose', function () { overlayGeometryDisposed = true; });
       document.documentElement.style.setProperty('--ui-color-load', '#123456');
       overlayState.loads[0].forceN = [1e9, 0, 0];
       viewport.setAnalysisOverlay(overlayState);
       newLoadGlyph = viewport.analysisOverlay.getObjectByName('analysis-glyph-total-force');
       assert(overlayGeometryDisposed, 'repeated item edits leaked the previous Three.js glyph geometry');
-      assert(newLoadGlyph.line.material.color.getHexString() === '123456', 'load glyph did not resolve its color from the active theme token');
-      assert(newLoadGlyph.line.scale.y === oldLoadGlyph.line.scale.y, 'glyph visual scale changed with numeric load magnitude');
+      assert(newLoadGlyph.getObjectByName('glyph-shaft').material.color.getHexString() === '123456', 'load glyph did not resolve its color from the active theme token');
+      assert(newLoadGlyph.getObjectByName('glyph-shaft').geometry.parameters.height === oldLoadGlyph.getObjectByName('glyph-shaft').geometry.parameters.height,
+        'glyph visual scale changed with numeric load magnitude');
       document.documentElement.style.removeProperty('--ui-color-load');
     });
   }

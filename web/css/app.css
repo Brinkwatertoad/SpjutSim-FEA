@@ -42,7 +42,7 @@ button { font: inherit; }
 .fea-analysis-list .fea-empty-list { color: var(--ui-color-text-muted, #aeb4bf); font-size: 12px; }
 .fea-gravity-form { margin-top: 13px; padding-top: 10px; border-top: 1px solid var(--ui-color-border-soft, #374151); }
 .fea-error { color: var(--ui-color-danger, #da1e28) !important; }
-.fea-warning { color: var(--ui-color-load, #fbbf24) !important; }
+.fea-warning { color: var(--ui-color-warning, #fbbf24) !important; }
 .fea-material-details { margin-top: 8px; color: var(--ui-color-text-muted, #aeb4bf); font-size: 11px; }
 .fea-material-details p { font-size: 11px; }
 .fea-material-details a { color: var(--ui-color-accent, #4387f5); }

@@ -274,6 +274,22 @@
       'symmetric curved-face glyph did not retain a finite local normal');
   }
 
+  function testDistributedSurfaceGlyphSampling() {
+    var geometry = cubeGeometry('glyph-sampling');
+    var faceMap = {};
+    geometry.preview.faceRanges.forEach(function (range) { faceMap[range.faceId] = range; });
+    var surface = { positionsM: geometry.preview.positionsM, indices: geometry.preview.indices, faceMap: faceMap };
+    var samples = api.sampleFaceGlyphPoints(surface, 'face-z+', { spacingM: 0.6, minCount: 1, maxCount: 8 });
+    var repeated = api.sampleFaceGlyphPoints(surface, 'face-z+', { spacingM: 0.6, minCount: 1, maxCount: 8 });
+    var capped = api.sampleFaceGlyphPoints(surface, 'face-z+', { spacingM: 0.05, minCount: 1, maxCount: 5 });
+    assert(samples.length === 3 && capped.length === 5, 'surface glyph density did not follow area or explicit caps');
+    assert(JSON.stringify(samples) === JSON.stringify(repeated), 'surface glyph sampling was not deterministic');
+    assert(samples.every(function (sample) {
+      return near(sample.positionM[2], 1) && sample.positionM[0] >= 0 && sample.positionM[0] <= 1 &&
+        sample.positionM[1] >= 0 && sample.positionM[1] <= 1 && near(sample.outwardNormal[2], 1);
+    }), 'distributed glyph samples did not lie on the selected surface with local normals');
+  }
+
   function testSetupInspectorSummaries() {
     var state = api.createAnalysisDocument();
     state.geometry = cubeGeometry('cube-summary');
@@ -405,7 +421,7 @@
     forceSum = sumForces(projection.loads[1].equivalentNodalForcesN);
     assert(near(forceSum[0], 120) && near(forceSum[1], -30) && near(forceSum[2], 45), 'total force was divided by nodes instead of integrated by area');
     glyphs = api.buildAnalysisGlyphDescriptors(state);
-    assert(glyphs.length === 6, 'support/load/gravity glyph count was incorrect');
+    assert(glyphs.length > 6, 'support/load glyphs were not distributed across selected surfaces');
     assert(glyphs.find(function (glyph) { return glyph.itemId === ids.pressure; }).direction[1] > 0.999,
       'pressure glyph did not point inward on the selected cube face');
     controller.completeMeshGeneration(cubeMesh());
@@ -415,9 +431,10 @@
       loads: [], gravity: { enabled: false, accelerationMS2: [0, 0, -9.80665] }
     });
     var expectedNormals = [[-1, 0, 0], [1, 0, 0], [0, -1, 0], [0, 1, 0], [0, 0, -1], [0, 0, 1]];
-    api.buildAnalysisGlyphDescriptors(allFacesState).forEach(function (glyph, index) {
-      assert(near(glyph.direction[0], expectedNormals[index][0]) && near(glyph.direction[1], expectedNormals[index][1]) && near(glyph.direction[2], expectedNormals[index][2]),
-        'glyph orientation was incorrect on one of the six cube faces');
+    geometry.faceIds.forEach(function (faceId, index) {
+      var glyph = api.buildAnalysisGlyphDescriptors(allFacesState).find(function (item) { return item.faceId === faceId; });
+      assert(glyph && near(glyph.direction[0], expectedNormals[index][0]) && near(glyph.direction[1], expectedNormals[index][1]) && near(glyph.direction[2], expectedNormals[index][2]),
+        'glyph orientation or coverage was incorrect on one of the six cube faces');
     });
     controller.removeBoundaryCondition(ids.prescribed);
     controller.removeLoad(ids.force);
@@ -593,6 +610,7 @@
     testControllerConstraintStability();
     testMaterialCatalog();
     testSymmetricCurvedFaceGlyph();
+    testDistributedSurfaceGlyphSampling();
     testSetupInspectorSummaries();
     testSetupInspectorMarkup();
     expectError(testControllerAndProjection, 'only once');

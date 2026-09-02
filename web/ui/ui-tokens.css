@@ -13,6 +13,7 @@
   --ui-color-accent: #93c5fd;
   --ui-color-selection-text: #111827;
   --ui-color-danger: #da1e28;
+  --ui-color-warning: #fbbf24;
   --ui-color-button-hover: color-mix(in srgb, var(--ui-color-hover) 14%, var(--ui-color-surface));
   --ui-color-primary-hover: color-mix(in srgb, var(--ui-color-accent) 86%, var(--ui-color-text));
   --ui-color-strong-hover: color-mix(in srgb, var(--ui-color-text) 86%, var(--ui-color-bg));
@@ -28,8 +29,11 @@
   --ui-color-selection: #38bdf8;
   --ui-color-tension: #60a5fa;
   --ui-color-compression: #f87171;
-  --ui-color-load: #fbbf24;
-  --ui-color-support: #c4b5fd;
+  --ui-color-load: #ef4444;
+  --ui-color-support: #22c55e;
+  --ui-color-axis-x: #ef4444;
+  --ui-color-axis-y: #22c55e;
+  --ui-color-axis-z: #3b82f6;
   --ui-space-1: 4px;
   --ui-space-2: 6px;
   --ui-space-3: 8px;
