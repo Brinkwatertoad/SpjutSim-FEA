@@ -62,7 +62,7 @@
 
   function validGeometry() {
     return {
-      geometryId: 'geometry-test', sourceName: 'cube.step', sourceFormat: 'step',
+      geometryId: 'geometry-test', sourceName: 'cube.step', sourceFormat: 'step', orientation: api.identityRigidOrientation(),
       faceIds: ['opaque-face'], boundingBoxM: { minM: [0, 0, 0], maxM: [1, 1, 1] }, volumeM3: 1,
       preview: {
         positionsM: new Float64Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),

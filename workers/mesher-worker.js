@@ -402,6 +402,7 @@ function importGeometry(gmsh, message) {
       geometryId: message.geometryId,
       sourceName: message.sourceName,
       sourceFormat: message.sourceFormat,
+      orientation: { rotation: [1, 0, 0, 0, 1, 0, 0, 0, 1], operations: [] },
       faceIds: preview.faceIds,
       boundingBoxM: box,
       volumeM3: volume,

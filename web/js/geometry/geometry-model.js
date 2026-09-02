@@ -36,6 +36,7 @@
    * @property {string} geometryId
    * @property {string} sourceName
    * @property {'step'|'iges'|'brep'} sourceFormat
+   * @property {{rotation: number[], operations: string[]}} orientation
    * @property {FaceId[]} faceIds
    * @property {BoundingBoxM} boundingBoxM
    * @property {number=} volumeM3
@@ -162,6 +163,7 @@
   function validateGeometryModel(model) {
     var boundingBox;
     var preview;
+    var orientation;
     if (!model || typeof model !== 'object' || Array.isArray(model) ||
         typeof model.geometryId !== 'string' || model.geometryId.length === 0 ||
         typeof model.sourceName !== 'string' || sourceFormatForFilename(model.sourceName) !== model.sourceFormat ||
@@ -170,6 +172,8 @@
         new Set(model.faceIds).size !== model.faceIds.length) {
       return validation(false, 'invalid-geometry-model');
     }
+    orientation = root.SpjutsimFEA.validateRigidOrientation(model.orientation);
+    if (!orientation.valid) { return orientation; }
     boundingBox = validateBoundingBoxM(model.boundingBoxM);
     if (!boundingBox.valid) { return boundingBox; }
     if (model.volumeM3 !== undefined && (!Number.isFinite(model.volumeM3) || model.volumeM3 <= 0)) {

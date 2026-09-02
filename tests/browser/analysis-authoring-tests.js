@@ -32,7 +32,7 @@
   function cubeGeometry(id) {
     var cube = cubeTopology();
     return {
-      geometryId: id, sourceName: 'cube.step', sourceFormat: 'step', faceIds: cube.faceIds,
+      geometryId: id, sourceName: 'cube.step', sourceFormat: 'step', orientation: api.identityRigidOrientation(), faceIds: cube.faceIds,
       boundingBoxM: { minM: [0, 0, 0], maxM: [1, 1, 1] }, volumeM3: 1,
       preview: {
         positionsM: cube.positions, normals: new Float32Array(cube.positions.length), indices: cube.indices,
@@ -87,6 +87,33 @@
     assert(!api.validateKnownFaceIds(['face-x-', 'face-x-'], ['face-x-']).valid, 'duplicate faces were accepted');
     assert(!api.validateKnownFaceIds(['missing'], ['face-x-']).valid, 'unknown faces were accepted');
     assert(!api.validateGravity({ enabled: true, accelerationMS2: [0, 0, -9.8] }, null).valid, 'gravity did not require density');
+  }
+
+  function testRigidOrientationContracts() {
+    var identity = api.identityRigidOrientation();
+    var quarterTurn = api.axisRotationMatrix('z', 90);
+    var rotatedVector = api.transformVector3(quarterTurn, [1, 0, 0]);
+    var geometry = cubeGeometry('orientation-cube');
+    var rotated = api.rotateGeometryAroundGlobalAxis(geometry, 'z', 90);
+    var composed = api.rotateGeometryAroundGlobalAxis(rotated, 'x', -90);
+    var cancelled = api.rotateGeometryAroundGlobalAxis(api.rotateGeometryAroundGlobalAxis(geometry, 'z', 45), 'z', -45);
+    assert(api.validateRigidOrientation(identity).valid, 'identity orientation was rejected');
+    assert(!api.validateRigidOrientation({ rotation: [2, 0, 0, 0, 1, 0, 0, 0, 1], operations: [] }).valid,
+      'scaled orientation matrix was accepted');
+    assert(near(rotatedVector[0], 0) && near(rotatedVector[1], 1) && near(rotatedVector[2], 0),
+      'positive global Z rotation used the wrong sign or axis');
+    assert(near(rotated.preview.positionsM[3], 0) && near(rotated.preview.positionsM[4], 1),
+      'preview positions were not rotated');
+    assert(near(rotated.boundingBoxM.minM[0], -1) && near(rotated.boundingBoxM.maxM[0], 0) &&
+      near(rotated.boundingBoxM.minM[1], 0) && near(rotated.boundingBoxM.maxM[1], 1),
+    'oriented bounds were not recomputed');
+    assert(rotated.orientation.operations.join(' · ') === 'Z +90°', 'orientation summary did not retain the signed axis operation');
+    assert(api.validateRigidOrientation(composed.orientation).valid, 'composed orientation lost orthonormality');
+    assert(near(cancelled.boundingBoxM.minM[0], 0) && near(cancelled.boundingBoxM.maxM[0], 1) &&
+      near(cancelled.boundingBoxM.minM[1], 0) && near(cancelled.boundingBoxM.maxM[1], 1),
+    'canceling arbitrary rotations inflated the model bounds');
+    assert(geometry.preview.positionsM[3] === 1 && geometry.orientation.operations.length === 0,
+      'orientation mutated the source geometry');
   }
 
   function testMaterialCatalog() {
@@ -418,6 +445,7 @@
 
   try {
     testContractsAndConversions();
+    testRigidOrientationContracts();
     testMaterialCatalog();
     testSymmetricCurvedFaceGlyph();
     testSetupInspectorSummaries();
