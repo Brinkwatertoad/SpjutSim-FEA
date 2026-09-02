@@ -113,4 +113,11 @@ and CAD `FaceId` references remain in the global analysis frame. STL and OBJ are
 intentionally deferred until durable surface-patch identity and solid validation
 are defined for tessellated input.
 
+Every support uses one component-based global-coordinate contract. The Fixed
+editor preset sets X, Y, and Z displacement to zero; Choose components permits
+any one-, two-, or three-axis combination and finite nonzero prescribed values.
+The compact Supports group continuously reports provisional preview or exact
+mesh rank across Tx/Ty/Tz/Rx/Ry/Rz, explicitly identifying free or coupled rigid
+motion. Native solver diagnostics remain the final singularity check.
+
 See `spec.md` for the product specification and `UI_FOUNDATION.md` for the UI-kit provenance pin.

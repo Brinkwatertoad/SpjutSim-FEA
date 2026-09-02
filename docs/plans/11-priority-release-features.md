@@ -28,7 +28,8 @@ have distinct numerical/browser acceptance evidence.
 
 - Complete: compact setup inspector and unified in-place authoring.
 - Complete: STEP/IGES/BREP import and model orientation.
-- Next: component-based X/Y/Z supports and six-mode rigid-body diagnostics.
+- Complete: component-based X/Y/Z supports and six-mode rigid-body diagnostics.
+- Next: distributed surface-contacting glyphs and a corner XYZ triad.
 
 ## Constraints
 

@@ -186,8 +186,8 @@ support for added fields.
 
 The user selects one or more CAD faces and adds:
 
-- fixed support;
-- prescribed displacement;
+- a support constraining any nonempty subset of global X/Y/Z translation, with
+  zero or nonzero prescribed displacement per enabled component;
 - pressure;
 - distributed total force;
 - gravity/body force.
@@ -582,19 +582,14 @@ Validation:
 
 ### 5.3 Boundary-condition model
 
-Use discriminated plain objects:
+Use plain component-based support objects and discriminated load objects:
 
 ```js
-// Fixed support
-{ type: 'fixed', faceIds: ['face-id', ...] }
-
-// Prescribed displacement; omitted components are unconstrained
+// Support; omitted global components are unconstrained. Fixed is all zeros.
 {
-  type: 'prescribed-displacement',
+  type: 'support',
   faceIds: ['face-id', ...],
-  uxM: 0.0,
-  uyM: undefined,
-  uzM: undefined
+  componentsM: { x: 0.0, z: 0.001 }
 }
 
 // Pressure; positive means compression into the body
@@ -929,11 +924,12 @@ b = rho * g
 
 and therefore requires density.
 
-### 8.6 Supports and prescribed displacement
+### 8.6 Component supports
 
-Fixed support constrains all three displacement components of every node belonging to the selected geometric face(s).
-
-Prescribed displacement may constrain any subset of `ux`, `uy`, `uz`.
+Every support constrains any nonempty subset of global X, Y, and Z displacement
+at every unique node belonging to its selected geometric faces. Each enabled
+component carries a finite prescribed value in meters. Fixed is an authoring
+shortcut for `{x: 0, y: 0, z: 0}`, not a separate engineering data type.
 
 Duplicate constraints must be consolidated. Conflicting prescribed values on the same DOF are a preflight error.
 
@@ -1494,9 +1490,21 @@ Examples:
 
 ### 14.3 Underconstraint detection
 
-At minimum perform a preflight heuristic based on constrained DOFs and connected components, then rely on solver diagnostics for final detection.
+Construct observations of Tx, Ty, Tz, Rx, Ry, and Rz from every enabled global
+support component at its constrained points. Center and scale coordinates, then
+compute a deterministic rank and nullspace with an explicit tolerance. Before
+meshing, use deterministic samples of selected preview faces and label the
+result provisional. After meshing, recompute from actual unique constrained
+nodes and carry the exact result into solve preflight.
 
-A more robust v1 implementation should detect near-rigid modes through failure of the SPD iterative solve, very small/invalid pivots in preconditioner setup, or an optional low-cost stiffness stability check.
+Classify a canonical mode as free only when that axis-aligned mode lies in the
+nullspace, and as constrained only when it is absent from every remaining null
+mode. Otherwise label the involved axes coupled and report the coupled nullity;
+do not present a false per-axis answer. Rank below six is visibly underconstrained.
+
+Also detect near-rigid modes through failure of the SPD iterative solve,
+very small or invalid pivots in preconditioner setup, or an optional low-cost
+stiffness stability check.
 
 User-facing errors should identify underconstraint as the likely cause rather than exposing only a numerical failure code.
 
@@ -1890,7 +1898,7 @@ Done when representative supported CAD parts can be repeatedly remeshed without 
 Deliverables:
 
 - isotropic material;
-- fixed/prescribed-displacement BCs;
+- component-based global X/Y/Z supports, including nonzero prescribed values;
 - pressure, total force, gravity;
 - Tet4 assembly;
 - sparse PCG solve;
@@ -2279,7 +2287,7 @@ The project is ready to call v1.0 only when all of the following are true:
 - [ ] Exactly-one-solid restriction is enforced clearly.
 - [ ] CAD face selections survive remeshing within an analysis session.
 - [ ] Tet10 is the default production element.
-- [ ] Fixed supports, prescribed displacement, pressure, total face force, and gravity work.
+- [ ] One-, two-, and three-axis supports, prescribed displacement, pressure, total face force, and gravity work.
 - [ ] Force integrations and reactions satisfy equilibrium checks.
 - [ ] First-party sparse assembly avoids unbounded triplet-memory growth.
 - [ ] Production solver does not require a third-party sparse linear-algebra library.

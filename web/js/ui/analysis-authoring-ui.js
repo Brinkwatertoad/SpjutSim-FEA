@@ -16,7 +16,7 @@
     this.supportForm = byId('support-form');
     this.supportStatus = byId('support-status');
     this.supportType = byId('support-type');
-    this.prescribedFields = byId('prescribed-displacement-fields');
+    this.componentFields = byId('support-component-fields');
     this.cancelSupportEdit = byId('cancel-support-edit');
     this.removeSupportItemButton = byId('remove-support-item-button');
     this.loadForm = byId('load-form');
@@ -315,7 +315,7 @@
 
   AnalysisAuthoringUI.prototype.renderSupportType = function () {
     var custom = this.supportType.value === 'custom';
-    this.prescribedFields.hidden = !custom;
+    this.componentFields.hidden = !custom;
     this.renderSupportComponents();
   };
 
