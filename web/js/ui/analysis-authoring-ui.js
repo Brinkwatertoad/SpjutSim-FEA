@@ -28,6 +28,14 @@
     this.cancelLoadEdit = byId('cancel-load-edit');
     this.gravityForm = byId('gravity-form');
     this.gravityStatus = byId('gravity-status');
+    this.setupInspectorStatus = byId('setup-inspector-status');
+    this.setupModelList = byId('setup-inspector-model-list');
+    this.setupSupportList = byId('setup-inspector-support-list');
+    this.setupLoadList = byId('setup-inspector-load-list');
+    this.setupFormStash = byId('setup-inspector-form-stash');
+    this.activeInspectorKind = null;
+    this.activeInspectorItemId = null;
+    this.activeInspectorFocusReturn = null;
     this.editingSupportId = null;
     this.editingLoadId = null;
     this.lastSupportType = this.supportType ? this.supportType.value : 'fixed';
@@ -475,12 +483,73 @@
     setFeedback(this.gravityStatus, this.gravityFeedback, gravity.enabled ? 'Gravity is active.' : 'Gravity is off.');
   };
 
+  AnalysisAuthoringUI.prototype.openInspectorRow = function (kind, itemId, opener) {
+    this.activeInspectorKind = kind;
+    this.activeInspectorItemId = itemId;
+    this.activeInspectorFocusReturn = opener || null;
+    if (kind === 'support') { this.beginSupportEdit(itemId); }
+    else if (kind === 'load') { this.beginLoadEdit(itemId); }
+    else { this.render(this.controller.document); }
+  };
+
+  AnalysisAuthoringUI.prototype.renderSetupInspector = function (documentState) {
+    var self = this;
+    var groups;
+    if (!this.setupModelList || !root.SpjutsimFEA.buildSetupInspectorRows) { return; }
+    groups = { model: this.setupModelList, support: this.setupSupportList, load: this.setupLoadList, gravity: this.setupLoadList };
+    Object.keys(groups).forEach(function (kind, index, kinds) {
+      if (kinds.indexOf(kind) === index) { groups[kind].replaceChildren(); }
+    });
+    root.SpjutsimFEA.buildSetupInspectorRows(documentState).forEach(function (definition) {
+      var list = groups[definition.kind];
+      var item = document.createElement('li');
+      var trigger = document.createElement('button');
+      var primary = document.createElement('strong');
+      var summary = document.createElement('span');
+      var meta = document.createElement('span');
+      var editorHost = document.createElement('div');
+      var active = self.activeInspectorKind === definition.kind && self.activeInspectorItemId === definition.itemId;
+      var editorId = 'setup-editor-' + definition.kind + '-' + definition.itemId;
+      item.className = 'fea-setup-row';
+      item.dataset.setupRow = '';
+      item.dataset.setupKind = definition.kind;
+      item.dataset.itemId = definition.itemId;
+      trigger.type = 'button';
+      trigger.className = 'fea-setup-row-button';
+      trigger.dataset.setupRowTrigger = '';
+      trigger.setAttribute('aria-label', definition.ariaLabel);
+      trigger.setAttribute('aria-expanded', String(active));
+      trigger.setAttribute('aria-controls', editorId);
+      primary.textContent = definition.primaryText;
+      summary.className = 'fea-setup-row-summary'; summary.textContent = definition.secondaryText;
+      meta.className = 'fea-setup-row-meta'; meta.textContent = definition.metaText;
+      trigger.append(primary, summary, meta);
+      trigger.addEventListener('click', function () { self.openInspectorRow(definition.kind, definition.itemId, trigger); });
+      editorHost.id = editorId;
+      editorHost.className = 'fea-setup-editor';
+      editorHost.dataset.setupEditorHost = '';
+      editorHost.hidden = !active;
+      item.append(trigger, editorHost);
+      list.append(item);
+    });
+    [
+      { list: this.setupSupportList, kind: 'support', text: 'No supports.' },
+      { list: this.setupLoadList, kind: 'load', text: 'No loads.' }
+    ].forEach(function (emptyState) {
+      if (emptyState.list && !emptyState.list.children.length) {
+        var empty = document.createElement('li');
+        empty.className = 'fea-empty-list'; empty.textContent = emptyState.text; emptyState.list.append(empty);
+      }
+    });
+  };
+
   AnalysisAuthoringUI.prototype.render = function (documentState) {
     if (!this.materialForm) { return; }
     this.renderMaterial(documentState);
     this.renderSupports(documentState);
     this.renderLoads(documentState);
     this.renderGravity(documentState);
+    this.renderSetupInspector(documentState);
   };
 
   root.SpjutsimFEA = root.SpjutsimFEA || {};

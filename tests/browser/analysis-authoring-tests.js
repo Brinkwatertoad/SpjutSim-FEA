@@ -332,6 +332,19 @@
     document.getElementById('load-pressure').value = '1.5';
     document.getElementById('load-form').requestSubmit();
     assert(state.loads.length === 1 && state.loads[0].name === 'Load 1' && state.loads[0].pressurePa === 1.5e6, 'keyboard form submission did not add an auto-named pressure load');
+    var inspectorRows = Array.from(document.querySelectorAll('[data-setup-row]'));
+    assert(inspectorRows.map(function (row) { return row.dataset.setupKind; }).join('|') === 'model|support|load',
+      'compact setup rows were not rendered in model/support/load order');
+    var supportTrigger = document.querySelector('[data-setup-kind="support"][data-item-id="support-1"] [data-setup-row-trigger]');
+    assert(supportTrigger && supportTrigger.getAttribute('aria-expanded') === 'false', 'support setup row was missing or not collapsed');
+    controller.replaceSelectedFaces(['face-z+']);
+    supportTrigger.click();
+    assert(state.selectedFaceIds.join('|') === 'face-x-', 'support setup row did not highlight its faces');
+    supportTrigger = document.querySelector('[data-setup-kind="support"][data-item-id="support-1"] [data-setup-row-trigger]');
+    assert(supportTrigger.getAttribute('aria-expanded') === 'true', 'selected setup row did not expose expanded state');
+    assert(supportTrigger.getAttribute('aria-label').indexOf('Support 1') !== -1 && supportTrigger.getAttribute('aria-label').indexOf('1 face') !== -1,
+      'setup row accessible name omitted its item summary');
+    authoring.resetSupportForm();
     assert(document.getElementById('support-list').querySelector('button') && document.getElementById('load-list').querySelector('button'),
       'authored items were not exposed as keyboard-focusable buttons');
 
