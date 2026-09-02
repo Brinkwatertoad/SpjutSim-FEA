@@ -159,6 +159,40 @@
       'symmetric curved-face glyph did not retain a finite local normal');
   }
 
+  function testSetupInspectorSummaries() {
+    var state = api.createAnalysisDocument();
+    state.geometry = cubeGeometry('cube-summary');
+    state.material = { name: 'Steel A36', youngsModulusPa: 200e9, poissonsRatio: 0.3, densityKgM3: 7850 };
+    state.boundaryConditions = [
+      { id: 'support-1', name: 'Support 1', type: 'fixed', faceIds: ['face-x-', 'face-y-'] },
+      { id: 'support-2', name: 'Support 2', type: 'prescribed-displacement', faceIds: ['face-z-'], uxM: 0, uzM: 0.001 }
+    ];
+    state.loads = [
+      { id: 'load-1', name: 'Load 1', type: 'pressure', faceIds: ['face-x+'], pressurePa: 1.5e6 },
+      { id: 'load-2', name: 'Load 2', type: 'total-force', faceIds: ['face-y+'], forceN: [120, -30, 45] }
+    ];
+    state.gravity = { enabled: true, accelerationMS2: [0, 0, -9.80665] };
+
+    var rows = api.buildSetupInspectorRows(state);
+    assert(rows.map(function (row) { return row.kind + ':' + row.itemId; }).join('|') ===
+      'model:model|support:support-1|support:support-2|load:load-1|load:load-2|gravity:gravity',
+      'setup rows were not emitted in stable document order');
+    assert(rows[0].primaryText === 'cube.step' && rows[0].secondaryText === 'Steel A36 · STEP',
+      'model row omitted source or material');
+    assert(rows[0].metaText === '6 faces', 'model row omitted face count');
+    assert(rows[1].secondaryText === 'Fixed · X, Y, Z' && rows[1].metaText === '2 faces',
+      'fixed support row omitted constrained components or face count');
+    assert(rows[2].secondaryText === 'X 0 mm · Z 1 mm', 'prescribed support row omitted displacement values');
+    assert(rows[3].secondaryText === 'Pressure · 1.5 MPa', 'pressure row omitted display units');
+    assert(rows[4].secondaryText === 'Force · [120, −30, 45] N', 'force row omitted vector or display units');
+    assert(rows[5].secondaryText === '[0, 0, −9.80665] m/s²', 'gravity row omitted acceleration');
+    assert(rows.every(function (row) { return row.ariaLabel.indexOf(row.primaryText) !== -1; }),
+      'setup row accessible label omitted its primary text');
+
+    state.gravity.enabled = false;
+    assert(api.buildSetupInspectorRows(state).length === 5, 'disabled gravity was included as a setup row');
+  }
+
   function testControllerAndProjection() {
     var geometry = cubeGeometry('cube-a');
     var documentState = api.createAnalysisDocument();
@@ -313,6 +347,7 @@
     testContractsAndConversions();
     testMaterialCatalog();
     testSymmetricCurvedFaceGlyph();
+    testSetupInspectorSummaries();
     expectError(testControllerAndProjection, 'only once');
     testGeneratedNamesAndSequences();
     runCompleteControllerProjectionTest();
