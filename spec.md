@@ -165,6 +165,11 @@ especially important for printed polymers. TPU also requires a prominent
 warning that a small-strain linear-isotropic model may be inappropriate for its
 normal large-deformation behavior. Do not ship guessed placeholder values.
 
+The active model and material are summarized together in the compact setup
+inspector. Selecting the Model row opens the one material editor in place; the
+application must not expose a second competing material form elsewhere in the
+tools pane.
+
 The material-library architecture should follow the established SpjutSim-Truss
 pattern: immutable checked-in factory records, stable IDs, base-SI values,
 source metadata, a separately persisted validated User layer, and exact
@@ -189,6 +194,10 @@ The user selects one or more CAD faces and adds:
 - gravity/body force.
 
 Boundary-condition selections are stored against geometric face identifiers supplied by the mesher backend, not against triangle or node IDs.
+
+Supports and loads appear immediately in the compact setup inspector with their
+type, value/components, units, and face count. Selecting a row highlights its
+CAD faces and opens the one corresponding editor in place.
 
 ### Step 4 — Mesh
 
@@ -340,6 +349,10 @@ results
 convergence study
 UI preferences
 ```
+
+Which compact setup row is expanded, its focus-return target, and other
+transient editor presentation belong to the UI controller. They are not
+engineering state and must not be serialized into `AnalysisDocument`.
 
 The active analysis material is engineering state and is stored as a complete
 `IsotropicMaterial` snapshot. The checked-in built-in material catalog and the
@@ -1491,13 +1504,12 @@ Use the internalized SpjutSim UI shell as the baseline application chrome:
 | App title/status | File/View/etc menus            | primary Solve |
 +----------------------+--------------------------------------------+
 | Tools pane           | Canvas / Results layout                    |
-|                      | +---------------------+------------------+  |
-| Geometry             | |                     | Results          |  |
-| Material             | |    Three.js         | / Convergence    |  |
-| Supports             | |    viewport         | / Diagnostics    |  |
-| Loads                | |                     |                  |  |
-| Mesh                 | +---------------------+------------------+  |
-| Analysis             |                                            |
+| Compact setup        | +---------------------+------------------+  |
+|  Model + material    | |                     | Results          |  |
+|  Supports            | |    Three.js         | / Convergence    |  |
+|  Loads               | |    viewport         | / Diagnostics    |  |
+| Geometry / Mesh      | |                     |                  |  |
+| Solve preflight      | +---------------------+------------------+  |
 +----------------------+--------------------------------------------+
 ```
 
@@ -1517,14 +1529,23 @@ The exact tab names may change, but numerical results and convergence should liv
 
 Use ordinary semantic HTML controls enhanced by the internal UI helpers where useful.
 
-Recommended sections:
+The highest-priority tools-pane surface is a compact setup inspector placed at
+the top of the pane. It groups Model (including material), Supports, and Loads.
+A typical model with a material, a few supports, and a few simple loads must fit
+together in the normal tools-pane viewport without requiring page scrolling.
+Each compact row includes the engineering value/components, display units, and
+face count needed to understand ordinary setup at a glance.
 
-- Geometry / Import;
-- Material;
-- Supports;
-- Loads;
-- Mesh;
-- Solve preflight.
+Selecting a row opens its editor directly in that row. Compact Add actions open
+the same support or load form in place. The UI moves the single form node
+between the inactive form stash and active row; it must not clone forms, keep a
+parallel draft, or expose separate Material/Supports/Loads editing sections.
+Save, cancel, delete, and Escape return focus to the logical row or Add action.
+Escape closes the inline editor before it clears transient face selection.
+
+Below the inspector, retain focused Geometry / Import, Mesh, and Solve preflight
+tools. Expanded editors may use their own bounded overflow when necessary, but
+collapsed setup summaries remain compact and readable.
 
 The analysis state model remains authoritative. Controls render the state and dispatch commands; they do not own the engineering model.
 
@@ -1543,12 +1564,15 @@ snapshot to the analysis. Replacing or deleting a user entry must be explicit;
 built-in entries cannot be modified or deleted. User-created entries default
 their Source metadata to `User`, following the SpjutSim-Truss convention.
 
+Material authoring is reached by selecting the compact Model row. Applying or
+removing a material updates that row immediately and announces the outcome.
+
 #### 15.2.2 Support and load authoring
 
-Each section presents its add/edit form before its list of defined items. The
-list must appear immediately below the corresponding form and feedback, with a
-clear empty state. Gravity remains a separate body-load control and is not part
-of the face-load list.
+The compact inspector presents support and load rows with clear empty states and
+adjacent Add actions. Selecting a row opens its add/edit form directly beneath
+that row. Gravity remains a separate body-load control but appears in the Loads
+group when enabled; it is not part of the face-load collection.
 
 Users do not enter support or surface-load names. On creation, the controller
 assigns a stable display name using a per-category monotonically increasing
@@ -1640,6 +1664,8 @@ The viewport must support:
 - clear selection;
 - selected-face highlight;
 - selecting the faces associated with an existing BC from the analysis tree/tools pane.
+- selecting the faces associated with an existing support or load from the
+  compact setup inspector.
 
 In a face-selection presentation mode, a primary-button click on viewport
 background (no model face hit) clears the complete current face selection,
@@ -2241,6 +2267,8 @@ The project is ready to call v1.0 only when all of the following are true:
 - [ ] Direct-local meshing and solving remain off the UI thread using the tested file-safe worker path.
 - [ ] Optional HTTP mode detects cross-origin isolation and can enable threaded acceleration when a threaded build is present.
 - [ ] SpjutSim UI source is internalized and the application shell works from repository-local files only.
+- [ ] Compact Model/Material, Support, and Load summaries are visible together
+  for an ordinary setup and every item can be selected and edited in place.
 - [ ] PCG failures are diagnosed rather than returned as plausible results.
 - [ ] Pre-solve memory estimate is shown for every solve.
 - [ ] Device-memory hints are optional and absence does not break the app.

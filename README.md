@@ -47,8 +47,9 @@ the camera navigation, preference validation, and pointer-cancellation checks.
 It should report `Passed`.
 
 Open `tests/browser/analysis-authoring-tests.html` directly in Chromium to run
-the material/load contract, controller invalidation, boundary projection,
-surface-integration, and six-face glyph-orientation checks. It should report
+the material/load contract, compact setup inspector summaries and in-place
+editing, keyboard/focus behavior, controller invalidation, boundary projection,
+surface integration, and six-face glyph-orientation checks. It should report
 `Passed` without a server.
 
 Open `tests/browser/wasm-solve-result-tests.html` directly in Chromium to run

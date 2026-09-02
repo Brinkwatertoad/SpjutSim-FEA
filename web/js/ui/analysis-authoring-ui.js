@@ -72,6 +72,10 @@
     element.classList.toggle('fea-warning', Boolean(feedback && feedback.warning));
   }
 
+  AnalysisAuthoringUI.prototype.announceSetup = function (message) {
+    if (this.setupInspectorStatus) { this.setupInspectorStatus.textContent = message || ''; }
+  };
+
   var MATERIAL_FIELD_LABELS = {
     youngsModulusPa: "Young's modulus", poissonsRatio: "Poisson's ratio", densityKgM3: 'density',
     tensileYieldPa: 'tensile yield', compressiveYieldPa: 'compressive yield',
@@ -244,7 +248,7 @@
       this.materialFeedback = validation.warnings.length
         ? { warning: true, message: validation.warnings[0].message }
         : (saved && saved.storageWarning ? { warning: true, message: saved.storageWarning } : { message: entry ? 'Material applied as an analysis snapshot.' : 'Custom material saved and applied in SI units.' });
-      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false });
+      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: 'Material saved.' });
     } catch (error) {
       this.materialFeedback = { error: true, message: error.message };
       this.render(this.controller.document);
@@ -330,7 +334,7 @@
       else { this.controller.createBoundaryCondition(support); }
       this.supportFeedback = { message: this.editingSupportId ? 'Support updated.' : 'Support added.' };
       this.resetSupportForm(false);
-      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false });
+      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: 'Support saved.' });
     } catch (error) {
       this.supportFeedback = { error: true, message: error.message };
       this.render(this.controller.document);
@@ -343,7 +347,7 @@
       this.controller.removeBoundaryCondition(this.editingSupportId);
       this.supportFeedback = { message: 'Support removed.' };
       this.resetSupportForm(false);
-      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false });
+      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: 'Support removed.' });
     } catch (error) {
       this.supportFeedback = { error: true, message: error.message };
       this.render(this.controller.document);
@@ -413,7 +417,7 @@
       else { this.controller.createLoad(load); }
       this.loadFeedback = { message: this.editingLoadId ? 'Load updated.' : 'Load added.' };
       this.resetLoadForm(false);
-      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false });
+      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: 'Load saved.' });
     } catch (error) {
       this.loadFeedback = { error: true, message: error.message };
       this.render(this.controller.document);
@@ -426,7 +430,7 @@
       this.controller.removeLoad(this.editingLoadId);
       this.loadFeedback = { message: 'Load removed.' };
       this.resetLoadForm(false);
-      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false });
+      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: 'Load removed.' });
     } catch (error) {
       this.loadFeedback = { error: true, message: error.message };
       this.render(this.controller.document);
@@ -471,12 +475,13 @@
 
   AnalysisAuthoringUI.prototype.saveGravity = function () {
     try {
+      var enabled = byId('gravity-enabled').checked;
       this.controller.replaceGravity({
-        enabled: byId('gravity-enabled').checked,
+        enabled: enabled,
         accelerationMS2: ['x', 'y', 'z'].map(function (axis) { return readNumber('gravity-' + axis, 'gravity ' + axis.toUpperCase()); })
       });
-      this.gravityFeedback = { message: byId('gravity-enabled').checked ? 'Gravity enabled.' : 'Gravity disabled.' };
-      this.render(this.controller.document);
+      this.gravityFeedback = { message: enabled ? 'Gravity enabled.' : 'Gravity disabled.' };
+      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: this.gravityFeedback.message });
     } catch (error) {
       this.gravityFeedback = { error: true, message: error.message };
       this.render(this.controller.document);
@@ -495,6 +500,7 @@
   };
 
   AnalysisAuthoringUI.prototype.openInspectorRow = function (kind, itemId, opener) {
+    var selectedItem;
     if (this.activeInspectorKind === kind && this.activeInspectorItemId === itemId) {
       this.closeInspectorRow({ restoreFocus: true, cancelEdit: true });
       return;
@@ -507,6 +513,9 @@
     this.activeInspectorKind = kind;
     this.activeInspectorItemId = itemId;
     this.activeInspectorFocusReturn = opener || null;
+    if (kind === 'support') { selectedItem = this.controller.document.boundaryConditions.find(function (item) { return item.id === itemId; }); }
+    if (kind === 'load') { selectedItem = this.controller.document.loads.find(function (item) { return item.id === itemId; }); }
+    this.announceSetup('Editing ' + (selectedItem ? selectedItem.name : (itemId === 'new' ? 'new ' + kind : (kind === 'model' ? 'model and material' : kind))) + '.');
     if (kind === 'support' && itemId !== 'new') { this.beginSupportEdit(itemId); }
     else if (kind === 'load' && itemId !== 'new') { this.beginLoadEdit(itemId); }
     else { this.render(this.controller.document); }
@@ -534,10 +543,12 @@
     this.activeInspectorItemId = null;
     this.activeInspectorFocusReturn = null;
     this.render(this.controller.document);
+    if (options && options.message) { this.announceSetup(options.message); }
+    else if (options && options.cancelEdit) { this.announceSetup('Editing cancelled.'); }
     if (restoreFocus) {
       var selector = '[data-setup-kind="' + kind + '"][data-item-id="' + itemId + '"] [data-setup-row-trigger]';
       var target = document.querySelector(selector);
-      if (!target) { target = kind === 'support' ? this.addSupportButton : (kind === 'load' ? this.addLoadButton : null); }
+      if (!target) { target = kind === 'support' ? this.addSupportButton : (kind === 'load' || kind === 'gravity' ? this.addLoadButton : null); }
       if (target) { target.focus(); }
     }
   };

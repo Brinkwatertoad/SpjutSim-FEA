@@ -342,6 +342,8 @@
     assert(state.selectedFaceIds.join('|') === 'face-x-', 'support setup row did not highlight its faces');
     supportTrigger = document.querySelector('[data-setup-kind="support"][data-item-id="support-1"] [data-setup-row-trigger]');
     assert(supportTrigger.getAttribute('aria-expanded') === 'true', 'selected setup row did not expose expanded state');
+    assert(document.getElementById('setup-inspector-status').textContent === 'Editing Support 1.',
+      'opening a setup item was not announced');
     assert(supportTrigger.getAttribute('aria-label').indexOf('Support 1') !== -1 && supportTrigger.getAttribute('aria-label').indexOf('1 face') !== -1,
       'setup row accessible name omitted its item summary');
     assert(document.getElementById('support-form').closest('[data-setup-editor-host]'), 'support form was not mounted in the selected row');
@@ -393,6 +395,25 @@
     removeLoad.click();
     assert(state.loads.length === 0, 'inline remove action did not delete the load');
     assert(document.activeElement === document.getElementById('setup-add-load-button'), 'deleting a row did not return focus to the load add action');
+    assert(document.getElementById('setup-inspector-status').textContent === 'Load removed.', 'load removal was not announced');
+
+    controller.replaceSelectedFaces(['face-y-']); controller.createBoundaryCondition({ type: 'fixed' });
+    controller.replaceSelectedFaces(['face-z-']); controller.createBoundaryCondition({ type: 'fixed' });
+    controller.replaceSelectedFaces(['face-y+']); controller.createLoad({ type: 'pressure', pressurePa: 2e6 });
+    controller.replaceSelectedFaces(['face-z+']); controller.createLoad({ type: 'total-force', forceN: [0, 0, -500] });
+    controller.replaceGravity({ enabled: true, accelerationMS2: [0, 0, -9.80665] });
+    var inspector = document.getElementById('setup-inspector');
+    assert(inspector.scrollHeight <= inspector.parentElement.clientHeight,
+      'ordinary model/material/support/load setup did not fit in the normal tools-pane viewport');
+
+    var gravityTrigger = document.querySelector('[data-setup-kind="gravity"] [data-setup-row-trigger]');
+    gravityTrigger.click();
+    document.getElementById('gravity-enabled').checked = false;
+    document.getElementById('gravity-form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    assert(!document.querySelector('[data-setup-kind="gravity"]'), 'disabled gravity remained in the compact setup list');
+    assert(authoring.activeInspectorKind === null, 'disabling gravity left a missing inspector row active');
+    assert(document.activeElement === document.getElementById('setup-add-load-button'), 'disabling gravity did not return focus to the load add action');
+    assert(document.getElementById('setup-inspector-status').textContent === 'Gravity disabled.', 'gravity change was not announced');
   }
 
   try {
