@@ -3,7 +3,7 @@
 **Status:** Initial development specification  
 **Target:** v1.0 local-first browser application  
 **Primary use case:** Simple static finite element simulations on homogeneous, single-body mechanical parts  
-**Primary CAD source:** STEP exported from Onshape  
+**Primary CAD sources:** STEP, IGES, and OpenCASCADE BREP
 **Mesher for v1:** Gmsh + OpenCASCADE, behind a replaceable mesher interface  
 **Solver:** First-party C++/WebAssembly FEM + sparse PCG solver, executed locally in a Web Worker  
 **Frontend:** Plain JavaScript + internalized SpjutSim UI foundation + Three.js; classic-script-compatible baseline for direct local-file execution  
@@ -52,7 +52,7 @@ The product should favor **useful, defensible engineering feedback over solver f
 - SpjutSim UI foundation incorporated directly into the repository.
 - No React, TypeScript, Vite, npm, or runtime Node.js requirement.
 - Direct-local-file-capable application distribution, plus optional static HTTP serving for enhanced/threaded mode.
-- Local STEP import (`.step`, `.stp`).
+- Local STEP (`.step`, `.stp`), IGES (`.iges`, `.igs`), and OpenCASCADE BREP (`.brep`) import.
 - One closed solid body per analysis.
 - Homogeneous isotropic linear-elastic material.
 - 3D solid tetrahedral elements.
@@ -84,10 +84,9 @@ The product should favor **useful, defensible engineering feedback over solver f
 - Remote/cloud solve service.
 - GPU/WebGPU sparse solver.
 - Parasolid import.
-- IGES support in the UI, even though the selected meshing stack may technically support it.
-- STL and other non-STEP import formats. They are post-v1 candidates, but the
+- STL, OBJ, and other tessellated import formats. They are post-v1 candidates, but the
   geometry/import boundary must not require downstream UI, meshing, or solver
-  code to understand STEP-specific details.
+  code to understand format-specific details.
 - Mobile-device support.
 
 ### 2.3 v1 analysis assumptions
@@ -112,7 +111,7 @@ The canonical v1 workflow is:
 
 ### Step 1 — Import
 
-The user selects a STEP file.
+The user selects a STEP, IGES, or OpenCASCADE BREP file.
 
 The application:
 
@@ -390,7 +389,7 @@ Required lifecycle:
 7. Transfer mesh/material/BC data into solver worker.
 8. Terminate solver worker when results are no longer needed or a new solve invalidates them.
 
-If remeshing is requested, recreate the mesher worker and re-import the source STEP bytes. Keep the original STEP file bytes in application state if memory permits, otherwise retain a file handle/reference and request access as needed.
+If remeshing is requested, recreate the mesher worker and re-import the canonical CAD source bytes. Keep the original source bytes and explicit format in application state if memory permits, otherwise retain a file handle/reference and request access as needed.
 
 ### 4.6 Runtime modes: direct local files and optional HTTP acceleration
 
@@ -527,7 +526,8 @@ Use plain JavaScript objects for configuration/state and typed arrays for bulk n
  * @typedef {Object} GeometryModel
  * @property {string} geometryId
  * @property {string} sourceName
- * @property {'step'} sourceFormat
+ * @property {'step'|'iges'|'brep'} sourceFormat
+ * @property {RigidOrientation} orientation
  * @property {FaceId[]} faceIds
  * @property {Object} boundingBoxM
  * @property {number=} volumeM3
@@ -630,7 +630,7 @@ The application/orchestrator must depend on an abstract mesher contract rather t
 
 ```js
 // Conceptual MesherBackend API
-await mesher.importGeometry(stepBytes, importOptions);
+await mesher.importGeometry(sourceBytes, sourceFormat, importOptions);
 await mesher.generateMesh(meshRequest);
 await mesher.dispose();
 ```
@@ -670,16 +670,19 @@ Requirements:
 
 ### 6.1 Supported input
 
-v1 accepts STEP only:
+v1 accepts these neutral CAD formats:
 
 - `.step`
 - `.stp`
+- `.iges`
+- `.igs`
+- `.brep`
 
 Use Gmsh's OpenCASCADE geometry kernel for import.
 
 The implementation should set OpenCASCADE's target unit so the imported model is normalized to meters before meshing. Do not infer units from filename or UI assumptions.
 
-Future import adapters may add STL and other formats behind the same geometry
+Future import adapters may add STL, OBJ, and other formats behind the same geometry
 contract. Downstream consumers must treat `sourceFormat` as metadata rather
 than branching on STEP behavior. Before STL is enabled for analysis, define
 watertight-solid validation and a replacement for CAD `FaceId` semantics, such
@@ -729,6 +732,22 @@ For a given imported geometry instance:
 A remesh must not invalidate face selections.
 
 v1 does **not** promise that face identifiers survive editing/re-exporting the source CAD model. A future project-file format may add geometric-signature remapping.
+
+### 6.5 Model orientation
+
+The geometry model owns an orthonormal, determinant-one, row-major 3x3 rotation
+and a concise operation history. Imported geometry begins at identity. Users can
+rotate the part about global X, Y, or Z by an adjustable signed angle (90 degrees
+by default), reset to the imported frame, or align one selected preview-face
+normal to a signed global axis. Curved or faceted faces use an area-weighted
+preview normal and produce a warning when triangle normals vary materially; a
+face with no stable normal is rejected.
+
+Orientation transforms preview positions, normals, feature edges, and final
+mesh coordinates without changing opaque `FaceId` values or mutating canonical
+source bytes. It invalidates mesh, preflight, and results. Material, supports,
+loads, gravity, and selections remain attached and expressed in the global
+coordinate frame.
 
 ---
 
@@ -1778,7 +1797,7 @@ At minimum:
 
 #### External solver comparison
 
-Maintain several small STEP + analysis fixtures with reference results generated by a mature solver such as CalculiX or another trusted FEA package.
+Maintain several small CAD + analysis fixtures with reference results generated by a mature solver such as CalculiX or another trusted FEA package.
 
 Compare:
 
@@ -1811,7 +1830,7 @@ Each solver/mesher release should run a fixed corpus containing:
 - fillets;
 - highly curved surfaces;
 - mixed small/large geometric scales;
-- purposely troublesome STEP files.
+- purposely troublesome STEP, IGES, and BREP files.
 
 Store expected import status, mesh counts within tolerances/ranges, quality status, and selected numerical outputs.
 
@@ -1855,7 +1874,7 @@ Done when the primary supported desktop browser can open `index.html` through `f
 
 Deliverables:
 
-- STEP import through Gmsh/OpenCASCADE;
+- STEP, IGES, and OpenCASCADE BREP import through Gmsh/OpenCASCADE;
 - single-solid validation;
 - face IDs and face picking;
 - Tet4 volume mesh;
@@ -1864,7 +1883,7 @@ Deliverables:
 - mesh-quality summary;
 - corpus of at least 50 representative/problematic CAD parts if available during development.
 
-Done when representative STEP parts can be repeatedly remeshed without losing selected geometric faces and failures are classified usefully.
+Done when representative supported CAD parts can be repeatedly remeshed without losing selected geometric faces and failures are classified usefully.
 
 ### Milestone 2 — Trusted Tet4 solver
 
@@ -2074,7 +2093,9 @@ Example mesher requests:
   protocol: 1,
   type: 'import',
   requestId: '...',
-  stepBytes: arrayBuffer
+  sourceName: 'part.step',
+  sourceFormat: 'step',
+  sourceBytes: arrayBuffer
 }
 
 {
@@ -2191,7 +2212,7 @@ This licensing question is one reason the mesher abstraction is a v1 architectur
 For v1:
 
 - all geometry and analysis computation occurs locally;
-- do not upload STEP files or meshes to an application backend;
+- do not upload CAD files or meshes to an application backend;
 - analytics, if added, must not include geometry or material/analysis payloads;
 - imported file data should be released when the user closes/replaces the model;
 - worker termination is the preferred cleanup mechanism for large WASM heaps.
@@ -2230,7 +2251,7 @@ Start with a framework-free vertical skeleton and the geometry/meshing path befo
 4. Add optional `/tools/serve.py` for HTTP/threaded testing with COOP/COEP headers and correct WASM MIME handling.
 5. Establish `app.js`, `AppController`, `UIController`, and `ViewportController` with plain JavaScript and JSDoc contracts; do not require native ES modules for the baseline path.
 6. Produce/pin a single-threaded Gmsh/OpenCASCADE browser build that can initialize in the direct-local worker path using repository-local/generated assets only.
-7. Import one known-good STEP cube and normalize units to meters.
+7. Import known-good STEP, IGES, and BREP cubes and normalize units to meters.
 8. Extract geometric surface IDs and a preview tessellation.
 9. Implement face picking in Three.js and connect selection state to the tools pane.
 10. Generate a Tet4 mesh and return typed-array connectivity.
@@ -2243,7 +2264,7 @@ Start with a framework-free vertical skeleton and the geometry/meshing path befo
 
 A successful first vertical slice is:
 
-> Import STEP cube -> click one face as fixed -> click opposite face and apply traction -> mesh -> show memory estimate -> solve in first-party WASM -> display deformed shape and axial stress -> verify against the analytical solution.
+> Import a CAD cube -> click one face as fixed -> click opposite face and apply traction -> mesh -> show memory estimate -> solve in first-party WASM -> display deformed shape and axial stress -> verify against the analytical solution.
 
 That slice exercises almost every architectural boundary without requiring the full result/convergence system.
 
@@ -2253,7 +2274,8 @@ That slice exercises almost every architectural boundary without requiring the f
 
 The project is ready to call v1.0 only when all of the following are true:
 
-- [ ] STEP import works on the agreed CAD regression corpus at an acceptable success rate.
+- [ ] STEP, IGES, and BREP import work on the agreed CAD regression corpus at an acceptable success rate.
+- [ ] Axis rotation and selected-face alignment preserve global setup state and invalidate stale mesh/results.
 - [ ] Exactly-one-solid restriction is enforced clearly.
 - [ ] CAD face selections survive remeshing within an analysis session.
 - [ ] Tet10 is the default production element.
@@ -2321,7 +2343,7 @@ Reference documentation consulted while preparing this specification:
 | Area | Decision |
 |---|---|
 | Product model | Local-first browser FEA |
-| CAD format | STEP only |
+| CAD format | STEP, IGES, and OpenCASCADE BREP; STL/OBJ deferred |
 | Geometry | One closed solid body |
 | Geometry kernel | OpenCASCADE through Gmsh |
 | Mesher | Gmsh, isolated behind replaceable interface |

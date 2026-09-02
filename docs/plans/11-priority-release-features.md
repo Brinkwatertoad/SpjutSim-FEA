@@ -24,6 +24,12 @@ first package's executable plan is
 receive separate executable plans because they modify independent contracts and
 have distinct numerical/browser acceptance evidence.
 
+## Progress
+
+- Complete: compact setup inspector and unified in-place authoring.
+- Complete: STEP/IGES/BREP import and model orientation.
+- Next: component-based X/Y/Z supports and six-mode rigid-body diagnostics.
+
 ## Constraints
 
 - Preserve the dependency-free plain-JavaScript and direct `file://` runtime.
@@ -38,4 +44,3 @@ have distinct numerical/browser acceptance evidence.
 All acceptance additions in the approved design are verified, the existing v1
 numerical behavior remains intact, and the complete applicable Python, C++,
 browser, Gmsh, WASM, and direct-local suites pass.
-

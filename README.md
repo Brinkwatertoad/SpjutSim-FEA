@@ -1,6 +1,6 @@
 # SpjutSim FEA
 
-SpjutSim FEA is a local-first browser application for simple static finite element analysis of a single STEP solid. The browser application has no runtime network or server dependency; geometry and analysis execute on the user's machine.
+SpjutSim FEA is a local-first browser application for simple static finite element analysis of a single STEP, IGES, or OpenCASCADE BREP solid. The browser application has no runtime network or server dependency; geometry and analysis execute on the user's machine.
 
 ## Run locally
 
@@ -28,9 +28,9 @@ worker protocol-validation and lifecycle regression checks; it should report
 `Passed` without a server.
 
 Open `tests/browser/step-import-tests.html` from the optional HTTP server to
-run the Gmsh-backed STEP cube import check. In the tested direct-local browser
-configuration it can also be opened with local-file access enabled; it should
-report `Passed` after the worker starts.
+run the Gmsh-backed STEP, IGES, and BREP cube import checks. In the tested
+direct-local browser configuration it can also be opened with local-file access
+enabled; it should report `Passed` after the worker starts.
 
 Open `tests/browser/tet4-mesh-tests.html` from the optional HTTP server to run
 the cube Tet4 extraction checks across the coarse, normal, fine, and custom
@@ -49,8 +49,8 @@ It should report `Passed`.
 Open `tests/browser/analysis-authoring-tests.html` directly in Chromium to run
 the material/load contract, compact setup inspector summaries and in-place
 editing, keyboard/focus behavior, controller invalidation, boundary projection,
-surface integration, and six-face glyph-orientation checks. It should report
-`Passed` without a server.
+surface integration, rigid model/selected-face orientation, and six-face
+glyph-orientation checks. It should report `Passed` without a server.
 
 Open `tests/browser/wasm-solve-result-tests.html` directly in Chromium to run
 the embedded FEM worker preflight/solve, transferable result-contract, progress,
@@ -96,7 +96,7 @@ Wrangler is not an application runtime or development dependency; direct
 ## Current boundary
 
 The current vertical slice provides app/controller-owned analysis state, local
-STEP import and Tet4 meshing in disposable Gmsh workers, SI-backed analysis
+STEP/IGES/BREP import and Tet4 meshing in disposable Gmsh workers, SI-backed analysis
 authoring, exact-topology memory preflight, and the first-party FEM core compiled
 as a pinned single-threaded embedded WASM worker runtime. Solves return validated
 transferable result models with raw and smoothed stress fields, reactions,
@@ -104,5 +104,13 @@ equilibrium and solver diagnostics. The viewport supports Model, Mesh, Stress,
 and Deformation presentation (including legends, scale modes, mesh overlay, and
 approximate probes), defaults to von Mises stress after solve, and disposes stale
 result resources after upstream engineering edits.
+
+The compact Model editor can rotate the part around a global X, Y, or Z axis by
+an adjustable angle (90 degrees by default), reset the imported orientation, or
+align one selected CAD face normal to a signed global axis. Geometry orientation
+invalidates the mesh and results; loads, gravity, support components, material,
+and CAD `FaceId` references remain in the global analysis frame. STL and OBJ are
+intentionally deferred until durable surface-patch identity and solid validation
+are defined for tessellated input.
 
 See `spec.md` for the product specification and `UI_FOUNDATION.md` for the UI-kit provenance pin.
