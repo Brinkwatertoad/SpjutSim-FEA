@@ -69,10 +69,11 @@
       'yield-based factor of safety was not added to the trusted result');
     assert(documentState.results.convergenceStatus === 'not-run' && documentState.results.assumptions.length === 4,
       'single-solve trust metadata was incomplete');
+    var trustedResult = documentState.results;
     assert(documentState.viewportPresentation.mode === 'stress' && documentState.viewportPresentation.field === 'vonMises',
       'Stress/von Mises was not activated after solve');
     controller.replaceViewportPresentation(Object.assign({}, documentState.viewportPresentation, { mode: 'mesh' }));
-    assert(documentState.results === result, 'presentation-only mode switch changed solved data');
+    assert(documentState.results === trustedResult, 'presentation-only mode switch changed solved data');
     controller.replaceMaterial({ youngsModulusPa: 200e9, poissonsRatio: 0.3, densityKgM3: 7850 });
     assert(documentState.results === null && documentState.resultInvalidation.stale, 'engineering edit did not mark results stale');
     assert(progressStages.indexOf('preflight') >= 0 && progressStages.indexOf('solve') >= 0 && progressStages.indexOf('visualization') >= 0,

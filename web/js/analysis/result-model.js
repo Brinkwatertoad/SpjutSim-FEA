@@ -97,6 +97,14 @@
         !Number.isFinite(result.solverStatistics.finalRelativeResidual) || result.solverStatistics.finalRelativeResidual < 0) {
       return { valid: false, reason: 'invalid-result-diagnostics' };
     }
+    if (!result.extrema.maxDisplacement || !Number.isFinite(result.extrema.maxDisplacement.valueM) ||
+        !Array.isArray(result.extrema.maxDisplacement.locationM) || result.extrema.maxDisplacement.locationM.length !== 3 ||
+        !result.extrema.rawVonMisesMax || !Number.isFinite(result.extrema.rawVonMisesMax.valuePa) ||
+        !Number.isInteger(result.extrema.rawVonMisesMax.sampleIndex) ||
+        result.extrema.rawVonMisesMax.sampleIndex < 0 || result.extrema.rawVonMisesMax.sampleIndex >= sampleCount ||
+        !Array.isArray(result.extrema.rawVonMisesMax.locationM) || result.extrema.rawVonMisesMax.locationM.length !== 3) {
+      return { valid: false, reason: 'invalid-result-extrema' };
+    }
     return { valid: true };
   }
 

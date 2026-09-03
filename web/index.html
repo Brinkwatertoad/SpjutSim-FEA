@@ -185,6 +185,17 @@
         </div>
         <p id="results-empty">No analysis results.</p>
         <section id="results-summary" hidden><h2>Results</h2><dl class="fea-output-list" id="results-values"></dl></section>
+        <section id="convergence-summary" aria-labelledby="convergence-title">
+          <h2 id="convergence-title">Convergence</h2>
+          <p>Global refinement uses h<sub>next</sub> = 0.7 h, up to four solved levels.</p>
+          <button id="start-convergence-button" type="button">Start study</button>
+          <button id="cancel-convergence-button" type="button" hidden>Cancel study</button>
+          <p id="convergence-status" role="status" aria-live="polite">Not studied.</p>
+          <div class="fea-table-scroll"><table id="convergence-table"><caption>Mesh convergence levels</caption>
+            <thead><tr><th>Level</th><th>h (m)</th><th>DOF</th><th>Max u (m)</th><th>Energy (J)</th><th>Raw VM (Pa)</th><th>Memory</th><th>Viewport</th></tr></thead><tbody></tbody>
+          </table></div>
+          <svg id="convergence-plot" viewBox="0 0 320 120" role="img" aria-label="Normalized displacement, strain energy, and raw peak stress by convergence level"></svg>
+        </section>
         <section id="diagnostics-summary" hidden><h2>Diagnostics</h2><dl class="fea-output-list" id="diagnostics-values"></dl></section>
         <dl class="fea-diagnostics"><dt>Launch mode</dt><dd id="launch-mode">Detecting…</dd><dt>Worker</dt><dd id="worker-status">Pending</dd><dt>WebAssembly</dt><dd id="wasm-status">Pending</dd></dl>
       </aside>
@@ -265,6 +276,8 @@
   <script src="js/analysis/solver-input.js"></script>
   <script src="js/analysis/result-model.js"></script>
   <script src="js/analysis/factor-of-safety.js"></script>
+  <script src="js/analysis/convergence.js"></script>
+  <script src="js/analysis/convergence-runner.js"></script>
   <script src="js/analysis/analysis-document.js"></script>
   <script src="js/analysis/app-controller.js"></script>
   <script src="js/render/viewport-navigation.js"></script>

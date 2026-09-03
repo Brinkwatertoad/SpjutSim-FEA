@@ -549,6 +549,72 @@
     return true;
   };
 
+  AppController.prototype.beginConvergenceStudy = function (settings) {
+    if (!this.document.geometry || !this.document.material || !this.geometrySource) {
+      throw new Error('Import geometry and define a material before starting convergence.');
+    }
+    this.document.convergenceStudy = { schemaVersion: 1, status: 'running',
+      settings: root.SpjutsimFEA.createConvergenceSettings(settings), levels: [],
+      classification: null, stopReason: null, error: null, progress: null,
+      selectedLevel: null, selectedResult: null, analysisRevision: this.document.analysisRevision };
+    this.notify();
+    return this.document.analysisRevision;
+  };
+
+  AppController.prototype.reportConvergenceProgress = function (revision, progress) {
+    var study = this.document.convergenceStudy;
+    if (!study || study.status !== 'running' || revision !== this.document.analysisRevision) { return false; }
+    study.progress = progress; this.notify(); return true;
+  };
+
+  AppController.prototype.completeConvergenceLevel = function (revision, summary, result) {
+    var study = this.document.convergenceStudy;
+    if (!study || study.status !== 'running' || revision !== this.document.analysisRevision) { return false; }
+    study.levels.push(summary);
+    study.selectedLevel = summary.level;
+    study.selectedResult = result;
+    this.document.results = result;
+    this.document.viewportPresentation = Object.assign({}, this.document.viewportPresentation,
+      { mode: 'stress', field: 'vonMises' });
+    this.notify(); return true;
+  };
+
+  AppController.prototype.completeConvergenceStudy = function (revision, classification, error) {
+    var study = this.document.convergenceStudy;
+    if (!study || revision !== this.document.analysisRevision) { return false; }
+    study.status = classification.stopReason === 'cancelled' ? 'cancelled' :
+      classification.status === 'failed' ? 'failed' : 'completed';
+    study.classification = classification;
+    study.stopReason = classification.stopReason;
+    study.error = error || null;
+    study.progress = null;
+    if (study.selectedResult) {
+      study.selectedResult.convergenceStatus = classification.status;
+      if (classification.warning && study.selectedResult.warnings.indexOf(classification.warning) < 0) {
+        study.selectedResult.warnings.push(classification.warning);
+      }
+    }
+    this.notify(); return true;
+  };
+
+  AppController.prototype.cancelConvergenceStudy = function () {
+    var study = this.document.convergenceStudy;
+    if (!study || study.status !== 'running') { return false; }
+    study.status = 'cancelled'; study.stopReason = 'cancelled'; study.progress = null;
+    this.notify(); return true;
+  };
+
+  AppController.prototype.restartConvergenceStudy = function () {
+    var settings = this.document.convergenceStudy && this.document.convergenceStudy.settings;
+    return this.beginConvergenceStudy(settings);
+  };
+
+  AppController.prototype.selectConvergenceLevel = function (level) {
+    var study = this.document.convergenceStudy;
+    if (!study || study.selectedLevel !== level || !study.selectedResult) { return false; }
+    this.document.results = study.selectedResult; this.notify(); return true;
+  };
+
   AppController.prototype.failSolve = function (revision, error) {
     if (revision !== this.document.analysisRevision) { return false; }
     this.document.solveExecution = { status: 'failed', error: error && error.diagnostic ? error.diagnostic : error,

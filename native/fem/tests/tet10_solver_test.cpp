@@ -46,5 +46,27 @@ int main() {
               "Tet10 affine solve did not recover constant strain");
   require(result.raw_von_mises_max.sample_index < 4,
           "Tet10 raw extremum omitted its recovery sample");
+
+  Context loaded;
+  require(loaded.load_mesh(mesh), "loaded Tet10 mesh rejected");
+  require(loaded.set_material({200e9, .3, 24}), "loaded Tet10 material rejected");
+  std::vector<PrescribedDof> fixed;
+  for (std::uint32_t dof = 0; dof < 30; ++dof)
+    fixed.push_back({dof, 0});
+  require(loaded.set_constraints(std::move(fixed)), "loaded Tet10 supports rejected");
+  Loads loads;
+  loads.gravity_enabled = true;
+  loads.gravity_m_s2 = {0, 0, -10};
+  SurfaceLoad pressure;
+  pressure.type = SurfaceLoadType::pressure;
+  pressure.nodes_per_face = 6;
+  pressure.pressure_pa = 12;
+  pressure.triangle_connectivity = {0, 2, 1, 6, 5, 4};
+  loads.surface_loads.push_back(pressure);
+  require(loaded.set_loads(std::move(loads)), "Tet10 loads rejected");
+  require(loaded.solve(), "loaded Tet10 solve failed");
+  require(near(loaded.results().total_applied_force_n[2], -34, 1e-10, 1e-10) &&
+              near(loaded.results().total_reaction_n[2], 34, 1e-10, 1e-10),
+          "Tet10 pressure/gravity resultants did not equilibrate");
   return 0;
 }

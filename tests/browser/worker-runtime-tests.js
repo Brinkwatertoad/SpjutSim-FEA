@@ -113,7 +113,7 @@
       ranges: { vonMises: { minimum: 10, maximum: 40 }, maxPrincipal: { minimum: 10, maximum: 40 },
         minPrincipal: { minimum: 10, maximum: 40 }, displacementMagnitude: { minimum: 0, maximum: 0.01 },
         ux: { minimum: 0, maximum: 0.01 }, uy: { minimum: 0, maximum: 0.01 }, uz: { minimum: 0, maximum: 0.01 } },
-      extrema: { maxDisplacement: { valueM: 0.01 }, rawVonMisesMax: { valuePa: 40 },
+      extrema: { maxDisplacement: { valueM: 0.01, locationM: [1, 0, 0] }, rawVonMisesMax: { valuePa: 40, sampleIndex: 0, locationM: [0.25, 0.25, 0.25] },
         displayedVonMisesMax: { valuePa: 40 }, rawMaxPrincipal: { valuePa: 30 }, rawMinPrincipal: { valuePa: -10 } },
       equilibrium: { totalReactionN: [-1, 0, 0], totalAppliedForceN: [1, 0, 0], relativeResidual: 0 },
       solverStatistics: { iterations: 1, finalRelativeResidual: 0, solveDurationMs: 1, wasmMemoryBytes: 16777216 },
@@ -463,6 +463,22 @@
     assert(menuGroup.dataset.open === 'false' && event.defaultPrevented, 'Escape did not dismiss and consume the open menu');
   }
 
+  function testConvergenceControllerLifecycle() {
+    var controller = new api.AppController({ document: api.createAnalysisDocument() });
+    controller.replaceGeometry(validGeometry(), { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([1]).buffer });
+    controller.document.material = { youngsModulusPa: 1e9, poissonsRatio: .25 };
+    var revision = controller.beginConvergenceStudy();
+    assert(controller.document.convergenceStudy.status === 'running' &&
+      controller.document.convergenceStudy.settings.refinementFactor === .7, 'convergence study did not start deterministically');
+    controller.completeConvergenceLevel(revision, { level: 1 }, { warnings: [], convergenceStatus: 'not-run' });
+    controller.completeConvergenceStudy(revision, { status: 'unconverged', stopReason: 'level-limit', warning: null });
+    assert(controller.document.convergenceStudy.status === 'completed' && controller.document.results.convergenceStatus === 'unconverged',
+      'convergence completion did not install its status');
+    controller.replaceMaterial({ youngsModulusPa: 2e9, poissonsRatio: .25 });
+    assert(controller.document.convergenceStudy === null && controller.document.results === null,
+      'engineering edit did not invalidate convergence state');
+  }
+
   root.SpjutsimWorkerRuntimeTests = Promise.resolve().then(function () {
     testResponseValidation();
     testGeometryContractAndInvalidation();
@@ -473,6 +489,7 @@
     testViewportCameraNavigation();
     testDeformationAnimationControls();
     testEscapeClearsFaceSelection();
+    testConvergenceControllerLifecycle();
     return testSolverTimeoutTerminatesWorker().then(testMesherClientUsesDedicatedTransferCopy).then(testMeshContractAndDedicatedTransferCopy);
   }).then(function () {
     status.textContent = 'Passed';

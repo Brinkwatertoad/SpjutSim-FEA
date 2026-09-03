@@ -63,7 +63,7 @@
   function tet10Mesh() {
     var positions = new Float64Array([
       0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
-      0.5, 0, 0, 0.5, 0.5, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.5, 0.5, 0.5, 0.5
+      0.5, 0, 0, 0.5, 0.5, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.5, 0.5, 0.5, 0, 0.5
     ]);
     var solver = new Uint32Array([
       0, 2, 1, 6, 5, 4,
@@ -150,8 +150,8 @@
       { minM: [0, 0, 0], maxM: [1, 1, 1] });
     var selected;
     assert(resolved.elementType === 'tet10', 'mesh setting resolution discarded Tet10');
-    assert(api.validateVolumeMeshResult(mesh, ['face-0', 'face-1', 'face-2', 'face-3']).valid,
-      'valid Tet10 mesh did not satisfy the public contract');
+    var validation = api.validateVolumeMeshResult(mesh, ['face-0', 'face-1', 'face-2', 'face-3']);
+    assert(validation.valid, 'valid Tet10 mesh did not satisfy the public contract: ' + validation.reason);
     selected = api.selectedBoundary(mesh, ['face-0']);
     assert(selected.surfaceElementType === 'tri6' && selected.surfaceConnectivity.length === 6,
       'solver projection lost quadratic boundary connectivity');
@@ -473,7 +473,7 @@
     assert(rows[4].secondaryText === 'Pressure · 1.5 MPa', 'pressure row omitted display units');
     assert(rows[5].secondaryText === 'Force · [120, −30, 45] N', 'force row omitted vector or display units');
     assert(rows[6].secondaryText === '[0, 0, −9.80665] m/s²', 'gravity row omitted acceleration');
-    assert(rows[7].secondaryText === '42 Tet4 elements' && rows[7].metaText === '18 nodes · Normal',
+    assert(rows[7].secondaryText === '42 Tet10 elements' && rows[7].metaText === '18 nodes · Normal',
       'mesh row omitted generated mesh statistics or density');
     assert(rows.every(function (row) { return row.ariaLabel.indexOf(row.primaryText) !== -1; }),
       'setup row accessible label omitted its primary text');

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-09-02T00:00:00-04:00",
+  "solver": { "name": "SpjutSim FEM", "apiVersion": 2, "runtime": "single-threaded WASM", "elementType": "tet10" },
+  "definition": { "geometry": "1 m unit cube", "youngsModulusPa": 1000000000, "poissonsRatio": 0.25, "totalForceN": [1000, 0, 0], "analyticalAxialDisplacementM": 0.000001, "analyticalVonMisesPa": 1000 },
+  "levels": [
+    { "targetSizeM": 0.2, "nodeCount": 2058, "elementCount": 1111, "degreeOfFreedomCount": 6174, "maximumDisplacementM": 0.0000010606601717044431, "strainEnergyJ": 0.0004999999999999448, "rawVonMisesMaxPa": 1000.0000079844727, "iterations": 261, "solveDurationMs": 47.8, "estimatedPeakBytes": 110164734 },
+    { "targetSizeM": 0.14, "nodeCount": 4321, "elementCount": 2485, "degreeOfFreedomCount": 12963, "maximumDisplacementM": 0.0000010606601717833233, "strainEnergyJ": 0.0005000000000003887, "rawVonMisesMaxPa": 1000.0000070942754, "iterations": 359, "solveDurationMs": 147.7, "estimatedPeakBytes": 121379610 }
+  ],
+  "classification": { "status": "converged", "maximumDisplacementRelativeChange": 7.436892331361508e-11, "strainEnergyRelativeChange": 8.87744738831229e-13, "rawVonMisesRelativeChange": 8.901973771434667e-10 },
+  "acceptance": { "axialDisplacementProbe": "loaded-face Ux", "axialDisplacementRelativeError": 0.00002, "rawVonMisesRelativeError": 0.00000001, "passed": true }
+}

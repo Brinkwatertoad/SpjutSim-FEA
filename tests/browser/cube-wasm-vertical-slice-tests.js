@@ -41,9 +41,9 @@
     return mesher.importGeometry({ geometryId: 'cube-wasm-slice', sourceName: 'generated-unit-cube-m.step', sourceFormat: 'step', sourceBytes: bytes });
   }).then(function (geometry) {
     controller.replaceGeometry(geometry, { sourceName: geometry.sourceName, sourceFormat: geometry.sourceFormat, sourceBytes: sourceBytes });
-    controller.replaceMaterial({ name: 'Patch material', youngsModulusPa: 1e9, poissonsRatio: 0.25, densityKgM3: 1000 });
+    controller.replaceMaterial({ name: 'Patch material', youngsModulusPa: 1e9, poissonsRatio: 0.25, densityKgM3: 1000, tensileYieldPa: 250e6 });
     controller.beginMeshGeneration();
-    return mesher.generateMesh({ geometry: geometry, settings: { preset: 'coarse', elementType: 'tet4' }, sourceBytes: sourceBytes });
+    return mesher.generateMesh({ geometry: geometry, settings: { preset: 'coarse', elementType: 'tet10' }, sourceBytes: sourceBytes });
   }).then(function (mesh) {
     controller.completeMeshGeneration(mesh);
     mesher.dispose();
@@ -55,6 +55,7 @@
     solver = new api.SolverClient();
     var revision = controller.beginSolvePreflight();
     return solver.preflight(api.prepareSolverInput(controller.document), revision, 8).then(function (preflight) {
+      root.__spjutsimBenchmark = { preflight: preflight };
       assert(preflight.nodeCount === mesh.statistics.nodeCount && preflight.elementCount === mesh.statistics.elementCount,
         'cube preflight did not use the authored mesh');
       controller.completeSolvePreflight(revision, preflight);
@@ -64,6 +65,7 @@
   }).then(function (solved) {
     var revision = solved[0];
     var result = solved[1];
+    root.__spjutsimBenchmark.result = result;
     var maximumLoadedUx = -Infinity;
     var node;
     for (node = 0; node < result.originalSurface.nodePositionsM.length / 3; node += 1) {
@@ -73,14 +75,21 @@
     }
     assert(near(maximumLoadedUx, 1e-6, 2e-5, 1e-11), 'cube axial displacement missed the analytical target');
     assert(near(result.extrema.rawVonMisesMax.valuePa, 1000, 2e-4, 1e-3), 'cube axial stress missed the analytical target');
+    assert(result.elementType === 'tet10' && result.recoverySampleFields.vonMisesPa.length === result.meshStatistics.elementCount * 4,
+      'Tet10 recovery samples were not returned end to end');
+    assert(new Set(result.originalSurface.triangleElementIndices).size > 1,
+      'subdivided Tri6 display faces lost their owning Tet10 elements');
     assert(near(result.equilibrium.totalReactionN[0], -1000, 1e-7, 1e-5) && result.equilibrium.relativeResidual < 1e-6,
       'cube reaction equilibrium failed');
     controller.completeSolve(revision, result);
+    var trustedResult = controller.document.results;
+    assert(trustedResult.factorOfSafety && near(trustedResult.factorOfSafety.rawMinimum.value, 250000, 2e-4, 1),
+      'Tet10 factor of safety missed the analytical target');
     ['model', 'mesh', 'stress', 'deformation'].forEach(function (mode) {
       controller.replaceViewportPresentation(Object.assign({}, controller.document.viewportPresentation, {
         mode: mode, field: mode === 'deformation' ? 'displacementMagnitude' : 'vonMises'
       }));
-      assert(controller.document.results === result, mode + ' view changed the solved result');
+      assert(controller.document.results === trustedResult, mode + ' view changed the solved result');
     });
     status.textContent = 'Passed'; status.dataset.result = 'passed'; document.title = 'Cube WASM vertical slice: Passed';
   }).catch(function (error) {

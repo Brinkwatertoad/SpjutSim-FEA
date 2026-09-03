@@ -13,6 +13,7 @@
   var activeMesh = null;
   var activeSolver = null;
   var activeSolverRevision = null;
+  var activeConvergence = null;
   var displayedGeometry = null;
   var displayedMesh = null;
   var displayedResults = null;
@@ -34,6 +35,7 @@
     var geometryId;
     var replacing = Boolean(app.document.geometry);
     var sourceFormat = api.sourceFormatForFilename(file.name);
+    cancelConvergence();
     if (replacementMigrationUI.draft) { replacementMigrationUI.cancel(); }
     if (activeImport) { activeImport.cancel(); }
     if (!replacing) {
@@ -84,6 +86,7 @@
   function generateMesh() {
     var client;
     if (!app.document.geometry || !app.geometrySource) { return; }
+    cancelConvergence();
     if (activeMesh) { activeMesh.cancel(); }
     disposeSolver();
     app.discardSolvePreflight();
@@ -111,6 +114,7 @@
   function prepareSolve() {
     var input;
     var revision;
+    cancelConvergence();
     disposeSolver();
     try {
       input = api.prepareSolverInput(app.document);
@@ -152,9 +156,72 @@
     app.cancelSolve();
   }
 
+  function cancelConvergence() {
+    if (activeConvergence) { activeConvergence.cancel(); activeConvergence = null; }
+    app.cancelConvergenceStudy();
+  }
+
+  function startConvergence() {
+    var revision;
+    var resolved;
+    var diagonal;
+    if (activeImport || activeMesh) { return; }
+    if (activeConvergence) { activeConvergence.cancel(); }
+    disposeSolver();
+    try {
+      revision = app.beginConvergenceStudy();
+      resolved = api.resolveMeshSettings(app.document.meshSettings, app.document.geometry.boundingBoxM);
+      diagonal = Math.hypot(
+        app.document.geometry.boundingBoxM.maxM[0] - app.document.geometry.boundingBoxM.minM[0],
+        app.document.geometry.boundingBoxM.maxM[1] - app.document.geometry.boundingBoxM.minM[1],
+        app.document.geometry.boundingBoxM.maxM[2] - app.document.geometry.boundingBoxM.minM[2]);
+    } catch (error) { return; }
+    var runner = new api.ConvergenceRunner({
+      prepareLevel: async function (targetSizeM, index, control) {
+        var mesher = new api.MesherClient({ onProgress: function (progress) {
+          app.reportConvergenceProgress(revision, { level: index + 1, stage: progress.stage || 'meshing', targetSizeM: targetSizeM });
+        } });
+        var solver = null;
+        control.cancelCurrent = function () { mesher.cancel(); if (solver) { solver.cancel(); } };
+        try {
+          var mesh = await mesher.generateMesh({ geometry: app.document.geometry,
+            settings: { preset: 'custom', elementType: app.document.meshSettings.elementType,
+              minSizeM: targetSizeM / 4, maxSizeM: targetSizeM },
+            sourceBytes: app.geometrySource.sourceBytes });
+          mesher.dispose();
+          solver = new api.SolverClient({ onProgress: function (progress) {
+            app.reportConvergenceProgress(revision, { level: index + 1, stage: progress.stage, targetSizeM: targetSizeM });
+          } });
+          control.cancelCurrent = function () { solver.cancel(); };
+          var input = api.prepareSolverInput(Object.assign({}, app.document, { mesh: mesh,
+            meshMetadata: { statistics: mesh.statistics, quality: mesh.quality, memoryInputs: mesh.memoryInputs } }));
+          var preflight = await solver.preflight(input, revision, root.navigator && root.navigator.deviceMemory);
+          return { mesh: mesh, preflight: preflight, material: app.document.material,
+            solve: function () { return solver.solve(revision, app.document.solveSettings, true); },
+            dispose: function () { solver.dispose(); } };
+        } catch (error) {
+          mesher.dispose(); if (solver) { solver.dispose(); } throw error;
+        }
+      },
+      onProgress: function (progress) { app.reportConvergenceProgress(revision, progress); },
+      onLevel: function (summary, result) {
+        if (!app.completeConvergenceLevel(revision, summary, result)) { runner.cancel(); }
+      },
+      onComplete: function (classification, error) {
+        app.completeConvergenceStudy(revision, classification, error);
+        if (activeConvergence === runner) { activeConvergence = null; }
+      },
+      confirmHighMemory: function (preflight, level) {
+        return root.confirm('Convergence level ' + level + ' is estimated at or above 8 GiB. Continue this level?');
+      }
+    });
+    activeConvergence = runner;
+    runner.start(resolved.maxSizeM, undefined, diagonal);
+  }
+
   function setText(id, value) { document.getElementById(id).textContent = value; }
   setText('launch-mode', location.protocol === 'file:' ? 'Direct local file' : (root.crossOriginIsolated ? 'HTTP, isolated' : 'HTTP, portable'));
-  root.addEventListener('pagehide', function () { if (activeMesh) { activeMesh.cancel(); } disposeSolver(); replacementMigrationUI.dispose(); ui.dispose(); viewport.dispose(); }, { once: true });
+  root.addEventListener('pagehide', function () { if (activeMesh) { activeMesh.cancel(); } if (activeConvergence) { activeConvergence.cancel(); } disposeSolver(); replacementMigrationUI.dispose(); ui.dispose(); viewport.dispose(); }, { once: true });
   viewport.setFacePickHandler(function (faceId, additive) {
     if (!faceId) {
       app.clearSelectedFaces();
@@ -166,6 +233,10 @@
   });
   app.subscribe(function (documentState) {
     if (activeSolver && activeSolverRevision !== documentState.analysisRevision) { disposeSolver(); }
+    if (activeConvergence && (!documentState.convergenceStudy ||
+        documentState.convergenceStudy.analysisRevision !== documentState.analysisRevision)) {
+      activeConvergence.cancel(); activeConvergence = null;
+    }
     if (documentState.geometry !== displayedGeometry) {
       displayedGeometry = documentState.geometry;
       if (displayedGeometry) {
@@ -192,6 +263,7 @@
     app.clearMesh();
   });
   ui.setSolveHandlers(prepareSolve, solve, cancelSolve);
+  ui.setConvergenceHandlers(startConvergence, cancelConvergence);
   viewport.setProbeHandler(function (probe) { ui.renderProbe(probe); });
   ui.start();
 

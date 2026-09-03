@@ -30,13 +30,13 @@ uncalibrated value called out by `spec.md`.
 
 ## Implementation
 
-- [ ] **Introduce explicit element descriptors.** Generalize
+- [x] **Introduce explicit element descriptors.** Generalize
   `native/fem/include/spjutsim/fem_types.hpp`, `native/fem/src/fem_context.cpp`,
   and `native/fem/src/sparse.cpp` around `ElementType::{tet4,tet10}` plus
   nodes-per-element and recovery-point counts. Keep Tet4 behavior bitwise or
   tolerance-equivalent and reject connectivity arity/index overflow before graph
   allocation.
-- [ ] **Implement and patch-test the Tet10 kernel.** Add focused Tet10 source
+- [x] **Implement and patch-test the Tet10 kernel.** Add focused Tet10 source
   in `native/fem/src/tet10.cpp`, its public/internal declaration under
   `native/fem/include/spjutsim`, and `native/fem/tests/tet10_element_test.cpp`
   for quadratic shape functions/derivatives, partition of unity, Kronecker
@@ -44,24 +44,24 @@ uncalibrated value called out by `spec.md`.
   strain, and a quadratic displacement field. Use the same documented
   four-point tetrahedral integration rule named in Task 12 and fail every
   invalid sampled Jacobian.
-- [ ] **Integrate quadratic surface and body loads.** Replace the Tet4-only
+- [x] **Integrate quadratic surface and body loads.** Replace the Tet4-only
   surface-load representation with element-aware Tri3/Tri6 faces. Numerically
   integrate pressure using the current outward geometry and positive-inward
   sign convention, integrate total-face force so its nodal sum matches the
   requested vector, and integrate gravity through the Tet10 volume shape
   functions. Add conservation and reaction-equilibrium tests for every load.
-- [ ] **Recover raw and smoothed Tet10 results.** Evaluate strain/stress at the
+- [x] **Recover raw and smoothed Tet10 results.** Evaluate strain/stress at the
   documented recovery points, return typed recovery-sample values and owning
   element indices for raw extrema, and produce nodal/surface-smoothed fields for
   rendering without relabeling smoothed maxima as raw. Preserve Tet4's one
   sample per element behind the same result interface.
-- [ ] **Version the native/WASM/browser boundary.** Bump
+- [x] **Version the native/WASM/browser boundary.** Bump
   `SPJUTSIM_FEM_API_VERSION` and the worker protocol, extend
   `native/fem/include/spjutsim/fem_c_api.h`, `native/wasm/fem_c_api.cpp`,
   `workers/solver-worker.js`, `web/js/workers/solver-client.js`, and
   `web/js/analysis/result-model.js`, and reject stale envelopes/struct sizes.
   Transfer mesh and result buffers once; avoid per-element JavaScript objects.
-- [ ] **Calibrate memory and solver behavior.** Make the estimator account for
+- [x] **Calibrate memory and solver behavior.** Make the estimator account for
   Tet10 connectivity, graph density, integration/recovery storage, assembly
   lookup lifetime, PCG vectors, and result buffers from the same counts used by
   allocation. Add a benchmark recorder under `benchmarks/` that stores predicted
@@ -69,11 +69,11 @@ uncalibrated value called out by `spec.md`.
   optional external process peak for representative Tet4/Tet10 meshes. Fit and
   document the safety multiplier and retain the 3.5 GiB cap unless supported-
   browser evidence justifies a changed value without relying on `memory64`.
-- [ ] **Choose the measured PCG configuration.** Run representative Tet10
+- [x] **Choose the measured PCG configuration.** Run representative Tet10
   axial, bending, mixed-scale, and poor-quality cases. Keep Jacobi when it meets
   the documented convergence/time targets; add a first-party IC(0) only if the
   recorded cases demonstrate the need, and include its allocations in preflight.
-- [ ] **Flip the production default atomically.** After the native/WASM tests
+- [x] **Flip the production default atomically.** After the native/WASM tests
   pass, make new analyses use Tet10, label Tet4 as an advanced/debug option,
   enable Tet10 preflight/Solve, and show element type in Mesh, preflight,
   Results, and Diagnostics. Rebuild `web/wasm/fem/fem.js` with

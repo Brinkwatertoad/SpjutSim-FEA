@@ -257,6 +257,7 @@ function boundaryMapping(mesh) {
   var byKey = Object.create(null);
   var faces = [[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]];
   var boundary = mesh.boundaryFaces.triangleConnectivity;
+  var solverBoundary = mesh.boundaryFaces.solverConnectivity;
   var elementIndices = new Uint32Array(boundary.length / 3);
   var faceIndices = new Uint32Array(boundary.length / 3);
   var element;
@@ -264,6 +265,7 @@ function boundaryMapping(mesh) {
   var triangle;
   var key;
   var elementNodes = mesh.elementType === 'tet10' ? 10 : 4;
+  var faceNodes = mesh.elementType === 'tet10' ? 6 : 3;
   for (element = 0; element < mesh.elementConnectivity.length / elementNodes; element += 1) {
     for (face = 0; face < 4; face += 1) {
       key = faces[face].map(function (corner) { return mesh.elementConnectivity[element * elementNodes + corner]; })
@@ -271,15 +273,33 @@ function boundaryMapping(mesh) {
       byKey[key] = element;
     }
   }
-  for (triangle = 0; triangle < elementIndices.length; triangle += 1) {
-    key = [boundary[triangle * 3], boundary[triangle * 3 + 1], boundary[triangle * 3 + 2]]
-      .sort(function (a, b) { return a - b; }).join(':');
-    elementIndices[triangle] = byKey[key];
-  }
   mesh.boundaryFaces.faceRanges.forEach(function (faceRange, index) {
+    var solverRange = mesh.boundaryFaces.solverFaceRanges[index];
+    var solverFaceCount = solverRange.count / faceNodes;
+    var displayTrianglesPerFace = (faceRange.count / 3) / solverFaceCount;
+    var localFace;
+    var localTriangle;
+    for (localFace = 0; localFace < solverFaceCount; localFace += 1) {
+      var solverOffset = solverRange.start + localFace * faceNodes;
+      key = [solverBoundary[solverOffset], solverBoundary[solverOffset + 1], solverBoundary[solverOffset + 2]]
+        .sort(function (a, b) { return a - b; }).join(':');
+      element = byKey[key];
+      if (!Number.isInteger(element)) { throw new Error('A boundary face could not be mapped to its tetrahedral element.'); }
+      for (localTriangle = 0; localTriangle < displayTrianglesPerFace; localTriangle += 1) {
+        triangle = faceRange.start / 3 + localFace * displayTrianglesPerFace + localTriangle;
+        elementIndices[triangle] = element;
+      }
+    }
     for (triangle = faceRange.start / 3; triangle < (faceRange.start + faceRange.count) / 3; triangle += 1) { faceIndices[triangle] = index; }
   });
   return { elementIndices: elementIndices, faceIndices: faceIndices };
+}
+
+function boundaryFaceForElement(mapping, faceIds, elementIndex) {
+  for (var triangle = 0; triangle < mapping.elementIndices.length; triangle += 1) {
+    if (mapping.elementIndices[triangle] === elementIndex) { return faceIds[mapping.faceIndices[triangle]] || null; }
+  }
+  return null;
 }
 
 function makeResult(Module, input, revision, preflight) {
@@ -326,7 +346,8 @@ function makeResult(Module, input, revision, preflight) {
     extrema: {
       maxDisplacement: { valueM: maximumDisplacement, nodeIndex: maximumNode,
         locationM: Array.prototype.slice.call(input.mesh.nodePositionsM, maximumNode * 3, maximumNode * 3 + 3) },
-      rawVonMisesMax: { valuePa: v(15), elementIndex: v(18), sampleIndex: v(22), locationM: elementLocation(input.mesh, v(18)) },
+      rawVonMisesMax: { valuePa: v(15), elementIndex: v(18), sampleIndex: v(22), locationM: elementLocation(input.mesh, v(18)),
+        faceId: boundaryFaceForElement(mapping, input.mesh.boundaryFaces.faceRanges.map(function (item) { return item.faceId; }), v(18)) },
       displayedVonMisesMax: { valuePa: range(surface.vonMisesPa).maximum },
       rawMaxPrincipal: { valuePa: v(16), elementIndex: v(19), sampleIndex: v(23), locationM: elementLocation(input.mesh, v(19)) },
       rawMinPrincipal: { valuePa: v(17), elementIndex: v(20), sampleIndex: v(24), locationM: elementLocation(input.mesh, v(20)) }

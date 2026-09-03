@@ -21,11 +21,11 @@ evidence.
 8. [x] [Author material, supports, and loads](08-material-support-and-load-authoring.md)
 9. [x] [Implement the trusted Tet4 solver and preflight model](09-trusted-tet4-solver-and-preflight.md)
 10. [x] [Integrate WASM solve and first result views](10-wasm-solve-and-result-views.md)
-11. [ ] [Complete priority release features](11-priority-release-features.md) — feature packages complete; final regression follow-up in progress
-12. [ ] [Generate production Tet10 meshes](12-production-tet10-meshing.md)
-13. [ ] [Solve Tet10 models and calibrate resource use](13-tet10-solver-and-resource-calibration.md)
-14. [ ] [Complete factor-of-safety and result trust views](14-factor-of-safety-and-result-trust.md)
-15. [ ] [Deliver convergence, validation, and the v1.0 release gate](15-convergence-validation-and-v1-release.md)
+11. [x] [Complete priority release features](11-priority-release-features.md)
+12. [x] [Generate production Tet10 meshes](12-production-tet10-meshing.md)
+13. [x] [Solve Tet10 models and calibrate resource use](13-tet10-solver-and-resource-calibration.md)
+14. [x] [Complete factor-of-safety and result trust views](14-factor-of-safety-and-result-trust.md)
+15. [ ] [Deliver convergence, validation, and the v1.0 release gate](15-convergence-validation-and-v1-release.md) — workflow complete; independent reference, broader CAD/browser-resource, and redistribution gates remain open (see `../release/v1-acceptance-audit.md`)
 
 Each task should leave the repository usable from both `file://` and the
 optional HTTP server.

@@ -64,6 +64,13 @@ equilibrium, staleness, and default-result-view checks. Open
 enabled (or from the optional HTTP server) for the full STEP cube import,
 face-authored support/load, mesh, analytical axial solve, and four-view check.
 
+Open `tests/browser/factor-of-safety-tests.html`,
+`tests/browser/convergence-tests.html`, and
+`tests/browser/convergence-runner-tests.html` directly for the pure trust and
+sequencing contracts. `tests/browser/cube-convergence-tests.html` runs a real
+two-level Tet10 analytical convergence study through disposable Gmsh and FEM
+workers; enable local-file access for that harness.
+
 After changing either file in `workers/`, regenerate the checked-in local-file worker wrappers:
 
 ```sh

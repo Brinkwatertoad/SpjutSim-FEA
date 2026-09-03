@@ -54,6 +54,8 @@
   under `web/wasm/gmsh/licenses/`.
 
 Distribution of this artifact carries GPL obligations unless Gmsh is separately
-licensed. In particular, the project's all-rights-reserved root license does not
-grant permission to disregard the third-party terms. The public distribution
-posture for the combined application must be reviewed before v1.0 release.
+licensed. The v1 decision is therefore **do not publicly distribute the combined
+artifact under the current all-rights-reserved root license**. Public release
+requires either a compatible project license approved by the copyright holder
+or a suitable commercial Gmsh license; the release gate remains closed until
+one of those paths is documented.

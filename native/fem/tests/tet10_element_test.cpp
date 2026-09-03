@@ -59,6 +59,17 @@ int main() {
               "Tet10 constant-strain patch failed");
   }
 
+  std::array<double, 30> quadratic{};
+  for (int node = 0; node < 10; ++node) {
+    const double px = x[node * 3];
+    quadratic[node * 3] = px * px;
+  }
+  for (const auto &point : data.points) {
+    const auto strain = tet10_strain(point, quadratic);
+    require(near(strain[0], 2 * point.barycentric[1], 1e-11, 1e-13),
+            "Tet10 quadratic displacement field was not differentiated exactly");
+  }
+
   const auto constitutive = isotropic_constitutive_matrix({200e9, .3, 0});
   const auto stiffness = tet10_stiffness(data, constitutive);
   for (int row = 0; row < 30; ++row)
