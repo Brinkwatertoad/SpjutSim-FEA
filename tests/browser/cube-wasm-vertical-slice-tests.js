@@ -34,6 +34,21 @@
     controller.replaceSelectedFaces([faceId]);
     controller.createBoundaryCondition(definition);
   }
+  function tet10RecoveryLocation(mesh, elementIndex, sampleIndex) {
+    var a = 0.5854101966249685;
+    var b = 0.1381966011250105;
+    var barycentric = [b, b, b, b];
+    barycentric[sampleIndex % 4] = a;
+    var edges = [[0, 1], [1, 2], [2, 0], [0, 3], [2, 3], [3, 1]];
+    var shape = barycentric.map(function (value) { return value * (2 * value - 1); });
+    edges.forEach(function (edge) { shape.push(4 * barycentric[edge[0]] * barycentric[edge[1]]); });
+    var location = [0, 0, 0];
+    for (var localNode = 0; localNode < 10; localNode += 1) {
+      var node = mesh.elementConnectivity[elementIndex * 10 + localNode];
+      for (var axis = 0; axis < 3; axis += 1) { location[axis] += shape[localNode] * mesh.nodePositionsM[node * 3 + axis]; }
+    }
+    return location;
+  }
 
   fetch('../fixtures/generated-unit-cube-m.step').then(function (response) { return response.arrayBuffer(); }).then(function (bytes) {
     sourceBytes = bytes;
@@ -77,6 +92,11 @@
     assert(near(result.extrema.rawVonMisesMax.valuePa, 1000, 2e-4, 1e-3), 'cube axial stress missed the analytical target');
     assert(result.elementType === 'tet10' && result.recoverySampleFields.vonMisesPa.length === result.meshStatistics.elementCount * 4,
       'Tet10 recovery samples were not returned end to end');
+    var expectedPeakLocation = tet10RecoveryLocation(mesh, result.extrema.rawVonMisesMax.elementIndex,
+      result.extrema.rawVonMisesMax.sampleIndex);
+    assert(result.extrema.rawVonMisesMax.locationM.every(function (value, axis) {
+      return near(value, expectedPeakLocation[axis], 1e-10, 1e-12);
+    }), 'Tet10 raw peak location did not identify its recovery quadrature point');
     assert(new Set(result.originalSurface.triangleElementIndices).size > 1,
       'subdivided Tri6 display faces lost their owning Tet10 elements');
     assert(near(result.equilibrium.totalReactionN[0], -1000, 1e-7, 1e-5) && result.equilibrium.relativeResidual < 1e-6,

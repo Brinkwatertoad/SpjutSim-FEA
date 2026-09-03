@@ -2,14 +2,13 @@
 
 Tasks 01–10 established the portable geometry path and the first trusted Tet4
 browser vertical slice. Task 11 then consolidated the priority authoring and
-presentation work. Its feature packages are implemented; a final compact-Mesh
-row/delete-mesh regression follow-up is still in progress and remains the gate
-before the production-element roadmap begins.
+presentation work. Its feature packages and compact-Mesh/delete-mesh regression
+follow-up are complete.
 
-Execute the remaining plans in order. Tasks 12–13 complete Milestone 3 by
-making Tet10 the production mesh/solve path and calibrating its resource model.
-Tasks 14–15 complete the remaining Milestone 4 trust layer and v1.0 release
-evidence.
+Task 12 and Task 13's implementation make Tet10 the production mesh/solve path;
+Task 13's measurement-backed resource and PCG calibration remains open. Task 14
+and Task 15's implemented workflow provide the remaining Milestone 4 trust
+layer, while Task 15's external v1.0 release evidence remains open.
 
 1. [x] [Complete the portable runtime foundation](01-portable-runtime-foundation.md)
 2. [x] [Prove the Gmsh local-runtime path](02-gmsh-local-runtime-spike.md)
@@ -23,7 +22,7 @@ evidence.
 10. [x] [Integrate WASM solve and first result views](10-wasm-solve-and-result-views.md)
 11. [x] [Complete priority release features](11-priority-release-features.md)
 12. [x] [Generate production Tet10 meshes](12-production-tet10-meshing.md)
-13. [x] [Solve Tet10 models and calibrate resource use](13-tet10-solver-and-resource-calibration.md)
+13. [ ] [Solve Tet10 models and calibrate resource use](13-tet10-solver-and-resource-calibration.md) — Tet10 solve path complete; representative peak-memory and PCG calibration evidence remains open
 14. [x] [Complete factor-of-safety and result trust views](14-factor-of-safety-and-result-trust.md)
 15. [ ] [Deliver convergence, validation, and the v1.0 release gate](15-convergence-validation-and-v1-release.md) — workflow complete; independent reference, broader CAD/browser-resource, and redistribution gates remain open (see `../release/v1-acceptance-audit.md`)
 

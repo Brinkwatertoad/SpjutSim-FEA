@@ -1,6 +1,8 @@
 'use strict';
 var WORKER_PROTOCOL_VERSION = 2;
 var WASM_HEAP_CAP_BYTES = 3758096384;
+// Provisional until Task 13 has representative supported-browser peak-memory evidence.
+var MEMORY_SAFETY_MULTIPLIER = 1.5;
 var activeAnalysis = null;
 var femModulePromise = typeof createSpjutsimFemModule === 'function'
   ? createSpjutsimFemModule({ noInitialRun: true })
@@ -241,14 +243,25 @@ function range(field) {
   return { minimum: minimum, maximum: maximum };
 }
 
-function elementLocation(mesh, element) {
+function recoverySampleLocation(mesh, element, sample) {
   var location = [0, 0, 0];
-  var corner;
+  var weights = [0.25, 0.25, 0.25, 0.25];
+  var localNode;
   var axis;
   var node;
-  for (corner = 0; corner < 4; corner += 1) {
-    node = mesh.elementConnectivity[element * (mesh.elementType === 'tet10' ? 10 : 4) + corner];
-    for (axis = 0; axis < 3; axis += 1) { location[axis] += mesh.nodePositionsM[node * 3 + axis] / 4; }
+  var elementNodes = mesh.elementType === 'tet10' ? 10 : 4;
+  if (mesh.elementType === 'tet10') {
+    var a = 0.5854101966249685;
+    var b = 0.1381966011250105;
+    var barycentric = [b, b, b, b];
+    var edges = [[0, 1], [1, 2], [2, 0], [0, 3], [2, 3], [3, 1]];
+    barycentric[sample % 4] = a;
+    weights = barycentric.map(function (value) { return value * (2 * value - 1); });
+    edges.forEach(function (edge) { weights.push(4 * barycentric[edge[0]] * barycentric[edge[1]]); });
+  }
+  for (localNode = 0; localNode < elementNodes; localNode += 1) {
+    node = mesh.elementConnectivity[element * elementNodes + localNode];
+    for (axis = 0; axis < 3; axis += 1) { location[axis] += mesh.nodePositionsM[node * 3 + axis] * weights[localNode]; }
   }
   return location;
 }
@@ -295,11 +308,26 @@ function boundaryMapping(mesh) {
   return { elementIndices: elementIndices, faceIndices: faceIndices };
 }
 
-function boundaryFaceForElement(mapping, faceIds, elementIndex) {
+function boundaryFaceForElement(mapping, surface, faceIds, elementIndex, locationM) {
+  var nearestFace = null;
+  var nearestDistanceSquared = Infinity;
   for (var triangle = 0; triangle < mapping.elementIndices.length; triangle += 1) {
-    if (mapping.elementIndices[triangle] === elementIndex) { return faceIds[mapping.faceIndices[triangle]] || null; }
+    if (mapping.elementIndices[triangle] !== elementIndex) { continue; }
+    var distanceSquared = 0;
+    for (var axis = 0; axis < 3; axis += 1) {
+      var centroid = 0;
+      for (var corner = 0; corner < 3; corner += 1) {
+        var node = surface.triangleConnectivity[triangle * 3 + corner];
+        centroid += surface.nodePositionsM[node * 3 + axis] / 3;
+      }
+      distanceSquared += Math.pow(centroid - locationM[axis], 2);
+    }
+    if (distanceSquared < nearestDistanceSquared) {
+      nearestDistanceSquared = distanceSquared;
+      nearestFace = faceIds[mapping.faceIndices[triangle]] || null;
+    }
   }
-  return null;
+  return nearestFace;
 }
 
 function makeResult(Module, input, revision, preflight) {
@@ -327,6 +355,7 @@ function makeResult(Module, input, revision, preflight) {
   var mapping = boundaryMapping(input.mesh);
   var maximumDisplacement = range(displacementMagnitude).maximum;
   var maximumNode = displacementMagnitude.indexOf(maximumDisplacement);
+  var rawVonMisesLocation = recoverySampleLocation(input.mesh, v(18), v(22));
   var warnings = preflight.warnings.slice();
   if (Number.isFinite(input.mesh.statistics.boundingBoxDiagonalM) &&
       maximumDisplacement > 0.05 * input.mesh.statistics.boundingBoxDiagonalM) {
@@ -346,11 +375,13 @@ function makeResult(Module, input, revision, preflight) {
     extrema: {
       maxDisplacement: { valueM: maximumDisplacement, nodeIndex: maximumNode,
         locationM: Array.prototype.slice.call(input.mesh.nodePositionsM, maximumNode * 3, maximumNode * 3 + 3) },
-      rawVonMisesMax: { valuePa: v(15), elementIndex: v(18), sampleIndex: v(22), locationM: elementLocation(input.mesh, v(18)),
-        faceId: boundaryFaceForElement(mapping, input.mesh.boundaryFaces.faceRanges.map(function (item) { return item.faceId; }), v(18)) },
+      rawVonMisesMax: { valuePa: v(15), elementIndex: v(18), sampleIndex: v(22), locationM: rawVonMisesLocation,
+        faceId: boundaryFaceForElement(mapping, { nodePositionsM: input.mesh.nodePositionsM,
+          triangleConnectivity: input.mesh.boundaryFaces.triangleConnectivity },
+        input.mesh.boundaryFaces.faceRanges.map(function (item) { return item.faceId; }), v(18), rawVonMisesLocation) },
       displayedVonMisesMax: { valuePa: range(surface.vonMisesPa).maximum },
-      rawMaxPrincipal: { valuePa: v(16), elementIndex: v(19), sampleIndex: v(23), locationM: elementLocation(input.mesh, v(19)) },
-      rawMinPrincipal: { valuePa: v(17), elementIndex: v(20), sampleIndex: v(24), locationM: elementLocation(input.mesh, v(20)) }
+      rawMaxPrincipal: { valuePa: v(16), elementIndex: v(19), sampleIndex: v(23), locationM: recoverySampleLocation(input.mesh, v(19), v(23)) },
+      rawMinPrincipal: { valuePa: v(17), elementIndex: v(20), sampleIndex: v(24), locationM: recoverySampleLocation(input.mesh, v(20), v(24)) }
     },
     reactionsN: copyResultArray(Module, p(7), nodes * 3),
     equilibrium: { totalReactionN: [v(9), v(10), v(11)], totalAppliedForceN: [v(12), v(13), v(14)], relativeResidual: v(8) },
@@ -380,7 +411,7 @@ function handlePreflight(Module, message) {
   loaded = loadAnalysis(Module, input);
   progress(message.requestId, 'preflight', 'Counting exact matrix nonzeros and estimating memory…');
   checkNative(Module, loaded.context, Module._fem_wasm_preflight(loaded.context, Number(message.deviceMemoryGiB) || 0,
-    WASM_HEAP_CAP_BYTES, 1.5), 'preflight');
+    WASM_HEAP_CAP_BYTES, MEMORY_SAFETY_MULTIPLIER), 'preflight');
   estimate = memoryResult(Module, input, loaded.constraintCount);
   activeAnalysis = { context: loaded.context, input: input, revision: message.analysisRevision, preflight: estimate };
   reply(message.requestId, 'preflight-result', estimate);

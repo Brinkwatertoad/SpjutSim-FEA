@@ -22,12 +22,11 @@
   }
 
   function peakConcentrated(previous, current, modelDiagonal, settings) {
-    var sameFace = previous.peakFaceId && current.peakFaceId && previous.peakFaceId === current.peakFaceId;
     var distance = previous.peakLocationM && current.peakLocationM
       ? Math.hypot(current.peakLocationM[0] - previous.peakLocationM[0],
         current.peakLocationM[1] - previous.peakLocationM[1], current.peakLocationM[2] - previous.peakLocationM[2]) : Infinity;
-    return Boolean(sameFace || (Number.isFinite(modelDiagonal) && modelDiagonal > 0 &&
-      distance / modelDiagonal <= settings.concentrationDistanceRatio));
+    return Boolean(Number.isFinite(modelDiagonal) && modelDiagonal > 0 &&
+      distance / modelDiagonal <= settings.concentrationDistanceRatio);
   }
 
   function within(value, limit) {

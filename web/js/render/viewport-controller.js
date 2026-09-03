@@ -64,6 +64,49 @@
     });
   }
 
+  function setMaterialTheme(material, color, emissive) {
+    if (!material) { return; }
+    if (Array.isArray(material)) {
+      material.forEach(function (item, index) {
+        setMaterialTheme(item, index === 0 ? color : emissive || color, index === 0 ? null : emissive);
+      });
+      return;
+    }
+    if (material.color && typeof material.color.set === 'function') { material.color.set(color); }
+    if (emissive && material.emissive && typeof material.emissive.set === 'function') { material.emissive.set(emissive); }
+  }
+
+  function refreshViewportTheme(viewport) {
+    var geometryColor = themeColor('--ui-color-geometry', '#f4f1ea');
+    var selectionColor = themeColor('--ui-color-selection', '#93c5fd');
+    var lineColor = themeColor('--ui-color-grid-major', '#334155');
+    var featureEdges;
+    if (viewport.scene && viewport.scene.background && typeof viewport.scene.background.set === 'function') {
+      viewport.scene.background.set(themeColor('--ui-color-canvas', '#111827'));
+    }
+    if (viewport.previewMesh && Array.isArray(viewport.previewMesh.material)) {
+      setMaterialTheme(viewport.previewMesh.material[0], geometryColor);
+      setMaterialTheme(viewport.previewMesh.material[1], selectionColor, selectionColor);
+    }
+    if (viewport.importedGeometry && typeof viewport.importedGeometry.getObjectByName === 'function') {
+      featureEdges = viewport.importedGeometry.getObjectByName('imported-geometry-feature-edges');
+      if (featureEdges) { setMaterialTheme(featureEdges.material, lineColor); }
+    }
+    if (viewport.meshSurface && Array.isArray(viewport.meshSurface.material)) {
+      setMaterialTheme(viewport.meshSurface.material[0], geometryColor);
+      setMaterialTheme(viewport.meshSurface.material[1], selectionColor, selectionColor);
+    }
+    if (viewport.meshDisplay && viewport.meshDisplay.userData.lines) {
+      setMaterialTheme(viewport.meshDisplay.userData.lines.material, lineColor);
+    }
+    if (viewport.resultDisplay && viewport.resultDisplay.userData.lines) {
+      setMaterialTheme(viewport.resultDisplay.userData.lines.material, lineColor);
+    }
+    if (typeof viewport.rebuildReferenceGrid === 'function') { viewport.rebuildReferenceGrid(); }
+    if (typeof viewport.rebuildAnalysisOverlay === 'function') { viewport.rebuildAnalysisOverlay(); }
+    if (typeof viewport.rebuildAxisTriad === 'function') { viewport.rebuildAxisTriad(); }
+  }
+
   /** Convert a pointer event from CSS pixels to canvas and Three.js coordinates. */
   function pointerToCanvasCoordinates(event, canvas) {
     var rect = canvas.getBoundingClientRect();
@@ -187,9 +230,22 @@
       metalness: 0.04
     });
     var referenceObject = new root.THREE.Mesh(geometry, material);
+    grid.name = 'reference-grid';
     referenceObject.name = 'reference-solid';
     referenceObject.position.y = 0.36;
     this.scene.add(grid, referenceObject);
+  };
+
+  ViewportController.prototype.rebuildReferenceGrid = function () {
+    var current = this.scene.getObjectByName('reference-grid');
+    var grid = new root.THREE.GridHelper(4, 8,
+      themeColor('--ui-color-grid-major', '#334155'),
+      themeColor('--ui-color-grid-minor', '#1f2937'));
+    grid.name = 'reference-grid';
+    if (current) { this.scene.remove(current); disposeObjectResources(current); }
+    this.scene.add(grid);
+    var referenceObject = this.scene.getObjectByName('reference-solid');
+    if (referenceObject) { setMaterialTheme(referenceObject.material, themeColor('--ui-color-geometry', '#f4f1ea')); }
   };
 
   ViewportController.prototype.rebuildAxisTriad = function () {
@@ -228,9 +284,7 @@
     var self = this;
     if (typeof root.MutationObserver !== 'function') { return; }
     this.themeObserver = new root.MutationObserver(function () {
-      self.scene.background.set(themeColor('--ui-color-canvas', '#111827'));
-      self.rebuildAnalysisOverlay();
-      self.rebuildAxisTriad();
+      refreshViewportTheme(self);
       self.render();
     });
     this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style', 'data-color-scheme', 'data-theme'] });
@@ -1025,5 +1079,6 @@
 
   root.SpjutsimFEA = root.SpjutsimFEA || {};
   root.SpjutsimFEA.pointerToCanvasCoordinates = pointerToCanvasCoordinates;
+  root.SpjutsimFEA.refreshViewportTheme = refreshViewportTheme;
   root.SpjutsimFEA.ViewportController = ViewportController;
 }(globalThis));

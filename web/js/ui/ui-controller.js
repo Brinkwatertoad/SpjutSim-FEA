@@ -551,6 +551,38 @@
     return value.toLocaleString(undefined, { maximumSignificantDigits: 5 }) + (unit ? ' ' + unit : '');
   }
   function formatBytes(bytes) { return formatNumber(bytes / 1073741824, 'GiB'); }
+  function convergenceErrorMessage(error) {
+    var value = error && error.diagnostic ? error.diagnostic : error;
+    return value && (value.userMessage || value.message) || null;
+  }
+  function convergenceStatusMessage(study) {
+    var levels = study && Array.isArray(study.levels) ? study.levels : [];
+    var classification = study && study.classification;
+    var statusLabels = { converged: 'Converged', 'converged-stress-unresolved': 'Converged globally; stress unresolved',
+      unconverged: 'Unconverged', 'indeterminate-resource-limit': 'Indeterminate — resource limit', failed: 'Failed' };
+    var message;
+    var errorMessage;
+    if (!study) { return 'Not studied.'; }
+    if (study.status === 'running') {
+      return 'Level ' + ((study.progress && study.progress.level) || levels.length + 1) + ': ' +
+        ((study.progress && study.progress.stage) || 'preparing') + '…';
+    }
+    if (study.status === 'cancelled') { return 'Cancelled — completed levels remain available in the table.'; }
+    message = statusLabels[classification && classification.status] || study.status;
+    errorMessage = convergenceErrorMessage(study.error);
+    if (errorMessage) { message += ' — ' + errorMessage; }
+    else if (study.stopReason === 'high-memory-confirmation') { message += ' — high-memory confirmation was declined.'; }
+    else if (study.stopReason === 'resource-limit') { message += ' — the next level exceeded the configured memory limit.'; }
+    else if (study.stopReason === 'level-limit' && classification && !classification.globalConverged) {
+      message += ' — the four-level limit was reached.';
+    }
+    if (classification && classification.warning) { message += ' ' + classification.warning; }
+    return message;
+  }
+  function legendRangeStatus(fieldRange, deformationScale) {
+    return (fieldRange && fieldRange.clipped ? 'Clipped visualization range' : 'Unclipped range') +
+      ' · deformation ×' + formatNumber(deformationScale || 0);
+  }
   function replaceDefinitionList(element, entries) {
     if (!element) { return; }
     element.textContent = '';
@@ -644,18 +676,11 @@
     var otherWorkerRunning = documentState.geometryImport.status === 'importing' ||
       documentState.meshGeneration.status === 'generating' || documentState.solvePreflight.status === 'running' ||
       documentState.solveExecution.status === 'running';
-    var statusLabels = { converged: 'Converged', 'converged-stress-unresolved': 'Converged globally; stress unresolved',
-      unconverged: 'Unconverged', 'indeterminate-resource-limit': 'Indeterminate — resource limit', failed: 'Failed' };
     if (this.startConvergenceButton) { this.startConvergenceButton.disabled = running || otherWorkerRunning || !documentState.geometry || !documentState.material; }
     if (this.startConvergenceButton) { this.startConvergenceButton.textContent = study ? 'Restart study' : 'Start study'; }
     if (this.cancelConvergenceButton) { this.cancelConvergenceButton.hidden = !running; }
     if (this.convergenceStatus) {
-      this.convergenceStatus.textContent = !study ? 'Not studied.' : running
-        ? 'Level ' + ((study.progress && study.progress.level) || levels.length + 1) + ': ' + ((study.progress && study.progress.stage) || 'preparing') + '…'
-        : (statusLabels[study.classification && study.classification.status] || (study.status === 'cancelled' ? 'Cancelled' : study.status));
-      if (study && study.classification && study.classification.warning) {
-        this.convergenceStatus.textContent += ' ' + study.classification.warning;
-      }
+      this.convergenceStatus.textContent = convergenceStatusMessage(study);
     }
     if (this.convergenceTable) {
       var body = this.convergenceTable.tBodies[0];
@@ -713,7 +738,7 @@
     this.legendTitle.textContent = definition[0] + ' (' + definition[1] + ')';
     this.legendMin.textContent = formatNumber(fieldRange.minimum / definition[2]);
     this.legendMax.textContent = formatNumber(fieldRange.maximum / definition[2]);
-    this.legendStatus.textContent = 'Unclipped range · deformation ×' + formatNumber(presentation.deformationScale || 0);
+    this.legendStatus.textContent = legendRangeStatus(fieldRange, presentation.deformationScale);
   };
 
   UIController.prototype.renderProbe = function (probe) {
@@ -738,5 +763,7 @@
     if (this.clearFaceSelectionButton) { this.clearFaceSelectionButton.disabled = selectedFaceIds.length === 0; }
   };
   root.SpjutsimFEA = root.SpjutsimFEA || {};
+  root.SpjutsimFEA.convergenceStatusMessage = convergenceStatusMessage;
+  root.SpjutsimFEA.legendRangeStatus = legendRangeStatus;
   root.SpjutsimFEA.UIController = UIController;
 }(globalThis));

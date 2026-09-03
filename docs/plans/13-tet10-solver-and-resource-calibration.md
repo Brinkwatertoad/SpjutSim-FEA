@@ -61,7 +61,7 @@ uncalibrated value called out by `spec.md`.
   `workers/solver-worker.js`, `web/js/workers/solver-client.js`, and
   `web/js/analysis/result-model.js`, and reject stale envelopes/struct sizes.
   Transfer mesh and result buffers once; avoid per-element JavaScript objects.
-- [x] **Calibrate memory and solver behavior.** Make the estimator account for
+- [ ] **Calibrate memory and solver behavior.** Make the estimator account for
   Tet10 connectivity, graph density, integration/recovery storage, assembly
   lookup lifetime, PCG vectors, and result buffers from the same counts used by
   allocation. Add a benchmark recorder under `benchmarks/` that stores predicted
@@ -69,7 +69,7 @@ uncalibrated value called out by `spec.md`.
   optional external process peak for representative Tet4/Tet10 meshes. Fit and
   document the safety multiplier and retain the 3.5 GiB cap unless supported-
   browser evidence justifies a changed value without relying on `memory64`.
-- [x] **Choose the measured PCG configuration.** Run representative Tet10
+- [ ] **Choose the measured PCG configuration.** Run representative Tet10
   axial, bending, mixed-scale, and poor-quality cases. Keep Jacobi when it meets
   the documented convergence/time targets; add a first-party IC(0) only if the
   recorded cases demonstrate the need, and include its allocations in preflight.
