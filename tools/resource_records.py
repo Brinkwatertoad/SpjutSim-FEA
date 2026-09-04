@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import collections
 import math
+import statistics
 from typing import Any
 
 
@@ -112,3 +113,26 @@ def validate_matrix(records: Any) -> list[str]:
         if count < 3:
             errors.append(f"{group} requires three repetitions")
     return errors
+
+
+def summarize_matrix(records: list[dict[str, Any]], margin: float = 0.25) -> dict[str, Any]:
+    """Return conservative calibration statistics without selecting best runs."""
+    ratios = [record["observed"]["wasmMemoryHighWaterBytes"] / record["preflight"]["modeledPeakBytes"] for record in records]
+    by_case: dict[str, list[dict[str, Any]]] = collections.defaultdict(list)
+    for record in records:
+        by_case[record["case"]["id"]].append(record)
+    selected = max(1.0, math.ceil((max(ratios) + margin) * 10) / 10)
+    return {
+        "recordCount": len(records),
+        "maximumWasmToModeledRatio": max(ratios),
+        "recommendedSafetyMultiplier": selected,
+        "margin": margin,
+        "cases": {
+            case_id: {
+                "medianWallTimeMs": statistics.median(row["solve"]["wallTimeMs"] for row in rows),
+                "worstWasmMemoryHighWaterBytes": max(row["observed"]["wasmMemoryHighWaterBytes"] for row in rows),
+                "maximumIterations": max(row["solve"]["iterations"] for row in rows),
+            }
+            for case_id, rows in sorted(by_case.items())
+        },
+    }

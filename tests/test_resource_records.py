@@ -75,6 +75,19 @@ class ResourceRecordTests(unittest.TestCase):
         errors = self.module.validate_matrix(records)
         self.assertTrue(any("three repetitions" in error for error in errors))
 
+    def test_summary_uses_worst_memory_and_median_time(self):
+        records = []
+        for wall, peak in ((100, 20_000_000), (300, 24_000_000), (200, 22_000_000)):
+            record = valid_record()
+            record["solve"]["wallTimeMs"] = wall
+            record["observed"]["wasmMemoryHighWaterBytes"] = peak
+            record["observed"]["wasmMemoryByPhaseBytes"]["postprocess"] = peak
+            records.append(record)
+        summary = self.module.summarize_matrix(records)
+        self.assertEqual(200, summary["cases"]["axial-tet10-25k"]["medianWallTimeMs"])
+        self.assertEqual(24_000_000, summary["cases"]["axial-tet10-25k"]["worstWasmMemoryHighWaterBytes"])
+        self.assertEqual(1.5, summary["recommendedSafetyMultiplier"])
+
 
 if __name__ == "__main__":
     unittest.main()

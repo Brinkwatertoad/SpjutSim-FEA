@@ -42,7 +42,7 @@ scale, and poor-quality calibration cases have not been measured as a matrix.
   `wasmMemoryHighWaterBytes` with solver statistics. Update validators, generated
   wrappers, and browser tests; bump the worker/result contract only if the
   existing version cannot reject stale shapes safely.
-- [ ] **Add a repeatable benchmark harness.** Create
+- [x] **Add a repeatable benchmark harness.** Create
   `tests/browser/resource-benchmark-tests.{html,js}` with exportable records for
   Tet10 meshes near 25k, 75k, and 150k nodes plus a comparable Tet4 case. Run
   axial, cantilever, mixed-scale, and deliberately poor-but-valid quality cases;
