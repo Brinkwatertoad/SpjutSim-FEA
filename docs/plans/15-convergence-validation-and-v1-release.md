@@ -63,20 +63,25 @@ decision must be explicitly closed before release.
   peak von Mises stress. Show the deterministic target size, memory estimate,
   iterations/time, stop reason, global/stress status, and selection of an
   available level for viewport inspection.
-- [ ] **Complete analytical and reference validation.** Add committed benchmark
+- [ ] **Complete analytical and reference validation (carried forward to
+  [Task 16](16-reference-validation-matrix.md)).** Add committed benchmark
   definitions/results for axial traction, cantilever bending, a uniform
   pressure/symmetry case, gravity/reaction balance, and a nonsingular stress-
   concentration case. Record source solver/version, units, probe definitions,
   mesh sequence, and tolerances; meet Section 16.2 for converged Tet10 results
   and never tolerance-test a singular raw peak.
-- [ ] **Expand regression and resource evidence.** Grow `tests/fixtures` and
+- [ ] **Expand regression and resource evidence (carried forward to
+  [Task 17](17-cad-regression-corpus.md) and
+  [Task 18](18-browser-resource-calibration.md)).** Grow `tests/fixtures` and
   `benchmarks/cad-corpus` toward the required representative/problematic corpus,
   recording expected import status, mesh-count ranges, quality status, and
   selected numerical outputs. Run supported-browser direct-local and optional-
   HTTP cases at representative sizes; record predicted/observed WASM memory,
   completion, cancellation response, wall time, and UI responsiveness. Refit
   Task 13's safety factor only when these records support the change.
-- [x] **Close distribution and release documentation.** Resolve and document the
+- [ ] **Close distribution and release documentation (carried forward to
+  [Task 19](19-distribution-licensing-decision.md) and
+  [Task 20](20-v1-release-candidate.md)).** Resolve and document the
   Gmsh/OpenCASCADE/Emscripten/Three.js license and source-offer posture in
   `THIRD_PARTY.md`; update README run/test/release instructions and `spec.md`
   only for decisions the evidence settles. Audit Section 26 line by line,

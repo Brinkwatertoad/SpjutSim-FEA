@@ -1,8 +1,9 @@
 # v1.0 acceptance audit
 
-Audit date: 2026-09-02. `spec.md` section 26 remains authoritative. “Pass”
+Audit date: 2026-09-03. `spec.md` section 26 remains authoritative. “Pass”
 means the cited repository test or inspected implementation currently supports
-the item; “Pending” keeps the v1 release gate closed.
+the stated area. A Section 26 checkbox remains unchecked when its full wording
+needs broader evidence; every “Pending” row keeps the release closed.
 
 | Area | Status | Evidence |
 | --- | --- | --- |
@@ -32,3 +33,8 @@ the item; “Pending” keeps the v1 release gate closed.
 
 The project must not be tagged or described as v1.0-ready while any Pending row
 that maps to section 26 remains unresolved.
+
+The next work is split without changing the gate: Task 16 owns numerical and
+independent-solver validation, Task 17 owns the CAD corpus and quality evidence,
+Task 18 owns browser/resource/PCG calibration, Task 19 owns distribution rights,
+and Task 20 reruns and binds the complete acceptance record to one candidate.

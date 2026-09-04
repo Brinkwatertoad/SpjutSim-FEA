@@ -1,6 +1,6 @@
 # Local Web FEA — Development Specification
 
-**Status:** Initial development specification  
+**Status:** v1 feature implementation complete; release validation, calibration, corpus, and distribution gates remain open
 **Target:** v1.0 local-first browser application  
 **Primary use case:** Simple static finite element simulations on homogeneous, single-body mechanical parts  
 **Primary CAD sources:** STEP, IGES, and OpenCASCADE BREP
@@ -2348,37 +2348,42 @@ That slice exercises almost every architectural boundary without requiring the f
 
 The project is ready to call v1.0 only when all of the following are true:
 
+Checked items below have repository evidence summarized in
+`docs/release/v1-acceptance-audit.md`. Unchecked items remain release blockers;
+an implemented code path is not sufficient without the required release
+evidence.
+
 - [ ] STEP, IGES, and BREP import work on the agreed CAD regression corpus at an acceptable success rate.
-- [ ] Axis rotation and selected-face alignment preserve global setup state and invalidate stale mesh/results.
-- [ ] Exactly-one-solid restriction is enforced clearly.
-- [ ] CAD face selections survive remeshing within an analysis session.
-- [ ] Tet10 is the default production element.
-- [ ] One-, two-, and three-axis supports, prescribed displacement, pressure, total face force, and gravity work.
-- [ ] Force integrations and reactions satisfy equilibrium checks.
-- [ ] First-party sparse assembly avoids unbounded triplet-memory growth.
-- [ ] Production solver does not require a third-party sparse linear-algebra library.
-- [ ] Frontend runs without npm, React, TypeScript, Vite, or a framework/transpile JavaScript build step.
-- [ ] Primary supported desktop browser completes the full import -> mesh -> solve workflow when `index.html` is opened through `file://`.
-- [ ] Direct-local mode does not require `SharedArrayBuffer`, cross-origin isolation, a server process, or a network connection.
-- [ ] Direct-local meshing and solving remain off the UI thread using the tested file-safe worker path.
+- [x] Axis rotation and selected-face alignment preserve global setup state and invalidate stale mesh/results.
+- [x] Exactly-one-solid restriction is enforced clearly.
+- [x] CAD face selections survive remeshing within an analysis session.
+- [x] Tet10 is the default production element.
+- [x] One-, two-, and three-axis supports, prescribed displacement, pressure, total face force, and gravity work.
+- [x] Force integrations and reactions satisfy equilibrium checks.
+- [x] First-party sparse assembly avoids unbounded triplet-memory growth.
+- [x] Production solver does not require a third-party sparse linear-algebra library.
+- [x] Frontend runs without npm, React, TypeScript, Vite, or a framework/transpile JavaScript build step.
+- [x] Primary supported desktop browser completes the full import -> mesh -> solve workflow when `index.html` is opened through `file://`.
+- [x] Direct-local mode does not require `SharedArrayBuffer`, cross-origin isolation, a server process, or a network connection.
+- [x] Direct-local meshing and solving remain off the UI thread using the tested file-safe worker path.
 - [ ] Optional HTTP mode detects cross-origin isolation and can enable threaded acceleration when a threaded build is present.
-- [ ] SpjutSim UI source is internalized and the application shell works from repository-local files only.
-- [ ] Compact Model/Material, Support, and Load summaries are visible together
+- [x] SpjutSim UI source is internalized and the application shell works from repository-local files only.
+- [x] Compact Model/Material, Support, and Load summaries are visible together
   for an ordinary setup and every item can be selected and edited in place.
-- [ ] PCG failures are diagnosed rather than returned as plausible results.
-- [ ] Pre-solve memory estimate is shown for every solve.
-- [ ] Device-memory hints are optional and absence does not break the app.
+- [x] PCG failures are diagnosed rather than returned as plausible results.
+- [x] Pre-solve memory estimate is shown for every solve.
+- [x] Device-memory hints are optional and absence does not break the app.
 - [ ] >= 8 GiB estimated solves show an explicit high-memory warning/confirmation.
-- [ ] Configured WASM heap limit is enforced before solve allocation.
-- [ ] Solver and mesher run off the UI thread.
-- [ ] Worker cancellation works.
-- [ ] Deformed shape and required scalar contours render correctly.
-- [ ] Raw and smoothed stress peaks are distinguished.
-- [ ] Maximum displacement, stress extrema, reactions, and solver statistics are reported.
-- [ ] Yield-based von Mises factor of safety works when strength data is supplied.
-- [ ] Mesh convergence workflow is complete.
-- [ ] Global convergence vs unresolved peak stress are reported separately.
-- [ ] Likely stress singularities produce a clear warning.
+- [x] Configured WASM heap limit is enforced before solve allocation.
+- [x] Solver and mesher run off the UI thread.
+- [x] Worker cancellation works.
+- [x] Deformed shape and required scalar contours render correctly.
+- [x] Raw and smoothed stress peaks are distinguished.
+- [x] Maximum displacement, stress extrema, reactions, and solver statistics are reported.
+- [x] Yield-based von Mises factor of safety works when strength data is supplied.
+- [x] Mesh convergence workflow is complete.
+- [x] Global convergence vs unresolved peak stress are reported separately.
+- [x] Likely stress singularities produce a clear warning.
 - [ ] Analytical and reference-solver validation tests pass agreed tolerances.
 - [ ] Memory-estimator calibration tests have been run on supported browsers.
 - [ ] Licensing/distribution posture for Gmsh has been resolved.
