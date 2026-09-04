@@ -7,7 +7,7 @@ needs broader evidence; every “Pending” row keeps the release closed.
 
 | Area | Status | Evidence |
 | --- | --- | --- |
-| STEP/IGES/BREP import and one-solid restriction | Pass for current corpus | `step-import-tests.html`, `tests/fixtures/README.md` |
+| STEP/IGES/BREP import and one-solid restriction | Pass for v1 corpus | 50-entry manifest, `cad-corpus-tests.html`, Chromium 152 report |
 | Orientation invalidation and face stability | Pass | `analysis-authoring-tests.html`, `tet4-mesh-tests.html`, `tet10-mesh-tests.html` |
 | Tet10 production default | Pass | `analysis-document.js`, Tet10 cube vertical slice |
 | Supports, prescribed displacement, pressure, force, gravity | Pass | native solver tests and authoring browser tests |
@@ -28,7 +28,7 @@ needs broader evidence; every “Pending” row keeps the release closed.
 | Likely-singularity caution | Pass as deterministic heuristic | convergence tests; no mathematical-singularity claim |
 | Analytical/reference validation matrix | Pass | Five converged Tet10 cases, CalculiX 2.21 raw outputs, normalized records, and enforced Section 16.2 tolerances |
 | Supported-browser memory calibration | Pending | One Chromium record exists; larger/non-headless/browser-matrix records remain |
-| Representative/problematic CAD corpus size | Pending | Current generated corpus is intentionally small |
+| Representative/problematic CAD corpus size | Pass | 50 CC0 fixtures: 34 accepted across three formats and 16 classified rejections |
 | Gmsh distribution rights | Pending external decision | `THIRD_PARTY.md`; current combined public distribution is prohibited |
 
 The project must not be tagged or described as v1.0-ready while any Pending row

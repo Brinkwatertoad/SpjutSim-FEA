@@ -2353,7 +2353,7 @@ Checked items below have repository evidence summarized in
 an implemented code path is not sufficient without the required release
 evidence.
 
-- [ ] STEP, IGES, and BREP import work on the agreed CAD regression corpus at an acceptable success rate.
+- [x] STEP, IGES, and BREP import work on the agreed CAD regression corpus at an acceptable success rate.
 - [x] Axis rotation and selected-face alignment preserve global setup state and invalidate stale mesh/results.
 - [x] Exactly-one-solid restriction is enforced clearly.
 - [x] CAD face selections survive remeshing within an analysis session.

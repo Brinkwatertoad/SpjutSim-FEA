@@ -77,6 +77,12 @@ server to rerun the five-case Tet10 validation matrix. Copy its JSON evidence to
 records with `python3 tools/build-validation-records.py`, and enforce all
 Section 16.2 limits with `python3 tools/validate-validation-records.py`.
 
+Run `python3 tools/validate-cad-corpus.py`, then open
+`tests/browser/cad-corpus-tests.html` from the optional HTTP server (or with the
+documented local-file browser access) to audit the 50-entry STEP/IGES/BREP
+release corpus. The runner continues through deliberate failures and exports a
+compact JSON report.
+
 After changing either file in `workers/`, regenerate the checked-in local-file worker wrappers:
 
 ```sh

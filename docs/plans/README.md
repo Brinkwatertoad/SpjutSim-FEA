@@ -25,9 +25,9 @@ corpus, distribution, and final acceptance gates into auditable chunks.
 12. [x] [Generate production Tet10 meshes](12-production-tet10-meshing.md)
 13. [ ] [Solve Tet10 models and calibrate resource use](13-tet10-solver-and-resource-calibration.md) — Tet10 solve path complete; representative peak-memory and PCG calibration evidence remains open
 14. [x] [Complete factor-of-safety and result trust views](14-factor-of-safety-and-result-trust.md)
-15. [ ] [Deliver convergence, validation, and the v1.0 release gate](15-convergence-validation-and-v1-release.md) — workflow and independent references complete; CAD/browser-resource and redistribution gates remain open (see `../release/v1-acceptance-audit.md`)
+15. [ ] [Deliver convergence, validation, and the v1.0 release gate](15-convergence-validation-and-v1-release.md) — workflow, independent references, and CAD corpus complete; browser-resource and redistribution gates remain open (see `../release/v1-acceptance-audit.md`)
 16. [x] [Complete the reference validation matrix](16-reference-validation-matrix.md)
-17. [ ] [Establish the release CAD regression corpus](17-cad-regression-corpus.md)
+17. [x] [Establish the release CAD regression corpus](17-cad-regression-corpus.md)
 18. [ ] [Calibrate browser resources and production solver settings](18-browser-resource-calibration.md)
 19. [ ] [Resolve distribution licensing and artifact compliance](19-distribution-licensing-decision.md)
 20. [ ] [Audit and produce the v1.0 release candidate](20-v1-release-candidate.md)

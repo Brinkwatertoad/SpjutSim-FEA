@@ -1,0 +1,2187 @@
+{
+  "schemaVersion": 1,
+  "corpusId": "spjutsim-cad-v1",
+  "generatedAt": "2026-09-04",
+  "generator": "tools/cad-fixtures/generate-corpus.py",
+  "licensePolicy": "Project-authored CC0-1.0 only",
+  "entries": [
+    {
+      "id": "step-box",
+      "path": "tests/fixtures/cad-corpus/box.step",
+      "sha256": "56f7abfb19c4d194861d8a622b64760e4c9553d863be829cfe2a40f490254a2f",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "basic",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          6,
+          6
+        ],
+        "volumeM3": [
+          0.47999951999999996,
+          0.48000048
+        ],
+        "boundsDiagonalM": [
+          1.4142124875704498,
+          1.4142153159982533
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.0875,
+        "maxSizeM": 0.35,
+        "nodeCount": [
+          317,
+          431
+        ],
+        "elementCount": [
+          1057,
+          1431
+        ],
+        "gammaMinimum": [
+          0.1537375361441914,
+          0.46121260843357414
+        ],
+        "gammaP05": [
+          0.42126003680093405,
+          0.70210006133589
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.9530429481909546
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-tiny-box",
+      "path": "tests/fixtures/cad-corpus/tiny-box.step",
+      "sha256": "cdf49fba2e2b667942189d8a0c72e4ddeab0f7abf5e548c931a478e44d711d2d",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "tiny",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          6,
+          6
+        ],
+        "volumeM3": [
+          4.79999e-10,
+          4.80001e-10
+        ],
+        "boundsDiagonalM": [
+          0.0014145515607717383,
+          0.001414554389877689
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.0001,
+        "maxSizeM": 0.0004,
+        "nodeCount": [
+          323,
+          437
+        ],
+        "elementCount": [
+          1089,
+          1475
+        ],
+        "gammaMinimum": [
+          0.15334147790628566,
+          0.46002443371985696
+        ],
+        "gammaP05": [
+          0.4161479564936764,
+          0.6935799274904606
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.6979489379398993
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-thin-plate",
+      "path": "tests/fixtures/cad-corpus/thin-plate.step",
+      "sha256": "da30b2ef6308074fc591c75cf69ae4a79729fdebef38c54ba18ed9326e28f26e",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "thin",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          6,
+          6
+        ],
+        "volumeM3": [
+          0.0191999808,
+          0.019200019199999998
+        ],
+        "boundsDiagonalM": [
+          1.442358016305447,
+          1.4423609010243645
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.0075,
+        "maxSizeM": 0.03,
+        "nodeCount": [
+          2371,
+          3209
+        ],
+        "elementCount": [
+          6807,
+          9211
+        ],
+        "gammaMinimum": [
+          0.0002853490233908779,
+          0.0008560470711726337
+        ],
+        "gammaP05": [
+          0.46355710355655344,
+          0.7725951725952558
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.4687311670524803
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-slender-bar",
+      "path": "tests/fixtures/cad-corpus/slender-bar.step",
+      "sha256": "d1290826d1a52ee3b341e7807cdcf252e67e6ceb609dc2e6cf2b31b63cc46968",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "mixed-scale",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          6,
+          6
+        ],
+        "volumeM3": [
+          0.009999990000000002,
+          0.010000010000000002
+        ],
+        "boundsDiagonalM": [
+          2.501777075241572,
+          2.5017820788007255
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.02,
+        "maxSizeM": 0.08,
+        "nodeCount": [
+          222,
+          302
+        ],
+        "elementCount": [
+          494,
+          670
+        ],
+        "gammaMinimum": [
+          0.2825563298090901,
+          0.8476689894282704
+        ],
+        "gammaP05": [
+          0.4406549207788027,
+          0.7344248679656712
+        ],
+        "maximumEdgeRatio": [
+          1,
+          2.782654139935471
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-cylinder",
+      "path": "tests/fixtures/cad-corpus/cylinder.step",
+      "sha256": "cdf494e0395312fb5be54a9765fb88c836591173c06979b1844d122836dccd3a",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "curved",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          3,
+          3
+        ],
+        "volumeM3": [
+          0.5026543219195424,
+          0.5026553272291915
+        ],
+        "boundsDiagonalM": [
+          1.5099657214653317,
+          1.5099687413997946
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.0625,
+        "maxSizeM": 0.25,
+        "nodeCount": [
+          221,
+          301
+        ],
+        "elementCount": [
+          720,
+          976
+        ],
+        "gammaMinimum": [
+          0.15176076403747185,
+          0.45528229211341553
+        ],
+        "gammaP05": [
+          0.4204706172553422,
+          0.700784362093237
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.9047637752383277
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-sphere",
+      "path": "tests/fixtures/cad-corpus/sphere.step",
+      "sha256": "e979e090a1dc38710bc9195b00c128cc657b63003328742f9cf3b93b232eb387",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "curved",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          1,
+          1
+        ],
+        "volumeM3": [
+          0.5235982519995234,
+          0.5235992991970745
+        ],
+        "boundsDiagonalM": [
+          1.7320494219278844,
+          1.7320528860301925
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet10",
+        "minSizeM": 0.0625,
+        "maxSizeM": 0.25,
+        "nodeCount": [
+          965,
+          1307
+        ],
+        "elementCount": [
+          507,
+          687
+        ],
+        "gammaMinimum": [
+          0.1563393742610438,
+          0.46901812278413135
+        ],
+        "gammaP05": [
+          0.4094952937087193,
+          0.6824921561821987
+        ],
+        "maximumEdgeRatio": [
+          1,
+          5.012652959035108
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-ellipsoid",
+      "path": "tests/fixtures/cad-corpus/ellipsoid.step",
+      "sha256": "cd4467f3dbef1b28fb4ee4f9d77f5a3d7b50a2616b088f46737a4d0753190794",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "curved",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          1,
+          1
+        ],
+        "volumeM3": [
+          0.23446942763072878,
+          0.234469896570053
+        ],
+        "boundsDiagonalM": [
+          2.718453020557554,
+          2.7184584574690325
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.045,
+        "maxSizeM": 0.18,
+        "nodeCount": [
+          91,
+          125
+        ],
+        "elementCount": [
+          236,
+          320
+        ],
+        "gammaMinimum": [
+          0.05157598393107219,
+          0.15472795179421658
+        ],
+        "gammaP05": [
+          0.24668211375854376,
+          0.41113685626523955
+        ],
+        "maximumEdgeRatio": [
+          1,
+          5.16607103036086
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-through-hole",
+      "path": "tests/fixtures/cad-corpus/through-hole.step",
+      "sha256": "3981a22b363f8b2a48bda36f2dddc65c036573624a116b568559b573e3a758c3",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "hole",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          7,
+          7
+        ],
+        "volumeM3": [
+          0.2694634499433867,
+          0.2694639888708255
+        ],
+        "boundsDiagonalM": [
+          1.4456821019852084,
+          1.445684993352304
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet10",
+        "minSizeM": 0.045,
+        "maxSizeM": 0.18,
+        "nodeCount": [
+          1343,
+          1817
+        ],
+        "elementCount": [
+          651,
+          881
+        ],
+        "gammaMinimum": [
+          0.1510675152238035,
+          0.4532025456724105
+        ],
+        "gammaP05": [
+          0.44877650708809635,
+          0.7479608451478272
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.6756055634542566
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-blind-hole",
+      "path": "tests/fixtures/cad-corpus/blind-hole.step",
+      "sha256": "5c4225c358afbacccd07c4ddfe233d8aa93f6ee19601dc5e5c83f8193d8f0fcf",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "hole",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          8,
+          8
+        ],
+        "volumeM3": [
+          0.4685836048800274,
+          0.4685845420481744
+        ],
+        "boundsDiagonalM": [
+          1.499998833333003,
+          1.5000018333336695
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.04,
+        "maxSizeM": 0.16,
+        "nodeCount": [
+          271,
+          367
+        ],
+        "elementCount": [
+          822,
+          1114
+        ],
+        "gammaMinimum": [
+          0.1552658072587695,
+          0.46579742177730854
+        ],
+        "gammaP05": [
+          0.415703594437717,
+          0.6928393240638616
+        ],
+        "maximumEdgeRatio": [
+          1,
+          4.29386865260747
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-annulus",
+      "path": "tests/fixtures/cad-corpus/annulus.step",
+      "sha256": "7fc085be2fd3857c78b9332501298d15c574b5745fd76708d81cd7b7d8368155",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "hole",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          4,
+          4
+        ],
+        "volumeM3": [
+          0.23561921339979064,
+          0.23561968463868865
+        ],
+        "boundsDiagonalM": [
+          1.4696927025743713,
+          1.469695641962716
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.04,
+        "maxSizeM": 0.16,
+        "nodeCount": [
+          184,
+          250
+        ],
+        "elementCount": [
+          501,
+          679
+        ],
+        "gammaMinimum": [
+          0.15589120656773564,
+          0.4676736197042069
+        ],
+        "gammaP05": [
+          0.3737760650867862,
+          0.622960108478977
+        ],
+        "maximumEdgeRatio": [
+          1,
+          4.234875660860736
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-fillet-box",
+      "path": "tests/fixtures/cad-corpus/fillet-box.step",
+      "sha256": "6967a30bad4ff0c481b153b32c10737687624e9bdec1e262a8d3c42912ec0676",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "fillet",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          26,
+          26
+        ],
+        "volumeM3": [
+          0.33859897391625626,
+          0.33859965111488133
+        ],
+        "boundsDiagonalM": [
+          1.3190896102995053,
+          1.319092248481364
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet10",
+        "minSizeM": 0.045,
+        "maxSizeM": 0.18,
+        "nodeCount": [
+          2150,
+          2910
+        ],
+        "elementCount": [
+          1148,
+          1554
+        ],
+        "gammaMinimum": [
+          0.15100941133365361,
+          0.4530282340019608
+        ],
+        "gammaP05": [
+          0.34942652061181423,
+          0.5823775343540237
+        ],
+        "maximumEdgeRatio": [
+          1,
+          5.584470135191644
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-rounded-column",
+      "path": "tests/fixtures/cad-corpus/rounded-column.step",
+      "sha256": "ec56c7147861bbfcae5bc53aa04770d7ce12dce2b086d1111bcbe98a30bb0d47",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "fillet",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          3,
+          3
+        ],
+        "volumeM3": [
+          0.3976728723936742,
+          0.3976736677402144
+        ],
+        "boundsDiagonalM": [
+          1.517397909251355,
+          1.517400944050208
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.05,
+        "maxSizeM": 0.2,
+        "nodeCount": [
+          193,
+          263
+        ],
+        "elementCount": [
+          607,
+          823
+        ],
+        "gammaMinimum": [
+          0.15015727591272912,
+          0.45047182773918737
+        ],
+        "gammaP05": [
+          0.42368707577827247,
+          0.7061451262981208
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.5927384720807556
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-cross-union",
+      "path": "tests/fixtures/cad-corpus/cross-union.step",
+      "sha256": "d5d4916efab547ae31e0f282006ccd7a22cf328a58928f54f553a97885d0b2cc",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "thin",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          14,
+          14
+        ],
+        "volumeM3": [
+          0.17399982600000005,
+          0.17400017400000004
+        ],
+        "boundsDiagonalM": [
+          2.271561366109786,
+          2.2715659092370615
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.03,
+        "maxSizeM": 0.12,
+        "nodeCount": [
+          337,
+          457
+        ],
+        "elementCount": [
+          909,
+          1231
+        ],
+        "gammaMinimum": [
+          0.16667002215859542,
+          0.5000100664767863
+        ],
+        "gammaP05": [
+          0.4103312740042767,
+          0.6838854566747945
+        ],
+        "maximumEdgeRatio": [
+          1,
+          4.483346788322128
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-mixed-boss",
+      "path": "tests/fixtures/cad-corpus/mixed-boss.step",
+      "sha256": "15f25dea0b872ec0cd442ec340454d5af1da6d295fa8bd1a716033ad8be198a5",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "mixed-scale",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          8,
+          8
+        ],
+        "volumeM3": [
+          0.24226170444863793,
+          0.24226218897253132
+        ],
+        "boundsDiagonalM": [
+          1.7464234824351768,
+          1.7464269752856345
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.02,
+        "maxSizeM": 0.08,
+        "nodeCount": [
+          757,
+          1025
+        ],
+        "elementCount": [
+          2506,
+          3392
+        ],
+        "gammaMinimum": [
+          0.15086647673849574,
+          0.4525994302164872
+        ],
+        "gammaP05": [
+          0.3933734244272875,
+          0.6556223740464792
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.8516322567858916
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-cone",
+      "path": "tests/fixtures/cad-corpus/cone.step",
+      "sha256": "bb9cfa4593f9c349649d4c45fa186087f8670e0420a91f30d8d6efd1def6f930",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "curved",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          3,
+          3
+        ],
+        "volumeM3": [
+          0.3639007851394505,
+          0.3639015129417486
+        ],
+        "boundsDiagonalM": [
+          1.7320494219278846,
+          1.7320528860301927
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.05,
+        "maxSizeM": 0.2,
+        "nodeCount": [
+          159,
+          217
+        ],
+        "elementCount": [
+          470,
+          638
+        ],
+        "gammaMinimum": [
+          0.15584706093240835,
+          0.46754118279822504
+        ],
+        "gammaP05": [
+          0.40148584135517085,
+          0.6691430689262847
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.836382214059837
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-torus",
+      "path": "tests/fixtures/cad-corpus/torus.step",
+      "sha256": "99cdcad5d39d09f481028bbaea4365b77213f3fd419c181def698375ad3c680a",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "curved",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          1,
+          1
+        ],
+        "volumeM3": [
+          0.38372983538414945,
+          0.38373060284458765
+        ],
+        "boundsDiagonalM": [
+          2.4149263610935994,
+          2.4149311909511515
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.045,
+        "maxSizeM": 0.18,
+        "nodeCount": [
+          162,
+          220
+        ],
+        "elementCount": [
+          407,
+          551
+        ],
+        "gammaMinimum": [
+          0.11403469690112138,
+          0.3421040907043641
+        ],
+        "gammaP05": [
+          0.2816058598155082,
+          0.46934309969351357
+        ],
+        "maximumEdgeRatio": [
+          1,
+          4.081426763331594
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-loft",
+      "path": "tests/fixtures/cad-corpus/loft.step",
+      "sha256": "aaf12698cd7ad9f66bd92cf2928f7d28442efd4509f2515c40cec0f7a758eac1",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "curved",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          3,
+          3
+        ],
+        "volumeM3": [
+          0.3245220134718395,
+          0.3245226625165155
+        ],
+        "boundsDiagonalM": [
+          1.9865925171785936,
+          1.9865964903676012
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.04,
+        "maxSizeM": 0.16,
+        "nodeCount": [
+          163,
+          221
+        ],
+        "elementCount": [
+          460,
+          624
+        ],
+        "gammaMinimum": [
+          0.1486905528246834,
+          0.4460716584750502
+        ],
+        "gammaP05": [
+          0.3560144166605954,
+          0.5933573611019923
+        ],
+        "maximumEdgeRatio": [
+          1,
+          4.217957109345738
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-offset-box",
+      "path": "tests/fixtures/cad-corpus/offset-box.step",
+      "sha256": "dcf0b214f9335d09c809dee0c218993fe2663facecde6937b847c9d18db89961",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "basic",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          6,
+          6
+        ],
+        "volumeM3": [
+          0.6929993069999998,
+          0.6930006929999999
+        ],
+        "boundsDiagonalM": [
+          1.5842967083221724,
+          1.5842998769187575
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.075,
+        "maxSizeM": 0.3,
+        "nodeCount": [
+          292,
+          396
+        ],
+        "elementCount": [
+          972,
+          1316
+        ],
+        "gammaMinimum": [
+          0.1523980441419671,
+          0.4571941324269012
+        ],
+        "gammaP05": [
+          0.42732510376947325,
+          0.7122085062834554
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.7497999185389057
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "iges-box",
+      "path": "tests/fixtures/cad-corpus/box.iges",
+      "sha256": "99349b3b50912b4ddb48b1cf4b2f35c1a988f3b9ad299a656f8ced55302c5327",
+      "format": "iges",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "mm",
+      "category": "basic",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          6,
+          6
+        ],
+        "volumeM3": [
+          0.47999952,
+          0.48000048000000006
+        ],
+        "boundsDiagonalM": [
+          1.4142124875704498,
+          1.4142153159982533
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.0875,
+        "maxSizeM": 0.35,
+        "nodeCount": [
+          320,
+          434
+        ],
+        "elementCount": [
+          1073,
+          1453
+        ],
+        "gammaMinimum": [
+          0.15181938901734152,
+          0.45545816705302455
+        ],
+        "gammaP05": [
+          0.41661585794207834,
+          0.6943597632377971
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.8752330919723788
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "iges-tiny-box",
+      "path": "tests/fixtures/cad-corpus/tiny-box.iges",
+      "sha256": "bb3594939030c2faf862dc95816d5306254a40b10409aba650e361d12b3f680e",
+      "format": "iges",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "mm",
+      "category": "tiny",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          6,
+          6
+        ],
+        "volumeM3": [
+          4.79999e-10,
+          4.80001e-10
+        ],
+        "boundsDiagonalM": [
+          0.0014145515607717383,
+          0.001414554389877689
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.0001,
+        "maxSizeM": 0.0004,
+        "nodeCount": [
+          323,
+          437
+        ],
+        "elementCount": [
+          1095,
+          1483
+        ],
+        "gammaMinimum": [
+          0.15081648328145128,
+          0.45244944984535385
+        ],
+        "gammaP05": [
+          0.4150696479790405,
+          0.6917827466327341
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.68325068536456
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "iges-thin-plate",
+      "path": "tests/fixtures/cad-corpus/thin-plate.iges",
+      "sha256": "5b27fc1056e84a74b1796e72777afdb5905600c8a62b48bb0931932db7133710",
+      "format": "iges",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "mm",
+      "category": "thin",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          6,
+          6
+        ],
+        "volumeM3": [
+          0.0191999808,
+          0.019200019199999998
+        ],
+        "boundsDiagonalM": [
+          1.442358016305447,
+          1.4423609010243645
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.0075,
+        "maxSizeM": 0.03,
+        "nodeCount": [
+          2374,
+          3212
+        ],
+        "elementCount": [
+          6805,
+          9209
+        ],
+        "gammaMinimum": [
+          0.15026645710014727,
+          0.45079937130144176
+        ],
+        "gammaP05": [
+          0.46403211868489425,
+          0.7733868644758237
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.1580040460347263
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "iges-cylinder",
+      "path": "tests/fixtures/cad-corpus/cylinder.iges",
+      "sha256": "81e18de4ede47b0be578a6d32e72f046b70277b684a6773843cb43f2692283c6",
+      "format": "iges",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "mm",
+      "category": "curved",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          3,
+          3
+        ],
+        "volumeM3": [
+          0.5066763984402517,
+          0.5066774117940619
+        ],
+        "boundsDiagonalM": [
+          2.0880595571631475,
+          2.0880637332864382
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.0625,
+        "maxSizeM": 0.25,
+        "nodeCount": [
+          158,
+          216
+        ],
+        "elementCount": [
+          470,
+          638
+        ],
+        "gammaMinimum": [
+          0.1702153543454504,
+          0.5106460630373512
+        ],
+        "gammaP05": [
+          0.4287531803574793,
+          0.7145886339301321
+        ],
+        "maximumEdgeRatio": [
+          1,
+          4.091442536983676
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "iges-cone",
+      "path": "tests/fixtures/cad-corpus/cone.iges",
+      "sha256": "8963d8831b558f4d51053be3e9180949b50b9fde4b53ef130a10118e7f6dadf7",
+      "format": "iges",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "mm",
+      "category": "curved",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          3,
+          3
+        ],
+        "volumeM3": [
+          0.36655598401836104,
+          0.36655671713106214
+        ],
+        "boundsDiagonalM": [
+          2.4999978385631194,
+          2.500002838563797
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.05,
+        "maxSizeM": 0.2,
+        "nodeCount": [
+          133,
+          181
+        ],
+        "elementCount": [
+          375,
+          509
+        ],
+        "gammaMinimum": [
+          0.1531647673532967,
+          0.4594943020608901
+        ],
+        "gammaP05": [
+          0.38285501614187956,
+          0.6380916935707993
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.8810077903604787
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "iges-through-hole",
+      "path": "tests/fixtures/cad-corpus/through-hole.iges",
+      "sha256": "7715da8698a83b2039515d34fe18158e40fa05b5bae5bb88291bcefe74b75853",
+      "format": "iges",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "mm",
+      "category": "hole",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          7,
+          7
+        ],
+        "volumeM3": [
+          0.26922280167892054,
+          0.2692233401250623
+        ],
+        "boundsDiagonalM": [
+          1.4456821019852084,
+          1.445684993352304
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet10",
+        "minSizeM": 0.045,
+        "maxSizeM": 0.18,
+        "nodeCount": [
+          1418,
+          1920
+        ],
+        "elementCount": [
+          691,
+          937
+        ],
+        "gammaMinimum": [
+          0.1814804120401311,
+          0.5444412361213933
+        ],
+        "gammaP05": [
+          0.4652052762250346,
+          0.7753421270427243
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.951007020999962
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "iges-fillet-box",
+      "path": "tests/fixtures/cad-corpus/fillet-box.iges",
+      "sha256": "032443064bc54b17cdee156bd3093a5e1ff02da316f8cd5152312b39c93f5ada",
+      "format": "iges",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "mm",
+      "category": "fillet",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          26,
+          26
+        ],
+        "volumeM3": [
+          0.3360875268538179,
+          0.33608819902954373
+        ],
+        "boundsDiagonalM": [
+          1.3190896102995053,
+          1.319092248481364
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet10",
+        "minSizeM": 0.045,
+        "maxSizeM": 0.18,
+        "nodeCount": [
+          1943,
+          2631
+        ],
+        "elementCount": [
+          1030,
+          1394
+        ],
+        "gammaMinimum": [
+          0.1528687650939343,
+          0.45860629528280283
+        ],
+        "gammaP05": [
+          0.33113065522611174,
+          0.5518844253778529
+        ],
+        "maximumEdgeRatio": [
+          1,
+          8.107395651250574
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "iges-mixed-boss",
+      "path": "tests/fixtures/cad-corpus/mixed-boss.iges",
+      "sha256": "6b7717cf43d7f8a6b6cf5b1f67d8de88a02d4552c19d579efc9de5b05ef629bb",
+      "format": "iges",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "mm",
+      "category": "mixed-scale",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          8,
+          8
+        ],
+        "volumeM3": [
+          0.24227953024441462,
+          0.24228001480395966
+        ],
+        "boundsDiagonalM": [
+          1.7464234824351768,
+          1.7464269752856345
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.02,
+        "maxSizeM": 0.08,
+        "nodeCount": [
+          717,
+          971
+        ],
+        "elementCount": [
+          2329,
+          3153
+        ],
+        "gammaMinimum": [
+          0.15040420329478463,
+          0.45121260988535383
+        ],
+        "gammaP05": [
+          0.3950403258617263,
+          0.6584005431038772
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.977280661775123
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "brep-box",
+      "path": "tests/fixtures/cad-corpus/box.brep",
+      "sha256": "8921f2a426ea3b920f19c209007c3e1d000a172df04277f882263157175dce17",
+      "format": "brep",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "basic",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          6,
+          6
+        ],
+        "volumeM3": [
+          0.47999951999999996,
+          0.48000048
+        ],
+        "boundsDiagonalM": [
+          1.4142124875704498,
+          1.4142153159982533
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.0875,
+        "maxSizeM": 0.35,
+        "nodeCount": [
+          321,
+          435
+        ],
+        "elementCount": [
+          1079,
+          1461
+        ],
+        "gammaMinimum": [
+          0.1574147175242585,
+          0.4722441525737755
+        ],
+        "gammaP05": [
+          0.41227328871957103,
+          0.6871221478669517
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.764144036736096
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "brep-tiny-box",
+      "path": "tests/fixtures/cad-corpus/tiny-box.brep",
+      "sha256": "960440e28a4a397879b90cf7108f0de2c7e3c566c79f12369d367959454e5ed3",
+      "format": "brep",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "tiny",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          6,
+          6
+        ],
+        "volumeM3": [
+          4.79999e-10,
+          4.80001e-10
+        ],
+        "boundsDiagonalM": [
+          0.0014145515607717383,
+          0.001414554389877689
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.0001,
+        "maxSizeM": 0.0004,
+        "nodeCount": [
+          317,
+          431
+        ],
+        "elementCount": [
+          1058,
+          1432
+        ],
+        "gammaMinimum": [
+          0.15476604160273688,
+          0.4642981248092106
+        ],
+        "gammaP05": [
+          0.4252906317628041,
+          0.7088177196056735
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.798173172095896
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "brep-thin-plate",
+      "path": "tests/fixtures/cad-corpus/thin-plate.brep",
+      "sha256": "f86114fdab9494e0ad0c36feec0f0d8216004fdb54bd62ec5f3c3cc36e914f24",
+      "format": "brep",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "thin",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          6,
+          6
+        ],
+        "volumeM3": [
+          0.0191999808,
+          0.019200019199999998
+        ],
+        "boundsDiagonalM": [
+          1.442358016305447,
+          1.4423609010243645
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.0075,
+        "maxSizeM": 0.03,
+        "nodeCount": [
+          2402,
+          3250
+        ],
+        "elementCount": [
+          6932,
+          9380
+        ],
+        "gammaMinimum": [
+          0.15117187363235282,
+          0.4535156208980584
+        ],
+        "gammaP05": [
+          0.45176823497869534,
+          0.7529470582988255
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.469029833878402
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "brep-cylinder",
+      "path": "tests/fixtures/cad-corpus/cylinder.brep",
+      "sha256": "7b184e8bf67a70b1da13518065b5c759a9c999c685fee0b94d98d8eb0d3d2872",
+      "format": "brep",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "curved",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          3,
+          3
+        ],
+        "volumeM3": [
+          0.5026543219195428,
+          0.5026553272291919
+        ],
+        "boundsDiagonalM": [
+          1.5099657214653317,
+          1.5099687413997946
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.0625,
+        "maxSizeM": 0.25,
+        "nodeCount": [
+          225,
+          305
+        ],
+        "elementCount": [
+          745,
+          1009
+        ],
+        "gammaMinimum": [
+          0.15259252985321156,
+          0.45777758956063463
+        ],
+        "gammaP05": [
+          0.3923442529944075,
+          0.6539070883250125
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.7606251345181967
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "brep-sphere",
+      "path": "tests/fixtures/cad-corpus/sphere.brep",
+      "sha256": "45c2a3294b4f032e118202bd52df2b3cd2d1d9665a93c3a0514b9dce394da1dd",
+      "format": "brep",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "curved",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          1,
+          1
+        ],
+        "volumeM3": [
+          0.5235982519995233,
+          0.5235992991970744
+        ],
+        "boundsDiagonalM": [
+          1.7320494219278844,
+          1.7320528860301925
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet10",
+        "minSizeM": 0.0625,
+        "maxSizeM": 0.25,
+        "nodeCount": [
+          1116,
+          1510
+        ],
+        "elementCount": [
+          617,
+          837
+        ],
+        "gammaMinimum": [
+          0.1523082846077568,
+          0.4569248538242704
+        ],
+        "gammaP05": [
+          0.3696121621806633,
+          0.6160202703021054
+        ],
+        "maximumEdgeRatio": [
+          1,
+          4.104509524635359
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "brep-through-hole",
+      "path": "tests/fixtures/cad-corpus/through-hole.brep",
+      "sha256": "69662339ff66ee6542ce5acffe67f900444b852ad762c2ead1a75a92c37f06e6",
+      "format": "brep",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "hole",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          7,
+          7
+        ],
+        "volumeM3": [
+          0.2694634499433878,
+          0.26946398887082657
+        ],
+        "boundsDiagonalM": [
+          1.4456821019852084,
+          1.445684993352304
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet10",
+        "minSizeM": 0.045,
+        "maxSizeM": 0.18,
+        "nodeCount": [
+          1337,
+          1809
+        ],
+        "elementCount": [
+          647,
+          877
+        ],
+        "gammaMinimum": [
+          0.15429808943784254,
+          0.4628942683145276
+        ],
+        "gammaP05": [
+          0.4547858594168448,
+          0.757976432362408
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.5607016384908485
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "brep-fillet-box",
+      "path": "tests/fixtures/cad-corpus/fillet-box.brep",
+      "sha256": "136a3b50453c4e980fe0daa941bd82aa214b5fe919a8043513f02b1636b0176d",
+      "format": "brep",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "fillet",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          26,
+          26
+        ],
+        "volumeM3": [
+          0.3385989739162546,
+          0.33859965111487966
+        ],
+        "boundsDiagonalM": [
+          1.319089610299505,
+          1.3190922484813639
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet10",
+        "minSizeM": 0.045,
+        "maxSizeM": 0.18,
+        "nodeCount": [
+          2159,
+          2921
+        ],
+        "elementCount": [
+          1155,
+          1563
+        ],
+        "gammaMinimum": [
+          0.10596560527046466,
+          0.31789681581239393
+        ],
+        "gammaP05": [
+          0.39010923701418465,
+          0.6501820616913077
+        ],
+        "maximumEdgeRatio": [
+          1,
+          4.795148456016531
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "brep-mixed-boss",
+      "path": "tests/fixtures/cad-corpus/mixed-boss.brep",
+      "sha256": "c5beee2e8494044035d14c61ee6545de60e8177286bf9e50ac1dfb56bec5af89",
+      "format": "brep",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-corpus.py; Gmsh 4.12.1/OpenCASCADE 7.6 export",
+      "sourceUnits": "m",
+      "category": "mixed-scale",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          8,
+          8
+        ],
+        "volumeM3": [
+          0.24226170444863798,
+          0.24226218897253138
+        ],
+        "boundsDiagonalM": [
+          1.7464234824351768,
+          1.7464269752856345
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet4",
+        "minSizeM": 0.02,
+        "maxSizeM": 0.08,
+        "nodeCount": [
+          760,
+          1030
+        ],
+        "elementCount": [
+          2522,
+          3414
+        ],
+        "gammaMinimum": [
+          0.1502888754637195,
+          0.45086662639215846
+        ],
+        "gammaP05": [
+          0.4008186950988136,
+          0.6680311584990226
+        ],
+        "maximumEdgeRatio": [
+          1,
+          3.9628084314186163
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "step-two-solids",
+      "path": "tests/fixtures/cad-corpus/two-solids.step",
+      "sha256": "4b1f5d16508acf6747c7971f14dbcdd104b657a46d901e6105ed3ccdaf2e7ee3",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored deliberate rejection fixture",
+      "sourceUnits": "m",
+      "category": "multiple-solids",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "MULTIPLE_SOLIDS_UNSUPPORTED"
+      }
+    },
+    {
+      "id": "step-open-shell",
+      "path": "tests/fixtures/cad-corpus/open-shell.step",
+      "sha256": "3e2b21792c2f761f8f3c44c7b1cf88166b5501e603ddd7fb16bd65d3db42bcd5",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored deliberate rejection fixture",
+      "sourceUnits": "m",
+      "category": "open-shell",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "GEOMETRY_NO_SOLID"
+      }
+    },
+    {
+      "id": "step-malformed-1",
+      "path": "tests/fixtures/cad-corpus/malformed-1.step",
+      "sha256": "90fdeb9263cde334e34a162895630d836ae4831f9691663ab3a7057d5edbc20b",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored deliberate rejection fixture",
+      "sourceUnits": "m",
+      "category": "malformed",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "GEOMETRY_NO_SOLID"
+      }
+    },
+    {
+      "id": "step-malformed-2",
+      "path": "tests/fixtures/cad-corpus/malformed-2.step",
+      "sha256": "3d0bae1a20326d9b42a1b72bf175c374a89e6f07aebfabdfa17738880adac1fd",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored deliberate rejection fixture",
+      "sourceUnits": "m",
+      "category": "malformed",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "GEOMETRY_NO_SOLID"
+      }
+    },
+    {
+      "id": "step-malformed-3",
+      "path": "tests/fixtures/cad-corpus/malformed-3.step",
+      "sha256": "e7e9031a3fb4618cc7c9ab55ef1ee84fb471e8836359d4bcfd82a8ed6a949b85",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored deliberate rejection fixture",
+      "sourceUnits": "m",
+      "category": "malformed",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "GEOMETRY_NO_SOLID"
+      }
+    },
+    {
+      "id": "iges-two-solids",
+      "path": "tests/fixtures/cad-corpus/two-solids.iges",
+      "sha256": "83472c7edff6384d4386974cc7d83da40e50738351e4005fa8657e391a9b0d15",
+      "format": "iges",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored deliberate rejection fixture",
+      "sourceUnits": "m",
+      "category": "multiple-solids",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "GEOMETRY_NO_SOLID"
+      }
+    },
+    {
+      "id": "iges-open-shell",
+      "path": "tests/fixtures/cad-corpus/open-shell.iges",
+      "sha256": "e7565e7cc677b6b1e7e35b916990cdbc48e494fb403f0285fdb673276f1b95d5",
+      "format": "iges",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored deliberate rejection fixture",
+      "sourceUnits": "m",
+      "category": "open-shell",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "GEOMETRY_NO_SOLID"
+      }
+    },
+    {
+      "id": "iges-malformed-1",
+      "path": "tests/fixtures/cad-corpus/malformed-1.iges",
+      "sha256": "20eaf033005b277b4a408f219cf95b2fdb82fb3beb04487ff4e33f6d576ba4d6",
+      "format": "iges",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored deliberate rejection fixture",
+      "sourceUnits": "m",
+      "category": "malformed",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "IGES_UNITS_UNSUPPORTED"
+      }
+    },
+    {
+      "id": "iges-malformed-2",
+      "path": "tests/fixtures/cad-corpus/malformed-2.iges",
+      "sha256": "08d2410f721de0a48c0e88bb8978780390f5d1b7325b57cd73f125834fc79190",
+      "format": "iges",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored deliberate rejection fixture",
+      "sourceUnits": "m",
+      "category": "malformed",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "IGES_UNITS_UNSUPPORTED"
+      }
+    },
+    {
+      "id": "iges-malformed-3",
+      "path": "tests/fixtures/cad-corpus/malformed-3.iges",
+      "sha256": "f1cb32ce7132fe456eb955eed36282ce22b890672fde7ee2ff83dbf08f17f6bf",
+      "format": "iges",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored deliberate rejection fixture",
+      "sourceUnits": "m",
+      "category": "malformed",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "IGES_UNITS_UNSUPPORTED"
+      }
+    },
+    {
+      "id": "brep-two-solids",
+      "path": "tests/fixtures/cad-corpus/two-solids.brep",
+      "sha256": "acdb9ff9fe2590bcdf3ba56e7176f513a546e801e7301efa7924a933365b1aa6",
+      "format": "brep",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored deliberate rejection fixture",
+      "sourceUnits": "m",
+      "category": "multiple-solids",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "MULTIPLE_SOLIDS_UNSUPPORTED"
+      }
+    },
+    {
+      "id": "brep-open-shell",
+      "path": "tests/fixtures/cad-corpus/open-shell.brep",
+      "sha256": "abc1715fc7e2f6f9b947abb8cd0c40368515478ccf47fc7c46ae4b1ad9d70f60",
+      "format": "brep",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored deliberate rejection fixture",
+      "sourceUnits": "m",
+      "category": "open-shell",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "GEOMETRY_NO_SOLID"
+      }
+    },
+    {
+      "id": "brep-malformed-1",
+      "path": "tests/fixtures/cad-corpus/malformed-1.brep",
+      "sha256": "d0c141fc9cb7a27feb062da080fe3c00da525ee9fb9badad74abefafd47ab175",
+      "format": "brep",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored deliberate rejection fixture",
+      "sourceUnits": "m",
+      "category": "malformed",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "GEOMETRY_NO_SOLID"
+      }
+    },
+    {
+      "id": "brep-malformed-2",
+      "path": "tests/fixtures/cad-corpus/malformed-2.brep",
+      "sha256": "0c15a15bcbdd6bc76cb7202ad385a2ad88dfd906e98901f3d75986703df785be",
+      "format": "brep",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored deliberate rejection fixture",
+      "sourceUnits": "m",
+      "category": "malformed",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "GEOMETRY_NO_SOLID"
+      }
+    },
+    {
+      "id": "brep-malformed-3",
+      "path": "tests/fixtures/cad-corpus/malformed-3.brep",
+      "sha256": "3206f80914f4c1e9389d2362aa36544df8632f8a39c8c0fd00cdb73d04cdf530",
+      "format": "brep",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored deliberate rejection fixture",
+      "sourceUnits": "m",
+      "category": "malformed",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "GEOMETRY_NO_SOLID"
+      }
+    },
+    {
+      "id": "step-empty",
+      "path": "tests/fixtures/cad-corpus/empty.step",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "format": "step",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored deliberate rejection fixture",
+      "sourceUnits": "m",
+      "category": "empty",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "INVALID_IMPORT_REQUEST"
+      }
+    }
+  ]
+}

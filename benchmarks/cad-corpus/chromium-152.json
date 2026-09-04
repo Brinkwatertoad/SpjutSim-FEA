@@ -1,0 +1,1031 @@
+{
+  "schemaVersion": 1,
+  "corpusId": "spjutsim-cad-v1",
+  "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.7977.82 Safari/537.36",
+  "runtime": {
+    "gmshVersion": "5.0.0",
+    "runtimeMode": "serial-local-embedded",
+    "capabilities": {
+      "openCascade": true,
+      "step": true,
+      "threads": false,
+      "sharedArrayBuffer": false,
+      "runtimeNetwork": false
+    },
+    "wasmMemoryBytes": 67108864
+  },
+  "peakMesherWasmBytes": 67108864,
+  "qualityWarningThresholdGamma": 0.1,
+  "entryCount": 50,
+  "agreementCount": 50,
+  "entries": [
+    {
+      "id": "step-box",
+      "outcome": "accepted",
+      "detail": "tet4 1244 elements",
+      "durationMs": 1038.7050000429153,
+      "geometry": {
+        "faceCount": 6,
+        "volumeM3": 0.48,
+        "boundsDiagonalM": 1.4142139017843516
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 374,
+        "elementCount": 1244,
+        "gammaMinimum": 0.3074750722883828,
+        "gammaP05": 0.561680049067912,
+        "gammaMedian": 0.7877562049988986,
+        "maximumEdgeRatio": 2.6353619654606364,
+        "minimumJacobian": 0.0007179603462415589,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-tiny-box",
+      "outcome": "accepted",
+      "detail": "tet4 1282 elements",
+      "durationMs": 987.710000038147,
+      "geometry": {
+        "faceCount": 6,
+        "volumeM3": 4.8e-10,
+        "boundsDiagonalM": 0.0014145529753247137
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 380,
+        "elementCount": 1282,
+        "gammaMinimum": 0.3066829558125713,
+        "gammaP05": 0.5548639419915685,
+        "gammaMedian": 0.8051158341859789,
+        "maximumEdgeRatio": 2.465299291959933,
+        "minimumJacobian": 7.16789400621552e-13,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-thin-plate",
+      "outcome": "accepted",
+      "detail": "tet4 8009 elements",
+      "durationMs": 1267.0949999690056,
+      "geometry": {
+        "faceCount": 6,
+        "volumeM3": 0.0192,
+        "boundsDiagonalM": 1.4423594586649058
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 2790,
+        "elementCount": 8009,
+        "gammaMinimum": 0.0005706980467817558,
+        "gammaP05": 0.6180761380754046,
+        "gammaMedian": 0.7892689946253032,
+        "maximumEdgeRatio": 2.3124874447016537,
+        "minimumJacobian": 8.479832570709313e-9,
+        "poorElementCount": 15,
+        "warning": "Some elements have low gamma quality."
+      }
+    },
+    {
+      "id": "step-slender-bar",
+      "outcome": "accepted",
+      "detail": "tet4 582 elements",
+      "durationMs": 957.3700000047684,
+      "geometry": {
+        "faceCount": 6,
+        "volumeM3": 0.010000000000000002,
+        "boundsDiagonalM": 2.5017795770211486
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 262,
+        "elementCount": 582,
+        "gammaMinimum": 0.5651126596181802,
+        "gammaP05": 0.5875398943717369,
+        "gammaMedian": 0.6663022377322041,
+        "maximumEdgeRatio": 1.8551027599569807,
+        "minimumJacobian": 0.00007812499999999968,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-cylinder",
+      "outcome": "accepted",
+      "detail": "tet4 848 elements",
+      "durationMs": 999.4900000095367,
+      "geometry": {
+        "faceCount": 3,
+        "volumeM3": 0.5026548245743669,
+        "boundsDiagonalM": 1.5099672314325632
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 261,
+        "elementCount": 848,
+        "gammaMinimum": 0.3035215280749437,
+        "gammaP05": 0.5606274896737896,
+        "gammaMedian": 0.7829418863318816,
+        "maximumEdgeRatio": 2.6031758501588853,
+        "minimumJacobian": 0.0010254583121978903,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-sphere",
+      "outcome": "accepted",
+      "detail": "tet10 597 elements",
+      "durationMs": 1036.699999988079,
+      "geometry": {
+        "faceCount": 1,
+        "volumeM3": 0.5235987755982989,
+        "boundsDiagonalM": 1.7320511539790384
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet10",
+        "nodeCount": 1136,
+        "elementCount": 597,
+        "gammaMinimum": 0.3126787485220876,
+        "gammaP05": 0.545993724944959,
+        "gammaMedian": 0.7630377180420932,
+        "maximumEdgeRatio": 3.341768639356739,
+        "minimumJacobian": 0.0016167691782324523,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-ellipsoid",
+      "outcome": "accepted",
+      "detail": "tet4 278 elements",
+      "durationMs": 1250.1050000190735,
+      "geometry": {
+        "faceCount": 1,
+        "volumeM3": 0.23446966210039089,
+        "boundsDiagonalM": 2.7184557390132933
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 108,
+        "elementCount": 278,
+        "gammaMinimum": 0.10315196786214438,
+        "gammaP05": 0.32890948501139167,
+        "gammaMedian": 0.6270045904517014,
+        "maximumEdgeRatio": 3.444047353573907,
+        "minimumJacobian": 0.000799072689825366,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-through-hole",
+      "outcome": "accepted",
+      "detail": "tet10 766 elements",
+      "durationMs": 1109.4850000143051,
+      "geometry": {
+        "faceCount": 7,
+        "volumeM3": 0.2694637194071061,
+        "boundsDiagonalM": 1.4456835476687562
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet10",
+        "nodeCount": 1580,
+        "elementCount": 766,
+        "gammaMinimum": 0.302135030447607,
+        "gammaP05": 0.5983686761174618,
+        "gammaMedian": 0.7707914418580099,
+        "maximumEdgeRatio": 2.4504037089695045,
+        "minimumJacobian": 0.00037719579280193563,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-blind-hole",
+      "outcome": "accepted",
+      "detail": "tet4 968 elements",
+      "durationMs": 1091.5799999833107,
+      "geometry": {
+        "faceCount": 8,
+        "volumeM3": 0.4685840734641009,
+        "boundsDiagonalM": 1.5000003333333363
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 319,
+        "elementCount": 968,
+        "gammaMinimum": 0.310531614517539,
+        "gammaP05": 0.5542714592502893,
+        "gammaMedian": 0.783876222337019,
+        "maximumEdgeRatio": 2.8625791017383135,
+        "minimumJacobian": 0.0005946455715550374,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-annulus",
+      "outcome": "accepted",
+      "detail": "tet4 590 elements",
+      "durationMs": 1007.7350000143051,
+      "geometry": {
+        "faceCount": 4,
+        "volumeM3": 0.23561944901923965,
+        "boundsDiagonalM": 1.4696941722685437
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 217,
+        "elementCount": 590,
+        "gammaMinimum": 0.3117824131354713,
+        "gammaP05": 0.4983680867823816,
+        "gammaMedian": 0.7249649395094543,
+        "maximumEdgeRatio": 2.8232504405738235,
+        "minimumJacobian": 0.0008978824318103277,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-fillet-box",
+      "outcome": "accepted",
+      "detail": "tet10 1351 elements",
+      "durationMs": 2455.9549999833107,
+      "geometry": {
+        "faceCount": 26,
+        "volumeM3": 0.3385993125155688,
+        "boundsDiagonalM": 1.3190909293904347
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet10",
+        "nodeCount": 2530,
+        "elementCount": 1351,
+        "gammaMinimum": 0.30201882266730723,
+        "gammaP05": 0.465902027482419,
+        "gammaMedian": 0.728718834176978,
+        "maximumEdgeRatio": 3.7229800901277628,
+        "minimumJacobian": 0.0000894180599761349,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-rounded-column",
+      "outcome": "accepted",
+      "detail": "tet4 715 elements",
+      "durationMs": 1091.5999999642372,
+      "geometry": {
+        "faceCount": 3,
+        "volumeM3": 0.3976732700669443,
+        "boundsDiagonalM": 1.5173994266507815
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 228,
+        "elementCount": 715,
+        "gammaMinimum": 0.30031455182545824,
+        "gammaP05": 0.5649161010376966,
+        "gammaMedian": 0.7861476759120769,
+        "maximumEdgeRatio": 2.3951589813871705,
+        "minimumJacobian": 0.0010246191207476415,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-cross-union",
+      "outcome": "accepted",
+      "detail": "tet4 1070 elements",
+      "durationMs": 1159.3450000286102,
+      "geometry": {
+        "faceCount": 14,
+        "volumeM3": 0.17400000000000004,
+        "boundsDiagonalM": 2.271563637673424
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 397,
+        "elementCount": 1070,
+        "gammaMinimum": 0.33334004431719083,
+        "gammaP05": 0.5471083653390356,
+        "gammaMedian": 0.7563304112785723,
+        "maximumEdgeRatio": 2.9888978588814186,
+        "minimumJacobian": 0.0002595863780784774,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-mixed-boss",
+      "outcome": "accepted",
+      "detail": "tet4 2949 elements",
+      "durationMs": 1175.3349999785423,
+      "geometry": {
+        "faceCount": 8,
+        "volumeM3": 0.24226194671058462,
+        "boundsDiagonalM": 1.7464252288604056
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 891,
+        "elementCount": 2949,
+        "gammaMinimum": 0.3017329534769915,
+        "gammaP05": 0.5244978992363833,
+        "gammaMedian": 0.7800987763294854,
+        "maximumEdgeRatio": 2.567754837857261,
+        "minimumJacobian": 0.00005976367879403196,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-cone",
+      "outcome": "accepted",
+      "detail": "tet4 554 elements",
+      "durationMs": 1012.5699999928474,
+      "geometry": {
+        "faceCount": 3,
+        "volumeM3": 0.36390114904059956,
+        "boundsDiagonalM": 1.7320511539790386
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 188,
+        "elementCount": 554,
+        "gammaMinimum": 0.3116941218648167,
+        "gammaP05": 0.5353144551402278,
+        "gammaMedian": 0.764590374240167,
+        "maximumEdgeRatio": 2.557588142706558,
+        "minimumJacobian": 0.0008111185678300028,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-torus",
+      "outcome": "accepted",
+      "detail": "tet4 479 elements",
+      "durationMs": 1285.2849999666214,
+      "geometry": {
+        "faceCount": 1,
+        "volumeM3": 0.38373021911436855,
+        "boundsDiagonalM": 2.4149287760223754
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 191,
+        "elementCount": 479,
+        "gammaMinimum": 0.22806939380224275,
+        "gammaP05": 0.3754744797540109,
+        "gammaMedian": 0.7858498434271016,
+        "maximumEdgeRatio": 2.720951175554396,
+        "minimumJacobian": 0.0007778582547050374,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-loft",
+      "outcome": "accepted",
+      "detail": "tet4 542 elements",
+      "durationMs": 1329.4850000143051,
+      "geometry": {
+        "faceCount": 3,
+        "volumeM3": 0.3245223379941775,
+        "boundsDiagonalM": 1.9865945037730974
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 192,
+        "elementCount": 542,
+        "gammaMinimum": 0.2973811056493668,
+        "gammaP05": 0.4746858888807939,
+        "gammaMedian": 0.7530162006653873,
+        "maximumEdgeRatio": 2.8119714062304917,
+        "minimumJacobian": 0.0005411596655679682,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-offset-box",
+      "outcome": "accepted",
+      "detail": "tet4 1144 elements",
+      "durationMs": 1043.4849999547005,
+      "geometry": {
+        "faceCount": 6,
+        "volumeM3": 0.6929999999999998,
+        "boundsDiagonalM": 1.584298292620465
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 344,
+        "elementCount": 1144,
+        "gammaMinimum": 0.3047960882839342,
+        "gammaP05": 0.5697668050259643,
+        "gammaMedian": 0.7907504526619012,
+        "maximumEdgeRatio": 2.4998666123592703,
+        "minimumJacobian": 0.0011553337576690424,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "iges-box",
+      "outcome": "accepted",
+      "detail": "tet4 1263 elements",
+      "durationMs": 1124.8500000238419,
+      "geometry": {
+        "faceCount": 6,
+        "volumeM3": 0.48000000000000004,
+        "boundsDiagonalM": 1.4142139017843516
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 377,
+        "elementCount": 1263,
+        "gammaMinimum": 0.30363877803468303,
+        "gammaP05": 0.5554878105894377,
+        "gammaMedian": 0.7931879751739693,
+        "maximumEdgeRatio": 2.5834887279815857,
+        "minimumJacobian": 0.0007178766774674995,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "iges-tiny-box",
+      "outcome": "accepted",
+      "detail": "tet4 1289 elements",
+      "durationMs": 1124.0099999904633,
+      "geometry": {
+        "faceCount": 6,
+        "volumeM3": 4.8e-10,
+        "boundsDiagonalM": 0.0014145529753247137
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 380,
+        "elementCount": 1289,
+        "gammaMinimum": 0.30163296656290256,
+        "gammaP05": 0.5534261973053873,
+        "gammaMedian": 0.8018346037157436,
+        "maximumEdgeRatio": 2.4555004569097068,
+        "minimumJacobian": 6.893609740627433e-13,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "iges-thin-plate",
+      "outcome": "accepted",
+      "detail": "tet4 8007 elements",
+      "durationMs": 1351.1700000166893,
+      "geometry": {
+        "faceCount": 6,
+        "volumeM3": 0.0192,
+        "boundsDiagonalM": 1.4423594586649058
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 2793,
+        "elementCount": 8007,
+        "gammaMinimum": 0.30053291420029454,
+        "gammaP05": 0.618709491579859,
+        "gammaMedian": 0.8814922962895014,
+        "maximumEdgeRatio": 2.1053360306898177,
+        "minimumJacobian": 0.000002216094374257503,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "iges-cylinder",
+      "outcome": "accepted",
+      "detail": "tet4 554 elements",
+      "durationMs": 1236.164999961853,
+      "geometry": {
+        "faceCount": 3,
+        "volumeM3": 0.5066769051171568,
+        "boundsDiagonalM": 2.088061645224793
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 187,
+        "elementCount": 554,
+        "gammaMinimum": 0.3404307086909008,
+        "gammaP05": 0.5716709071433057,
+        "gammaMedian": 0.7837215525977828,
+        "maximumEdgeRatio": 2.727628357989117,
+        "minimumJacobian": 0.0013706009334920883,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "iges-cone",
+      "outcome": "accepted",
+      "detail": "tet4 442 elements",
+      "durationMs": 1362.9300000071526,
+      "geometry": {
+        "faceCount": 3,
+        "volumeM3": 0.3665563505747116,
+        "boundsDiagonalM": 2.500000338563458
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 157,
+        "elementCount": 442,
+        "gammaMinimum": 0.3063295347065934,
+        "gammaP05": 0.5104733548558394,
+        "gammaMedian": 0.7742011975134659,
+        "maximumEdgeRatio": 2.587338526906986,
+        "minimumJacobian": 0.0006470385694907014,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "iges-through-hole",
+      "outcome": "accepted",
+      "detail": "tet10 814 elements",
+      "durationMs": 1554.4200000166893,
+      "geometry": {
+        "faceCount": 7,
+        "volumeM3": 0.26922307090199143,
+        "boundsDiagonalM": 1.4456835476687562
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet10",
+        "nodeCount": 1669,
+        "elementCount": 814,
+        "gammaMinimum": 0.3629608240802622,
+        "gammaP05": 0.6202737016333795,
+        "gammaMedian": 0.7888858499499084,
+        "maximumEdgeRatio": 2.6340046806666413,
+        "minimumJacobian": 0.00039465925682874073,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "iges-fillet-box",
+      "outcome": "accepted",
+      "detail": "tet10 1212 elements",
+      "durationMs": 3379.3050000071526,
+      "geometry": {
+        "faceCount": 26,
+        "volumeM3": 0.3360878629416808,
+        "boundsDiagonalM": 1.3190909293904347
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet10",
+        "nodeCount": 2287,
+        "elementCount": 1212,
+        "gammaMinimum": 0.3057375301878686,
+        "gammaP05": 0.4415075403014823,
+        "gammaMedian": 0.7427845251798463,
+        "maximumEdgeRatio": 5.404930434167049,
+        "minimumJacobian": 0.00009764506068238156,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "iges-mixed-boss",
+      "outcome": "accepted",
+      "detail": "tet4 2741 elements",
+      "durationMs": 1495.3500000238419,
+      "geometry": {
+        "faceCount": 8,
+        "volumeM3": 0.24227977252418714,
+        "boundsDiagonalM": 1.7464252288604056
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 844,
+        "elementCount": 2741,
+        "gammaMinimum": 0.30080840658956925,
+        "gammaP05": 0.5267204344823018,
+        "gammaMedian": 0.7807738211247847,
+        "maximumEdgeRatio": 2.6515204411834152,
+        "minimumJacobian": 0.0000716364380487312,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "brep-box",
+      "outcome": "accepted",
+      "detail": "tet4 1270 elements",
+      "durationMs": 885.839999973774,
+      "geometry": {
+        "faceCount": 6,
+        "volumeM3": 0.48,
+        "boundsDiagonalM": 1.4142139017843516
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 378,
+        "elementCount": 1270,
+        "gammaMinimum": 0.314829435048517,
+        "gammaP05": 0.5496977182927614,
+        "gammaMedian": 0.793027457449822,
+        "maximumEdgeRatio": 2.509429357824064,
+        "minimumJacobian": 0.0007159547527929204,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "brep-tiny-box",
+      "outcome": "accepted",
+      "detail": "tet4 1245 elements",
+      "durationMs": 906.6300000548363,
+      "geometry": {
+        "faceCount": 6,
+        "volumeM3": 4.8e-10,
+        "boundsDiagonalM": 0.0014145529753247137
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 374,
+        "elementCount": 1245,
+        "gammaMinimum": 0.30953208320547376,
+        "gammaP05": 0.5670541756837388,
+        "gammaMedian": 0.7884070225546524,
+        "maximumEdgeRatio": 2.5321154480639305,
+        "minimumJacobian": 7.16789400621552e-13,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "brep-thin-plate",
+      "outcome": "accepted",
+      "detail": "tet4 8156 elements",
+      "durationMs": 1184.0949999690056,
+      "geometry": {
+        "faceCount": 6,
+        "volumeM3": 0.0192,
+        "boundsDiagonalM": 1.4423594586649058
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 2826,
+        "elementCount": 8156,
+        "gammaMinimum": 0.30234374726470564,
+        "gammaP05": 0.6023576466382604,
+        "gammaMedian": 0.7857796752676323,
+        "maximumEdgeRatio": 2.3126865559189347,
+        "minimumJacobian": 0.0000028216751476111078,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "brep-cylinder",
+      "outcome": "accepted",
+      "detail": "tet4 877 elements",
+      "durationMs": 915.4399999976158,
+      "geometry": {
+        "faceCount": 3,
+        "volumeM3": 0.5026548245743674,
+        "boundsDiagonalM": 1.5099672314325632
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 265,
+        "elementCount": 877,
+        "gammaMinimum": 0.3051850597064231,
+        "gammaP05": 0.52312567065921,
+        "gammaMedian": 0.7867502498517029,
+        "maximumEdgeRatio": 2.5070834230121313,
+        "minimumJacobian": 0.0011350315936217762,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "brep-sphere",
+      "outcome": "accepted",
+      "detail": "tet10 727 elements",
+      "durationMs": 1002.5250000357628,
+      "geometry": {
+        "faceCount": 1,
+        "volumeM3": 0.5235987755982988,
+        "boundsDiagonalM": 1.7320511539790384
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet10",
+        "nodeCount": 1313,
+        "elementCount": 727,
+        "gammaMinimum": 0.3046165692155136,
+        "gammaP05": 0.49281621624088434,
+        "gammaMedian": 0.7801667257244937,
+        "maximumEdgeRatio": 2.7363396830902396,
+        "minimumJacobian": 0.0014051576334368752,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "brep-through-hole",
+      "outcome": "accepted",
+      "detail": "tet10 762 elements",
+      "durationMs": 930.3999999761581,
+      "geometry": {
+        "faceCount": 7,
+        "volumeM3": 0.26946371940710717,
+        "boundsDiagonalM": 1.4456835476687562
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet10",
+        "nodeCount": 1573,
+        "elementCount": 762,
+        "gammaMinimum": 0.3085961788756851,
+        "gammaP05": 0.6063811458891264,
+        "gammaMedian": 0.7761335660070425,
+        "maximumEdgeRatio": 2.3738010923272324,
+        "minimumJacobian": 0.0004177151038302357,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "brep-fillet-box",
+      "outcome": "accepted",
+      "detail": "tet10 1359 elements",
+      "durationMs": 2243.8199999928474,
+      "geometry": {
+        "faceCount": 26,
+        "volumeM3": 0.33859931251556713,
+        "boundsDiagonalM": 1.3190909293904345
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet10",
+        "nodeCount": 2540,
+        "elementCount": 1359,
+        "gammaMinimum": 0.2119312105409293,
+        "gammaP05": 0.5201456493522462,
+        "gammaMedian": 0.7403190503722432,
+        "maximumEdgeRatio": 3.1967656373443543,
+        "minimumJacobian": 0.00011230910712755224,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "brep-mixed-boss",
+      "outcome": "accepted",
+      "detail": "tet4 2968 elements",
+      "durationMs": 958.2450000047684,
+      "geometry": {
+        "faceCount": 8,
+        "volumeM3": 0.24226194671058468,
+        "boundsDiagonalM": 1.7464252288604056
+      },
+      "mesherWasmBytes": 67108864,
+      "mesh": {
+        "elementType": "tet4",
+        "nodeCount": 895,
+        "elementCount": 2968,
+        "gammaMinimum": 0.300577750927439,
+        "gammaP05": 0.5344249267984181,
+        "gammaMedian": 0.7818645957849214,
+        "maximumEdgeRatio": 2.641872287612411,
+        "minimumJacobian": 0.0000636034807690322,
+        "poorElementCount": 0,
+        "warning": null
+      }
+    },
+    {
+      "id": "step-two-solids",
+      "outcome": "rejected",
+      "detail": "MULTIPLE_SOLIDS_UNSUPPORTED",
+      "durationMs": 790.9150000214577,
+      "diagnostic": {
+        "code": "MULTIPLE_SOLIDS_UNSUPPORTED",
+        "stage": "import",
+        "userMessage": "This analysis supports exactly one solid body.",
+        "recoverable": true
+      }
+    },
+    {
+      "id": "step-open-shell",
+      "outcome": "rejected",
+      "detail": "GEOMETRY_NO_SOLID",
+      "durationMs": 714.7150000333786,
+      "diagnostic": {
+        "code": "GEOMETRY_NO_SOLID",
+        "stage": "import",
+        "userMessage": "The CAD file does not contain a usable 3D solid.",
+        "recoverable": true
+      }
+    },
+    {
+      "id": "step-malformed-1",
+      "outcome": "rejected",
+      "detail": "GEOMETRY_NO_SOLID",
+      "durationMs": 675.9900000095367,
+      "diagnostic": {
+        "code": "GEOMETRY_NO_SOLID",
+        "stage": "import",
+        "userMessage": "The CAD file does not contain a usable 3D solid.",
+        "recoverable": true
+      }
+    },
+    {
+      "id": "step-malformed-2",
+      "outcome": "rejected",
+      "detail": "GEOMETRY_NO_SOLID",
+      "durationMs": 668.0800000429153,
+      "diagnostic": {
+        "code": "GEOMETRY_NO_SOLID",
+        "stage": "import",
+        "userMessage": "The CAD file does not contain a usable 3D solid.",
+        "recoverable": true
+      }
+    },
+    {
+      "id": "step-malformed-3",
+      "outcome": "rejected",
+      "detail": "GEOMETRY_NO_SOLID",
+      "durationMs": 665.4850000143051,
+      "diagnostic": {
+        "code": "GEOMETRY_NO_SOLID",
+        "stage": "import",
+        "userMessage": "The CAD file does not contain a usable 3D solid.",
+        "recoverable": true
+      }
+    },
+    {
+      "id": "iges-two-solids",
+      "outcome": "rejected",
+      "detail": "GEOMETRY_NO_SOLID",
+      "durationMs": 845.1599999666214,
+      "diagnostic": {
+        "code": "GEOMETRY_NO_SOLID",
+        "stage": "import",
+        "userMessage": "The CAD file does not contain a usable 3D solid.",
+        "recoverable": true
+      }
+    },
+    {
+      "id": "iges-open-shell",
+      "outcome": "rejected",
+      "detail": "GEOMETRY_NO_SOLID",
+      "durationMs": 769.539999961853,
+      "diagnostic": {
+        "code": "GEOMETRY_NO_SOLID",
+        "stage": "import",
+        "userMessage": "The CAD file does not contain a usable 3D solid.",
+        "recoverable": true
+      }
+    },
+    {
+      "id": "iges-malformed-1",
+      "outcome": "rejected",
+      "detail": "IGES_UNITS_UNSUPPORTED",
+      "durationMs": 670.2950000166893,
+      "diagnostic": {
+        "code": "IGES_UNITS_UNSUPPORTED",
+        "stage": "import",
+        "userMessage": "The IGES file uses an unsupported or unreadable length unit.",
+        "recoverable": true
+      }
+    },
+    {
+      "id": "iges-malformed-2",
+      "outcome": "rejected",
+      "detail": "IGES_UNITS_UNSUPPORTED",
+      "durationMs": 665.0400000214577,
+      "diagnostic": {
+        "code": "IGES_UNITS_UNSUPPORTED",
+        "stage": "import",
+        "userMessage": "The IGES file uses an unsupported or unreadable length unit.",
+        "recoverable": true
+      }
+    },
+    {
+      "id": "iges-malformed-3",
+      "outcome": "rejected",
+      "detail": "IGES_UNITS_UNSUPPORTED",
+      "durationMs": 652.585000038147,
+      "diagnostic": {
+        "code": "IGES_UNITS_UNSUPPORTED",
+        "stage": "import",
+        "userMessage": "The IGES file uses an unsupported or unreadable length unit.",
+        "recoverable": true
+      }
+    },
+    {
+      "id": "brep-two-solids",
+      "outcome": "rejected",
+      "detail": "MULTIPLE_SOLIDS_UNSUPPORTED",
+      "durationMs": 651.4250000119209,
+      "diagnostic": {
+        "code": "MULTIPLE_SOLIDS_UNSUPPORTED",
+        "stage": "import",
+        "userMessage": "This analysis supports exactly one solid body.",
+        "recoverable": true
+      }
+    },
+    {
+      "id": "brep-open-shell",
+      "outcome": "rejected",
+      "detail": "GEOMETRY_NO_SOLID",
+      "durationMs": 657.539999961853,
+      "diagnostic": {
+        "code": "GEOMETRY_NO_SOLID",
+        "stage": "import",
+        "userMessage": "The CAD file does not contain a usable 3D solid.",
+        "recoverable": true
+      }
+    },
+    {
+      "id": "brep-malformed-1",
+      "outcome": "rejected",
+      "detail": "GEOMETRY_NO_SOLID",
+      "durationMs": 635.3450000286102,
+      "diagnostic": {
+        "code": "GEOMETRY_NO_SOLID",
+        "stage": "import",
+        "userMessage": "The CAD file does not contain a usable 3D solid.",
+        "recoverable": true
+      }
+    },
+    {
+      "id": "brep-malformed-2",
+      "outcome": "rejected",
+      "detail": "GEOMETRY_NO_SOLID",
+      "durationMs": 635.2549999952316,
+      "diagnostic": {
+        "code": "GEOMETRY_NO_SOLID",
+        "stage": "import",
+        "userMessage": "The CAD file does not contain a usable 3D solid.",
+        "recoverable": true
+      }
+    },
+    {
+      "id": "brep-malformed-3",
+      "outcome": "rejected",
+      "detail": "GEOMETRY_NO_SOLID",
+      "durationMs": 627.9900000095367,
+      "diagnostic": {
+        "code": "GEOMETRY_NO_SOLID",
+        "stage": "import",
+        "userMessage": "The CAD file does not contain a usable 3D solid.",
+        "recoverable": true
+      }
+    },
+    {
+      "id": "step-empty",
+      "outcome": "rejected",
+      "detail": "INVALID_IMPORT_REQUEST",
+      "durationMs": 2.1700000166893005,
+      "diagnostic": {
+        "code": "INVALID_IMPORT_REQUEST",
+        "stage": "import",
+        "userMessage": "Choose a non-empty STEP, IGES, or BREP file.",
+        "recoverable": true
+      }
+    }
+  ]
+}
