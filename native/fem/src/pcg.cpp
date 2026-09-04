@@ -135,8 +135,6 @@ static SolverDiagnostics solve_pcg_impl(const CsrMatrix &a,
                 1000, n > std::numeric_limits<std::uint32_t>::max() / 10
                           ? std::numeric_limits<std::uint32_t>::max()
                           : 10 * n);
-  double best = residual;
-  std::uint32_t stagnant = 0;
   const auto check =
       std::max<std::uint32_t>(1, settings.cancellation_check_interval);
   for (std::uint32_t iter = 1; iter <= max_iter; ++iter) {
@@ -206,20 +204,7 @@ static SolverDiagnostics solve_pcg_impl(const CsrMatrix &a,
         p[i] = z[i];
       }
       rz = dot(r, z);
-      best = std::min(best, residual);
-      stagnant = 0;
       continue;
-    }
-    if (residual < best * (1.0 - 1e-6)) {
-      best = residual;
-      stagnant = 0;
-    } else if (++stagnant >= 100) {
-      stats.termination = TerminationReason::stagnated;
-      diagnostic = {ErrorCode::solver_stagnated,
-                    "The solver residual stagnated before convergence.",
-                    {},
-                    true};
-      return stats;
     }
     for (std::uint32_t i = 0; i < n; ++i)
       z[i] = r[i] / diag[i];

@@ -1,5 +1,20 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Convergence tests</title></head>
-<body><p id="test-status">Running…</p><script src="../../web/js/analysis/convergence.js"></script>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Convergence tests</title>
+<link rel="stylesheet" href="../../web/css/app.css"></head>
+<body><p id="test-status">Running…</p>
+<main class="fea-workspace" id="test-workspace"><div></div><div></div><aside class="fea-results" id="test-output">
+  <div role="tablist" aria-label="Output views">
+    <button id="test-results-tab" role="tab" aria-selected="true" aria-controls="test-results-panel" data-output-tab="results">Results</button>
+    <button id="test-convergence-tab" role="tab" aria-selected="false" aria-controls="convergence-summary" data-output-tab="convergence">Convergence</button>
+    <button id="test-diagnostics-tab" role="tab" aria-selected="false" aria-controls="test-diagnostics-panel" data-output-tab="diagnostics">Diagnostics</button>
+  </div>
+  <section id="test-results-panel" role="tabpanel" data-output-panel="results">Results panel</section>
+  <section id="convergence-summary" role="tabpanel" data-output-panel="convergence" hidden>
+    <div class="fea-table-scroll"><table><tbody><tr><td>Level</td><td>Target size</td><td>Degrees of freedom</td><td>Displacement</td><td>Energy</td><td>Stress</td></tr></tbody></table></div>
+    <svg id="convergence-plot" viewBox="0 0 320 120"></svg>
+  </section>
+  <section id="test-diagnostics-panel" role="tabpanel" data-output-panel="diagnostics" hidden>Diagnostics panel</section>
+</aside></main>
+<script src="../../web/js/analysis/convergence.js"></script>
 <script src="../../web/js/render/viewport-controller.js"></script>
 <script src="../../web/js/ui/ui-controller.js"></script>
 <script src="convergence-tests.js"></script></body></html>

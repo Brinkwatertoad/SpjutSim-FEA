@@ -6,6 +6,7 @@
   var mesher = new api.MesherClient();
   var solver;
   var sourceBytes;
+  var solvedMesh;
   function assert(condition, message) { if (!condition) { throw new Error(message); } }
   function near(actual, expected, relative, absolute) {
     return Math.abs(actual - expected) <= Math.max(absolute || 0, relative * Math.max(Math.abs(actual), Math.abs(expected)));
@@ -60,6 +61,7 @@
     controller.beginMeshGeneration();
     return mesher.generateMesh({ geometry: geometry, settings: { preset: 'coarse', elementType: 'tet10' }, sourceBytes: sourceBytes });
   }).then(function (mesh) {
+    solvedMesh = mesh;
     controller.completeMeshGeneration(mesh);
     mesher.dispose();
     addPrescribed(axisFace(mesh, 0, false), 'ux');
@@ -92,7 +94,7 @@
     assert(near(result.extrema.rawVonMisesMax.valuePa, 1000, 2e-4, 1e-3), 'cube axial stress missed the analytical target');
     assert(result.elementType === 'tet10' && result.recoverySampleFields.vonMisesPa.length === result.meshStatistics.elementCount * 4,
       'Tet10 recovery samples were not returned end to end');
-    var expectedPeakLocation = tet10RecoveryLocation(mesh, result.extrema.rawVonMisesMax.elementIndex,
+    var expectedPeakLocation = tet10RecoveryLocation(solvedMesh, result.extrema.rawVonMisesMax.elementIndex,
       result.extrema.rawVonMisesMax.sampleIndex);
     assert(result.extrema.rawVonMisesMax.locationM.every(function (value, axis) {
       return near(value, expectedPeakLocation[axis], 1e-10, 1e-12);

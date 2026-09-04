@@ -41,6 +41,8 @@
     this.convergenceStatus = document.getElementById('convergence-status');
     this.convergenceTable = document.getElementById('convergence-table');
     this.convergencePlot = document.getElementById('convergence-plot');
+    this.outputTabs = Array.prototype.slice.call(document.querySelectorAll('[data-output-tab]'));
+    this.outputPanels = Array.prototype.slice.call(document.querySelectorAll('[data-output-panel]'));
     this.resultLegend = document.getElementById('result-legend');
     this.legendTitle = document.getElementById('legend-title');
     this.legendMin = document.getElementById('legend-min');
@@ -209,6 +211,7 @@
   UIController.prototype.start = function () {
     var self = this;
     this.applySettingsShortcutPresentation();
+    configureOutputTabs(this.outputTabs, this.outputPanels);
     if (this.analysisAuthoring) { this.analysisAuthoring.start(); }
     if (this.importButton && this.importInput) {
       this.importButton.addEventListener('click', function () { self.importInput.click(); });
@@ -551,6 +554,34 @@
     return value.toLocaleString(undefined, { maximumSignificantDigits: 5 }) + (unit ? ' ' + unit : '');
   }
   function formatBytes(bytes) { return formatNumber(bytes / 1073741824, 'GiB'); }
+  function configureOutputTabs(tabs, panels) {
+    function select(name, moveFocus) {
+      var selected = null;
+      tabs.forEach(function (tab) {
+        var active = tab.dataset.outputTab === name;
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+        tab.tabIndex = active ? 0 : -1;
+        if (active) { selected = tab; }
+      });
+      panels.forEach(function (panel) { panel.hidden = panel.dataset.outputPanel !== name; });
+      if (moveFocus && selected) { selected.focus(); }
+    }
+    tabs.forEach(function (tab, index) {
+      tab.addEventListener('click', function () { select(tab.dataset.outputTab, false); });
+      tab.addEventListener('keydown', function (event) {
+        var next = index;
+        if (event.key === 'ArrowRight') { next = (index + 1) % tabs.length; }
+        else if (event.key === 'ArrowLeft') { next = (index + tabs.length - 1) % tabs.length; }
+        else if (event.key === 'Home') { next = 0; }
+        else if (event.key === 'End') { next = tabs.length - 1; }
+        else { return; }
+        event.preventDefault();
+        select(tabs[next].dataset.outputTab, true);
+      });
+    });
+    var initial = tabs.find(function (tab) { return tab.getAttribute('aria-selected') === 'true'; }) || tabs[0];
+    if (initial) { select(initial.dataset.outputTab, false); }
+  }
   function convergenceErrorMessage(error) {
     var value = error && error.diagnostic ? error.diagnostic : error;
     return value && (value.userMessage || value.message) || null;
@@ -763,6 +794,7 @@
     if (this.clearFaceSelectionButton) { this.clearFaceSelectionButton.disabled = selectedFaceIds.length === 0; }
   };
   root.SpjutsimFEA = root.SpjutsimFEA || {};
+  root.SpjutsimFEA.configureOutputTabs = configureOutputTabs;
   root.SpjutsimFEA.convergenceStatusMessage = convergenceStatusMessage;
   root.SpjutsimFEA.legendRangeStatus = legendRangeStatus;
   root.SpjutsimFEA.UIController = UIController;

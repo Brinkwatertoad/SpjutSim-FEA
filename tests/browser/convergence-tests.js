@@ -32,6 +32,28 @@
     assert(api.legendRangeStatus({ clipped: true }, 5) === 'Clipped visualization range · deformation ×5',
       'clipped factor-of-safety legend was labeled as unclipped');
 
+    var tabs = Array.from(document.querySelectorAll('[data-output-tab]'));
+    var panels = Array.from(document.querySelectorAll('[data-output-panel]'));
+    api.configureOutputTabs(tabs, panels);
+    document.getElementById('test-convergence-tab').click();
+    assert(document.getElementById('test-convergence-tab').getAttribute('aria-selected') === 'true' &&
+      !document.getElementById('convergence-summary').hidden && document.getElementById('test-results-panel').hidden,
+    'output tabs did not select only the requested panel');
+    document.getElementById('test-convergence-tab').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    assert(document.getElementById('test-diagnostics-tab').getAttribute('aria-selected') === 'true' &&
+      document.activeElement === document.getElementById('test-diagnostics-tab'),
+    'output tabs did not support keyboard selection and focus');
+    document.getElementById('test-convergence-tab').click();
+    var tableScroll = document.querySelector('.fea-table-scroll');
+    assert(getComputedStyle(tableScroll).overflowX === 'auto', 'convergence table does not scroll inside the results pane');
+    assert(document.getElementById('convergence-plot').getBoundingClientRect().width <=
+      document.getElementById('convergence-summary').getBoundingClientRect().width,
+    'convergence plot overflows the results pane');
+    if (matchMedia('(max-width: 900px)').matches) {
+      assert(getComputedStyle(document.getElementById('test-output')).display !== 'none',
+        'narrow layouts hide all results and convergence controls');
+    }
+
     var assigned = {};
     function color(name) { return { set: function (value) { assigned[name] = value; } }; }
     var viewport = {

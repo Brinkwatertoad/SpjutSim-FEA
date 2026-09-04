@@ -179,13 +179,15 @@
       </section>
       <aside class="fea-results" aria-label="Analysis output">
         <div role="tablist" aria-label="Output views">
-          <button role="tab" aria-selected="true">Results</button>
-          <button role="tab" aria-selected="false">Convergence</button>
-          <button role="tab" aria-selected="false">Diagnostics</button>
+          <button id="results-tab" role="tab" aria-selected="true" aria-controls="results-panel" data-output-tab="results">Results</button>
+          <button id="convergence-tab" role="tab" aria-selected="false" aria-controls="convergence-summary" data-output-tab="convergence" tabindex="-1">Convergence</button>
+          <button id="diagnostics-tab" role="tab" aria-selected="false" aria-controls="diagnostics-panel" data-output-tab="diagnostics" tabindex="-1">Diagnostics</button>
         </div>
-        <p id="results-empty">No analysis results.</p>
-        <section id="results-summary" hidden><h2>Results</h2><dl class="fea-output-list" id="results-values"></dl></section>
-        <section id="convergence-summary" aria-labelledby="convergence-title">
+        <section id="results-panel" role="tabpanel" aria-labelledby="results-tab" data-output-panel="results">
+          <p id="results-empty">No analysis results.</p>
+          <section id="results-summary" hidden><h2>Results</h2><dl class="fea-output-list" id="results-values"></dl></section>
+        </section>
+        <section id="convergence-summary" role="tabpanel" aria-labelledby="convergence-tab" data-output-panel="convergence" hidden>
           <h2 id="convergence-title">Convergence</h2>
           <p>Global refinement uses h<sub>next</sub> = 0.7 h, up to four solved levels.</p>
           <button id="start-convergence-button" type="button">Start study</button>
@@ -196,8 +198,10 @@
           </table></div>
           <svg id="convergence-plot" viewBox="0 0 320 120" role="img" aria-label="Normalized displacement, strain energy, and raw peak stress by convergence level"></svg>
         </section>
-        <section id="diagnostics-summary" hidden><h2>Diagnostics</h2><dl class="fea-output-list" id="diagnostics-values"></dl></section>
-        <dl class="fea-diagnostics"><dt>Launch mode</dt><dd id="launch-mode">Detecting…</dd><dt>Worker</dt><dd id="worker-status">Pending</dd><dt>WebAssembly</dt><dd id="wasm-status">Pending</dd></dl>
+        <section id="diagnostics-panel" role="tabpanel" aria-labelledby="diagnostics-tab" data-output-panel="diagnostics" hidden>
+          <section id="diagnostics-summary" hidden><h2>Diagnostics</h2><dl class="fea-output-list" id="diagnostics-values"></dl></section>
+          <dl class="fea-diagnostics"><dt>Launch mode</dt><dd id="launch-mode">Detecting…</dd><dt>Worker</dt><dd id="worker-status">Pending</dd><dt>WebAssembly</dt><dd id="wasm-status">Pending</dd></dl>
+        </section>
       </aside>
     </main>
   </div>
