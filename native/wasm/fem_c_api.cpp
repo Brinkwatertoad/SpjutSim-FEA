@@ -3,11 +3,19 @@
 
 #include <cmath>
 #include <cstdint>
+#include <emscripten/heap.h>
+#include <array>
 
 namespace {
 FemMemoryEstimate memory_estimate{};
 FemResultInfo result_info{};
 FemErrorInfo error_info{};
+std::array<std::uint64_t, 3> phase_memory_bytes{};
+
+void sample_phase(uint32_t phase, void *) {
+  if (phase < phase_memory_bytes.size())
+    phase_memory_bytes[phase] = emscripten_get_heap_size();
+}
 
 template <typename T> void initialize(T &value) {
   value = {};
@@ -67,7 +75,15 @@ int fem_wasm_solve(FemContext *context, double relative_tolerance,
   settings.equilibrium_tolerance = equilibrium_tolerance;
   settings.max_iterations = max_iterations;
   settings.cancellation_check_interval = 8;
+  phase_memory_bytes = {};
+  fem_set_phase_callback(context, sample_phase, nullptr);
   return fem_solve(context, &settings);
+}
+
+double fem_wasm_phase_memory_value(uint32_t key) {
+  return key < phase_memory_bytes.size()
+             ? static_cast<double>(phase_memory_bytes[key])
+             : 0;
 }
 
 int fem_wasm_read_results(FemContext *context) {

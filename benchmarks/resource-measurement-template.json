@@ -1,9 +1,12 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "recordedAt": null,
-  "browser": { "name": null, "version": null, "platform": null },
-  "case": { "name": null, "elementType": "tet10", "nodeCount": 0, "elementCount": 0 },
-  "preflight": { "modelVersion": 1, "modeledPeakBytes": 0, "safetyMultiplier": 1.5, "predictedPeakBytes": 0 },
-  "observed": { "wasmBytesBefore": 0, "wasmBytesAfter": 0, "externalProcessPeakBytes": null },
-  "solve": { "outcome": null, "iterations": 0, "durationMs": 0, "wallTimeMs": 0 }
+  "application": { "gitCommit": null, "solverRuntimeSha256": null },
+  "browser": { "name": null, "version": null, "launchMode": null },
+  "system": { "os": null, "architecture": null, "logicalCores": 0, "memoryBytes": 0 },
+  "case": { "id": null, "kind": null, "elementType": "tet10", "nodeCount": 0, "elementCount": 0, "degreeOfFreedomCount": 0, "exactNnz": 0 },
+  "preflight": { "modelVersion": 1, "allocations": {}, "modeledPeakBytes": 0, "safetyMultiplier": 1.5, "predictedPeakBytes": 0, "wasmHeapCapBytes": 3758096384 },
+  "observed": { "wasmMemoryByPhaseBytes": { "initial": 0, "inputLoaded": 0, "graphPreflight": 0, "assembly": 0, "solve": 0, "postprocess": 0 }, "wasmMemoryHighWaterBytes": 0, "jsHeapPeakBytes": null, "externalProcessPeakBytes": null, "mesherSolverOverlap": false },
+  "solve": { "outcome": null, "preconditioner": "jacobi", "relativeTolerance": 1e-8, "maximumIterations": 0, "iterations": 0, "finalRelativeResidual": 0, "phaseDurationMs": { "input": 0, "preflight": 0, "assembly": 0, "solve": 0, "postprocess": 0 }, "wallTimeMs": 0 },
+  "cancellation": { "meshLatencyMs": 0, "solveLatencyMs": 0, "editAfterCancelPassed": null }
 }

@@ -34,10 +34,11 @@ covered by the Python test suite and must be byte-identical.
 
 ## Resource measurements
 
-Copy `resource-measurement-template.json` for each representative Tet4 or Tet10
-browser run. Record the exact preflight and solver-statistics values returned by
-the application, plus browser/version and wall time. External process peak
-memory is optional because browser process accounting differs by platform.
+Schema-v2 `resource-measurement-template.json` records reproducible application
+and runtime hashes, launch/system metadata, modeled allocation categories,
+monotonic WASM high-water by solver phase, optional JS/process peaks, PCG
+statistics, timings, cancellation latency, and worker separation. Validate a
+captured matrix with `python3 tools/validate-resource-records.py PATH`.
 
 The current multiplier remains the provisional, uncalibrated value of 1.5 and
 the single-threaded WASM cap remains 3.5 GiB. The existing Chromium cube record

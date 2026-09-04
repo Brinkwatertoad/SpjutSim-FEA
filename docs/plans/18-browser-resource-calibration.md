@@ -30,13 +30,13 @@ scale, and poor-quality calibration cases have not been measured as a matrix.
 
 ## Implementation
 
-- [ ] **Version the resource record.** Replace the template with schema version
+- [x] **Version the resource record.** Replace the template with schema version
   2 fields for application/runtime hashes, launch mode, OS/hardware, element
   type/counts/nnz, modeled allocation categories, predicted bytes, WASM high-
   water by phase, JS heap where exposed, external process peak, mesher/solver
   separation, iterations/residual/timing, cancellation latency, and outcome.
   Add `tools/validate-resource-records.py` plus Python unit tests.
-- [ ] **Measure worker high-water accurately.** Extend the native/WASM bridge
+- [x] **Measure worker high-water accurately.** Extend the native/WASM bridge
   and `workers/solver-worker.js` to sample linear-memory byte length after
   input load, graph/preflight, assembly, solve, and post-processing and return
   `wasmMemoryHighWaterBytes` with solver statistics. Update validators, generated

@@ -634,6 +634,8 @@ bool Context::solve(const SolveSettings &settings) {
       restore_graph();
       return false;
     }
+    if (settings.on_phase)
+      settings.on_phase(SolvePhase::assembly);
     std::vector<double> u;
     const auto solver = solve_pcg(matrix, rhs, u, settings, diagnostic_);
     solver_diagnostics_ = solver;
@@ -641,6 +643,8 @@ bool Context::solve(const SolveSettings &settings) {
       restore_graph();
       return false;
     }
+    if (settings.on_phase)
+      settings.on_phase(SolvePhase::solve);
     Results result;
     result.solver = solver;
     result.displacement_m = std::move(u);
@@ -769,6 +773,8 @@ bool Context::solve(const SolveSettings &settings) {
           "The solved result failed the global force-balance check.");
       return false;
     }
+    if (settings.on_phase)
+      settings.on_phase(SolvePhase::postprocess);
     results_ = std::move(result);
     diagnostic_ = {};
     return true;

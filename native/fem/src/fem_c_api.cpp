@@ -10,6 +10,8 @@ struct FemContext {
   spjutsim::fem::Context implementation;
   spjutsim::fem::Loads loads;
   spjutsim::fem::Diagnostic bridge_error;
+  FemPhaseCallback phase_callback = nullptr;
+  void *phase_user_data = nullptr;
 };
 
 namespace {
@@ -173,6 +175,14 @@ int fem_set_gravity(FemContext *c, int enabled, const double a[3]) {
     return status(c->implementation.set_loads(c->loads));
   });
 }
+int fem_set_phase_callback(FemContext *c, FemPhaseCallback callback,
+                           void *user_data) {
+  if (!c)
+    return -1;
+  c->phase_callback = callback;
+  c->phase_user_data = user_data;
+  return 0;
+}
 int fem_estimate_memory(FemContext *c, double device, uint64_t cap,
                         double multiplier, FemMemoryEstimate *out) {
   if (!c || !out ||
@@ -221,6 +231,10 @@ int fem_solve(FemContext *c, const FemSolveSettings *settings) {
     s.equilibrium_tolerance = settings->equilibrium_tolerance;
     s.max_iterations = settings->max_iterations;
     s.cancellation_check_interval = settings->cancellation_check_interval;
+    if (c->phase_callback)
+      s.on_phase = [c](SolvePhase phase) {
+        c->phase_callback(static_cast<uint32_t>(phase), c->phase_user_data);
+      };
     return status(c->implementation.solve(s));
   });
 }

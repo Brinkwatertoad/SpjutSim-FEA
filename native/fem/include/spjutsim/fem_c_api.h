@@ -10,6 +10,7 @@ extern "C" {
 #define SPJUTSIM_FEM_API_VERSION 2u
 
 typedef struct FemContext FemContext;
+typedef void (*FemPhaseCallback)(uint32_t phase, void *user_data);
 
 typedef struct FemSolveSettings {
   uint32_t api_version;
@@ -92,6 +93,8 @@ int fem_add_total_face_force(FemContext *context, const uint32_t *triangles,
                              const double force_n[3]);
 int fem_set_gravity(FemContext *context, int enabled,
                     const double acceleration_m_s2[3]);
+int fem_set_phase_callback(FemContext *context, FemPhaseCallback callback,
+                           void *user_data);
 int fem_estimate_memory(FemContext *context, double device_memory_gib_hint,
                         uint64_t wasm_heap_cap_bytes, double safety_multiplier,
                         FemMemoryEstimate *out);

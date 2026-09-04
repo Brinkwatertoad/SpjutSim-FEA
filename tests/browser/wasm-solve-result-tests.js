@@ -61,6 +61,14 @@
   }).then(function (result) {
     assert(api.validateResultModel(result, revision).valid, 'WASM result model failed runtime validation');
     assert(result.solverStatistics.finalRelativeResidual < 1e-8, 'Tet4 solve did not converge to tolerance');
+    var memoryPhases = result.solverStatistics.wasmMemoryByPhaseBytes;
+    assert(memoryPhases && ['inputLoaded', 'graphPreflight', 'assembly', 'solve', 'postprocess'].every(function (phase) {
+      return Number.isFinite(memoryPhases[phase]) && memoryPhases[phase] > 0;
+    }), 'solver result omitted phase memory high-water measurements');
+    assert(result.solverStatistics.wasmMemoryHighWaterBytes === memoryPhases.postprocess &&
+      memoryPhases.inputLoaded <= memoryPhases.graphPreflight && memoryPhases.graphPreflight <= memoryPhases.assembly &&
+      memoryPhases.assembly <= memoryPhases.solve && memoryPhases.solve <= memoryPhases.postprocess,
+    'solver memory high-water measurements were not monotonic');
     assert(result.equilibrium.relativeResidual < 1e-6, 'reaction equilibrium check failed');
     assert(result.extrema.rawVonMisesMax.valuePa > 0, 'raw stress peak was not recovered');
     assert(result.extrema.displayedVonMisesMax.valuePa > 0, 'smoothed surface stress was not prepared');

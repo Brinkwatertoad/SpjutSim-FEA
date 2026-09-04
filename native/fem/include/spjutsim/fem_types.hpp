@@ -87,12 +87,15 @@ struct Loads {
   std::array<double, 3> gravity_m_s2{0.0, 0.0, -9.80665};
 };
 
+enum class SolvePhase { assembly, solve, postprocess };
+
 struct SolveSettings {
   double relative_tolerance = kDefaultPcgRelativeTolerance;
   double equilibrium_tolerance = kDefaultEquilibriumTolerance;
   std::uint32_t max_iterations = 0;
   std::uint32_t cancellation_check_interval = 8;
   std::function<bool()> is_cancelled;
+  std::function<void(SolvePhase)> on_phase;
 };
 
 enum class TerminationReason {

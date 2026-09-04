@@ -330,7 +330,7 @@ function boundaryFaceForElement(mapping, surface, faceIds, elementIndex, locatio
   return nearestFace;
 }
 
-function makeResult(Module, input, revision, preflight) {
+function makeResult(Module, input, revision, preflight, memory) {
   var v = Module._fem_wasm_result_value;
   var p = Module._fem_wasm_result_pointer;
   var ip = Module._fem_wasm_result_index_pointer;
@@ -386,7 +386,8 @@ function makeResult(Module, input, revision, preflight) {
     reactionsN: copyResultArray(Module, p(7), nodes * 3),
     equilibrium: { totalReactionN: [v(9), v(10), v(11)], totalAppliedForceN: [v(12), v(13), v(14)], relativeResidual: v(8) },
     solverStatistics: { iterations: v(3), terminationReason: 'converged', finalRelativeResidual: v(5),
-      solveDurationMs: v(6), strainEnergyJ: v(7), wasmMemoryBytes: Module.HEAPU8.buffer.byteLength },
+      solveDurationMs: v(6), strainEnergyJ: v(7), wasmMemoryBytes: Module.HEAPU8.buffer.byteLength,
+      wasmMemoryHighWaterBytes: memory.postprocess, wasmMemoryByPhaseBytes: memory },
     meshStatistics: input.mesh.statistics, preflight: preflight, warnings: warnings
   };
 }
@@ -406,14 +407,17 @@ function handlePreflight(Module, message) {
   var input = validateInput(message.input);
   var loaded;
   var estimate;
+  var memory = { initial: Module.HEAPU8.buffer.byteLength };
   if (activeAnalysis) { Module._fem_destroy(activeAnalysis.context); activeAnalysis = null; }
   progress(message.requestId, 'preparing', 'Preparing solver input…');
   loaded = loadAnalysis(Module, input);
+  memory.inputLoaded = Math.max(memory.initial, Module.HEAPU8.buffer.byteLength);
   progress(message.requestId, 'preflight', 'Counting exact matrix nonzeros and estimating memory…');
   checkNative(Module, loaded.context, Module._fem_wasm_preflight(loaded.context, Number(message.deviceMemoryGiB) || 0,
     WASM_HEAP_CAP_BYTES, MEMORY_SAFETY_MULTIPLIER), 'preflight');
   estimate = memoryResult(Module, input, loaded.constraintCount);
-  activeAnalysis = { context: loaded.context, input: input, revision: message.analysisRevision, preflight: estimate };
+  memory.graphPreflight = Math.max(memory.inputLoaded, Module.HEAPU8.buffer.byteLength);
+  activeAnalysis = { context: loaded.context, input: input, revision: message.analysisRevision, preflight: estimate, memory: memory };
   reply(message.requestId, 'preflight-result', estimate);
 }
 
@@ -435,10 +439,13 @@ function handleSolve(Module, message) {
     Number(message.solveSettings && message.solveSettings.relativeTolerance) || 1e-8,
     Number(message.solveSettings && message.solveSettings.equilibriumTolerance) || 1e-6,
     Number(message.solveSettings && message.solveSettings.maxIterations) || 0), 'solve');
+  activeAnalysis.memory.assembly = Math.max(activeAnalysis.memory.graphPreflight, Module._fem_wasm_phase_memory_value(0));
+  activeAnalysis.memory.solve = Math.max(activeAnalysis.memory.assembly, Module._fem_wasm_phase_memory_value(1));
   progress(message.requestId, 'recovery', 'Recovering stresses and reactions…');
   checkNative(Module, activeAnalysis.context, Module._fem_wasm_read_results(activeAnalysis.context), 'postprocess');
+  activeAnalysis.memory.postprocess = Math.max(activeAnalysis.memory.solve, Module._fem_wasm_phase_memory_value(2), Module.HEAPU8.buffer.byteLength);
   progress(message.requestId, 'visualization', 'Preparing visualization buffers…');
-  result = makeResult(Module, activeAnalysis.input, activeAnalysis.revision, activeAnalysis.preflight);
+  result = makeResult(Module, activeAnalysis.input, activeAnalysis.revision, activeAnalysis.preflight, activeAnalysis.memory);
   Module._fem_destroy(activeAnalysis.context);
   activeAnalysis = null;
   reply(message.requestId, 'solve-result', result, transfers(result));
