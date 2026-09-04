@@ -1,0 +1,204 @@
+{
+  "schemaVersion": 1,
+  "caseId": "axial-traction",
+  "caseRevision": 1,
+  "geometrySha256": "df4dd78ea086220cb98cf5860b802d47297b2b06db284606d77ec35c3a86dc7c",
+  "units": {
+    "length": "m",
+    "force": "N",
+    "stress": "Pa",
+    "energy": "J"
+  },
+  "fieldIdentities": {
+    "displacement": "result.displacementM",
+    "rawStress": "result.recoverySampleFields.vonMisesPa",
+    "smoothedStress": "result.elementFields.vonMisesPa",
+    "stressComparison": "rawStress"
+  },
+  "definition": {
+    "material": {
+      "youngsModulusPa": 1000000000,
+      "poissonsRatio": 0.25,
+      "densityKgM3": 1000
+    },
+    "load": {
+      "type": "total-force",
+      "face": "x-max",
+      "forceN": [
+        1000,
+        0,
+        0
+      ]
+    },
+    "supports": [
+      "x-min:x",
+      "y-min:y",
+      "z-min:z"
+    ]
+  },
+  "solver": {
+    "name": "CalculiX CrunchiX",
+    "version": "2.21",
+    "independent": true,
+    "inputPath": "benchmarks/reference/calculix/axial-traction/case.inp",
+    "inputSha256": "bee4919b8c7c9a19d37b69d29d208f877dff2d0f47ac4326cb8d02804963cbc2",
+    "rawOutputPath": "benchmarks/reference/calculix/axial-traction/case.dat",
+    "rawOutputSha256": "76066871ad207a69da0b6eae4eaae1696a39b3fa4903b271cd0c1335fea9eb4c",
+    "elementFormulation": "C3D8 full integration",
+    "extractionMethod": "XMAX node displacement, constrained reaction totals, and raw PROBE integration-point stress; see reference README"
+  },
+  "levels": [
+    {
+      "level": 1,
+      "targetSizeM": 0.2,
+      "nodeCount": 2058,
+      "elementCount": 1111,
+      "degreeOfFreedomCount": 6174,
+      "maximumDisplacementM": 1.0606601717044431e-06,
+      "strainEnergyJ": 0.0004999999999999448,
+      "rawVonMisesMaxPa": 1000.0000079844727,
+      "minimumFactorOfSafety": 249999.99800388183,
+      "iterations": 261,
+      "solveDurationMs": 48.99,
+      "estimatedPeakBytes": 110164734,
+      "peakLocationM": [
+        0.6770713386323061,
+        0.959074710581554,
+        0.01899340122875355
+      ],
+      "peakFaceId": "face-axial-traction-1",
+      "equilibriumRelativeResidual": 3.5123413471762846e-10,
+      "totalReactionN": [
+        -1000.0000000126922,
+        -6.97877685463292e-07,
+        -7.916633548722392e-08
+      ],
+      "rawVonMisesLocationM": [
+        0.6770713386323061,
+        0.959074710581554,
+        0.01899340122875355
+      ],
+      "displacementProbe": {
+        "distance": 0.03923209600446342,
+        "valueM": 1.0165841992035123e-06,
+        "vectorM": [
+          9.999999999066989e-07,
+          -1.2367133515028918e-07,
+          -1.3471761250479963e-07
+        ],
+        "locationM": [
+          1,
+          0.4946853412693807,
+          0.5388704484084051
+        ]
+      },
+      "index": 0
+    },
+    {
+      "level": 2,
+      "targetSizeM": 0.13999999999999999,
+      "nodeCount": 4321,
+      "elementCount": 2485,
+      "degreeOfFreedomCount": 12963,
+      "maximumDisplacementM": 1.0606601717833233e-06,
+      "strainEnergyJ": 0.0005000000000003887,
+      "rawVonMisesMaxPa": 1000.0000070942754,
+      "minimumFactorOfSafety": 249999.99822643117,
+      "iterations": 359,
+      "solveDurationMs": 152.45,
+      "estimatedPeakBytes": 121379610,
+      "peakLocationM": [
+        0.09846800794233052,
+        0.012645866682104797,
+        0.9873541333178953
+      ],
+      "peakFaceId": "face-axial-traction-2",
+      "equilibriumRelativeResidual": 5.283094989057772e-10,
+      "totalReactionN": [
+        -1000.0000001286065,
+        9.346455348341033e-07,
+        -4.7575392280021584e-07
+      ],
+      "rawVonMisesLocationM": [
+        0.09846800794233052,
+        0.012645866682104797,
+        0.9873541333178953
+      ],
+      "displacementProbe": {
+        "distance": 0.030718498832599684,
+        "valueM": 1.0160318221248833e-06,
+        "vectorM": [
+          9.999999999930223e-07,
+          -1.219841005849961e-07,
+          -1.3206264721273632e-07
+        ],
+        "locationM": [
+          1,
+          0.4879364007531201,
+          0.5282505883784587
+        ]
+      },
+      "index": 1
+    }
+  ],
+  "convergence": {
+    "status": "converged",
+    "globalConverged": true,
+    "stressStable": true,
+    "likelyStressSingularity": false,
+    "warning": null,
+    "changes": {
+      "maximumDisplacement": 7.436892331361508e-11,
+      "strainEnergy": 8.87744738831229e-13,
+      "rawVonMisesMax": 8.901973771434667e-10
+    },
+    "stopReason": "criteria-met"
+  },
+  "comparisons": [
+    {
+      "metric": "axial-displacement",
+      "probeId": "loaded-face-center",
+      "fieldKind": "displacement",
+      "spjutsimValue": 9.999999999930223e-07,
+      "referenceValue": 1e-06,
+      "referenceSource": "CalculiX 2.21 C3D8",
+      "relativeError": 6.977645661244113e-12,
+      "maximumRelativeError": 0.01,
+      "passed": true
+    },
+    {
+      "metric": "reaction-balance",
+      "probeId": "support-resultant",
+      "fieldKind": "reaction",
+      "spjutsimValue": 1000.0000001286065,
+      "referenceValue": 1000,
+      "referenceSource": "CalculiX 2.21 C3D8",
+      "relativeError": 1.286065298700123e-10,
+      "maximumRelativeError": 0.001,
+      "passed": true
+    },
+    {
+      "metric": "strain-energy",
+      "probeId": "loaded-face-center",
+      "fieldKind": "strain-energy",
+      "spjutsimValue": 0.0005000000000003887,
+      "referenceValue": 0.0005,
+      "referenceSource": "CalculiX 2.21 C3D8",
+      "relativeError": 7.773729576721067e-13,
+      "maximumRelativeError": 0.03,
+      "passed": true
+    },
+    {
+      "metric": "axial-stress",
+      "probeId": "axial-interior",
+      "fieldKind": "raw-recovery-stress",
+      "spjutsimValue": 1000.0000070942754,
+      "referenceValue": 999.9999999999989,
+      "referenceSource": "CalculiX 2.21 C3D8",
+      "relativeError": 7.094276497809923e-09,
+      "maximumRelativeError": 0.01,
+      "passed": true
+    }
+  ],
+  "passed": true
+}

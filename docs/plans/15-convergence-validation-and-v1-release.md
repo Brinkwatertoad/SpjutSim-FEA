@@ -63,7 +63,7 @@ decision must be explicitly closed before release.
   peak von Mises stress. Show the deterministic target size, memory estimate,
   iterations/time, stop reason, global/stress status, and selection of an
   available level for viewport inspection.
-- [ ] **Complete analytical and reference validation (carried forward to
+- [x] **Complete analytical and reference validation (carried forward to
   [Task 16](16-reference-validation-matrix.md)).** Add committed benchmark
   definitions/results for axial traction, cantilever bending, a uniform
   pressure/symmetry case, gravity/reaction balance, and a nonsingular stress-

@@ -2384,7 +2384,7 @@ evidence.
 - [x] Mesh convergence workflow is complete.
 - [x] Global convergence vs unresolved peak stress are reported separately.
 - [x] Likely stress singularities produce a clear warning.
-- [ ] Analytical and reference-solver validation tests pass agreed tolerances.
+- [x] Analytical and reference-solver validation tests pass agreed tolerances.
 - [ ] Memory-estimator calibration tests have been run on supported browsers.
 - [ ] Licensing/distribution posture for Gmsh has been resolved.
 

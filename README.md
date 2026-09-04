@@ -71,6 +71,12 @@ sequencing contracts. `tests/browser/cube-convergence-tests.html` runs a real
 two-level Tet10 analytical convergence study through disposable Gmsh and FEM
 workers; enable local-file access for that harness.
 
+Open `tests/browser/validation-benchmark-tests.html` from the optional HTTP
+server to rerun the five-case Tet10 validation matrix. Copy its JSON evidence to
+`benchmarks/validation/spjutsim-browser-evidence.json`, rebuild normalized
+records with `python3 tools/build-validation-records.py`, and enforce all
+Section 16.2 limits with `python3 tools/validate-validation-records.py`.
+
 After changing either file in `workers/`, regenerate the checked-in local-file worker wrappers:
 
 ```sh

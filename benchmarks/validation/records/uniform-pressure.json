@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 1,
+  "caseId": "uniform-pressure",
+  "caseRevision": 1,
+  "geometrySha256": "df4dd78ea086220cb98cf5860b802d47297b2b06db284606d77ec35c3a86dc7c",
+  "units": {
+    "length": "m",
+    "force": "N",
+    "stress": "Pa",
+    "energy": "J"
+  },
+  "fieldIdentities": {
+    "displacement": "result.displacementM",
+    "rawStress": "result.recoverySampleFields.vonMisesPa",
+    "smoothedStress": "result.elementFields.vonMisesPa",
+    "stressComparison": "rawStress"
+  },
+  "definition": {
+    "material": {
+      "youngsModulusPa": 1000000000,
+      "poissonsRatio": 0.25,
+      "densityKgM3": 1000
+    },
+    "load": {
+      "type": "pressure",
+      "face": "x-max",
+      "pressurePa": 1000
+    },
+    "supports": [
+      "x-min:x",
+      "y-min:y",
+      "z-min:z"
+    ]
+  },
+  "solver": {
+    "name": "CalculiX CrunchiX",
+    "version": "2.21",
+    "independent": true,
+    "inputPath": "benchmarks/reference/calculix/uniform-pressure/case.inp",
+    "inputSha256": "469f8633312def9838df2bb46bef749c995e13f73a47afc55fe1e96ce303af65",
+    "rawOutputPath": "benchmarks/reference/calculix/uniform-pressure/case.dat",
+    "rawOutputSha256": "3b29f7fb68bf1f1777e56e91fb904bcef9737f2d6e79ab4edd5fc82488137e81",
+    "elementFormulation": "C3D8 full integration",
+    "extractionMethod": "XMAX node displacement, constrained reaction totals, and raw PROBE integration-point stress; see reference README"
+  },
+  "levels": [
+    {
+      "level": 1,
+      "targetSizeM": 0.2,
+      "nodeCount": 2058,
+      "elementCount": 1111,
+      "degreeOfFreedomCount": 6174,
+      "maximumDisplacementM": 1.0606601717044431e-06,
+      "strainEnergyJ": 0.0004999999999999448,
+      "rawVonMisesMaxPa": 1000.0000079844727,
+      "minimumFactorOfSafety": 249999.99800388183,
+      "iterations": 261,
+      "solveDurationMs": 49.12,
+      "estimatedPeakBytes": 110164734,
+      "peakLocationM": [
+        0.6770713386323061,
+        0.959074710581554,
+        0.01899340122875355
+      ],
+      "peakFaceId": "face-uniform-pressure-1",
+      "equilibriumRelativeResidual": 3.5123413471762846e-10,
+      "totalReactionN": [
+        1000.0000000126922,
+        6.97877685463292e-07,
+        7.916633548722392e-08
+      ],
+      "rawVonMisesLocationM": [
+        0.6770713386323061,
+        0.959074710581554,
+        0.01899340122875355
+      ],
+      "displacementProbe": {
+        "distance": 0.03923209600446342,
+        "valueM": 1.0165841992035123e-06,
+        "vectorM": [
+          -9.999999999066989e-07,
+          1.2367133515028918e-07,
+          1.3471761250479963e-07
+        ],
+        "locationM": [
+          1,
+          0.4946853412693807,
+          0.5388704484084051
+        ]
+      },
+      "index": 0
+    },
+    {
+      "level": 2,
+      "targetSizeM": 0.13999999999999999,
+      "nodeCount": 4321,
+      "elementCount": 2485,
+      "degreeOfFreedomCount": 12963,
+      "maximumDisplacementM": 1.06066017181369e-06,
+      "strainEnergyJ": 0.0004999999999994872,
+      "rawVonMisesMaxPa": 1000.0000071004514,
+      "minimumFactorOfSafety": 249999.99822488715,
+      "iterations": 359,
+      "solveDurationMs": 149.515,
+      "estimatedPeakBytes": 121379610,
+      "peakLocationM": [
+        0.09846800794233052,
+        0.012645866682104797,
+        0.9873541333178953
+      ],
+      "peakFaceId": "face-uniform-pressure-2",
+      "equilibriumRelativeResidual": 5.380196867737662e-10,
+      "totalReactionN": [
+        1000.0000001274101,
+        -9.557389280318558e-07,
+        4.776928407266306e-07
+      ],
+      "rawVonMisesLocationM": [
+        0.09846800794233052,
+        0.012645866682104797,
+        0.9873541333178953
+      ],
+      "displacementProbe": {
+        "distance": 0.030718498832599684,
+        "valueM": 1.0160318221192583e-06,
+        "vectorM": [
+          -9.999999999851443e-07,
+          1.2198410059503234e-07,
+          1.3206264721984372e-07
+        ],
+        "locationM": [
+          1,
+          0.4879364007531201,
+          0.5282505883784587
+        ]
+      },
+      "index": 1
+    }
+  ],
+  "convergence": {
+    "status": "converged",
+    "globalConverged": true,
+    "stressStable": true,
+    "likelyStressSingularity": false,
+    "warning": null,
+    "changes": {
+      "maximumDisplacement": 1.0299898527302551e-10,
+      "strainEnergy": 9.152834740123638e-13,
+      "rawVonMisesMax": 8.840213397335523e-10
+    },
+    "stopReason": "criteria-met"
+  },
+  "comparisons": [
+    {
+      "metric": "axial-displacement",
+      "probeId": "loaded-face-center",
+      "fieldKind": "displacement",
+      "spjutsimValue": 9.999999999851443e-07,
+      "referenceValue": 1e-06,
+      "referenceSource": "CalculiX 2.21 C3D8",
+      "relativeError": 1.4855687345419546e-11,
+      "maximumRelativeError": 0.01,
+      "passed": true
+    },
+    {
+      "metric": "reaction-balance",
+      "probeId": "support-resultant",
+      "fieldKind": "reaction",
+      "spjutsimValue": 1000.0000001274101,
+      "referenceValue": 1000,
+      "referenceSource": "CalculiX 2.21 C3D8",
+      "relativeError": 1.2741008958983002e-10,
+      "maximumRelativeError": 0.001,
+      "passed": true
+    },
+    {
+      "metric": "strain-energy",
+      "probeId": "loaded-face-center",
+      "fieldKind": "strain-energy",
+      "spjutsimValue": 0.0004999999999994872,
+      "referenceValue": 0.0005,
+      "referenceSource": "CalculiX 2.21 C3D8",
+      "relativeError": 1.0256552551712872e-12,
+      "maximumRelativeError": 0.03,
+      "passed": true
+    }
+  ],
+  "passed": true
+}

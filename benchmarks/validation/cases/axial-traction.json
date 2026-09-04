@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "caseId": "axial-traction",
+  "revision": 1,
+  "title": "Unit cube under axial end traction",
+  "geometry": {"path": "tests/fixtures/generated-unit-cube-m.step", "sha256": "df4dd78ea086220cb98cf5860b802d47297b2b06db284606d77ec35c3a86dc7c", "sourceUnits": "m"},
+  "material": {"youngsModulusPa": 1000000000, "poissonsRatio": 0.25, "densityKgM3": 1000},
+  "load": {"type": "total-force", "face": "x-max", "forceN": [1000, 0, 0]},
+  "supports": ["x-min:x", "y-min:y", "z-min:z"],
+  "probes": [
+    {"id": "loaded-face-center", "feature": "center of x-max face", "coordinatesM": [1, 0.5, 0.5]},
+    {"id": "axial-interior", "feature": "interior raw recovery point", "coordinatesM": [0.5, 0.5, 0.5]},
+    {"id": "support-resultant", "feature": "sum over constrained faces", "coordinatesM": [0, 0, 0]}
+  ]
+}

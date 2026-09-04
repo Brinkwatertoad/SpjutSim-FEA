@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 1,
+  "caseId": "notched-prism-stress",
+  "caseRevision": 1,
+  "geometrySha256": "50ac6db4647783a889f01319801ca3278a46f90348b792581c59d8fbee011f2a",
+  "units": {
+    "length": "m",
+    "force": "N",
+    "stress": "Pa",
+    "energy": "J"
+  },
+  "fieldIdentities": {
+    "displacement": "result.displacementM",
+    "rawStress": "result.recoverySampleFields.vonMisesPa",
+    "smoothedStress": "result.elementFields.vonMisesPa",
+    "stressComparison": "rawStress"
+  },
+  "definition": {
+    "material": {
+      "youngsModulusPa": 1000000000,
+      "poissonsRatio": 0.25,
+      "densityKgM3": 1000
+    },
+    "load": {
+      "type": "total-force",
+      "face": "x-max",
+      "forceN": [
+        1000,
+        0,
+        0
+      ]
+    },
+    "supports": [
+      "x-min:xyz"
+    ]
+  },
+  "solver": {
+    "name": "CalculiX CrunchiX",
+    "version": "2.21",
+    "independent": true,
+    "inputPath": "benchmarks/reference/calculix/notched-prism-stress/case.inp",
+    "inputSha256": "b750b7e2bcbef6ea55755bc9e8eb14ed26a0c50349462a94bc92304948482fd8",
+    "rawOutputPath": "benchmarks/reference/calculix/notched-prism-stress/case.dat",
+    "rawOutputSha256": "e1840b780cd780244ef5eb142d4e92ab6ba18d0ec37cbfdd9f6e9f9d508ff93c",
+    "elementFormulation": "C3D8 full integration",
+    "extractionMethod": "XMAX node displacement, constrained reaction totals, and raw PROBE integration-point stress; see reference README"
+  },
+  "levels": [
+    {
+      "level": 1,
+      "targetSizeM": 0.25,
+      "nodeCount": 1244,
+      "elementCount": 578,
+      "degreeOfFreedomCount": 3732,
+      "maximumDisplacementM": 5.396075228144611e-05,
+      "strainEnergyJ": 0.010537958494708056,
+      "rawVonMisesMaxPa": 20570.84833584914,
+      "minimumFactorOfSafety": 12153.12056743528,
+      "iterations": 1764,
+      "solveDurationMs": 180.115,
+      "estimatedPeakBytes": 105956850,
+      "peakLocationM": [
+        1.7966030531493504,
+        0.6776359104070864,
+        0.1585410196624969
+      ],
+      "peakFaceId": "face-notched-prism-stress-7",
+      "equilibriumRelativeResidual": 4.0813980754545354e-10,
+      "totalReactionN": [
+        -1000.0000005766985,
+        5.678226266958575e-07,
+        -4.5575514417972585e-07
+      ],
+      "rawVonMisesLocationM": [
+        1.7966030531493504,
+        0.6776359104070864,
+        0.1585410196624969
+      ],
+      "rawStressProbe": {
+        "distance": 0.04500518652105351,
+        "valuePa": 10711.273004806797,
+        "locationM": [
+          1.5000000000000004,
+          0.5050464654754407,
+          0.055278640450004204
+        ]
+      },
+      "displacementProbe": {
+        "distance": 9.999999983634211e-08,
+        "valueM": 4.5869791931274786e-05,
+        "vectorM": [
+          2.1079596333883508e-05,
+          -4.0739186769795265e-05,
+          8.421136921681172e-08
+        ],
+        "locationM": [
+          3,
+          0.5,
+          0.1
+        ]
+      },
+      "index": 0
+    },
+    {
+      "level": 2,
+      "targetSizeM": 0.175,
+      "nodeCount": 2059,
+      "elementCount": 946,
+      "degreeOfFreedomCount": 6177,
+      "maximumDisplacementM": 5.419784674083527e-05,
+      "strainEnergyJ": 0.010557466812929395,
+      "rawVonMisesMaxPa": 24465.186527753853,
+      "minimumFactorOfSafety": 10218.601837202199,
+      "iterations": 1122,
+      "solveDurationMs": 195.83,
+      "estimatedPeakBytes": 109368138,
+      "peakLocationM": [
+        1.2243570828293564,
+        0.6819055537856666,
+        0.027639320225002095
+      ],
+      "peakFaceId": "face-notched-prism-stress-7",
+      "equilibriumRelativeResidual": 3.5075098993722254e-10,
+      "totalReactionN": [
+        -1000.000000591402,
+        1.2290096895739566e-07,
+        -5.131320124363015e-07
+      ],
+      "rawVonMisesLocationM": [
+        1.2243570828293564,
+        0.6819055537856666,
+        0.027639320225002095
+      ],
+      "rawStressProbe": {
+        "distance": 0.04836552443093521,
+        "valuePa": 10238.806810588976,
+        "locationM": [
+          1.5142012832739489,
+          0.4882719350763884,
+          0.14472135954999582
+        ]
+      },
+      "displacementProbe": {
+        "distance": 9.999999983634211e-08,
+        "valueM": 4.6069203961493496e-05,
+        "vectorM": [
+          2.1118845873810723e-05,
+          -4.0943390706993245e-05,
+          6.826432754491296e-08
+        ],
+        "locationM": [
+          3,
+          0.5000000000000013,
+          0.09999999999999892
+        ]
+      },
+      "index": 1
+    }
+  ],
+  "convergence": {
+    "status": "converged-stress-unresolved",
+    "globalConverged": true,
+    "stressStable": false,
+    "likelyStressSingularity": false,
+    "warning": null,
+    "changes": {
+      "maximumDisplacement": 0.004393831615847892,
+      "strainEnergy": 0.0018512426511393316,
+      "rawVonMisesMax": 0.18931344630634359
+    },
+    "stopReason": "criteria-met"
+  },
+  "comparisons": [
+    {
+      "metric": "local-stress",
+      "probeId": "notch-interior",
+      "fieldKind": "raw-recovery-stress",
+      "spjutsimValue": 10238.806810588976,
+      "referenceValue": 10252.844044402165,
+      "referenceSource": "CalculiX raw PROBE integration point nearest the declared probe",
+      "relativeError": 0.0013691063428252635,
+      "maximumRelativeError": 0.05,
+      "passed": true
+    },
+    {
+      "metric": "reaction-balance",
+      "probeId": "notch-interior",
+      "fieldKind": "reaction",
+      "spjutsimValue": 1000.000000591402,
+      "referenceValue": 1000.0,
+      "referenceSource": "CalculiX 2.21 C3D8",
+      "relativeError": 5.914019993724651e-10,
+      "maximumRelativeError": 0.001,
+      "passed": true
+    }
+  ],
+  "passed": true
+}

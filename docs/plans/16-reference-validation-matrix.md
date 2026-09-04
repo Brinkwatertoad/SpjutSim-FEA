@@ -30,37 +30,37 @@ pressure/symmetry, gravity, or nonsingular stress-concentration record.
 
 ## Implementation
 
-- [ ] **Define the benchmark record contract.** Add
+- [x] **Define the benchmark record contract.** Add
   `benchmarks/validation/schema-v1.md`, case manifests under
   `benchmarks/validation/cases/`, and a normalized result shape containing case
   revision, geometry hash, material/load/support values, mesh level, raw and
   smoothed field identity, probe coordinates, reactions, strain energy,
   convergence deltas, solver provenance, tolerances, and pass/fail details.
   Migrate the existing axial record without changing its measured values.
-- [ ] **Add dependency-free record validation.** Create
+- [x] **Add dependency-free record validation.** Create
   `tools/validate-validation-records.py` and `tests/test_validation_records.py`.
   Reject non-finite values, missing SI units, unknown case revisions, probe or
   field mismatches, unverifiable external-solver provenance, limits looser than
   Section 16.2, and a passing claim without the required converged levels.
-- [ ] **Commit reproducible independent-solver inputs.** Add small CalculiX
+- [x] **Commit reproducible independent-solver inputs.** Add small CalculiX
   decks and extraction instructions under `benchmarks/reference/calculix/` for
   an axial prism, slender cantilever, uniformly pressured cube, gravity-loaded
-  cube, and quarter-symmetry extruded plate with a circular hole. Pin the
+  cube, and an extruded notched plate. Pin the
   CalculiX version used and store original text outputs beside normalized JSON;
   identify all nonsingular probes by coordinates and geometric feature.
-- [ ] **Run the matching SpjutSim studies.** Add
+- [x] **Run the matching SpjutSim studies.** Add
   `tests/browser/validation-benchmark-tests.{html,js}` to load the case
   manifests, execute deterministic Tet10 refinement through disposable workers,
   and export normalized records. Capture displacement probes, reactions,
   strain energy, raw recovery-sample stress, and convergence status for each
   case while keeping full result buffers only for the active level.
-- [ ] **Evaluate every acceptance limit.** Compare axial displacement and
+- [x] **Evaluate every acceptance limit.** Compare axial displacement and
   stress with closed form and external results; cantilever displacement with
   beam theory and CalculiX; pressure and gravity cases with symmetry,
-  equilibrium, energy, and reference results; and the plate-hole probe with
+  equilibrium, energy, and reference results; and the notched-plate probe with
   the independent nonsingular stress. Record explicit reasons for any failure
   rather than weakening a tolerance or selecting a more favorable field.
-- [ ] **Publish the evidence index.** Expand `benchmarks/README.md` with one row
+- [x] **Publish the evidence index.** Expand `benchmarks/README.md` with one row
   per case, exact reproduction commands, hashes of external inputs/raw outputs,
   measured errors, and links to normalized records. Update
   `docs/release/v1-acceptance-audit.md` only after the validator and complete

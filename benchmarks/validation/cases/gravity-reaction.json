@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "caseId": "gravity-reaction",
+  "revision": 1,
+  "title": "Unit cube gravity reaction",
+  "geometry": {"path": "tests/fixtures/generated-unit-cube-m.step", "sha256": "df4dd78ea086220cb98cf5860b802d47297b2b06db284606d77ec35c3a86dc7c", "sourceUnits": "m"},
+  "material": {"youngsModulusPa": 1000000000, "poissonsRatio": 0.25, "densityKgM3": 1000},
+  "load": {"type": "gravity", "accelerationMS2": [0, 0, -9.81]},
+  "supports": ["z-min:z", "x-min:x", "y-min:y"],
+  "probes": [{"id": "support-resultant", "feature": "sum of all constrained reactions", "coordinatesM": [0, 0, 0]}]
+}

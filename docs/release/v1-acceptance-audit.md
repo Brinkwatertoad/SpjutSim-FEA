@@ -1,6 +1,6 @@
 # v1.0 acceptance audit
 
-Audit date: 2026-09-03. `spec.md` section 26 remains authoritative. “Pass”
+Audit date: 2026-09-04. `spec.md` section 26 remains authoritative. “Pass”
 means the cited repository test or inspected implementation currently supports
 the stated area. A Section 26 checkbox remains unchecked when its full wording
 needs broader evidence; every “Pending” row keeps the release closed.
@@ -26,7 +26,7 @@ needs broader evidence; every “Pending” row keeps the release closed.
 | Yield-based von Mises FoS | Pass | FoS and WASM result browser tests |
 | Global convergence and separate stress status | Pass | pure, fake-runner, and real Tet10 convergence tests |
 | Likely-singularity caution | Pass as deterministic heuristic | convergence tests; no mathematical-singularity claim |
-| Analytical/reference validation matrix | Pending | Tet10 axial record passes; independent bending, pressure, and stress-concentration references remain |
+| Analytical/reference validation matrix | Pass | Five converged Tet10 cases, CalculiX 2.21 raw outputs, normalized records, and enforced Section 16.2 tolerances |
 | Supported-browser memory calibration | Pending | One Chromium record exists; larger/non-headless/browser-matrix records remain |
 | Representative/problematic CAD corpus size | Pending | Current generated corpus is intentionally small |
 | Gmsh distribution rights | Pending external decision | `THIRD_PARTY.md`; current combined public distribution is prohibited |

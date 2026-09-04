@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "caseId": "cantilever-bending",
+  "caseRevision": 1,
+  "geometrySha256": "ea2d3965dd47cc1dfb41f790ee05f748319856054f108a8d758db9205bd40cd4",
+  "units": {
+    "length": "m",
+    "force": "N",
+    "stress": "Pa",
+    "energy": "J"
+  },
+  "fieldIdentities": {
+    "displacement": "result.displacementM",
+    "rawStress": "result.recoverySampleFields.vonMisesPa",
+    "smoothedStress": "result.elementFields.vonMisesPa",
+    "stressComparison": "rawStress"
+  },
+  "definition": {
+    "material": {
+      "youngsModulusPa": 1000000000,
+      "poissonsRatio": 0.25,
+      "densityKgM3": 1000
+    },
+    "load": {
+      "type": "total-force",
+      "face": "x-max",
+      "forceN": [
+        0,
+        0,
+        -1000
+      ]
+    },
+    "supports": [
+      "x-min:xyz"
+    ]
+  },
+  "solver": {
+    "name": "CalculiX CrunchiX",
+    "version": "2.21",
+    "independent": true,
+    "inputPath": "benchmarks/reference/calculix/cantilever-bending/case.inp",
+    "inputSha256": "5a1c24a20f4eb9cc7d04a713b97e2e98bad4e3ecd9e3ab157f9f16ae94e3a920",
+    "rawOutputPath": "benchmarks/reference/calculix/cantilever-bending/case.dat",
+    "rawOutputSha256": "59851d2f5c5b5dd2b483bda03ba6c21b93f24174bc3e7144dc12c4b4306e843b",
+    "elementFormulation": "C3D8 full integration",
+    "extractionMethod": "XMAX node displacement, constrained reaction totals, and raw PROBE integration-point stress; see reference README"
+  },
+  "levels": [
+    {
+      "level": 1,
+      "targetSizeM": 0.3,
+      "nodeCount": 671,
+      "elementCount": 290,
+      "degreeOfFreedomCount": 2013,
+      "maximumDisplacementM": 0.008272536393783529,
+      "strainEnergyJ": 4.118017957792842,
+      "rawVonMisesMaxPa": 347040.7396965592,
+      "minimumFactorOfSafety": 720.376518960257,
+      "iterations": 1582,
+      "solveDurationMs": 83.18,
+      "estimatedPeakBytes": 103397610,
+      "peakLocationM": [
+        0.14200445661067057,
+        0.17682372542187894,
+        0.017274575140626275
+      ],
+      "peakFaceId": "face-cantilever-bending-1",
+      "equilibriumRelativeResidual": 2.8223897373630918e-11,
+      "totalReactionN": [
+        -9.923263633027091e-08,
+        -2.569148449538261e-07,
+        999.999999117251
+      ],
+      "rawVonMisesLocationM": [
+        0.14200445661067057,
+        0.17682372542187894,
+        0.017274575140626275
+      ],
+      "displacementProbe": {
+        "distance": 1.0000000028043132e-07,
+        "valueM": 0.008235558492438795,
+        "vectorM": [
+          -5.535753380532626e-09,
+          3.5874669130158456e-06,
+          -0.008235557711074051
+        ],
+        "locationM": [
+          4,
+          0.125,
+          0.24999999999999967
+        ]
+      },
+      "index": 0
+    },
+    {
+      "level": 2,
+      "targetSizeM": 0.21,
+      "nodeCount": 1216,
+      "elementCount": 538,
+      "degreeOfFreedomCount": 3648,
+      "maximumDisplacementM": 0.008280959401117336,
+      "strainEnergyJ": 4.122194182654899,
+      "rawVonMisesMaxPa": 350701.8250793897,
+      "minimumFactorOfSafety": 712.8562845186408,
+      "iterations": 976,
+      "solveDurationMs": 96.585,
+      "estimatedPeakBytes": 105689298,
+      "peakLocationM": [
+        0.11781693692520046,
+        0.1768237254218789,
+        0.48383283749046113
+      ],
+      "peakFaceId": "face-cantilever-bending-2",
+      "equilibriumRelativeResidual": 1.44409045481904e-10,
+      "totalReactionN": [
+        -1.7133624510279333e-06,
+        6.359658684118585e-07,
+        1000.0000041295316
+      ],
+      "rawVonMisesLocationM": [
+        0.11781693692520046,
+        0.1768237254218789,
+        0.48383283749046113
+      ],
+      "displacementProbe": {
+        "distance": 1.0000000028043132e-07,
+        "valueM": 0.008243714485385165,
+        "vectorM": [
+          1.259919929777258e-09,
+          1.4640706567812201e-06,
+          -0.008243714355376752
+        ],
+        "locationM": [
+          4,
+          0.125,
+          0.25000000000000044
+        ]
+      },
+      "index": 1
+    }
+  ],
+  "convergence": {
+    "status": "converged",
+    "globalConverged": true,
+    "stressStable": true,
+    "likelyStressSingularity": false,
+    "warning": null,
+    "changes": {
+      "maximumDisplacement": 0.0010181892146327908,
+      "strainEnergy": 0.0010141346892752797,
+      "rawVonMisesMax": 0.01054943977479877
+    },
+    "stopReason": "criteria-met"
+  },
+  "comparisons": [
+    {
+      "metric": "tip-displacement",
+      "probeId": "free-end-center",
+      "fieldKind": "displacement",
+      "spjutsimValue": 0.008243714355376752,
+      "referenceValue": 0.008181948,
+      "referenceSource": "CalculiX 2.21 C3D8",
+      "relativeError": 0.0075491014336380394,
+      "maximumRelativeError": 0.03,
+      "passed": true
+    },
+    {
+      "metric": "tip-displacement",
+      "probeId": "free-end-center",
+      "fieldKind": "displacement",
+      "spjutsimValue": 0.008243714355376752,
+      "referenceValue": 0.008192,
+      "referenceSource": "Euler-Bernoulli closed form",
+      "relativeError": 0.006312787521576161,
+      "maximumRelativeError": 0.03,
+      "passed": true
+    },
+    {
+      "metric": "strain-energy",
+      "probeId": "free-end-center",
+      "fieldKind": "strain-energy",
+      "spjutsimValue": 4.122194182654899,
+      "referenceValue": 4.090974,
+      "referenceSource": "CalculiX 2.21 C3D8",
+      "relativeError": 0.007631479118395415,
+      "maximumRelativeError": 0.03,
+      "passed": true
+    }
+  ],
+  "passed": true
+}
