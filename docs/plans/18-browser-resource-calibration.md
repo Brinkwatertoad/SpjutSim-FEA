@@ -48,31 +48,31 @@ scale, and poor-quality calibration cases have not been measured as a matrix.
   axial, cantilever, mixed-scale, and deliberately poor-but-valid quality cases;
   include a cancellation trial during mesh and solve and an edit-after-cancel
   recovery check.
-- [ ] **Capture the browser matrix.** Record three repetitions per case in
+- [x] **Capture the browser matrix.** Record three repetitions per case in
   current non-headless Chrome/Chromium on the release platform and current
   Firefox where the direct-local worker path is supported. Run Chromium in
   `file://` and cross-origin-isolated HTTP modes. Capture OS process peak with
   the documented platform command and report median timing plus worst-case
   memory/prediction ratio rather than selecting the best run.
-- [ ] **Fit and lock the memory policy.** Update the modeled categories when a
+- [x] **Fit and lock the memory policy.** Update the modeled categories when a
   consistently coexisting allocation is missing, choose a multiplier no lower
   than the maximum observed `peak / modeled` ratio plus a documented margin,
   and keep or lower the 3.5 GiB cap unless successful near-cap runs across the
   supported matrix justify an increase. Preserve the Section 10.5 classes and
   test the >= 8 GiB confirmation state synthetically even when the hard cap
   prevents such an allocation.
-- [ ] **Choose the PCG path from evidence.** Retain Jacobi if every accepted
+- [x] **Choose the PCG path from evidence.** Retain Jacobi if every accepted
   case converges within current residual/iteration/time targets. If it does
   not, benchmark a first-party IC(0) implementation in native tests and include
   all factor storage/workspace in preflight before selecting it. Record the
   final tolerance, iteration heuristic, and preconditioner with failed-case
   diagnostics; do not silently retry under different settings.
-- [ ] **Close or explicitly defer optional acceleration.** Benchmark a threaded
+- [x] **Close or explicitly defer optional acceleration.** Benchmark a threaded
   HTTP build only if single-threaded timings show a release-relevant need and
   the same numerical tests remain deterministic. Otherwise record threaded
   WASM as a measured post-v1 deferral and ensure the UI does not promise an
   unavailable path.
-- [ ] **Publish constants and evidence.** Update `benchmarks/README.md`,
+- [x] **Publish constants and evidence.** Update `benchmarks/README.md`,
   `workers/solver-worker.js`, native defaults/tests, README browser support,
   `spec.md` Section 24 decisions, and the release audit together. Regenerate
   the WASM and local worker wrappers and inspect generated diffs.

@@ -6,6 +6,8 @@
   var query = new URLSearchParams(root.location.search);
   var smoke = query.get('profile') === 'smoke';
   var repetitions = smoke ? 1 : Math.max(1, Number(query.get('repetitions')) || 3);
+  var checkpointKey = 'spjutsim-resource-v2:' + [location.protocol, query.get('commit'), query.get('browser'),
+    query.get('browserVersion'), repetitions, smoke ? 'smoke' : 'full'].join(':');
   var cases = smoke ? [
     { id: 'smoke-tet4', kind: 'axial', path: '../fixtures/generated-unit-cube-m.step', elementType: 'tet4', targetNodes: 4, size: 0.7 }
   ] : [
@@ -98,9 +100,23 @@
     var solveLatency = performance.now() - started; controller.replaceMaterial({ youngsModulusPa: 2e9, poissonsRatio: 0.25, densityKgM3: 1000 });
     return { meshLatencyMs: meshLatency, solveLatencyMs: solveLatency, editAfterCancelPassed: controller.document.material.youngsModulusPa === 2e9 };
   }
+  function restoreCheckpoint() {
+    try {
+      if (query.get('reset') === '1') { localStorage.removeItem(checkpointKey); }
+      var saved = JSON.parse(localStorage.getItem(checkpointKey) || '[]');
+      return Array.isArray(saved) ? saved : [];
+    } catch (error) { return []; }
+  }
+  function saveCheckpoint(records) {
+    try { localStorage.setItem(checkpointKey, JSON.stringify(records)); } catch (error) { /* Export remains available in the page. */ }
+  }
   async function all() { if (location.protocol !== 'file:') { assert(root.crossOriginIsolated === true, 'HTTP benchmark mode requires cross-origin isolation'); }
-    var cancellation = await cancellationTrial(), records = [];
-    for (var r = 1; r <= repetitions; r += 1) { for (var i = 0; i < cases.length; i += 1) { status.textContent = 'Running ' + cases[i].id + ' repetition ' + r; var row = await run(cases[i], r); row.cancellation = cancellation; records.push(row); } }
+    var records = restoreCheckpoint(), cancellation = records.length ? records[0].cancellation : await cancellationTrial();
+    for (var r = 1; r <= repetitions; r += 1) { for (var i = 0; i < cases.length; i += 1) {
+      if (records.some(function (row) { return row.repetition === r && row.case.id === cases[i].id; })) { continue; }
+      status.textContent = 'Running ' + cases[i].id + ' repetition ' + r; var row = await run(cases[i], r); row.cancellation = cancellation;
+      records.push(row); saveCheckpoint(records);
+    } }
     root.__spjutsimResourceRecords = records; output.textContent = JSON.stringify(records, null, 2); status.textContent = 'Passed: ' + records.length + ' records'; status.dataset.result = 'passed'; document.title = 'Resource benchmarks: Passed'; }
   all().catch(function (error) { status.textContent = (error.diagnostic && error.diagnostic.userMessage) || error.message; status.dataset.result = 'failed'; throw error; });
 }(globalThis));

@@ -16,7 +16,7 @@ def main() -> int:
     parser.add_argument("--margin", type=float, default=0.25)
     args = parser.parse_args()
     records = json.loads(args.matrix.read_text(encoding="utf-8"))
-    errors = validate_matrix(records)
+    errors = validate_matrix(records, require_release_coverage=True)
     if errors:
         print("\n".join(errors))
         return 1

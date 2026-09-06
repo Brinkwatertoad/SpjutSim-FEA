@@ -1,5 +1,6 @@
 {
   "schemaVersion": 2,
+  "repetition": 1,
   "recordedAt": null,
   "application": { "gitCommit": null, "solverRuntimeSha256": null },
   "browser": { "name": null, "version": null, "launchMode": null },

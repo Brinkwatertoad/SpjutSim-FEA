@@ -26,6 +26,7 @@ def valid_record():
     }
     return {
         "schemaVersion": 2,
+        "repetition": 1,
         "recordedAt": "2026-09-04T12:00:00-04:00",
         "application": {"gitCommit": "a" * 40, "solverRuntimeSha256": "b" * 64},
         "browser": {"name": "Chromium", "version": "152.0", "launchMode": "file://"},
@@ -73,7 +74,33 @@ class ResourceRecordTests(unittest.TestCase):
     def test_matrix_requires_three_repetitions_per_case_and_mode(self):
         records = [copy.deepcopy(valid_record()) for _ in range(2)]
         errors = self.module.validate_matrix(records)
-        self.assertTrue(any("three repetitions" in error for error in errors))
+        self.assertTrue(any("repetitions 1, 2, and 3" in error for error in errors))
+
+    def test_matrix_rejects_duplicate_repetition_numbers(self):
+        records = [copy.deepcopy(valid_record()) for _ in range(3)]
+        errors = self.module.validate_matrix(records)
+        self.assertTrue(any("repetitions 1, 2, and 3" in error for error in errors))
+
+    def test_release_matrix_requires_every_case_in_supported_browser_modes(self):
+        records = [copy.deepcopy(valid_record()) for _ in range(3)]
+        errors = self.module.validate_matrix(records, require_release_coverage=True)
+        self.assertTrue(any("missing release coverage" in error for error in errors))
+
+        records = []
+        modes = (("Chromium", "file://"), ("Chromium", "cross-origin-isolated-http"), ("Firefox", "file://"))
+        definitions = (("axial-tet10-25k", "axial", "tet10"),
+                       ("cantilever-tet10-75k", "cantilever", "tet10"),
+                       ("mixed-scale-tet10-150k", "mixed-scale", "tet10"),
+                       ("poor-quality-tet4", "poor-quality", "tet4"))
+        for browser, mode in modes:
+            for case_id, kind, element_type in definitions:
+                for repetition in range(1, 4):
+                    record = valid_record()
+                    record["browser"].update(name=browser, launchMode=mode)
+                    record["case"].update(id=case_id, kind=kind, elementType=element_type)
+                    record["repetition"] = repetition
+                    records.append(record)
+        self.assertEqual([], self.module.validate_matrix(records, require_release_coverage=True))
 
     def test_summary_uses_worst_memory_and_median_time(self):
         records = []
@@ -86,6 +113,13 @@ class ResourceRecordTests(unittest.TestCase):
         summary = self.module.summarize_matrix(records)
         self.assertEqual(200, summary["cases"]["axial-tet10-25k"]["medianWallTimeMs"])
         self.assertEqual(24_000_000, summary["cases"]["axial-tet10-25k"]["worstWasmMemoryHighWaterBytes"])
+        self.assertEqual(1.5, summary["recommendedSafetyMultiplier"])
+
+    def test_summary_does_not_lower_existing_multiplier_floor(self):
+        records = [valid_record()]
+        records[0]["observed"]["wasmMemoryHighWaterBytes"] = 20_000_000
+        records[0]["observed"]["wasmMemoryByPhaseBytes"]["postprocess"] = 20_000_000
+        summary = self.module.summarize_matrix(records, margin=0.1)
         self.assertEqual(1.5, summary["recommendedSafetyMultiplier"])
 
 

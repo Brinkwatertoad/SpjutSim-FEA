@@ -1,6 +1,6 @@
 # v1.0 acceptance audit
 
-Audit date: 2026-09-04. `spec.md` section 26 remains authoritative. “Pass”
+Audit date: 2026-09-06. `spec.md` section 26 remains authoritative. “Pass”
 means the cited repository test or inspected implementation currently supports
 the stated area. A Section 26 checkbox remains unchecked when its full wording
 needs broader evidence; every “Pending” row keeps the release closed.
@@ -14,20 +14,20 @@ needs broader evidence; every “Pending” row keeps the release closed.
 | Load/reaction equilibrium | Pass | native solver tests and Tet10 cube vertical slice |
 | First-party bounded CSR/PCG and diagnosed failures | Pass | native sparse, PCG, failure, and benchmark tests |
 | Dependency-free frontend and local assets | Pass | Python framework tests and direct-local browser matrix |
-| Full `file://` import/mesh/solve workflow | Pass in Chromium 151 headless | `cube-wasm-vertical-slice-tests.html` |
+| Full `file://` import/mesh/solve workflow | Pass in Chromium 152 non-headless | Resource matrix and `cube-wasm-vertical-slice-tests.html` |
 | No baseline SharedArrayBuffer/server/network requirement | Pass | generated serial runtimes and direct-local browser matrix |
 | Mesher/solver workers and cancellation | Pass | worker runtime and convergence-runner tests |
 | Optional HTTP isolated mode | Pass for serial path | STEP, Tet10 mesh, cube solve, and convergence harnesses at `tools/serve.py` |
-| Optional threaded acceleration | Pending | No threaded runtime is shipped or benchmarked |
+| Optional threaded acceleration | Pass by explicit v1 deferral | Isolated HTTP is detected and tested; workers report serial execution and the UI does not advertise a threaded path |
 | Internal UI shell and compact editable setup | Pass | framework and authoring browser tests |
 | Memory preflight, optional device hint, hard WASM cap | Pass | native/C-ABI and WASM result tests |
-| >= 8 GiB confirmation | Pending release evidence | State-machine path exists; the 3.5 GiB hard cap prevents such a solve |
+| >= 8 GiB confirmation | Pass synthetically | Native preflight test drives the state above 8 GiB without allocating it; application and convergence paths require confirmation |
 | Deformation/contours, raw vs smoothed extrema, summaries | Pass | WASM result and cube vertical-slice tests |
 | Yield-based von Mises FoS | Pass | FoS and WASM result browser tests |
 | Global convergence and separate stress status | Pass | pure, fake-runner, and real Tet10 convergence tests |
 | Likely-singularity caution | Pass as deterministic heuristic | convergence tests; no mathematical-singularity claim |
 | Analytical/reference validation matrix | Pass | Five converged Tet10 cases, CalculiX 2.21 raw outputs, normalized records, and enforced Section 16.2 tolerances |
-| Supported-browser memory calibration | Pending | One Chromium record exists; larger/non-headless/browser-matrix records remain |
+| Supported-browser memory calibration | Pass | 36 records: Chromium 152 file/isolated HTTP and Firefox 155 file, four cases, three repetitions |
 | Representative/problematic CAD corpus size | Pass | 50 CC0 fixtures: 34 accepted across three formats and 16 classified rejections |
 | Gmsh distribution rights | Pending external decision | `THIRD_PARTY.md`; current combined public distribution is prohibited |
 

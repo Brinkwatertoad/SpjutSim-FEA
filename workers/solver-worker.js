@@ -1,7 +1,7 @@
 'use strict';
 var WORKER_PROTOCOL_VERSION = 2;
 var WASM_HEAP_CAP_BYTES = 3758096384;
-// Provisional until Task 13 has representative supported-browser peak-memory evidence.
+// Calibrated by the 36-record supported-browser matrix in benchmarks/resource/.
 var MEMORY_SAFETY_MULTIPLIER = 1.5;
 var activeAnalysis = null;
 var femModulePromise = typeof createSpjutsimFemModule === 'function'

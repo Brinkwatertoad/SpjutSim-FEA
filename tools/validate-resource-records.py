@@ -19,7 +19,7 @@ def main() -> int:
                         default=ROOT / "benchmarks/resource/matrix-v2.json")
     args = parser.parse_args()
     records = json.loads(args.matrix.read_text(encoding="utf-8"))
-    errors = validate_matrix(records)
+    errors = validate_matrix(records, require_release_coverage=True)
     if errors:
         print("\n".join(errors))
         return 1

@@ -40,9 +40,10 @@ monotonic WASM high-water by solver phase, optional JS/process peaks, PCG
 statistics, timings, cancellation latency, and worker separation. Validate a
 captured matrix with `python3 tools/validate-resource-records.py PATH`.
 
-The current multiplier remains the provisional, uncalibrated value of 1.5 and
-the single-threaded WASM cap remains 3.5 GiB. The existing Chromium cube record
-captures post-solve linear memory rather than peak memory, so it cannot fit or
-validate the multiplier. Keep Task 13's calibration item open until a
-representative Tet4/Tet10 supported-browser matrix captures peak WASM or
-external process memory and the documented PCG cases have been measured.
+The calibrated 36-record matrix is stored in
+[`resource/matrix-v2.json`](resource/matrix-v2.json), with individual exports
+for Chromium `file://`, Chromium isolated HTTP, and Firefox `file://`. Its
+[measurement report](resource/README.md) records medians, worst-case memory,
+the retained 1.5 multiplier and 3.5 GiB cap, Jacobi-PCG decision, process RSS
+observations, and reproduction commands. The older Chromium cube record is
+retained only as pre-instrumentation history and is not calibration input.

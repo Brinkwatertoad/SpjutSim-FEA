@@ -11,6 +11,8 @@ from typing import Any
 PHASES = ("initial", "inputLoaded", "graphPreflight", "assembly", "solve", "postprocess")
 KINDS = {"axial", "cantilever", "mixed-scale", "poor-quality"}
 LAUNCH_MODES = {"file://", "cross-origin-isolated-http"}
+RELEASE_CASES = {"axial-tet10-25k", "cantilever-tet10-75k", "mixed-scale-tet10-150k", "poor-quality-tet4"}
+RELEASE_TARGETS = {("chromium", "file://"), ("chromium", "cross-origin-isolated-http"), ("firefox", "file://")}
 
 
 def _positive(value: Any, *, allow_zero: bool = False) -> bool:
@@ -27,6 +29,8 @@ def validate_record(record: Any) -> list[str]:
     errors = []
     if record.get("schemaVersion") != 2:
         errors.append("schemaVersion must be 2")
+    if not isinstance(record.get("repetition"), int) or isinstance(record.get("repetition"), bool) or record["repetition"] < 1:
+        errors.append("repetition must be a positive integer")
     app = record.get("application", {})
     if not _hash(app.get("gitCommit"), 40):
         errors.append("application.gitCommit must be a Git SHA-1")
@@ -100,28 +104,49 @@ def validate_record(record: Any) -> list[str]:
     return errors
 
 
-def validate_matrix(records: Any) -> list[str]:
+def _browser_family(name: Any) -> str:
+    lowered = name.lower() if isinstance(name, str) else ""
+    if "chrom" in lowered:
+        return "chromium"
+    if "firefox" in lowered:
+        return "firefox"
+    return lowered
+
+
+def validate_matrix(records: Any, *, require_release_coverage: bool = False) -> list[str]:
     if not isinstance(records, list):
         return ["resource matrix must be an array"]
     errors = []
-    groups = collections.Counter()
+    groups: dict[tuple[Any, Any, Any], set[Any]] = collections.defaultdict(set)
     for index, record in enumerate(records):
         errors.extend(f"records[{index}]: {error}" for error in validate_record(record))
         if isinstance(record, dict):
-            groups[(record.get("browser", {}).get("name"), record.get("browser", {}).get("launchMode"), record.get("case", {}).get("id"))] += 1
-    for group, count in groups.items():
-        if count < 3:
-            errors.append(f"{group} requires three repetitions")
+            groups[(record.get("browser", {}).get("name"), record.get("browser", {}).get("launchMode"), record.get("case", {}).get("id"))].add(record.get("repetition"))
+    for group, repetitions in groups.items():
+        if repetitions != {1, 2, 3}:
+            errors.append(f"{group} requires repetitions 1, 2, and 3")
+    if require_release_coverage:
+        covered = {
+            (_browser_family(record.get("browser", {}).get("name")),
+             record.get("browser", {}).get("launchMode"),
+             record.get("case", {}).get("id"))
+            for record in records if isinstance(record, dict)
+        }
+        for family, mode in sorted(RELEASE_TARGETS):
+            for case_id in sorted(RELEASE_CASES):
+                if (family, mode, case_id) not in covered:
+                    errors.append(f"missing release coverage for {(family, mode, case_id)}")
     return errors
 
 
-def summarize_matrix(records: list[dict[str, Any]], margin: float = 0.25) -> dict[str, Any]:
+def summarize_matrix(records: list[dict[str, Any]], margin: float = 0.25,
+                     multiplier_floor: float = 1.5) -> dict[str, Any]:
     """Return conservative calibration statistics without selecting best runs."""
     ratios = [record["observed"]["wasmMemoryHighWaterBytes"] / record["preflight"]["modeledPeakBytes"] for record in records]
     by_case: dict[str, list[dict[str, Any]]] = collections.defaultdict(list)
     for record in records:
         by_case[record["case"]["id"]].append(record)
-    selected = max(1.0, math.ceil((max(ratios) + margin) * 10) / 10)
+    selected = max(multiplier_floor, math.ceil((max(ratios) + margin) * 10) / 10)
     return {
         "recordCount": len(records),
         "maximumWasmToModeledRatio": max(ratios),

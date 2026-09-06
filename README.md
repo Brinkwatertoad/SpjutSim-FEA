@@ -77,6 +77,14 @@ server to rerun the five-case Tet10 validation matrix. Copy its JSON evidence to
 records with `python3 tools/build-validation-records.py`, and enforce all
 Section 16.2 limits with `python3 tools/validate-validation-records.py`.
 
+Open `tests/browser/resource-benchmark-tests.html?repetitions=3` in current
+desktop Chromium under both direct `file://` and `tools/serve.py`, and in
+current desktop Firefox under direct `file://`, to reproduce the resource
+matrix. Supply `commit`, `memoryBytes`, `architecture`, `browser`, and
+`browserVersion` query parameters. The harness checkpoints completed cases in
+browser storage, exposes the final array as `window.__spjutsimResourceRecords`,
+and is documented in `benchmarks/resource/README.md`.
+
 Run `python3 tools/validate-cad-corpus.py`, then open
 `tests/browser/cad-corpus-tests.html` from the optional HTTP server (or with the
 documented local-file browser access) to audit the 50-entry STEP/IGES/BREP

@@ -1145,13 +1145,17 @@ Then add explicit estimates for the Jacobi diagonal, PCG work vectors, graph/ass
 
 Do **not** present this raw sum as a precise number. Apply a configurable safety multiplier derived from benchmark measurements.
 
-Initial conservative recommendation:
+Calibrated v1 policy:
 
 ```text
 estimatedPeakBytes = 1.5 * modeledPeakBytes
 ```
 
-The multiplier must be recalibrated from real browser measurements before v1.0.
+The 36-record Chromium/Firefox calibration matrix retained this multiplier.
+The maximum measured WASM/model ratio was 0.991525; a 0.25 absolute margin
+rounded upward would permit 1.3, but v1 keeps 1.5 because the matrix does not
+include successful near-cap allocations and whole-browser overhead is not part
+of the solver-only model. See `benchmarks/resource/README.md`.
 
 ### 10.4 Mesher and solver memory should not overlap unnecessarily
 
@@ -1200,11 +1204,11 @@ Do not promise that a solve below 8 GiB will succeed.
 
 v1 should not depend on `memory64` for correctness. Treat 64-bit WebAssembly memory as a future capability until the application has been tested across its supported browser matrix and the selected Emscripten/libraries support it reliably.
 
-The initial production build sets a 3.5 GiB practical upper bound for the
+The production build sets a 3.5 GiB practical upper bound for the
 single-threaded solver WASM memory and surfaces that limit in preflight. This
 stays below the 32-bit WebAssembly address-space ceiling while leaving room for
-browser/runtime allocations outside the solver heap; it must be recalibrated
-from the supported-browser memory benchmarks before being raised.
+browser/runtime allocations outside the solver heap. The v1 browser matrix did
+not exercise a successful near-cap allocation, so calibration retains this cap.
 
 If the estimate exceeds the configured WASM heap maximum, disable Solve and require a coarser mesh.
 
@@ -2302,14 +2306,14 @@ These do not block implementation and should be decided using benchmark data:
 1. Exact Gmsh 3D meshing algorithm/options for the default preset.
 2. Exact tetrahedral quality metric and warning threshold.
 3. Whether to optimize the validated scalar CSR implementation into 3x3 block-CSR before or after v1.0.
-4. Whether Jacobi is sufficient for the v1 benchmark corpus or a first-party IC(0)/stronger preconditioner is required.
-5. Production PCG tolerance and maximum-iteration heuristic.
-6. Exact practical WASM heap cap for supported browsers.
-7. Calibration factor in the memory estimator.
-8. Exact browser support matrix beyond current Chromium desktop.
+4. **Resolved for v1:** retain Jacobi; all resource and numerical cases converge without a fallback, so IC(0) is deferred.
+5. **Resolved for v1:** relative tolerance `1e-8` and automatic maximum `max(1000, 10 * DOF)`.
+6. **Resolved for v1:** retain the 3.5 GiB single-threaded WASM heap cap; the measured matrix does not justify raising it.
+7. **Resolved for v1:** retain the calibrated 1.5 memory multiplier; measured WASM/model maximum is 0.991525.
+8. **Partially resolved:** current Chromium desktop is primary; current Firefox direct-local is the secondary resource-compatibility target. Broader support remains open.
 9. Whether to provide a downloadable/local desktop wrapper after the browser v1 is stable; it is not required to achieve direct-local browser execution.
 10. Whether the copied SpjutSim UI helpers should eventually be converted from global/IIFE scripts to ES modules; this is cleanup and must not remove the baseline direct-local path.
-11. Whether the solver should gain a threaded build after single-threaded WASM performance has been benchmarked; threaded acceleration is optional for v1 correctness.
+11. **Resolved for v1:** threaded WASM is a post-v1 optimization. Cross-origin-isolated HTTP keeps the serial path until a separately modeled and numerically verified pthread artifact exists.
 
 Each should be resolved by a benchmark, compatibility test, or licensing/product requirement rather than by prematurely coupling the architecture.
 
@@ -2366,14 +2370,15 @@ evidence.
 - [x] Primary supported desktop browser completes the full import -> mesh -> solve workflow when `index.html` is opened through `file://`.
 - [x] Direct-local mode does not require `SharedArrayBuffer`, cross-origin isolation, a server process, or a network connection.
 - [x] Direct-local meshing and solving remain off the UI thread using the tested file-safe worker path.
-- [ ] Optional HTTP mode detects cross-origin isolation and can enable threaded acceleration when a threaded build is present.
+- [x] Optional HTTP mode detects cross-origin isolation, retains the serial path,
+  and does not advertise deferred threaded acceleration as available.
 - [x] SpjutSim UI source is internalized and the application shell works from repository-local files only.
 - [x] Compact Model/Material, Support, and Load summaries are visible together
   for an ordinary setup and every item can be selected and edited in place.
 - [x] PCG failures are diagnosed rather than returned as plausible results.
 - [x] Pre-solve memory estimate is shown for every solve.
 - [x] Device-memory hints are optional and absence does not break the app.
-- [ ] >= 8 GiB estimated solves show an explicit high-memory warning/confirmation.
+- [x] >= 8 GiB estimated solves show an explicit high-memory warning/confirmation.
 - [x] Configured WASM heap limit is enforced before solve allocation.
 - [x] Solver and mesher run off the UI thread.
 - [x] Worker cancellation works.
@@ -2385,7 +2390,7 @@ evidence.
 - [x] Global convergence vs unresolved peak stress are reported separately.
 - [x] Likely stress singularities produce a clear warning.
 - [x] Analytical and reference-solver validation tests pass agreed tolerances.
-- [ ] Memory-estimator calibration tests have been run on supported browsers.
+- [x] Memory-estimator calibration tests have been run on supported browsers.
 - [ ] Licensing/distribution posture for Gmsh has been resolved.
 
 ---

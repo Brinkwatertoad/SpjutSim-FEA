@@ -70,7 +70,7 @@ decision must be explicitly closed before release.
   concentration case. Record source solver/version, units, probe definitions,
   mesh sequence, and tolerances; meet Section 16.2 for converged Tet10 results
   and never tolerance-test a singular raw peak.
-- [ ] **Expand regression and resource evidence (carried forward to
+- [x] **Expand regression and resource evidence (completed by
   [Task 17](17-cad-regression-corpus.md) and
   [Task 18](18-browser-resource-calibration.md)).** Grow `tests/fixtures` and
   `benchmarks/cad-corpus` toward the required representative/problematic corpus,
