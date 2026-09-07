@@ -2,6 +2,13 @@
 
 SpjutSim FEA is a local-first browser application for simple static finite element analysis of a single STEP, IGES, or OpenCASCADE BREP solid. The browser application has no runtime network or server dependency; geometry and analysis execute on the user's machine.
 
+## Development status
+
+v1 is unreleased. The approved interface, result-clarity, and bounded STL work
+is scheduled in [plans 21–30](docs/plans/README.md), with owner usability reviews
+after each package. These plans precede the final plan 20 candidate audit; they
+do not describe features already implemented.
+
 ## Run locally
 
 Open `web/index.html` directly in a current Chromium desktop browser. The startup check renders the repository-local Three.js scene, initializes serial Gmsh/OpenCASCADE in two fresh disposable workers, creates a unit box in each, and starts the solver worker shell. No network requests or local server are required.
@@ -182,9 +189,10 @@ The compact Model editor can rotate the part around a global X, Y, or Z axis by
 an adjustable angle (90 degrees by default), reset the imported orientation, or
 align one selected CAD face normal to a signed global axis. Geometry orientation
 invalidates the mesh and results; loads, gravity, support components, material,
-and CAD `FaceId` references remain in the global analysis frame. STL and OBJ are
-intentionally deferred until durable surface-patch identity and solid validation
-are defined for tessellated input.
+and CAD `FaceId` references remain in the global analysis frame. STL is not
+implemented yet; plans 28–29 schedule explicit units, durable
+surface-patch identity, solid validation, and the accepted analysis path before
+v1. OBJ remains deferred.
 
 The left pane is one compact Setup sequence: Model, Material, Supports, Loads,
 Mesh, and Solve Preflight. Model owns CAD import/replacement and collapses to a

@@ -1,6 +1,6 @@
 # v1.0 acceptance audit
 
-Audit date: 2026-09-06; distribution gate updated 2026-09-07. `spec.md` section 26 remains authoritative. “Pass”
+Audit date: 2026-09-06; distribution and revised pre-v1 scope updated 2026-09-07. `spec.md` section 26 remains authoritative. “Pass”
 means the cited repository test or inspected implementation currently supports
 the stated area. A Section 26 checkbox remains unchecked when its full wording
 needs broader evidence; every “Pending” row keeps the release closed.
@@ -31,10 +31,33 @@ needs broader evidence; every “Pending” row keeps the release closed.
 | Representative/problematic CAD corpus size | Pass | 50 CC0 fixtures: 34 accepted across three formats and 16 classified rejections |
 | Gmsh distribution rights | Pass | `distribution-policy.md`, `artifact-manifest.json`, `SOURCE.md`; owner approval on 2026-09-07 and successful staged-source audit with `--require-approved` |
 
+## Revised pre-v1 gates — all pending
+
+The Pass rows above record the earlier evidence scope; they are not acceptance
+of the approved changes. New boundary-range/contour, resize, and authoring
+behavior requires regression evidence even where an earlier row passed.
+
+| Area | Status | Required evidence |
+| --- | --- | --- |
+| Responsive workspace and bounded overlays | Pending | Task 21 regression and owner M21 |
+| Accurate surface extrema and result explanation | Pending | Task 22 numerical/postprocessing regression and owner M22 |
+| Orthographic/isometric and interactive gizmo | Pending | Task 23 navigation tests and owner M23 |
+| Contextual display and vertical/horizontal legend | Pending | Task 24 presentation tests and owner M24 |
+| Transactional assignment previews | Pending | Task 25 state/integration tests and owner M25 |
+| Setup and explicitly triggered solve checks | Pending | Task 26 preflight/recovery tests and owner M26 |
+| Bounded engineering undo/redo | Pending | Task 27 invalidation/memory tests and owner M27 |
+| STL feasibility and accepted patch contract | Pending | Task 28 runtime evidence and owner M28 decision |
+| Accepted STL import/mesh/solve subset | Pending | Task 29 topology/numerical/resource/corpus evidence and owner M29 |
+| Integrated usability and changed-path regression | Pending | Task 30 complete applicable suites and owner M30 |
+| Exact final candidate | Pending | Task 20 audit after accepted Tasks 21–30 |
+
 The project must not be tagged or described as v1.0-ready while any Pending row
 that maps to section 26 remains unresolved.
 
-The next work is split without changing the gate: Task 16 owns numerical and
+Historical evidence ownership: Task 16 owns numerical and
 independent-solver validation, Task 17 owns the CAD corpus and quality evidence,
 Task 18 owns browser/resource/PCG calibration, Task 19 owns distribution rights,
 and Task 20 reruns and binds the complete acceptance record to one candidate.
+
+The revised execution and mandatory manual review schedule is in
+`../plans/README.md`. Complete Tasks 21–30 before final Task 20 acceptance.
