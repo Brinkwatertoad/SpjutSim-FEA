@@ -1898,6 +1898,11 @@ Suggested starting targets for converged Tet10 benchmarks:
 
 Do not apply a fixed tolerance to mathematically singular peak stress.
 
+Numerical release validation must reject failed benchmark outcomes, preserve
+the signs of compared displacement/reaction components, and recompute relative
+errors from the recorded actual and reference values. A structurally valid
+failure record does not satisfy release acceptance.
+
 ### 16.3 Regression fixtures
 
 Each solver/mesher release should run a fixed corpus containing:
@@ -1925,6 +1930,11 @@ For representative mesh sizes, record:
 - UI responsiveness.
 
 These tests are required before adjusting the product's memory-warning thresholds.
+
+Every repetition in the release resource matrix must complete successfully,
+with final relative residual at or below its recorded solver tolerance.
+Failed, cancelled, or preflight-blocked runs remain diagnostic evidence and
+cannot fulfill the successful-run requirement.
 
 ---
 

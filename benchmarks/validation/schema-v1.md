@@ -25,3 +25,13 @@ nonsingular `raw-recovery-stress` probe; smoothed stresses are not admissible.
 
 Run `python3 tools/validate-validation-records.py` to check the schema, hashes,
 probes, finite values, provenance, convergence evidence, and tolerance limits.
+The command exits unsuccessfully if any benchmark has `passed: false`, even
+when that record is structurally valid.
+
+Displacement and reaction components retain their global-coordinate signs.
+For each comparison, `relativeError` must agree with
+`abs(spjutsimValue - referenceValue) / abs(referenceValue)`. Both values must
+be finite numbers and the reference must be nonzero; zero-reference checks
+need a separately defined absolute tolerance. Stored errors allow only
+floating-point roundoff (`rel_tol=1e-12`, `abs_tol=1e-15`), and acceptance uses
+the recomputed error with the unchanged Section 16.2 engineering limit.

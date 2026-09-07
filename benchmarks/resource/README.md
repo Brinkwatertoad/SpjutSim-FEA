@@ -70,3 +70,8 @@ matching checkpoint and start a clean run. Combine the three mode files into
 python3 tools/validate-resource-records.py benchmarks/resource/matrix-v2.json
 python3 tools/analyze-resource-records.py benchmarks/resource/matrix-v2.json
 ```
+
+Release validation requires every repetition to report a successful solve.
+A `passed` solve must have a finite final relative residual no greater than its
+recorded tolerance. Failed, cancelled, and preflight-blocked outcomes can be
+retained as diagnostic records, but do not satisfy the release calibration gate.

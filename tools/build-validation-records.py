@@ -51,7 +51,7 @@ def displacement_at(deck: str, raw: str, point: list[float], component: int) -> 
         displacements,
         key=lambda item: sum((nodes[item][axis] - point[axis]) ** 2 for axis in range(3)),
     )
-    return abs(displacements[node][component])
+    return displacements[node][component]
 
 
 def total_reaction(raw: str, set_name: str, component: int) -> float:
@@ -59,7 +59,7 @@ def total_reaction(raw: str, set_name: str, component: int) -> float:
     match = re.search(pattern, raw, re.DOTALL)
     if not match:
         raise ValueError(f"missing total reaction for {set_name}")
-    return abs(float(match.group(1).split()[component]))
+    return float(match.group(1).split()[component])
 
 
 def raw_von_mises_values(raw: str) -> list[float]:
@@ -80,13 +80,13 @@ def raw_von_mises_values(raw: str) -> list[float]:
 
 
 def comparison(metric, probe, field, actual, reference, limit, source):
-    error = relative_error(abs(actual), abs(reference))
+    error = relative_error(actual, reference)
     return {
         "metric": metric,
         "probeId": probe,
         "fieldKind": field,
-        "spjutsimValue": abs(actual),
-        "referenceValue": abs(reference),
+        "spjutsimValue": actual,
+        "referenceValue": reference,
         "referenceSource": source,
         "relativeError": error,
         "maximumRelativeError": limit,
@@ -106,23 +106,24 @@ def build_record(case: dict, manifest: dict, reference_root: pathlib.Path) -> di
     comparisons = []
 
     if case_id in ("axial-traction", "uniform-pressure"):
-        displacement = abs(final["displacementProbe"]["vectorM"][0])
+        displacement = final["displacementProbe"]["vectorM"][0]
         calc_displacement = displacement_at(deck, raw, [1, 0.5, 0.5], 0)
+        force = 1000 if case_id == "axial-traction" else -1000
         comparisons.extend([
             comparison("axial-displacement", "loaded-face-center", "displacement", displacement, calc_displacement, 0.01, calc),
-            comparison("reaction-balance", "support-resultant", "reaction", final["totalReactionN"][0], 1000, 0.001, calc),
-            comparison("strain-energy", "loaded-face-center", "strain-energy", final["strainEnergyJ"], 0.5 * 1000 * calc_displacement, 0.03, calc),
+            comparison("reaction-balance", "support-resultant", "reaction", final["totalReactionN"][0], total_reaction(raw, "XMIN", 0), 0.001, calc),
+            comparison("strain-energy", "loaded-face-center", "strain-energy", final["strainEnergyJ"], 0.5 * force * calc_displacement, 0.03, calc),
         ])
         if case_id == "axial-traction":
             comparisons.append(comparison("axial-stress", "axial-interior", "raw-recovery-stress", final["rawVonMisesMaxPa"], sum(raw_von_mises_values(raw)) / 8, 0.01, calc))
     elif case_id == "cantilever-bending":
-        displacement = abs(final["displacementProbe"]["vectorM"][2])
+        displacement = final["displacementProbe"]["vectorM"][2]
         calc_displacement = displacement_at(deck, raw, [4, 0.125, 0.25], 2)
-        beam_theory = 1000 * 4 ** 3 / (3 * 1e9 * (0.25 * 0.5 ** 3 / 12))
+        beam_theory = -1000 * 4 ** 3 / (3 * 1e9 * (0.25 * 0.5 ** 3 / 12))
         comparisons.extend([
             comparison("tip-displacement", "free-end-center", "displacement", displacement, calc_displacement, 0.03, calc),
             comparison("tip-displacement", "free-end-center", "displacement", displacement, beam_theory, 0.03, "Euler-Bernoulli closed form"),
-            comparison("strain-energy", "free-end-center", "strain-energy", final["strainEnergyJ"], 0.5 * 1000 * calc_displacement, 0.03, calc),
+            comparison("strain-energy", "free-end-center", "strain-energy", final["strainEnergyJ"], 0.5 * -1000 * calc_displacement, 0.03, calc),
         ])
     elif case_id == "gravity-reaction":
         comparisons.append(comparison("reaction-balance", "support-resultant", "reaction", final["totalReactionN"][2], 9810, 0.001, "CalculiX reaction plus constrained-node body load"))

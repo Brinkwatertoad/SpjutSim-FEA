@@ -1,5 +1,6 @@
 import copy
 import importlib.util
+import json
 import pathlib
 import unittest
 
@@ -54,6 +55,23 @@ class ResourceRecordTests(unittest.TestCase):
 
     def test_accepts_complete_conservative_schema_v2_record(self):
         self.assertEqual([], self.module.validate_record(valid_record()))
+
+    def test_release_rejects_unsuccessful_repetitions(self):
+        original = json.loads((ROOT / 'benchmarks/resource/matrix-v2.json').read_text())
+        for outcome in ('failed', 'cancelled', 'preflight-blocked'):
+            with self.subTest(outcome=outcome):
+                records = copy.deepcopy(original)
+                records[0]['solve']['outcome'] = outcome
+                self.assertEqual([], self.module.validate_record(records[0]))
+                errors = self.module.validate_matrix(records, require_release_coverage=True)
+                self.assertTrue(any('successful solve' in error for error in errors))
+
+    def test_passed_solve_must_meet_its_residual_tolerance(self):
+        record = valid_record()
+        record['solve']['finalRelativeResidual'] = 0.5
+        self.assertTrue(any('residual' in error for error in self.module.validate_record(record)))
+        record['solve']['finalRelativeResidual'] = 1e-8
+        self.assertEqual([], self.module.validate_record(record))
 
     def test_rejects_underprediction_and_nonmonotonic_high_water(self):
         record = valid_record()

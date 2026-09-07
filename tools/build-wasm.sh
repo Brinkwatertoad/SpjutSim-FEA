@@ -2,13 +2,29 @@
 set -eu
 
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-EMSDK_ROOT=${SPJUTSIM_EMSDK_ROOT:-"$ROOT/build/emsdk"}
-if [ -f "$EMSDK_ROOT/emsdk_env.sh" ]; then
-  # shellcheck disable=SC1091
-  BUILD_WASM_DIRECTORY=$PWD
-  cd "$EMSDK_ROOT"
-  . ./emsdk_env.sh >/dev/null
-  cd "$BUILD_WASM_DIRECTORY"
+if [ -z "${EMXX:-}" ]; then
+  BUILD_WASM_SDK=${SPJUTSIM_EMSDK_ROOT:-}
+  if [ -n "$BUILD_WASM_SDK" ]; then
+    if [ ! -f "$BUILD_WASM_SDK/emsdk_env.sh" ]; then
+      echo "SPJUTSIM_EMSDK_ROOT must name an SDK containing emsdk_env.sh: $BUILD_WASM_SDK" >&2
+      exit 1
+    fi
+  else
+    for BUILD_WASM_CANDIDATE in "${SPJUTSIM_GMSH_BUILD_ROOT:-$ROOT/build/gmsh-local-runtime}/emsdk" "$ROOT/build/emsdk"; do
+      if [ -f "$BUILD_WASM_CANDIDATE/emsdk_env.sh" ]; then
+        BUILD_WASM_SDK=$BUILD_WASM_CANDIDATE
+        break
+      fi
+    done
+  fi
+  if [ -n "$BUILD_WASM_SDK" ]; then
+    # Source from the SDK directory: emsdk_env.sh uses PWD under POSIX sh.
+    BUILD_WASM_DIRECTORY=$PWD
+    cd "$BUILD_WASM_SDK"
+    # shellcheck disable=SC1091
+    . ./emsdk_env.sh >/dev/null
+    cd "$BUILD_WASM_DIRECTORY"
+  fi
 fi
 : "${EMXX:=$(command -v em++ || true)}"
 if [ -z "$EMXX" ]; then

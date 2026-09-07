@@ -104,6 +104,24 @@ wrapper after changing the native FEM core or browser bridge:
 tools/build-wasm.sh
 ```
 
+On macOS and WSL/Linux, use a host-native Emscripten SDK (the checked-in
+runtime uses version 3.1.74). The build script selects the compiler in this
+order:
+
+1. `EMXX`, when explicitly set to a compiler executable or command on `PATH`.
+2. `SPJUTSIM_EMSDK_ROOT`, when set to a directory containing `emsdk_env.sh`.
+3. The SDK at `${SPJUTSIM_GMSH_BUILD_ROOT:-build/gmsh-local-runtime}/emsdk`,
+   then `build/emsdk`, relative to the checkout for the default paths.
+4. `em++` already available on `PATH`, including an activated external SDK.
+
+For an SDK outside the checkout, run
+`SPJUTSIM_EMSDK_ROOT="/path/to/emsdk" tools/build-wasm.sh`. Paths containing
+spaces are supported. Explicit `EMXX` skips SDK activation; a missing explicit
+SDK directory reports an error. When moving between macOS and WSL, install and
+activate the SDK on the destination OS; downloaded compiler binaries are
+platform-specific. Native tests require Python 3, CMake, and a C++17 compiler
+on each host.
+
 Rebuilding the pinned Gmsh/OpenCASCADE artifact is an infrequent dependency-update operation. It downloads and compiles the toolchain and third-party sources under ignored `build/` paths:
 
 ```sh

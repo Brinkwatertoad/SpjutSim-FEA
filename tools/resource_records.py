@@ -93,6 +93,11 @@ def validate_record(record: Any) -> list[str]:
     for field in ("relativeTolerance", "iterations", "finalRelativeResidual", "wallTimeMs"):
         if not _positive(solve.get(field), allow_zero=field in {"iterations", "finalRelativeResidual"}):
             errors.append(f"solve.{field} is invalid")
+    if (solve.get("outcome") == "passed"
+            and _positive(solve.get("relativeTolerance"))
+            and _positive(solve.get("finalRelativeResidual"), allow_zero=True)
+            and solve["finalRelativeResidual"] > solve["relativeTolerance"]):
+        errors.append("passed solve residual exceeds relativeTolerance")
     durations = solve.get("phaseDurationMs")
     if not isinstance(durations, dict) or any(not _positive(durations.get(phase), allow_zero=True) for phase in ("input", "preflight", "assembly", "solve", "postprocess")):
         errors.append("solve.phaseDurationMs is incomplete")
@@ -122,6 +127,8 @@ def validate_matrix(records: Any, *, require_release_coverage: bool = False) -> 
         errors.extend(f"records[{index}]: {error}" for error in validate_record(record))
         if isinstance(record, dict):
             groups[(record.get("browser", {}).get("name"), record.get("browser", {}).get("launchMode"), record.get("case", {}).get("id"))].add(record.get("repetition"))
+            if require_release_coverage and record.get("solve", {}).get("outcome") != "passed":
+                errors.append(f"records[{index}]: release calibration requires a successful solve for every repetition")
     for group, repetitions in groups.items():
         if repetitions != {1, 2, 3}:
             errors.append(f"{group} requires repetitions 1, 2, and 3")

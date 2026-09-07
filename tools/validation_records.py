@@ -21,6 +21,10 @@ MAXIMUM_TOLERANCES = {
 HEX_DIGITS = frozenset("0123456789abcdef")
 
 
+def _finite_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
 def _is_sha256(value: Any) -> bool:
     return (
         isinstance(value, str)
@@ -187,18 +191,32 @@ def validate_record(
         allowed = MAXIMUM_TOLERANCES.get(metric)
         limit = comparison.get("maximumRelativeError")
         error = comparison.get("relativeError")
+        valid_limit = _finite_number(limit) and allowed is not None and 0 <= limit <= allowed
         if allowed is None:
             errors.append(f"{prefix}.metric is unknown")
-        elif not isinstance(limit, (int, float)) or limit > allowed:
-            errors.append(f"{prefix} tolerance must be <= {allowed}")
-        if not isinstance(error, (int, float)) or not math.isfinite(error):
-            errors.append(f"{prefix}.relativeError must be finite")
-            comparison_passes = False
+        elif not valid_limit:
+            errors.append(f"{prefix} tolerance must be finite and 0 <= tolerance <= {allowed}")
+        actual = comparison.get("spjutsimValue")
+        reference = comparison.get("referenceValue")
+        computed_error = None
+        if not _finite_number(actual):
+            errors.append(f"{prefix}.spjutsimValue must be finite")
+        if not _finite_number(reference) or reference == 0:
+            errors.append(f"{prefix}.referenceValue must be finite and nonzero for relative comparison")
+        elif _finite_number(actual):
+            computed_error = abs(actual - reference) / abs(reference)
+        if not _finite_number(error) or error < 0:
+            errors.append(f"{prefix}.relativeError must be finite and nonnegative")
+        elif computed_error is not None and not math.isclose(error, computed_error, rel_tol=1e-12, abs_tol=1e-15):
+            # Allow only floating-point/JSON roundoff, not additional engineering tolerance.
+            errors.append(f"{prefix}.relativeError is inconsistent with its signed values")
+        if computed_error is None or not math.isfinite(computed_error):
+            expected_pass = False
         else:
-            expected_pass = isinstance(limit, (int, float)) and error <= limit
-            if comparison.get("passed") is not expected_pass:
-                errors.append(f"{prefix}.passed is inconsistent with its error and limit")
-            comparison_passes = comparison_passes and expected_pass
+            expected_pass = valid_limit and computed_error <= limit
+        if comparison.get("passed") is not expected_pass:
+            errors.append(f"{prefix}.passed is inconsistent with its computed error and limit")
+        comparison_passes = comparison_passes and expected_pass
         if metric in ("axial-stress", "local-stress") and comparison.get("fieldKind") != "raw-recovery-stress":
             errors.append(f"{prefix}.fieldKind must be raw-recovery-stress")
         probe_id = comparison.get("probeId")

@@ -94,6 +94,63 @@ class ValidationRecordTests(unittest.TestCase):
             [], self.module.validate_record(valid_record(), ROOT, check_files=False)
         )
 
+    def test_recomputes_error_from_signed_values(self):
+        for actual in (0.101, -1.01e-4):
+            with self.subTest(actual=actual):
+                record = valid_record()
+                record['comparisons'][0]['spjutsimValue'] = actual
+                errors = self.module.validate_record(record, ROOT, check_files=False)
+                self.assertTrue(any('relativeError' in error for error in errors))
+
+    def test_rejects_invalid_comparison_numbers(self):
+        for field, values in (
+            ('spjutsimValue', (None, True, '0.1', float('inf'))),
+            ('referenceValue', (None, False, '0.1', 0)),
+            ('relativeError', (-1, False)),
+            ('maximumRelativeError', (-1, True, float('nan'))),
+        ):
+            for value in values:
+                with self.subTest(field=field, value=value):
+                    record = valid_record()
+                    record['comparisons'][0][field] = value
+                    self.assertTrue(self.module.validate_record(record, ROOT, check_files=False))
+
+    def test_cli_rejects_consistent_failed_benchmark(self):
+        record = json.loads((ROOT / 'benchmarks/validation/records/axial-traction.json').read_text())
+        comparison = record['comparisons'][0]
+        comparison.update(spjutsimValue=2 * comparison['referenceValue'], relativeError=1, passed=False)
+        record['passed'] = False
+        self.assertEqual([], self.module.validate_record(record, ROOT))
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / 'failed.json'
+            path.write_text(json.dumps(record))
+            result = subprocess.run(
+                ['python3', 'tools/validate-validation-records.py', '--record', str(path)],
+                cwd=ROOT, text=True, capture_output=True,
+            )
+        self.assertNotEqual(0, result.returncode, result.stdout)
+        self.assertIn('did not pass', result.stderr)
+
+    def test_builder_rejects_reversed_pressure_components(self):
+        builder = ROOT / 'tools/build-validation-records.py'
+        original = json.loads((ROOT / 'benchmarks/validation/spjutsim-browser-evidence.json').read_text())
+        for field in ('displacementProbe', 'totalReactionN'):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as directory:
+                evidence = copy.deepcopy(original)
+                case = next(row for row in evidence['cases'] if row['caseId'] == 'uniform-pressure')
+                final = case['levels'][-1]
+                vector = final[field]['vectorM'] if field == 'displacementProbe' else final[field]
+                vector[0] *= -1
+                path = pathlib.Path(directory) / 'evidence.json'
+                path.write_text(json.dumps(evidence))
+                output = pathlib.Path(directory) / 'records'
+                subprocess.run(['python3', str(builder), '--evidence', str(path), '--output', str(output)], check=True)
+                record = json.loads((output / 'uniform-pressure.json').read_text())
+                self.assertFalse(record['passed'])
+                metric = 'axial-displacement' if field == 'displacementProbe' else 'reaction-balance'
+                comparison = next(row for row in record['comparisons'] if row['metric'] == metric)
+                self.assertAlmostEqual(2, comparison['relativeError'], places=8)
+
     def test_rejects_nonfinite_and_wrong_units(self):
         record = valid_record()
         record["levels"][1]["strainEnergyJ"] = float("nan")

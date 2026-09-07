@@ -34,6 +34,8 @@ def main() -> int:
             manifest=manifest,
             check_files=not args.no_file_checks,
         )
+        if record.get("passed") is not True:
+            errors.append("benchmark did not pass numerical/convergence acceptance")
         if errors:
             failures += 1
             for error in errors:
