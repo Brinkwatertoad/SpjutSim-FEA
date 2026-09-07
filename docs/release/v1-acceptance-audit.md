@@ -1,6 +1,6 @@
 # v1.0 acceptance audit
 
-Audit date: 2026-09-06. `spec.md` section 26 remains authoritative. “Pass”
+Audit date: 2026-09-06; distribution gate updated 2026-09-07. `spec.md` section 26 remains authoritative. “Pass”
 means the cited repository test or inspected implementation currently supports
 the stated area. A Section 26 checkbox remains unchecked when its full wording
 needs broader evidence; every “Pending” row keeps the release closed.
@@ -29,7 +29,7 @@ needs broader evidence; every “Pending” row keeps the release closed.
 | Analytical/reference validation matrix | Pass | Five converged Tet10 cases, CalculiX 2.21 raw outputs, normalized records, and enforced Section 16.2 tolerances |
 | Supported-browser memory calibration | Pass | 36 records: Chromium 152 file/isolated HTTP and Firefox 155 file, four cases, three repetitions |
 | Representative/problematic CAD corpus size | Pass | 50 CC0 fixtures: 34 accepted across three formats and 16 classified rejections |
-| Gmsh distribution rights | Pending external decision | `THIRD_PARTY.md`; current combined public distribution is prohibited |
+| Gmsh distribution rights | Pass | `distribution-policy.md`, `artifact-manifest.json`, `SOURCE.md`; owner approval on 2026-09-07 and successful staged-source audit with `--require-approved` |
 
 The project must not be tagged or described as v1.0-ready while any Pending row
 that maps to section 26 remains unresolved.

@@ -1,6 +1,6 @@
 # Local Web FEA — Development Specification
 
-**Status:** v1 feature implementation complete; release validation, calibration, corpus, and distribution gates remain open
+**Status:** v1 feature implementation and validation, calibration, corpus, and distribution gates complete; Task 20 candidate acceptance remains open
 **Target:** v1.0 local-first browser application  
 **Primary use case:** Simple static finite element simulations on homogeneous, single-body mechanical parts  
 **Primary CAD sources:** STEP, IGES, and OpenCASCADE BREP
@@ -2281,15 +2281,32 @@ Keep full diagnostic logs available behind a developer/debug panel.
 
 ## 22. Licensing and Distribution Decision
 
-This is the only major non-technical decision that should be settled before publicly distributing v1.0.
+On 2026-09-06 the copyright holder approved GPL-2.0-or-later for first-party
+SpjutSim FEA code and the copied UI foundation files. This does not relicense
+the separate UI Kit project or override third-party notices. The decision and
+final-review status are recorded in `docs/release/distribution-policy.md`.
 
 Gmsh is GPL-2.0-or-later, and common browser WASM packages statically include Gmsh/OpenCASCADE. Distribution of that WASM artifact carries Gmsh's license obligations unless a separate commercial license is obtained.
 
-Therefore:
+The v1 path is GPL-compatible source accompaniment. Each browser/folder release
+includes exact application source, pinned upstream source archives, notices,
+and build instructions. `docs/release/artifact-manifest.json` covers all
+vendor/generated assets and UI provenance. `tools/audit-distribution.py` checks
+hashes, coverage, local runtime URLs, source/build references, and policy
+consistency; its staged-release mode also verifies actual corresponding-source
+archive contents. `tools/package-distribution.py` creates the local source-
+accompanied stage. These are narrow Python packaging steps, not frontend tooling.
 
-- development can proceed with Gmsh now;
-- keep the mesher isolated behind the backend contract;
-- before proprietary distribution, decide whether the application will comply with the GPL obligations, obtain an appropriate Gmsh commercial license, or replace the meshing backend.
+Wrangler serves only that stage and requires a successful audit with final owner
+review bound to the artifact-manifest hash. A missing/blocked decision, missing
+source package, or stale final review prevents publication through that path.
+The literal URL audit is supplemented by offline browser verification. Final
+owner review and Task 20's complete candidate acceptance remain separate gates.
+
+Keep the mesher isolated behind its backend contract. A future proprietary
+release requires adequate rights to all retained code or a separately designed
+backend replacement; it does not revoke rights granted for earlier GPL versions.
+CAD authoring and first-party mesher/kernel replacements remain outside v1.
 
 This licensing question is one reason the mesher abstraction is a v1 architectural requirement rather than cleanup work.
 
@@ -2401,7 +2418,7 @@ evidence.
 - [x] Likely stress singularities produce a clear warning.
 - [x] Analytical and reference-solver validation tests pass agreed tolerances.
 - [x] Memory-estimator calibration tests have been run on supported browsers.
-- [ ] Licensing/distribution posture for Gmsh has been resolved.
+- [x] Licensing/distribution posture for Gmsh has been resolved.
 
 ---
 

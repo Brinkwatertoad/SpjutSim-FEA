@@ -1,0 +1,1236 @@
+{
+  "schema_version": 1,
+  "distribution_license": "GPL-2.0-or-later",
+  "components": {
+    "fem": {
+      "project": "fem",
+      "version": "candidate (source_files SHA-256 pins)",
+      "license": "GPL-2.0-or-later",
+      "source": {
+        "url": "https://github.com/Brinkwatertoad/SpjutSim-FEA",
+        "revision": "candidate (source_files SHA-256 pins)"
+      },
+      "source_files": [
+        {
+          "path": "native/fem/CMakeLists.txt",
+          "sha256": "0f863c212cb9e779d31991e3310283404c4bab9d40f59da93f552b1a9de09b43"
+        },
+        {
+          "path": "native/fem/include/spjutsim/fem_c_api.h",
+          "sha256": "98ccc4529c70359592f27ade60d1d55b9c5f6f8bedf0c04baf7251177e0a6a09"
+        },
+        {
+          "path": "native/fem/include/spjutsim/fem_context.hpp",
+          "sha256": "ed0b82074f499279ca3f13197d1d7ca6ea4317de368356adf640e9f51ebb8d2f"
+        },
+        {
+          "path": "native/fem/include/spjutsim/fem_types.hpp",
+          "sha256": "84d374b0200d87380d721e318994205bf9930707f221b8a9311440bb2e968688"
+        },
+        {
+          "path": "native/fem/include/spjutsim/pcg.hpp",
+          "sha256": "39f3592f36fd6b994959f819cb474a68a3312bb29d5f0bb2e72c7f2c168ba85e"
+        },
+        {
+          "path": "native/fem/include/spjutsim/sparse.hpp",
+          "sha256": "d1764732616c42422418dbbaa77ba4dda8e472e7494d2863dfcdb2a0be3e3cbd"
+        },
+        {
+          "path": "native/fem/include/spjutsim/tet10.hpp",
+          "sha256": "a6d10c5bec49473b74a8186ead38ac49fb8d649fb90ca32a08a87768bf23838f"
+        },
+        {
+          "path": "native/fem/include/spjutsim/tet4.hpp",
+          "sha256": "2549e855c1c468d4318335f32078b0fbf4de763f0b29d2ebdc7dd308780549b2"
+        },
+        {
+          "path": "native/fem/src/fem_c_api.cpp",
+          "sha256": "713adc1f9b04b0ace0f017116ef0caf89d2d73ce3cc22a9e3215701dc67fd39f"
+        },
+        {
+          "path": "native/fem/src/fem_context.cpp",
+          "sha256": "466be758ccb35d2fe3714f0a36007ad3b42e605d3c1b667327aed1f088117f6c"
+        },
+        {
+          "path": "native/fem/src/pcg.cpp",
+          "sha256": "3dde8f5c3f005afac1650760cb8f914532739be41063e39a808389bedb4f7b6a"
+        },
+        {
+          "path": "native/fem/src/sparse.cpp",
+          "sha256": "03d88c49daf1a486672cc16ab95072a1c547b7dc9591c0b95d835c2dcb4ca95f"
+        },
+        {
+          "path": "native/fem/src/tet10.cpp",
+          "sha256": "12a885258dc15835f6e1a0270005d6461334d0be1e40319e2478f03f74bc0bdb"
+        },
+        {
+          "path": "native/fem/src/tet4.cpp",
+          "sha256": "3567243685a9aa6cf7378cbee52bab64ccaa96a7f07b7845997de2f006fd2171"
+        },
+        {
+          "path": "native/fem/tests/c_api_test.cpp",
+          "sha256": "bee1f335f8d42b96a25b0582d117573b8f5369238e2d2651f96a0a1d34e0c963"
+        },
+        {
+          "path": "native/fem/tests/framework_test.cpp",
+          "sha256": "de021d5e805c513fb7f27b7adb6952b02cc5425d9746d2e530a79fce9d3b6f58"
+        },
+        {
+          "path": "native/fem/tests/solver_benchmark_test.cpp",
+          "sha256": "d76db9d57c99734290069965a45d8e2feae1dcadb306dc0f58edc6d75358af1f"
+        },
+        {
+          "path": "native/fem/tests/solver_failure_test.cpp",
+          "sha256": "1a26bea0c98325c4f2156ff0f33edf9c632c47f3e6239a30150ca7116698a885"
+        },
+        {
+          "path": "native/fem/tests/sparse_preflight_test.cpp",
+          "sha256": "727ecfd282e245aa98718afa249c8b802b161917cf9b51e12a0b43c6a53ff1c3"
+        },
+        {
+          "path": "native/fem/tests/test_support.hpp",
+          "sha256": "4d741bbd366283a97c050323f8ae3f32ae520ff5c1a679dc235fda6074347563"
+        },
+        {
+          "path": "native/fem/tests/tet10_element_test.cpp",
+          "sha256": "94fa9a359bbf4eb7bb1ade4b8a327c16f0ea00b0465e733a140901f65460afee"
+        },
+        {
+          "path": "native/fem/tests/tet10_solver_test.cpp",
+          "sha256": "2b09ea3de6ff4ebf0de5d57aca2d55dd09d54a614a8d14e29b8aaa65ed187259"
+        },
+        {
+          "path": "native/fem/tests/tet4_element_test.cpp",
+          "sha256": "e195aa72afbaa11859e0f440e9d52e3bdd5db64e527fde319b626ba44b8c648f"
+        },
+        {
+          "path": "native/wasm/fem_c_api.cpp",
+          "sha256": "352ff49fd4f9f7681703e0a6edfdb1d9a575e66da61cec833b43c56da1817b91"
+        },
+        {
+          "path": "tools/build-local-runtime.py",
+          "sha256": "8c4ede9b01b3f98c2ae7301955ac80fbeec0cf1b4223a98ef89e3774243ebf4e"
+        }
+      ],
+      "build_recipe": {
+        "path": "tools/build-wasm.sh",
+        "sha256": "046fa1cfdb07b5f096aed3fc0758ef764f8e9d86f97e51c45d0c9cdae4efe2a1"
+      },
+      "modifications": "First-party FEM core, WASM C bridge, serial embedded runtime and classic source-string wrapper.",
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "e84e31c84bce427c4ba98ba5c98650563c0c6b91f19eabc3bcd86f473cd3d5d1"
+        },
+        {
+          "path": "NOTICE",
+          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+        },
+        {
+          "path": "web/licenses/PROJECT-LICENSE.txt",
+          "sha256": "e84e31c84bce427c4ba98ba5c98650563c0c6b91f19eabc3bcd86f473cd3d5d1"
+        },
+        {
+          "path": "web/licenses/PROJECT-NOTICE.txt",
+          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+        },
+        {
+          "path": "web/licenses/GPL-2.0.txt",
+          "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6"
+        }
+      ]
+    },
+    "workers": {
+      "project": "workers",
+      "version": "protocol 2; candidate source hashes",
+      "license": "GPL-2.0-or-later",
+      "source": {
+        "url": "https://github.com/Brinkwatertoad/SpjutSim-FEA",
+        "revision": "protocol 2; candidate source hashes"
+      },
+      "source_files": [
+        {
+          "path": "workers/mesher-worker.js",
+          "sha256": "7668cb2fed2d37df0209a0f7cc456174b4879a7716330385985311d5c8fc2748"
+        },
+        {
+          "path": "workers/solver-worker.js",
+          "sha256": "1f01b3a43ed5f019d2b09ffd6a1c490ddc757b72d785bb4d60fadc7ea0e6f0ad"
+        }
+      ],
+      "build_recipe": {
+        "path": "tools/build-local-runtime.py",
+        "sha256": "8c4ede9b01b3f98c2ae7301955ac80fbeec0cf1b4223a98ef89e3774243ebf4e"
+      },
+      "modifications": "First-party workers packaged as classic JavaScript source strings.",
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "e84e31c84bce427c4ba98ba5c98650563c0c6b91f19eabc3bcd86f473cd3d5d1"
+        },
+        {
+          "path": "NOTICE",
+          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+        },
+        {
+          "path": "web/licenses/PROJECT-LICENSE.txt",
+          "sha256": "e84e31c84bce427c4ba98ba5c98650563c0c6b91f19eabc3bcd86f473cd3d5d1"
+        },
+        {
+          "path": "web/licenses/PROJECT-NOTICE.txt",
+          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+        },
+        {
+          "path": "web/licenses/GPL-2.0.txt",
+          "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6"
+        }
+      ]
+    },
+    "ui-foundation": {
+      "project": "ui-foundation",
+      "version": "0.7.1",
+      "license": "GPL-2.0-or-later",
+      "source": {
+        "url": "https://github.com/Brinkwatertoad/SpjutSim-UI-Kit",
+        "revision": "541c607c4b48520ed0e14b93106ec54ad3852461"
+      },
+      "source_files": [
+        {
+          "path": "web/ui/action-controls.js",
+          "sha256": "06c210b784eee8712765967a7059e2aa6fe214556eace9168dc96c95ad7db595"
+        },
+        {
+          "path": "web/ui/color-scheme-editor.js",
+          "sha256": "db24a58fb001fb432dd0033083f343240c3c1bc949907fd292e0968a008fb859"
+        },
+        {
+          "path": "web/ui/color-schemes.js",
+          "sha256": "a801be70088b55f19cc06a6bc1ebb939ba2f7994272fbd403443b1f93e52f0d9"
+        },
+        {
+          "path": "web/ui/custom-select.js",
+          "sha256": "09b90187e0ae71b50a949ed0a84e77ba793ff3aaffd90fb93b70a087ef29025c"
+        },
+        {
+          "path": "web/ui/overflow-menu.js",
+          "sha256": "be438c90f30e334063721f2dffbadf548002627d601b9e4e01462c380848818c"
+        },
+        {
+          "path": "web/ui/reference/shell.html",
+          "sha256": "2c7f4e784ca1b784fae2b7cfadbcaf729755bedfd6cf780ce105f2dd20512aed"
+        },
+        {
+          "path": "web/ui/settings-controls.js",
+          "sha256": "53890549744511997079dd57ff58af2f705328d942050dc650d6dac25ceff513"
+        },
+        {
+          "path": "web/ui/settings-hub.js",
+          "sha256": "a15ac871994a124023f5ba15646eeda37845e4505ad6615111287468ae72726f"
+        },
+        {
+          "path": "web/ui/shell-behaviors.js",
+          "sha256": "faa9a4e2b1faa557ae9286273108e2ed8091d677d2cc2e8ebb3e4b5b8b99a8b1"
+        },
+        {
+          "path": "web/ui/tooltips.js",
+          "sha256": "ca13bd5883ad2da94896f41d214a918b5a38074dd62840972773eb98813fe7cc"
+        },
+        {
+          "path": "web/ui/ui-tokens.css",
+          "sha256": "d1c40c702d5dd6536584d60a29fb8bae94970ac20b2dff897c85de3509818c27"
+        }
+      ],
+      "build_recipe": {
+        "path": "UI_FOUNDATION.md",
+        "sha256": "9cdad2e3cc5fef7c30523fd097f00665a54786d0e799c215c9d558ea7ab9d86d"
+      },
+      "modifications": "Copied as first-party source on 2026-08-25; FEA-owned adaptations and owner-approved GPL grant apply to these copies only. Current content is pinned per artifact.",
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "e84e31c84bce427c4ba98ba5c98650563c0c6b91f19eabc3bcd86f473cd3d5d1"
+        },
+        {
+          "path": "NOTICE",
+          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+        },
+        {
+          "path": "web/licenses/PROJECT-LICENSE.txt",
+          "sha256": "e84e31c84bce427c4ba98ba5c98650563c0c6b91f19eabc3bcd86f473cd3d5d1"
+        },
+        {
+          "path": "web/licenses/PROJECT-NOTICE.txt",
+          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+        },
+        {
+          "path": "web/licenses/GPL-2.0.txt",
+          "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6"
+        }
+      ]
+    },
+    "distribution": {
+      "project": "distribution",
+      "version": "candidate source hashes",
+      "license": "GPL-2.0-or-later",
+      "source": {
+        "url": "https://github.com/Brinkwatertoad/SpjutSim-FEA",
+        "revision": "candidate source hashes"
+      },
+      "source_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "e84e31c84bce427c4ba98ba5c98650563c0c6b91f19eabc3bcd86f473cd3d5d1"
+        },
+        {
+          "path": "NOTICE",
+          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+        },
+        {
+          "path": "tools/audit-distribution.py",
+          "sha256": "6f91dd4432bcf25f30f3afb594bb77e3acbeebc9c30c54b217a7c04e1d0adc95"
+        },
+        {
+          "path": "tools/package-distribution.py",
+          "sha256": "5f3a6199e0117bc57a207c4fcb6f5bca0e3c844dd0f85e7e8fe7956af92eccb9"
+        }
+      ],
+      "build_recipe": {
+        "path": "docs/release/SOURCE.md",
+        "sha256": "c90c3ab24c8e8594dd4197487cc34e92f5c0d0aec7860447ec327822e1f5be48"
+      },
+      "modifications": "First-party policy notices and source-accompanied packaging; exact upstream notices copied unchanged.",
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "e84e31c84bce427c4ba98ba5c98650563c0c6b91f19eabc3bcd86f473cd3d5d1"
+        },
+        {
+          "path": "NOTICE",
+          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+        },
+        {
+          "path": "web/licenses/PROJECT-LICENSE.txt",
+          "sha256": "e84e31c84bce427c4ba98ba5c98650563c0c6b91f19eabc3bcd86f473cd3d5d1"
+        },
+        {
+          "path": "web/licenses/PROJECT-NOTICE.txt",
+          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+        },
+        {
+          "path": "web/licenses/GPL-2.0.txt",
+          "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6"
+        }
+      ]
+    },
+    "gmsh-js": {
+      "project": "gmsh-js",
+      "version": "v0.3.0",
+      "license": "GPL-2.0-or-later",
+      "source": {
+        "url": "https://github.com/loumalouomega/GMSH-JS",
+        "revision": "3fdabeeb1dac2417446cefb9f75ecb6645315cd6",
+        "archive": {
+          "url": "https://codeload.github.com/loumalouomega/GMSH-JS/tar.gz/3fdabeeb1dac2417446cefb9f75ecb6645315cd6",
+          "sha256": "27ccb49388208f4bdc1efe7da7b46a0c93c0613ef431670b1c72715a2111182c"
+        }
+      },
+      "source_files": [
+        {
+          "path": "tools/build-local-runtime.py",
+          "sha256": "8c4ede9b01b3f98c2ae7301955ac80fbeec0cf1b4223a98ef89e3774243ebf4e"
+        }
+      ],
+      "build_recipe": {
+        "path": "tools/build-gmsh-local-runtime.sh",
+        "sha256": "f720d1742fac94734a2ca257ef06ce3ed9f20dc3c6777762d5ef32e2ffc2f9dc"
+      },
+      "modifications": "Upstream tree unmodified. Packaging converts export function buildApi to a classic function, attaches FS/module, combines generated descriptor and core, and splits source strings.",
+      "notices": [
+        {
+          "path": "web/wasm/gmsh/licenses/GMSH-JS-LICENSE.txt",
+          "sha256": "356b9f15d801a21ea41e853996c9a822ff5e8564bced4173c09fa2ba092b1c31",
+          "upstream_path": "LICENSE"
+        }
+      ]
+    },
+    "gmsh": {
+      "project": "gmsh",
+      "version": "5.0.0 development descriptor",
+      "license": "GPL-2.0-or-later with upstream linking exception; bundled dependencies retain their notices",
+      "source": {
+        "url": "https://gitlab.onelab.info/gmsh/gmsh",
+        "revision": "29726e7237db13ff77ef3f2db2d7fb9499c4e65c",
+        "archive": {
+          "url": "https://codeload.github.com/gmsh-project/gmsh/tar.gz/29726e7237db13ff77ef3f2db2d7fb9499c4e65c",
+          "sha256": "3e0b5f34c87a32089051a062009b3e94469c39d75dc722faab821801ec4160ef"
+        }
+      },
+      "source_files": [],
+      "build_recipe": {
+        "path": "tools/build-gmsh-local-runtime.sh",
+        "sha256": "f720d1742fac94734a2ca257ef06ce3ed9f20dc3c6777762d5ef32e2ffc2f9dc"
+      },
+      "modifications": "Unmodified pinned source. Serial static build with OpenCASCADE, Eigen and bundled modules selected by the recorded CMake recipe; no OpenMP/pthreads. Build metadata and diagnostic source paths are normalized without editing upstream sources.",
+      "notices": [
+        {
+          "path": "web/wasm/gmsh/licenses/GMSH-LICENSE.txt",
+          "sha256": "5fe4aec1ca85feb4100f32aeee9e69279278628211099c37353328d5e4d62673",
+          "upstream_path": "LICENSE.txt"
+        },
+        {
+          "path": "web/licenses/gmsh/CREDITS.txt",
+          "sha256": "67c044f728252341a5d556c969b66f94691e2ca9b2862b0f4c01f60a987ca480",
+          "upstream_path": "CREDITS.txt"
+        },
+        {
+          "path": "web/licenses/gmsh/LICENSE.txt",
+          "sha256": "5fe4aec1ca85feb4100f32aeee9e69279278628211099c37353328d5e4d62673",
+          "upstream_path": "LICENSE.txt"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/ANN/Copyright.txt",
+          "sha256": "3b142f4adfdf3f2aac806978c7d52dcdec968c5f32bb22d15f338e395fd1e425",
+          "upstream_path": "contrib/ANN/Copyright.txt"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/ANN/License.txt",
+          "sha256": "81d15b6bb9472b2eccac12b2799afa0b0ddefaca91d5dfb01bfe1ea3a2fd52cd",
+          "upstream_path": "contrib/ANN/License.txt"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/BoundaryLayers/LICENSE.txt",
+          "sha256": "cc810ce9535c8036f7f62e8a7c9a8fdcbfd01f4c20ec31d3e4c9b7c874e1aaa9",
+          "upstream_path": "contrib/BoundaryLayers/LICENSE.txt"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/MathEx/license.txt",
+          "sha256": "c91a96ded8bb1e1b28ab937a46e109cf72058128e5e8b77f0893a74d28b39c0e",
+          "upstream_path": "contrib/MathEx/license.txt"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/Netgen/LICENSE",
+          "sha256": "1e06f929649a191c35904b8abcf730143080161167fa14a170d4fcfd5f9884d5",
+          "upstream_path": "contrib/Netgen/LICENSE"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/eigen/COPYING.APACHE",
+          "sha256": "03379001a7b12a2ec997a25554247d985270b353c10d5bafee9ac8d6519820b7",
+          "upstream_path": "contrib/eigen/COPYING.APACHE"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/eigen/COPYING.BSD",
+          "sha256": "51928dce36213c5333ba3172e847d735d4c6e9b7ff2722a326c49067155b82eb",
+          "upstream_path": "contrib/eigen/COPYING.BSD"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/eigen/COPYING.MINPACK",
+          "sha256": "c87b7f8ee88f6195e91743820c00354833583aef091b72e2d4a49c8e28e798a0",
+          "upstream_path": "contrib/eigen/COPYING.MINPACK"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/eigen/COPYING.MPL2",
+          "sha256": "66a3107d5ad6a058aab753eaac2047ccb2ed0e39465dd0fe5844da3e300d5172",
+          "upstream_path": "contrib/eigen/COPYING.MPL2"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/eigen/COPYING.README",
+          "sha256": "db640ff2bd90c6abd6a4d3fbb351e0ee4d555417cf840492054d1cbb2ea85644",
+          "upstream_path": "contrib/eigen/COPYING.README"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/eigen/LICENSE",
+          "sha256": "1f256ecad192880510e84ad60474eab7589218784b9a50bc7ceee34c2b91f1d5",
+          "upstream_path": "contrib/eigen/LICENSE"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/gmm/COPYING",
+          "sha256": "c6dbc400c8a54cc50e28842306da9e54b8cfe9ad5a48d277e783e22c2c6309b6",
+          "upstream_path": "contrib/gmm/COPYING"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/hxt/CREDITS.txt",
+          "sha256": "354f93698620f3c06c74b60920844de1e6b3304d196f225211b6c85f57d18fd4",
+          "upstream_path": "contrib/hxt/CREDITS.txt"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/hxt/LICENSE.txt",
+          "sha256": "c56ec3490aa4dfd720bfea0c0cc6e1a14c86100de3235badebb8e7c74eefee92",
+          "upstream_path": "contrib/hxt/LICENSE.txt"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/kbipack/LICENSE",
+          "sha256": "11ee9134c68c744f7488f3550bb0274141f83384ae847240432a0a1a96fe23c9",
+          "upstream_path": "contrib/kbipack/LICENSE"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/metis/LICENSE.txt",
+          "sha256": "64ab947d7b289ad76e935adff51b31e4ac160df7dfad24480dbaa452e39bbe79",
+          "upstream_path": "contrib/metis/LICENSE.txt"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/mpeg_encode/COPYRIGHT.txt",
+          "sha256": "e6c3d8cbeb4f00807aee68782a7052c5a399a9e61fa9de88cdad97c353399136",
+          "upstream_path": "contrib/mpeg_encode/COPYRIGHT.txt"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/nii2mesh/LICENSE",
+          "sha256": "2abdd72e6adf5c19a9850f22b018e945359e7c64a1c5769cace3069415e4f8a7",
+          "upstream_path": "contrib/nii2mesh/LICENSE"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/tinyobjloader/LICENSE",
+          "sha256": "bd091988e6a48690919a6c38b53752ecea7d206040dd0496df6c3314a63947fa",
+          "upstream_path": "contrib/tinyobjloader/LICENSE"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/tinyxml2/LICENSE.txt",
+          "sha256": "9332252e9b9e46db8285d4a3f0bf25f139bf1dca6781b956d57f2302efca6432",
+          "upstream_path": "contrib/tinyxml2/LICENSE.txt"
+        },
+        {
+          "path": "web/licenses/gmsh/contrib/voro++/LICENSE",
+          "sha256": "48830a8a187c5b4c702d958fb71551c04de7fd8672b8b954127473353e0e7a77",
+          "upstream_path": "contrib/voro++/LICENSE"
+        }
+      ]
+    },
+    "occt": {
+      "project": "occt",
+      "version": "7.8.1",
+      "license": "LGPL-2.1-only WITH OCCT-exception-1.0",
+      "source": {
+        "url": "https://github.com/Open-Cascade-SAS/OCCT",
+        "revision": "V7_8_1",
+        "archive": {
+          "url": "https://codeload.github.com/Open-Cascade-SAS/OCCT/tar.gz/refs/tags/V7_8_1",
+          "sha256": "7321af48c34dc253bf8aae3f0430e8cb10976961d534d8509e72516978aa82f5"
+        }
+      },
+      "source_files": [],
+      "build_recipe": {
+        "path": "tools/build-gmsh-local-runtime.sh",
+        "sha256": "f720d1742fac94734a2ca257ef06ce3ed9f20dc3c6777762d5ef32e2ffc2f9dc"
+      },
+      "modifications": "Unmodified extracted source; serial static toolkits per build script. Extracted source-tree SHA-256 8a8c83a681b95d7741e70d429d9427072cf75c599ef663614772c97c67cef9af.",
+      "notices": [
+        {
+          "path": "web/wasm/gmsh/licenses/OCCT-LGPL-2.1.txt",
+          "sha256": "e237fa56668030e928551ddd60f05df5fe957f75eab874bbd017e085ed722e7c",
+          "upstream_path": "LICENSE_LGPL_21.txt"
+        },
+        {
+          "path": "web/wasm/gmsh/licenses/OCCT-LGPL-EXCEPTION.txt",
+          "sha256": "04580a884ea6cea294402649ff7b5cbb167d47462d1340a4ed33e550db10a81b",
+          "upstream_path": "OCCT_LGPL_EXCEPTION.txt"
+        }
+      ]
+    },
+    "three": {
+      "project": "three",
+      "version": "0.149.0",
+      "license": "MIT",
+      "source": {
+        "url": "https://github.com/mrdoob/three.js",
+        "revision": "r149 / npm three@0.149.0",
+        "archive": {
+          "url": "https://registry.npmjs.org/three/-/three-0.149.0.tgz",
+          "sha256": "ab8b7c131f6ce72e05081dff4882046584e4a4ce5ad864f9f2a0e3146cc3997c"
+        }
+      },
+      "source_files": [],
+      "build_recipe": {
+        "path": "web/vendor/three/README.md",
+        "sha256": "b60275b9b38972fcd504884d0a25f8cc63156833c5ba2517cd155f9da3f73bde"
+      },
+      "modifications": "None. Copy package/build/three.min.js from accompanied upstream package; readable source is package/src/.",
+      "notices": [
+        {
+          "path": "web/licenses/three/LICENSE",
+          "sha256": "852e0e8699169bf9f6fdc6bda3e682d078dcbc738b5d33e74df594721bff271d",
+          "upstream_path": "LICENSE"
+        }
+      ]
+    },
+    "emscripten": {
+      "project": "emscripten",
+      "version": "3.1.74",
+      "license": "MIT OR NCSA; system libraries retain their licenses and LLVM exceptions",
+      "source": {
+        "url": "https://github.com/emscripten-core/emscripten",
+        "revision": "3.1.74",
+        "archive": {
+          "url": "https://codeload.github.com/emscripten-core/emscripten/tar.gz/refs/tags/3.1.74",
+          "sha256": "07bc112871a4992a9e4bac5131f2f28554e47f826adeca40943144b159ddb700"
+        }
+      },
+      "source_files": [],
+      "build_recipe": {
+        "path": "tools/build-wasm.sh",
+        "sha256": "046fa1cfdb07b5f096aed3fc0758ef764f8e9d86f97e51c45d0c9cdae4efe2a1"
+      },
+      "modifications": "No upstream source modifications. Build recipes specify embedded serial runtimes and emmalloc; libc, C++ and compiler runtime notices are preserved.",
+      "notices": [
+        {
+          "path": "web/licenses/emscripten/LICENSE",
+          "sha256": "620a78084fc7ca97c0b5dea9abf891f3ffcadfdbf305276f099c9c4e12fc1d86",
+          "upstream_path": "LICENSE"
+        },
+        {
+          "path": "web/licenses/emscripten/system/lib/compiler-rt/LICENSE.TXT",
+          "sha256": "1a8f1058753f1ba890de984e48f0242a3a5c29a6a8f2ed9fd813f36985387e8d",
+          "upstream_path": "system/lib/compiler-rt/LICENSE.TXT"
+        },
+        {
+          "path": "web/licenses/emscripten/system/lib/libc/musl/COPYRIGHT",
+          "sha256": "f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af",
+          "upstream_path": "system/lib/libc/musl/COPYRIGHT"
+        },
+        {
+          "path": "web/licenses/emscripten/system/lib/libcxx/LICENSE.TXT",
+          "sha256": "539dd7aed86e8a4f12cbdd0e6c50c189c7d74847e4fecc64ce2c6ee3a01da38b",
+          "upstream_path": "system/lib/libcxx/LICENSE.TXT"
+        },
+        {
+          "path": "web/licenses/emscripten/system/lib/libcxxabi/LICENSE.TXT",
+          "sha256": "e2b35be49f7284a45b7baca8fc7b3ab7440e7902392b2528a457816b5bb2a15c",
+          "upstream_path": "system/lib/libcxxabi/LICENSE.TXT"
+        },
+        {
+          "path": "web/licenses/emscripten/system/lib/libunwind/LICENSE.TXT",
+          "sha256": "b5efebcaca80879234098e52d1725e6d9eb8fb96a19fce625d39184b705f7b6d",
+          "upstream_path": "system/lib/libunwind/LICENSE.TXT"
+        },
+        {
+          "path": "web/licenses/emscripten/system/lib/mimalloc/LICENSE",
+          "sha256": "19c99805e7a44a34b297a75d1edea9985e300066dfc024d5c99d4236d4573b5d",
+          "upstream_path": "system/lib/mimalloc/LICENSE"
+        }
+      ]
+    },
+    "emsdk": {
+      "project": "emsdk",
+      "version": "3.1.74",
+      "license": "MIT",
+      "source": {
+        "url": "https://github.com/emscripten-core/emsdk",
+        "revision": "3d6d8ee910466516a53e665b86458faa81dae9ba",
+        "archive": {
+          "url": "https://codeload.github.com/emscripten-core/emsdk/tar.gz/3d6d8ee910466516a53e665b86458faa81dae9ba",
+          "sha256": "4f2bf52e80c2f362421b76c7288b249569388b8d7361dcd597015748e547f103"
+        }
+      },
+      "source_files": [],
+      "build_recipe": {
+        "path": "tools/build-gmsh-local-runtime.sh",
+        "sha256": "f720d1742fac94734a2ca257ef06ce3ed9f20dc3c6777762d5ef32e2ffc2f9dc"
+      },
+      "modifications": "Build tool only; compiler executables are not distributed as application runtime.",
+      "notices": [
+        {
+          "path": "web/licenses/emsdk/LICENSE",
+          "sha256": "99d9a9616fbde3f5ee22a71d8645799a8522d48526130c5ba6dc27ad15ce01f1",
+          "upstream_path": "LICENSE"
+        }
+      ]
+    }
+  },
+  "artifacts": [
+    {
+      "path": "web/vendor/three/README.md",
+      "sha256": "b60275b9b38972fcd504884d0a25f8cc63156833c5ba2517cd155f9da3f73bde",
+      "components": [
+        "three"
+      ]
+    },
+    {
+      "path": "web/vendor/three/three.min.js",
+      "sha256": "8a5f7249903b54d30f79f708699d2fed2d6a1d0741a4cd41377d1f01bb5a2271",
+      "components": [
+        "three"
+      ]
+    },
+    {
+      "path": "web/wasm/fem/README.md",
+      "sha256": "855f1fdcd4ec2a6281eb94672d3b844a9f23fedf2e91f0bc7f330e9b51f146ad",
+      "components": [
+        "fem",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/wasm/fem/fem.js",
+      "sha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625",
+      "components": [
+        "fem",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/wasm/gmsh/README.md",
+      "sha256": "2829b611f812ded24ceb850a2170311d41eb2b8a890337abb5fda45abbdb1d93",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/wasm/gmsh/licenses/GMSH-JS-LICENSE.txt",
+      "sha256": "356b9f15d801a21ea41e853996c9a822ff5e8564bced4173c09fa2ba092b1c31",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/wasm/gmsh/licenses/GMSH-LICENSE.txt",
+      "sha256": "5fe4aec1ca85feb4100f32aeee9e69279278628211099c37353328d5e4d62673",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/wasm/gmsh/licenses/OCCT-LGPL-2.1.txt",
+      "sha256": "e237fa56668030e928551ddd60f05df5fe957f75eab874bbd017e085ed722e7c",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/wasm/gmsh/licenses/OCCT-LGPL-EXCEPTION.txt",
+      "sha256": "04580a884ea6cea294402649ff7b5cbb167d47462d1340a4ed33e550db10a81b",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/README.md",
+      "sha256": "291db23f4065bb4e328e1db272c0d51b8c9d72abe15806740d23cccb593fb906",
+      "components": [
+        "distribution"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/fem-runtime-source.js",
+      "sha256": "243fec59431d7afe7b6341b9dc4800955481c3b1dd98465c0a97f4b9777ea5da",
+      "components": [
+        "fem",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/gmsh-runtime-source-part-001.js",
+      "sha256": "d7d959abb25da93cbc3744d48f544907a30cad68ed4225ccb957db32ba01b1cb",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/gmsh-runtime-source-part-002.js",
+      "sha256": "74aa0b63e6b5ba320b69bdb8d8f3ef7ae258e3415bf60c531a3e43608a130dd8",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/gmsh-runtime-source-part-003.js",
+      "sha256": "6c0d0ce69665e7bc798c0cd6914f6f20519d075040169eb653dacf636e068b02",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/gmsh-runtime-source-part-004.js",
+      "sha256": "8c463e96fe6d1de2411b92d4b7e5ffe89e7c24ab3bd771285bc1ba1b7ac0e5ff",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/gmsh-runtime-source-part-005.js",
+      "sha256": "3fb25a8c1987ee09d537e91cf1d388ba4c897fdf7af00530184322e7b4790771",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/gmsh-runtime-source-part-006.js",
+      "sha256": "2d5d8a8292b6aa8d909e5afba8fa45258e845628ac1fc511c1ad184450fc717a",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/gmsh-runtime-source-part-007.js",
+      "sha256": "21a4eeb880812c3e90a3c711458b1f02aa4c9d8810275a3c12d9c927b341dc87",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/gmsh-runtime-source-part-008.js",
+      "sha256": "6ef9206bcdf2a8c3fd0eaa4f5f11f632468f713ea17e48318dcacf4d2f20a9b7",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/gmsh-runtime-source.js",
+      "sha256": "4e6c4e2cbc0a25c3930117f8b0d399444bdb5c2848dd5fe17408c3a8c890b212",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/mesher-worker-source.js",
+      "sha256": "6e3b34bab321a7b1e8cd7304a1565218196a2daafc1f08d390619701e787bc78",
+      "components": [
+        "workers"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/solver-worker-source.js",
+      "sha256": "858ccd0313831b5993a0d266b3cb1fc78104a08479419f68bcda999cbd379c54",
+      "components": [
+        "workers"
+      ]
+    },
+    {
+      "path": "web/ui/action-controls.js",
+      "sha256": "06c210b784eee8712765967a7059e2aa6fe214556eace9168dc96c95ad7db595",
+      "components": [
+        "ui-foundation"
+      ]
+    },
+    {
+      "path": "web/ui/color-scheme-editor.js",
+      "sha256": "db24a58fb001fb432dd0033083f343240c3c1bc949907fd292e0968a008fb859",
+      "components": [
+        "ui-foundation"
+      ]
+    },
+    {
+      "path": "web/ui/color-schemes.js",
+      "sha256": "a801be70088b55f19cc06a6bc1ebb939ba2f7994272fbd403443b1f93e52f0d9",
+      "components": [
+        "ui-foundation"
+      ]
+    },
+    {
+      "path": "web/ui/custom-select.js",
+      "sha256": "09b90187e0ae71b50a949ed0a84e77ba793ff3aaffd90fb93b70a087ef29025c",
+      "components": [
+        "ui-foundation"
+      ]
+    },
+    {
+      "path": "web/ui/overflow-menu.js",
+      "sha256": "be438c90f30e334063721f2dffbadf548002627d601b9e4e01462c380848818c",
+      "components": [
+        "ui-foundation"
+      ]
+    },
+    {
+      "path": "web/ui/reference/shell.html",
+      "sha256": "2c7f4e784ca1b784fae2b7cfadbcaf729755bedfd6cf780ce105f2dd20512aed",
+      "components": [
+        "ui-foundation"
+      ]
+    },
+    {
+      "path": "web/ui/settings-controls.js",
+      "sha256": "53890549744511997079dd57ff58af2f705328d942050dc650d6dac25ceff513",
+      "components": [
+        "ui-foundation"
+      ]
+    },
+    {
+      "path": "web/ui/settings-hub.js",
+      "sha256": "a15ac871994a124023f5ba15646eeda37845e4505ad6615111287468ae72726f",
+      "components": [
+        "ui-foundation"
+      ]
+    },
+    {
+      "path": "web/ui/shell-behaviors.js",
+      "sha256": "faa9a4e2b1faa557ae9286273108e2ed8091d677d2cc2e8ebb3e4b5b8b99a8b1",
+      "components": [
+        "ui-foundation"
+      ]
+    },
+    {
+      "path": "web/ui/tooltips.js",
+      "sha256": "ca13bd5883ad2da94896f41d214a918b5a38074dd62840972773eb98813fe7cc",
+      "components": [
+        "ui-foundation"
+      ]
+    },
+    {
+      "path": "web/ui/ui-tokens.css",
+      "sha256": "d1c40c702d5dd6536584d60a29fb8bae94970ac20b2dff897c85de3509818c27",
+      "components": [
+        "ui-foundation"
+      ]
+    },
+    {
+      "path": "web/licenses/GPL-2.0.txt",
+      "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6",
+      "components": [
+        "distribution"
+      ]
+    },
+    {
+      "path": "web/licenses/PROJECT-LICENSE.txt",
+      "sha256": "e84e31c84bce427c4ba98ba5c98650563c0c6b91f19eabc3bcd86f473cd3d5d1",
+      "components": [
+        "distribution"
+      ]
+    },
+    {
+      "path": "web/licenses/PROJECT-NOTICE.txt",
+      "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4",
+      "components": [
+        "distribution"
+      ]
+    },
+    {
+      "path": "web/licenses/emscripten/LICENSE",
+      "sha256": "620a78084fc7ca97c0b5dea9abf891f3ffcadfdbf305276f099c9c4e12fc1d86",
+      "components": [
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/emscripten/system/lib/compiler-rt/LICENSE.TXT",
+      "sha256": "1a8f1058753f1ba890de984e48f0242a3a5c29a6a8f2ed9fd813f36985387e8d",
+      "components": [
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/emscripten/system/lib/libc/musl/COPYRIGHT",
+      "sha256": "f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af",
+      "components": [
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/emscripten/system/lib/libcxx/LICENSE.TXT",
+      "sha256": "539dd7aed86e8a4f12cbdd0e6c50c189c7d74847e4fecc64ce2c6ee3a01da38b",
+      "components": [
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/emscripten/system/lib/libcxxabi/LICENSE.TXT",
+      "sha256": "e2b35be49f7284a45b7baca8fc7b3ab7440e7902392b2528a457816b5bb2a15c",
+      "components": [
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/emscripten/system/lib/libunwind/LICENSE.TXT",
+      "sha256": "b5efebcaca80879234098e52d1725e6d9eb8fb96a19fce625d39184b705f7b6d",
+      "components": [
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/emscripten/system/lib/mimalloc/LICENSE",
+      "sha256": "19c99805e7a44a34b297a75d1edea9985e300066dfc024d5c99d4236d4573b5d",
+      "components": [
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/emsdk/LICENSE",
+      "sha256": "99d9a9616fbde3f5ee22a71d8645799a8522d48526130c5ba6dc27ad15ce01f1",
+      "components": [
+        "emsdk"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/CREDITS.txt",
+      "sha256": "67c044f728252341a5d556c969b66f94691e2ca9b2862b0f4c01f60a987ca480",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/LICENSE.txt",
+      "sha256": "5fe4aec1ca85feb4100f32aeee9e69279278628211099c37353328d5e4d62673",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/ANN/Copyright.txt",
+      "sha256": "3b142f4adfdf3f2aac806978c7d52dcdec968c5f32bb22d15f338e395fd1e425",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/ANN/License.txt",
+      "sha256": "81d15b6bb9472b2eccac12b2799afa0b0ddefaca91d5dfb01bfe1ea3a2fd52cd",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/BoundaryLayers/LICENSE.txt",
+      "sha256": "cc810ce9535c8036f7f62e8a7c9a8fdcbfd01f4c20ec31d3e4c9b7c874e1aaa9",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/MathEx/license.txt",
+      "sha256": "c91a96ded8bb1e1b28ab937a46e109cf72058128e5e8b77f0893a74d28b39c0e",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/Netgen/LICENSE",
+      "sha256": "1e06f929649a191c35904b8abcf730143080161167fa14a170d4fcfd5f9884d5",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/eigen/COPYING.APACHE",
+      "sha256": "03379001a7b12a2ec997a25554247d985270b353c10d5bafee9ac8d6519820b7",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/eigen/COPYING.BSD",
+      "sha256": "51928dce36213c5333ba3172e847d735d4c6e9b7ff2722a326c49067155b82eb",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/eigen/COPYING.MINPACK",
+      "sha256": "c87b7f8ee88f6195e91743820c00354833583aef091b72e2d4a49c8e28e798a0",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/eigen/COPYING.MPL2",
+      "sha256": "66a3107d5ad6a058aab753eaac2047ccb2ed0e39465dd0fe5844da3e300d5172",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/eigen/COPYING.README",
+      "sha256": "db640ff2bd90c6abd6a4d3fbb351e0ee4d555417cf840492054d1cbb2ea85644",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/eigen/LICENSE",
+      "sha256": "1f256ecad192880510e84ad60474eab7589218784b9a50bc7ceee34c2b91f1d5",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/gmm/COPYING",
+      "sha256": "c6dbc400c8a54cc50e28842306da9e54b8cfe9ad5a48d277e783e22c2c6309b6",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/hxt/CREDITS.txt",
+      "sha256": "354f93698620f3c06c74b60920844de1e6b3304d196f225211b6c85f57d18fd4",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/hxt/LICENSE.txt",
+      "sha256": "c56ec3490aa4dfd720bfea0c0cc6e1a14c86100de3235badebb8e7c74eefee92",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/kbipack/LICENSE",
+      "sha256": "11ee9134c68c744f7488f3550bb0274141f83384ae847240432a0a1a96fe23c9",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/metis/LICENSE.txt",
+      "sha256": "64ab947d7b289ad76e935adff51b31e4ac160df7dfad24480dbaa452e39bbe79",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/mpeg_encode/COPYRIGHT.txt",
+      "sha256": "e6c3d8cbeb4f00807aee68782a7052c5a399a9e61fa9de88cdad97c353399136",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/nii2mesh/LICENSE",
+      "sha256": "2abdd72e6adf5c19a9850f22b018e945359e7c64a1c5769cace3069415e4f8a7",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/tinyobjloader/LICENSE",
+      "sha256": "bd091988e6a48690919a6c38b53752ecea7d206040dd0496df6c3314a63947fa",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/tinyxml2/LICENSE.txt",
+      "sha256": "9332252e9b9e46db8285d4a3f0bf25f139bf1dca6781b956d57f2302efca6432",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/voro++/LICENSE",
+      "sha256": "48830a8a187c5b4c702d958fb71551c04de7fd8672b8b954127473353e0e7a77",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/index.html",
+      "sha256": "8a44370630f63fb03d9b634e891488745f1620a35098e2c0bfa81a2677a33f50",
+      "components": [
+        "distribution"
+      ]
+    },
+    {
+      "path": "web/licenses/three/LICENSE",
+      "sha256": "852e0e8699169bf9f6fdc6bda3e682d078dcbc738b5d33e74df594721bff271d",
+      "components": [
+        "three"
+      ]
+    }
+  ]
+}

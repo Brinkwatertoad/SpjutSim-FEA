@@ -1,23 +1,22 @@
 # v1.0 readiness evidence
 
-Status: **not ready for public distribution**.
+Status: **Task 20 candidate acceptance pending**.
 
-The production Tet10 `file://` vertical slice and a deterministic two-level
-axial convergence study pass in Chromium 151. Native kernel, equilibrium,
-failure, and C-ABI tests pass. Reproducible records are under `benchmarks/`.
+The acceptance audit records the production Tet10 `file://` vertical slice,
+five-case analytical/reference matrix, 50-part CAD corpus, and supported-browser
+resource matrix as passing. Reproducible records are under `benchmarks/`;
+`v1-acceptance-audit.md` describes their scope and browser versions.
 
-Remaining release gates:
+The distribution gate passes: the owner approved GPL-2.0-or-later on 2026-09-06
+and the final policy/artifact list on 2026-09-07. The source-accompanied stage
+passes `python3 tools/audit-distribution.py --release-root build/distribution/web --require-approved`.
 
-- Run and record the supported non-headless browser/resource matrix at larger
-  representative sizes, including external process peak memory.
-- Add independent reference-solver records for bending, pressure/symmetry, and
-  a nonsingular stress concentration; current native analytical tests are not
-  substitutes for every reference case in spec section 16.
-- Expand the CAD corpus beyond the generated cube/cylinder/sphere, malformed
-  input, and multi-solid fixtures.
-- Resolve redistribution rights. The checked-in Gmsh/GMSH-JS payload is GPL;
-  the repository root currently grants no redistribution permission. Public
-  release therefore requires either a compatible project license approved by
-  the copyright holder or a suitable commercial Gmsh license.
+Run Task 20 against the final candidate, including the rebuilt Gmsh artifact,
+before claiming v1.0 readiness. Task 19's focused rebuild/startup checks do
+not replace the complete candidate acceptance matrix.
+
+See `distribution-policy.md`, `artifact-manifest.json`, `SOURCE.md`, and
+`reproducibility.md`. Website deployment must serve the staged source-accompanied
+package.
 
 No unchecked gate in `spec.md` section 26 should be interpreted as passing.

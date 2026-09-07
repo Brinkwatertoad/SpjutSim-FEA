@@ -66,6 +66,13 @@ test "$(git -C "$SOURCE_ROOT/gmsh" rev-parse HEAD)" = "$GMSH_COMMIT" || {
   exit 1
 }
 
+# CMake honors SOURCE_DATE_EPOCH for Gmsh's build date. Normalize diagnostic
+# __FILE__ strings as well: otherwise equivalent macOS/Linux builds carry the
+# operator's absolute checkout path into WASM and change every split hash.
+export SOURCE_DATE_EPOCH="$(git -C "$SOURCE_ROOT/gmsh" show -s --format=%ct "$GMSH_COMMIT")"
+export TZ=UTC LC_ALL=C
+REPRO_FLAGS="\"-ffile-prefix-map=$BUILD_ROOT=/spjutsim-build\""
+
 if [ ! -d "$EMSDK_ROOT/.git" ]; then
   git clone --branch "$EMSDK_VERSION" --depth 1 \
     https://github.com/emscripten-core/emsdk.git "$EMSDK_ROOT"
@@ -97,8 +104,8 @@ emcmake cmake -S "$OCCT_SOURCE" -B "$OCCT_BUILD" \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
   -DCMAKE_INSTALL_PREFIX="$OCCT_PREFIX" \
-  -DCMAKE_C_FLAGS="" \
-  -DCMAKE_CXX_FLAGS="-fexceptions" \
+  -DCMAKE_C_FLAGS="$REPRO_FLAGS" \
+  -DCMAKE_CXX_FLAGS="-fexceptions $REPRO_FLAGS" \
   -DBUILD_LIBRARY_TYPE=Static \
   -DBUILD_MODULE_Draw=OFF \
   -DBUILD_MODULE_Visualization=OFF \
@@ -139,8 +146,9 @@ pushd "$GMSH_BUILD" >/dev/null
 emcmake cmake -S "$SOURCE_ROOT/gmsh" -B . \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-  -DCMAKE_C_FLAGS="" \
-  -DCMAKE_CXX_FLAGS="-fexceptions" \
+  -DCMAKE_C_FLAGS="$REPRO_FLAGS" \
+  -DCMAKE_CXX_FLAGS="-fexceptions $REPRO_FLAGS" \
+  -DGMSH_HOST=spjutsim-build -DGMSH_PACKAGER=SpjutSim \
   -DENABLE_BUILD_LIB=ON -DENABLE_BUILD_SHARED=OFF -DENABLE_BUILD_DYNAMIC=OFF \
   -DENABLE_FLTK=OFF -DENABLE_GRAPHICS=OFF -DENABLE_OS_SPECIFIC_INSTALL=OFF \
   -DENABLE_OPENMP=OFF -DENABLE_MPI=OFF \

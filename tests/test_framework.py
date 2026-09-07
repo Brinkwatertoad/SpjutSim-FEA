@@ -355,7 +355,7 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn('"occtVersion": "7.8.1"', manifest)
         self.assertEqual(
             hashlib.sha256(source.encode('utf-8')).hexdigest(),
-            '49e61f1b64e86d1bcdbb15bef03bf4077c2c4530d55a943a87a9fb5212b8f0de',
+            '85cf9d1160de66b60fcd378eb2735644ddf2c0991dd0aaae87cd58e210a80603',
         )
         self.assertNotIn('SharedArrayBuffer', source)
         self.assertNotIn('PThread', source)

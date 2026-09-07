@@ -8,7 +8,10 @@
       "custom_domain": true
     }
   ],
+  "build": {
+    "command": "python3 tools/audit-distribution.py --release-root build/distribution/web --require-approved"
+  },
   "assets": {
-    "directory": "./web"
+    "directory": "./build/distribution/web"
   }
 }

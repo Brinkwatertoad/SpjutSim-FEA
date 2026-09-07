@@ -132,16 +132,36 @@ No npm, Node runtime, frontend framework, transpiler, or application bundler is 
 
 ## Deploy a Cloudflare preview
 
-The checked-in `wrangler.jsonc` publishes `web/` as static assets to the
+The checked-in `wrangler.jsonc` publishes an audited source-accompanied package to the
 `spjutsim-fea` Worker's `workers.dev` hostname and the `fea.spjutsim.com`
-Custom Domain. With Wrangler available as operator tooling, run:
+Custom Domain. Prepare a fresh candidate before deployment:
 
 ```sh
+python3 tools/audit-distribution.py
+python3 tools/package-distribution.py --fetch-sources
+python3 tools/audit-distribution.py --release-root build/distribution/web --require-approved
 wrangler deploy
 ```
 
+The owner approved GPL-2.0-or-later for first-party FEA and copied UI source.
+The final policy and artifact list were approved on 2026-09-07. Wrangler runs
+the distribution audit and serves `build/distribution/web`, including local license
+notices and exact corresponding-source archives. Do not deploy bare `web/`.
+See [the release procedure](docs/release/SOURCE.md) for rebuilding, offline
+packaging, reviewing, and retaining source for each release.
+
 Wrangler is not an application runtime or development dependency; direct
 `file://` previewing and all normal source work remain dependency-free.
+
+## License
+
+First-party SpjutSim FEA source and the UI foundation copies in this repository
+are [GPL-2.0-or-later](LICENSE), copyright (c) 2026 Brinkwatertoad, without
+warranty. Third-party materials retain their own licenses; see [NOTICE](NOTICE),
+[THIRD_PARTY.md](THIRD_PARTY.md), and the application's local Licenses page.
+The separate SpjutSim-UI-Kit repository is not relicensed by this decision.
+The [distribution policy](docs/release/distribution-policy.md) records approval,
+source obligations, and final artifact approval.
 
 ## Current boundary
 
