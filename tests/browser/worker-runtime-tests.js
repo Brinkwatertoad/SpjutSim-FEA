@@ -93,7 +93,7 @@
   function validResultModel() {
     var scalar = new Float32Array([10, 20, 30, 40]);
     return {
-      schemaVersion: 2, analysisRevision: 0, elementType: 'tet4',
+      schemaVersion: 2, rangeMetadataVersion: 1, analysisRevision: 0, elementType: 'tet4',
       originalSurface: {
         nodePositionsM: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]),
         triangleConnectivity: new Uint32Array([0, 2, 1]), faceIds: ['opaque-face'],
@@ -110,11 +110,28 @@
       surfaceFields: { vonMisesPa: scalar, maxPrincipalPa: new Float32Array(scalar), minPrincipalPa: new Float32Array(scalar),
         displacementMagnitudeM: new Float32Array([0, 0.01, 0.01, 0.01]), uxM: new Float32Array([0, 0.01, 0, 0]),
         uyM: new Float32Array([0, 0, 0.01, 0]), uzM: new Float32Array([0, 0, 0, 0.01]) },
-      ranges: { vonMises: { minimum: 10, maximum: 40 }, maxPrincipal: { minimum: 10, maximum: 40 },
-        minPrincipal: { minimum: 10, maximum: 40 }, displacementMagnitude: { minimum: 0, maximum: 0.01 },
-        ux: { minimum: 0, maximum: 0.01 }, uy: { minimum: 0, maximum: 0.01 }, uz: { minimum: 0, maximum: 0.01 } },
-      extrema: { maxDisplacement: { valueM: 0.01, locationM: [1, 0, 0] }, rawVonMisesMax: { valuePa: 40, sampleIndex: 0, locationM: [0.25, 0.25, 0.25] },
-        displayedVonMisesMax: { valuePa: 40 }, rawMaxPrincipal: { valuePa: 30 }, rawMinPrincipal: { valuePa: -10 } },
+      ranges: {
+        vonMises: { minimum: 10, maximum: 30, locationOwner: 'surface-node', minimumNodeIndex: 0, maximumNodeIndex: 2,
+          minimumLocationM: [0, 0, 0], maximumLocationM: [0, 1, 0] },
+        maxPrincipal: { minimum: 10, maximum: 30, locationOwner: 'surface-node', minimumNodeIndex: 0, maximumNodeIndex: 2,
+          minimumLocationM: [0, 0, 0], maximumLocationM: [0, 1, 0] },
+        minPrincipal: { minimum: 10, maximum: 30, locationOwner: 'surface-node', minimumNodeIndex: 0, maximumNodeIndex: 2,
+          minimumLocationM: [0, 0, 0], maximumLocationM: [0, 1, 0] },
+        displacementMagnitude: { minimum: 0, maximum: Math.fround(0.01), locationOwner: 'surface-node', minimumNodeIndex: 0, maximumNodeIndex: 2,
+          minimumLocationM: [0, 0, 0], maximumLocationM: [0, 1, 0] },
+        ux: { minimum: 0, maximum: Math.fround(0.01), locationOwner: 'surface-node', minimumNodeIndex: 0, maximumNodeIndex: 1,
+          minimumLocationM: [0, 0, 0], maximumLocationM: [1, 0, 0] },
+        uy: { minimum: 0, maximum: Math.fround(0.01), locationOwner: 'surface-node', minimumNodeIndex: 0, maximumNodeIndex: 2,
+          minimumLocationM: [0, 0, 0], maximumLocationM: [0, 1, 0] },
+        uz: { minimum: 0, maximum: 0, locationOwner: 'surface-node', minimumNodeIndex: 0, maximumNodeIndex: 0,
+          minimumLocationM: [0, 0, 0], maximumLocationM: [0, 0, 0] }
+      },
+      extrema: { maxDisplacement: { valueM: 0.01, nodeIndex: 1, locationOwner: 'volume-node', locationM: [1, 0, 0] },
+        rawVonMisesMax: { valuePa: 40, sampleIndex: 0, elementIndex: 0, locationOwner: 'solver-sample', isInterior: true,
+          faceId: 'opaque-face', nearbyBoundaryFaceId: 'opaque-face', locationM: [0.25, 0.25, 0.25] },
+        displayedVonMisesMax: { valuePa: 30, nodeIndex: 2, locationOwner: 'surface-node', locationM: [0, 1, 0] },
+        rawMaxPrincipal: { valuePa: 30, sampleIndex: 0, elementIndex: 0, locationOwner: 'solver-sample', isInterior: true, locationM: [0.25, 0.25, 0.25] },
+        rawMinPrincipal: { valuePa: -10, sampleIndex: 0, elementIndex: 0, locationOwner: 'solver-sample', isInterior: true, locationM: [0.25, 0.25, 0.25] } },
       equilibrium: { totalReactionN: [-1, 0, 0], totalAppliedForceN: [1, 0, 0], relativeResidual: 0 },
       solverStatistics: { iterations: 1, finalRelativeResidual: 0, solveDurationMs: 1, wasmMemoryBytes: 16777216 },
       meshStatistics: { nodeCount: 4, elementCount: 1 }, preflight: {}, warnings: []
@@ -289,6 +306,7 @@
       'Mesh view retained Model feature edges');
     var viewState = viewport.captureViewState();
     var result = validResultModel();
+    assert(api.validateResultModel(result, 0).valid, 'rendering fixture violated the versioned result contract');
     viewport.setResultModel(result);
     viewport.setPresentation({ mode: 'stress', displayStyle: 'lines', field: 'vonMises', meshOverlay: false,
       deformationMode: 'undeformed', deformationScale: 0, userDeformationScale: 1 });

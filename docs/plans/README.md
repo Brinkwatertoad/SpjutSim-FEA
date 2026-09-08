@@ -54,9 +54,9 @@ documentation, one complete-diff review, the complete applicable suites from the
 repository README, and the manual checkpoint below. Do not create tests that
 merely mirror implementation or turn each mechanical step into an approval gate.
 
-21. [ ] [Responsive workspace and overlays](21-responsive-workspace-and-overlays.md)
-22. [ ] [Stress extrema and result clarity](22-stress-extrema-and-result-clarity.md)
-23. [ ] [Orthographic camera and interactive gizmo](23-orthographic-camera-and-view-gizmo.md)
+21. [x] [Responsive workspace and overlays](21-responsive-workspace-and-overlays.md) — implemented and M21 accepted 2026-09-08
+22. [x] [Stress extrema and result clarity](22-stress-extrema-and-result-clarity.md) — implemented and M22 accepted 2026-09-08
+23. [x] [Orthographic camera and interactive gizmo](23-orthographic-camera-and-view-gizmo.md) — implemented and M23 accepted 2026-09-08
 24. [ ] [Contextual display controls and stress legend](24-display-controls-and-stress-legend.md)
 25. [ ] [Support/load preview authoring](25-support-and-load-preview-authoring.md)
 26. [ ] [Setup workflow and solve checks](26-setup-workflow-and-solve-checks.md)
@@ -76,8 +76,13 @@ not required by this sequence.
 
 ## Manual review schedule
 
+The owner's 2026-09-07 instruction to accomplish a few plans before a manual
+check authorizes one implementation batch for **21–23**, including parallel
+assistance. This overrides those plans' per-package stop/no-subagent notes for
+this batch only. [The combined review packet](../reviews/21-23-review.md) records the owner’s 2026-09-08 acceptance of M21, M22, and M23. Task 24 is next. The later review schedule and all release gates remain unchanged.
+
 This is a milestone schedule, not calendar appointments or automated reminders.
-All reviews are **Pending**. Reserve review time when the preceding implementation
+M21–M23 are **Accepted**; later reviews remain **Pending**. Reserve review time when the preceding implementation
 is ready, not before a runnable result exists. At each checkpoint the agent must
 stop, provide the review packet, and wait for the owner's explicit acceptance
 before starting the next plan. Automated checks are necessary but cannot approve
@@ -88,7 +93,7 @@ same checkpoint. Silence is not acceptance.
 | --- | --- | --- | --- | --- |
 | M21 | Plan 21 | Resize/zoom, split/collapse panes, overlay visibility | 10 min | `docs/reviews/21-workspace.md` |
 | M22 | Plan 22 | Read peaks/FoS, explain smoothing, locate peak | 15 min | `docs/reviews/22-result-clarity.md` |
-| M23 | Plan 23 | Six views, isometric, projection switching, picking | 15 min | `docs/reviews/23-camera.md` |
+| M23 | Plan 23 | Six views, animated reset, projection switching, picking | 15 min | `docs/reviews/23-camera.md` |
 | M24 | Plan 24 | View/field/shape controls, mesh toggle, legend ranges | 15 min | `docs/reviews/24-display.md` |
 | M25 | Plan 25 | Add/edit/toggle/preview/Apply/Cancel assignments | 20 min | `docs/reviews/25-assignment-drafts.md` |
 | M26 | Plan 26 | Setup → explicit checks → solve, errors and recovery | 20 min | `docs/reviews/26-setup-checks.md` |

@@ -1,7 +1,7 @@
 (function (root) {
   'use strict';
 
-  var PREFERENCE_SCHEMA_VERSION = 1;
+  var PREFERENCE_SCHEMA_VERSION = 2;
   var PREFERENCE_STORAGE_KEY = 'spjutsim-fea.viewport-navigation';
   var ARROW_NAVIGATION_ROLES = new Set([
     'application', 'combobox', 'grid', 'gridcell', 'listbox', 'menu', 'menubar', 'menuitem', 'menuitemcheckbox',
@@ -9,6 +9,7 @@
     'tablist', 'textbox', 'searchbox', 'toolbar', 'tree', 'treegrid', 'treeitem'
   ]);
   var DEFAULT_PREFERENCES = Object.freeze({
+    projection: 'orthographic',
     rotateButton: 0,
     panButton: 2,
     reverseZoom: false,
@@ -36,6 +37,7 @@
       panButton = DEFAULT_PREFERENCES.panButton;
     }
     return {
+      projection: source.projection === 'perspective' ? 'perspective' : 'orthographic',
       rotateButton: rotateButton,
       panButton: panButton,
       reverseZoom: typeof source.reverseZoom === 'boolean' ? source.reverseZoom : DEFAULT_PREFERENCES.reverseZoom,
@@ -48,7 +50,7 @@
 
   function migrateNavigationPreferences(record) {
     if (!record || typeof record !== 'object') { return normalizeNavigationPreferences(); }
-    if (record.version === PREFERENCE_SCHEMA_VERSION && record.preferences && typeof record.preferences === 'object') {
+    if ((record.version === 1 || record.version === PREFERENCE_SCHEMA_VERSION) && record.preferences && typeof record.preferences === 'object') {
       return normalizeNavigationPreferences(record.preferences);
     }
     return normalizeNavigationPreferences();
@@ -103,7 +105,7 @@
     var height = Math.max(Number(canvasHeight) || 1, 1);
     var scaleY = 2 * Math.max(Number(distance) || 0, 0.000001) * Math.tan(Number(verticalFovRadians) / 2) / height;
     var scale = Number.isFinite(Number(sensitivity)) ? Number(sensitivity) : 1;
-    return { x: -Number(deltaX) * scaleY * Number(aspect) * scale, y: Number(deltaY) * scaleY * scale };
+    return { x: -Number(deltaX) * scaleY * scale, y: Number(deltaY) * scaleY * scale };
   }
 
   function isEditableOrModalTarget(target, documentRef) {

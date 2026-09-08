@@ -1,0 +1,73 @@
+(function () {
+  'use strict';
+  var api = SpjutsimFEA;
+  function assert(value, message) { if (!value) { throw new Error(message); } }
+  var ui = new api.UIController({document:{}});
+  var result = {
+    elementType:'tet10', meshStatistics:{nodeCount:10,elementCount:1},
+    extrema:{maxDisplacement:{valueM:1e-6,locationM:[0,0,0]},
+      rawVonMisesMax:{valuePa:5000,locationM:[0.25,0.25,0.25]},displayedVonMisesMax:{valuePa:4000},
+      rawMaxPrincipal:{valuePa:5000},rawMinPrincipal:{valuePa:-1e-8}},
+    equilibrium:{totalAppliedForceN:[1000,0,0],totalReactionN:[-1000,1e-12,0]},
+    solverStatistics:{strainEnergyJ:1e-6}, assumptions:['linear-elastic'], convergenceStatus:'not-run',warnings:[],
+    ranges:{vonMises:{minimum:1000,maximum:4000},factorOfSafety:{minimum:2,maximum:2.5,clipped:false}},
+    factorOfSafety:{rawMinimum:{value:2},displayedMinimum:2.5,strength:{valuePa:10000}}
+  };
+  try {
+    ui.renderSolve({mesh:{}});
+    assert(!document.getElementById('solve-button').disabled, 'Solve unavailable before an available preflight');
+    ui.renderSolve({mesh:{},solvePreflight:{status:'running'}});
+    assert(document.getElementById('solve-button').disabled, 'Solve enabled during preflight');
+    ui.renderSolve({mesh:{},solvePreflight:{status:'ready',result:{exceedsWasmCap:true}}});
+    assert(document.getElementById('solve-button').disabled, 'Solve enabled above memory cap');
+    ui.renderSolve({mesh:{},solvePreflight:{status:'failed',error:{userMessage:'Add supports to constrain rigid-body motion.'}}});
+    assert(!document.getElementById('solve-output-status').hidden && document.getElementById('solve-output-status').textContent.includes('Add supports'), 'Preflight failure is not visible in Results when Tools is collapsed');
+    ui.renderSolve({mesh:null});
+    assert(document.getElementById('solve-button').disabled, 'Solve enabled without mesh');
+    var before = JSON.stringify(result);
+    ui.renderResults({results:result});
+    assert(document.getElementById('peak-headline').textContent.includes('0.005 MPa'), 'Engineering headline did not use sample peak');
+    assert(document.getElementById('yield-headline').textContent.endsWith(': 2'), 'Engineering yield headline used smoothed FoS');
+    assert(document.getElementById('trust-headline').textContent.includes('Not studied'), 'Single solve implied convergence');
+    ui.renderLegend({results:result,viewportPresentation:{mode:'stress',field:'factorOfSafety'}});
+    assert(!document.getElementById('legend-title').textContent.includes('clipped') && document.getElementById('legend-status').textContent.includes('Unclipped'), 'Unclipped FoS was described as clipped');
+    ui.renderLegend({results:result,viewportPresentation:{mode:'stress',field:'vonMises'}});
+    assert(document.getElementById('legend-title').textContent === 'von Mises (MPa)', 'Stress legend is not quiet');
+    assert(document.getElementById('legend-min').textContent === '0' && document.getElementById('legend-max').textContent === '0.005', 'Legend does not span zero to model sample peak');
+    assert(document.getElementById('legend-status').hidden && document.getElementById('result-legend').title.includes('0.004 MPa'), 'Smoothing detail is not confined to the tooltip');
+    assert(api.getResultDisplayRange(result, 'vonMises').maximum === 5000 && result.ranges.vonMises.maximum === 4000, 'Display range replaced boundary metadata');
+    assert(api.getResultDisplayRange(result, 'factorOfSafety') === result.ranges.factorOfSafety, 'Other field ranges changed');
+    // Exercise the actual color-buffer update, independently of camera/WebGL startup.
+    var renderer = Object.create(api.ViewportController.prototype);
+    var geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9), 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(9), 3));
+    renderer.resultSurface = {geometry:geometry};
+    renderer.resultDisplay = {userData:{lines:{geometry:geometry.clone()}}};
+    renderer.resultModel = Object.assign({}, result, {
+      originalSurface:{nodePositionsM:new Float64Array([0,0,0,1,0,0,0,1,0])},
+      displacementM:new Float64Array(9), surfaceFields:{vonMisesPa:new Float32Array([1000,2500,4000])}
+    });
+    renderer.presentation = {field:'vonMises',deformationScale:0}; renderer.deformationAnimationMultiplier = 1;
+    renderer.updateResultPresentation();
+    var color = geometry.getAttribute('color').array;
+    assert(Math.abs(color[3] - 0.56) < 1e-6 && Math.abs(color[4] - 0.775) < 1e-6 && Math.abs(color[5] - 0.435) < 1e-6, 'Surface color does not use the same zero-to-sample-peak scale as legend');
+    renderer.resultModel.extrema = {rawVonMisesMax:{valuePa:0}};
+    renderer.resultModel.surfaceFields.vonMisesPa.fill(0); renderer.updateResultPresentation();
+    assert(Array.from(color).every(Number.isFinite), 'Zero stress produced nonfinite colors');
+    renderer.resultDisplay.userData.lines.geometry.dispose(); geometry.dispose();
+    var values = document.getElementById('results-values');
+    var reaction = Array.from(values.querySelectorAll('dt')).find(function (label) { return label.textContent === 'Reaction'; }).nextElementSibling;
+    assert(reaction.textContent.includes('1e-12 N'), 'Small reaction was silently rounded to zero');
+    assert(Array.from(values.querySelectorAll('dd')).every(function (value) { return value.getBoundingClientRect().width >= 100; }), 'Result labels squeezed values into an unreadable column');
+    assert(JSON.stringify(result) === before, 'Formatting mutated engineering data');
+    document.getElementById('peak-location-status').textContent = 'Old level peak';
+    ui.renderResults({results:Object.assign({},result,{factorOfSafety:null})});
+    assert(document.getElementById('yield-headline').textContent.includes('unavailable'), 'Missing strength did not remove the yield headline');
+    assert(document.getElementById('peak-location-status').textContent === '', 'A different result retained the previous peak location');
+    document.getElementById('peak-location-status').textContent = 'Old peak';
+    ui.renderResults({results:null});
+    assert(document.getElementById('peak-location-status').textContent === '', 'Stale peak location survived result invalidation');
+    document.getElementById('test-status').textContent = 'Passed';
+  } catch (error) { document.getElementById('test-status').textContent = 'Failed: ' + error.message; }
+}());

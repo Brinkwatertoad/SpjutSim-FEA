@@ -5,9 +5,11 @@ SpjutSim FEA is a local-first browser application for simple static finite eleme
 ## Development status
 
 v1 is unreleased. The approved interface, result-clarity, and bounded STL work
-is scheduled in [plans 21–30](docs/plans/README.md), with owner usability reviews
-after each package. These plans precede the final plan 20 candidate audit; they
-do not describe features already implemented.
+is tracked in [plans 21–30](docs/plans/README.md). Plans 21–23 are implemented
+and accepted in the [combined owner review](docs/reviews/21-23-review.md) on
+2026-09-08; plans
+24–30 remain ahead of the final plan 20 candidate audit. No v1 acceptance is
+implied by passing automated checks.
 
 ## Run locally
 
@@ -54,8 +56,24 @@ to run the imported STEP-cube face-picking checks across canvas sizes. It should
 report `Passed`; the pointer conversion check also covers a simulated 2× device
 pixel ratio.
 
+Open `tests/browser/workspace-layout-tests.html` directly in Chromium with local
+file access enabled (or from the optional HTTP server) to exercise the real
+application's resize sequence, pane controls, keyboard focus, and preference
+fallbacks. Repeat at 2× DPI. `tests/browser/result-range-tests.html`,
+`tests/browser/result-formatting-tests.html`, and
+`tests/browser/result-presentation-tests.html` cover boundary-only contour
+ranges, scientific number formatting, and a quiet von Mises legend/color scale
+from zero to the whole-model sample peak.
+They should report `Passed`.
+
 Open `tests/browser/viewport-navigation-tests.html` directly in Chromium to run
-the camera navigation, preference validation, and pointer-cancellation checks.
+the orthographic/perspective camera, six signed views, interactive gizmo,
+projection preference migration, exact peak marker, and pointer-cancellation checks.
+It should report `Passed`.
+
+Open `tests/browser/solve-workflow-tests.html` with local file access enabled (or
+from the HTTP server) to check automatic preflight before Solve, blocked checks,
+cancellation, stale worker completion, and the existing memory confirmation.
 It should report `Passed`.
 
 Open `tests/browser/analysis-authoring-tests.html` directly in Chromium to run
@@ -177,10 +195,31 @@ STEP/IGES/BREP import and Tet4/Tet10 meshing in disposable Gmsh workers, SI-back
 authoring, exact-topology memory preflight, and the first-party FEM core compiled
 as a pinned single-threaded embedded WASM worker runtime. Solves return validated
 transferable result models with raw and smoothed stress fields, reactions,
-equilibrium and solver diagnostics. The viewport supports Model, Mesh, Stress,
+equilibrium and solver diagnostics. The workspace has persistent Setup/Results width preferences, visible pane
+toggles, and keyboard/pointer splitters. A separate action bar below the menubar
+places Tools on the left and Solve beside Results on the right, with disabled
+Undo/Redo/Save/Export placeholders. Disclosure triangles inside both panels match
+Truss. Solve runs an available preflight first and proceeds only after a valid
+check; explicit preflight remains available. Empty Results starts collapsed. Below
+1000 CSS pixels one pane is active at a time; below 680 pixels panes become
+explicitly opened drawers over a full-width canvas. View defaults to
+an orthographic three-face view. The 3D display Perspective switch preserves the
+view angle and apparent scale. The cube icon resets the view with a brief
+interruptible animation. Gizmo circles and negative labels appear on hover or
+keyboard focus (always on no-hover devices); labels respect arrow depth.
+
+The viewport supports Model, Mesh, Stress,
 and Deformation presentation (including legends, scale modes, mesh overlay, and
 approximate probes), defaults to von Mises stress after solve, and disposes stale
-result resources after upstream engineering edits. Deformation view includes a
+result resources after upstream engineering edits. The result headline and
+yield FoS use unaveraged recovery samples; contour extrema use only nodes
+referenced by the rendered boundary. The von Mises legend and colors use zero
+to the whole-model sample peak; surface maximum/smoothing detail lives in a
+tooltip and the Results panel. Stress smoothing remains the within-element
+sample mean followed by the unweighted adjacent-element mean. Locate peak marks
+the actual interior recovery sample in undeformed coordinates, through the
+surface if necessary. Sample maxima are not exact continuum maxima. Small
+numbers remain visible in scientific notation. Deformation view includes a
 Truss-compatible Play/Stop animation, an exaggeration slider, and a live scale
 readout; animation is presentation-only and returns to the selected full scale
 when stopped.

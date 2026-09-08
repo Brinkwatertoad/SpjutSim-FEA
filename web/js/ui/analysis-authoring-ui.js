@@ -697,6 +697,8 @@
       var list = groups[definition.kind];
       var item = document.createElement('li');
       var trigger = document.createElement('button');
+      var chevron = document.createElement('span');
+      chevron.className = 'fea-chevron'; chevron.textContent = '▶'; chevron.setAttribute('aria-hidden', 'true');
       var primary = document.createElement('strong');
       var summary = document.createElement('span');
       var meta = document.createElement('span');
@@ -716,7 +718,7 @@
       primary.textContent = definition.primaryText;
       summary.className = 'fea-setup-row-summary'; summary.textContent = definition.secondaryText;
       meta.className = 'fea-setup-row-meta'; meta.textContent = definition.metaText;
-      trigger.append(primary, summary, meta);
+      trigger.append(chevron, primary, summary, meta);
       trigger.addEventListener('click', function () { self.openInspectorRow(definition.kind, definition.itemId, trigger); });
       editorHost.id = editorId;
       editorHost.className = 'fea-setup-editor';

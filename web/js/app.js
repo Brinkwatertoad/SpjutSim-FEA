@@ -111,7 +111,7 @@
     activeSolverRevision = null;
   }
 
-  function prepareSolve() {
+  function prepareSolve(continueToSolve) {
     var input;
     var revision;
     cancelConvergence();
@@ -127,10 +127,13 @@
     if (activeMesh) { activeMesh.cancel(); activeMesh = null; }
     activeSolver = new api.SolverClient({ onProgress: function (progress) { app.reportSolveProgress(progress); } });
     activeSolverRevision = revision;
-    activeSolver.preflight(input, revision, root.navigator && root.navigator.deviceMemory).then(function (result) {
-      if (activeSolverRevision === revision && !app.completeSolvePreflight(revision, result)) { disposeSolver(); }
+    var client = activeSolver;
+    client.preflight(input, revision, root.navigator && root.navigator.deviceMemory).then(function (result) {
+      if (activeSolver !== client) { return; }
+      if (!app.completeSolvePreflight(revision, result)) { disposeSolver(); return; }
+      if (continueToSolve === true && !result.exceedsWasmCap) { solve(); }
     }).catch(function (error) {
-      if (activeSolverRevision === revision) { app.failSolvePreflight(revision, error); disposeSolver(); }
+      if (activeSolver === client) { app.failSolvePreflight(revision, error); disposeSolver(); }
     });
   }
 
@@ -138,16 +141,20 @@
     var preflight = app.document.solvePreflight;
     var confirmed = true;
     var revision;
-    if (!activeSolver || preflight.status !== 'ready') { return; }
+    if (!app.document.mesh || preflight.status === 'running' || app.document.solveExecution.status === 'running' ||
+        (app.document.convergenceStudy && app.document.convergenceStudy.status === 'running')) { return; }
+    if (preflight.status === 'ready' && preflight.result.exceedsWasmCap) { return; }
+    if (!activeSolver || preflight.status !== 'ready') { prepareSolve(true); return; }
     if (preflight.result.requiresEightGiBConfirmation) {
       confirmed = root.confirm('This solve is estimated at or above 8 GiB. Browser, OS, or WebAssembly limits may terminate it even when the device has more memory. Continue?');
     }
     if (!confirmed) { return; }
     try { revision = app.beginSolve(); } catch (error) { return; }
-    activeSolver.solve(revision, app.document.solveSettings, confirmed).then(function (result) {
-      if (activeSolverRevision === revision) { app.completeSolve(revision, result); disposeSolver(); }
+    var client = activeSolver;
+    client.solve(revision, app.document.solveSettings, confirmed).then(function (result) {
+      if (activeSolver === client) { app.completeSolve(revision, result); disposeSolver(); }
     }).catch(function (error) {
-      if (activeSolverRevision === revision) { app.failSolve(revision, error); disposeSolver(); }
+      if (activeSolver === client) { app.failSolve(revision, error); disposeSolver(); }
     });
   }
 

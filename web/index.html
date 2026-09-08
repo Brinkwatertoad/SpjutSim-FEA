@@ -11,7 +11,7 @@
 <body>
   <div class="fea-app" id="app-shell">
     <header class="fea-topbar">
-      <div><strong>SpjutSim FEA</strong> <span id="app-status" role="status">Starting…</span></div>
+      <div><strong>SpjutSim FEA</strong></div>
       <nav class="ui-menu-bar" id="application-menu" aria-label="Application menus">
         <div class="ui-menu-group" data-ui-menu-group data-open="false">
           <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">File</button>
@@ -22,15 +22,34 @@
           <div class="ui-menu-list" role="menu">
             <button type="button" role="menuitem" data-ui-menu-action="fit-view">Fit model</button>
             <button type="button" role="menuitem" data-ui-menu-action="reset-view">Reset view</button>
+            <button type="button" role="menuitem" data-ui-menu-action="camera-+x">View from +X · YZ plane</button>
+            <button type="button" role="menuitem" data-ui-menu-action="camera--x">View from −X · YZ plane</button>
+            <button type="button" role="menuitem" data-ui-menu-action="camera-+y">View from +Y · XZ plane</button>
+            <button type="button" role="menuitem" data-ui-menu-action="camera--y">View from −Y · XZ plane</button>
+            <button type="button" role="menuitem" data-ui-menu-action="camera-+z">View from +Z · XY plane</button>
+            <button type="button" role="menuitem" data-ui-menu-action="camera--z">View from −Z · XY plane</button>
+            <button type="button" role="menuitemradio" aria-checked="true" data-ui-menu-action="projection-orthographic">Orthographic</button>
+            <button type="button" role="menuitemradio" aria-checked="false" data-ui-menu-action="projection-perspective">Perspective</button>
             <button type="button" role="menuitem" data-ui-menu-action="settings"><span>Settings…</span><span class="ui-menu-shortcut" aria-hidden="true"></span></button>
           </div>
         </div>
         <a class="ui-menu-button" href="licenses/index.html" target="_blank" rel="noopener">Licenses</a>
       </nav>
-      <button class="fea-primary" id="solve-button" type="button" disabled title="Available after model preflight">Solve</button>
+      <span id="app-status" role="status">Starting…</span>
     </header>
+    <div class="fea-actionbar" role="group" aria-label="Model actions">
+      <button id="toggle-setup-pane" aria-controls="setup-pane" aria-expanded="true" type="button" title="Show or hide Tools">Tools</button>
+      <div class="fea-shell-actions">
+        <button type="button" data-placeholder="undo" disabled title="Undo — not implemented yet">Undo</button>
+        <button type="button" data-placeholder="redo" disabled title="Redo — not implemented yet">Redo</button>
+        <button type="button" data-placeholder="save" disabled title="Save — not implemented yet">Save</button>
+        <button type="button" data-placeholder="export" disabled title="Export — not implemented yet">Export</button>
+      </div>
+      <button class="fea-primary" id="solve-button" type="button" disabled title="Generate a mesh before solving">Solve</button>
+      <button id="toggle-results-pane" aria-controls="results-pane" aria-expanded="false" type="button" title="Show or hide Results">Results</button>
+    </div>
     <main class="fea-workspace">
-      <aside class="fea-tools" aria-label="Setup">
+      <aside id="setup-pane" class="fea-tools" aria-label="Setup">
         <h1 id="setup-inspector-title">Setup</h1>
         <section id="setup-inspector" class="fea-setup-inspector" aria-labelledby="setup-inspector-title">
           <p id="setup-inspector-status" class="fea-visually-hidden" role="status" aria-live="polite"></p>
@@ -68,7 +87,7 @@
                 <label for="material-poisson">Poisson's ratio</label><input id="material-poisson" type="number" min="-0.999" max="0.499" step="any" required aria-describedby="material-poisson-help">
                 <small id="material-poisson-help">Valid between −1 and 0.5. Negative values are unusual for ordinary solids.</small>
                 <label for="material-density">Density (kg/m³, optional)</label><input id="material-density" type="number" min="0" step="any">
-                <details><summary>Optional strengths</summary>
+                <details><summary><span class="fea-chevron" aria-hidden="true">▶</span> Optional strengths</summary>
                   <label for="material-tensile-yield">Tensile yield (MPa)</label><input id="material-tensile-yield" type="number" min="0" step="any">
                   <label for="material-compressive-yield">Compressive yield (MPa)</label><input id="material-compressive-yield" type="number" min="0" step="any">
                   <label for="material-ultimate-tensile">Ultimate tensile (MPa)</label><input id="material-ultimate-tensile" type="number" min="0" step="any">
@@ -152,9 +171,10 @@
           <dl id="preflight-summary" class="fea-compact-diagnostics" hidden></dl>
         </section>
       </aside>
+      <div id="setup-splitter" class="fea-splitter" role="separator" tabindex="0" aria-label="Resize Setup pane" aria-orientation="vertical" aria-controls="setup-pane" aria-valuemin="220" aria-valuemax="520" aria-valuenow="280"></div>
       <section class="fea-canvas" aria-label="3D viewport">
         <canvas id="viewport" tabindex="0" aria-describedby="viewport-help" aria-label="3D viewport. Left drag rotates, right drag pans, wheel or pinch zooms, and arrow keys rotate."></canvas>
-        <div class="fea-viewport-actions" aria-label="Viewport actions">
+        <div class="fea-viewport-actions" aria-label="3D display">
           <label for="viewport-mode">View</label>
           <select id="viewport-mode" aria-label="Viewport presentation mode"><option value="model">Model</option><option value="mesh">Mesh</option><option value="stress">Stress</option><option value="deformation">Deformation</option></select>
           <label for="display-style">Display style</label>
@@ -172,21 +192,38 @@
           <output id="deformation-scale-readout" for="deformation-scale" hidden>x100</output>
           <label class="fea-overlay-check" for="mesh-overlay"><input id="mesh-overlay" type="checkbox" disabled> Mesh overlay</label>
           <button id="fit-view-button" type="button">Fit model</button>
-          <button id="reset-view-button" type="button">Reset view</button>
+          <label class="fea-overlay-check" for="perspective-toggle"><input id="perspective-toggle" type="checkbox" role="switch"> Perspective</label>
         </div>
+        <div class="fea-gizmo-bounds" role="group" aria-label="Camera orientation">
+          <button type="button" data-view-orientation="+x" aria-label="View from +X · YZ plane" title="View from +X · YZ plane"></button>
+          <button type="button" data-view-orientation="-x" aria-label="View from -X · YZ plane" title="View from -X · YZ plane"></button>
+          <button type="button" data-view-orientation="+y" aria-label="View from +Y · XZ plane" title="View from +Y · XZ plane"></button>
+          <button type="button" data-view-orientation="-y" aria-label="View from -Y · XZ plane" title="View from -Y · XZ plane"></button>
+          <button type="button" data-view-orientation="+z" aria-label="View from +Z · XY plane" title="View from +Z · XY plane"></button>
+          <button type="button" data-view-orientation="-z" aria-label="View from -Z · XY plane" title="View from -Z · XY plane"></button>
+          <button id="reset-view-button" type="button" aria-label="Reset view" title="Reset view"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 22 7.5v9L12 22 2 16.5v-9Z M2 7.5 12 13l10-5.5 M12 13v9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
+        </div>
+        <div class="fea-result-overlays">
         <div id="result-legend" class="fea-result-legend" hidden><strong id="legend-title"></strong><div class="fea-color-ramp"></div><div><span id="legend-min"></span><span id="legend-max"></span></div><small id="legend-status"></small></div>
         <output id="probe-output" class="fea-probe" hidden></output>
+        </div>
         <p class="fea-viewport-help" id="viewport-help">Left drag rotates · Right drag pans · Wheel or pinch zooms · Arrow keys rotate</p>
       </section>
-      <aside class="fea-results" aria-label="Analysis output">
+      <div id="results-splitter" class="fea-splitter" role="separator" tabindex="0" aria-label="Resize Results pane" aria-orientation="vertical" aria-controls="results-pane" aria-valuemin="260" aria-valuemax="520" aria-valuenow="340" hidden></div>
+      <aside id="results-pane" hidden class="fea-results" aria-label="Analysis output">
         <div role="tablist" aria-label="Output views">
           <button id="results-tab" role="tab" aria-selected="true" aria-controls="results-panel" data-output-tab="results">Results</button>
           <button id="convergence-tab" role="tab" aria-selected="false" aria-controls="convergence-summary" data-output-tab="convergence" tabindex="-1">Convergence</button>
           <button id="diagnostics-tab" role="tab" aria-selected="false" aria-controls="diagnostics-panel" data-output-tab="diagnostics" tabindex="-1">Diagnostics</button>
         </div>
         <section id="results-panel" role="tabpanel" aria-labelledby="results-tab" data-output-panel="results">
+          <p id="solve-output-status" role="status" aria-live="polite" hidden></p>
           <p id="results-empty">No analysis results.</p>
-          <section id="results-summary" hidden><h2>Results</h2><dl class="fea-output-list" id="results-values"></dl></section>
+          <section id="results-summary" hidden><h2>Results</h2>
+            <p id="peak-headline"></p><p id="yield-headline"></p><p id="trust-headline"></p>
+            <button id="locate-peak-button" type="button">Locate peak</button><p id="peak-location-status" role="status"></p>
+            <details><summary><span class="fea-chevron" aria-hidden="true">▶</span> How to read these results</summary><p>The headline is the peak von Mises stress among unaveraged solver recovery samples throughout the solid. A sampled maximum is not an exact continuum maximum.</p><p>The smoothed surface contour first averages recovery samples within each element, then takes an unweighted mean of adjacent element values at each node. Surface extrema include only nodes used by the displayed boundary. The von Mises color scale spans zero to the whole-model sample peak, so its top color may not appear on the surface. Smoothing can reduce peaks.</p><p>Yield factor of safety uses the unaveraged sample peak and the smaller available tensile/compressive yield strength. One linear solve does not establish safety; review convergence, constraints and stress concentrations.</p></details>
+            <dl class="fea-output-list" id="results-values"></dl></section>
         </section>
         <section id="convergence-summary" role="tabpanel" aria-labelledby="convergence-tab" data-output-panel="convergence" hidden>
           <h2 id="convergence-title">Convergence</h2>
@@ -291,6 +328,8 @@
   <script src="js/render/viewport-controller.js"></script>
   <script src="js/ui/setup-inspector-summary.js"></script>
   <script src="js/ui/analysis-authoring-ui.js"></script>
+  <script src="js/ui/result-formatting.js"></script>
+  <script src="js/ui/workspace-layout.js"></script>
   <script src="js/ui/ui-controller.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source-part-001.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source-part-002.js"></script>

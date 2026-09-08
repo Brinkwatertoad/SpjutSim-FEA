@@ -30,9 +30,15 @@
     this.cancelSolveButton = document.getElementById('cancel-solve-button');
     this.solveStatus = document.getElementById('solve-status');
     this.preflightSummary = document.getElementById('preflight-summary');
+    this.solveOutputStatus = document.getElementById('solve-output-status');
     this.resultsEmpty = document.getElementById('results-empty');
     this.resultsSummary = document.getElementById('results-summary');
     this.resultsValues = document.getElementById('results-values');
+    this.peakHeadline = document.getElementById('peak-headline');
+    this.yieldHeadline = document.getElementById('yield-headline');
+    this.trustHeadline = document.getElementById('trust-headline');
+    this.locatePeakButton = document.getElementById('locate-peak-button');
+    this.peakLocationStatus = document.getElementById('peak-location-status');
     this.diagnosticsSummary = document.getElementById('diagnostics-summary');
     this.diagnosticsValues = document.getElementById('diagnostics-values');
     this.convergenceSummary = document.getElementById('convergence-summary');
@@ -59,9 +65,12 @@
     this.startConvergenceHandler = null;
     this.cancelConvergenceHandler = null;
     this.viewport = null;
+    this.workspaceLayout = null;
+    this.selectOutputTab = null;
     this.navigationPreferences = this.loadNavigationPreferences();
     this.applicationMenu = document.getElementById('application-menu');
     this.fitViewButton = document.getElementById('fit-view-button');
+    this.perspectiveToggle = document.getElementById('perspective-toggle');
     this.resetViewButton = document.getElementById('reset-view-button');
     this.settingsBackdrop = document.getElementById('settings-backdrop');
     this.settingsDialog = document.getElementById('settings-dialog');
@@ -109,7 +118,16 @@
     this.renderNavigationPreferences();
   };
 
+  UIController.prototype.renderProjectionCommands = function () {
+    var projection = this.navigationPreferences.projection || 'orthographic';
+    if (this.perspectiveToggle) { this.perspectiveToggle.checked = projection === 'perspective'; }
+    Array.from(document.querySelectorAll('[data-ui-menu-action^="projection-"]')).forEach(function (button) {
+      button.setAttribute('aria-checked', String(button.dataset.uiMenuAction === 'projection-' + projection));
+    });
+  };
+
   UIController.prototype.renderNavigationPreferences = function () {
+    this.renderProjectionCommands();
     var preferences = this.navigationPreferences;
     if (this.navigationRotateButton) { this.navigationRotateButton.value = String(preferences.rotateButton); }
     if (this.navigationPanButton) { this.navigationPanButton.value = String(preferences.panButton); }
@@ -211,7 +229,14 @@
   UIController.prototype.start = function () {
     var self = this;
     this.applySettingsShortcutPresentation();
-    configureOutputTabs(this.outputTabs, this.outputPanels);
+    if (this.locatePeakButton) { this.locatePeakButton.addEventListener('click', function () {
+      var peak = self.viewport && self.viewport.locatePeak();
+      if (peak && self.peakLocationStatus) { self.peakLocationStatus.textContent = 'Interior solver sample · undeformed xyz ' + peak.locationM.map(function (value) { return formatNumber(value, 'm'); }).join(', ') + '. Marker shows the sample through the surface.'; }
+    }); }
+    this.renderProjectionCommands();
+    this.selectOutputTab = configureOutputTabs(this.outputTabs, this.outputPanels);
+    var workspace = document.querySelector(".fea-workspace");
+    if (workspace && root.SpjutsimFEA.WorkspaceLayout) { this.workspaceLayout = new root.SpjutsimFEA.WorkspaceLayout(workspace); }
     if (this.analysisAuthoring) { this.analysisAuthoring.start(); }
     if (this.importButton && this.importInput) {
       this.importButton.addEventListener('click', function () { self.importInput.click(); });
@@ -260,11 +285,19 @@
     if (this.deformationAnimationToggle) { this.deformationAnimationToggle.addEventListener('click', function () { self.toggleDeformationAnimation(); }); }
     if (this.meshOverlay) { this.meshOverlay.addEventListener('change', function () { self.updateViewportPresentation(); }); }
     if (this.preflightButton) { this.preflightButton.addEventListener('click', function () { if (self.preflightHandler) { self.preflightHandler(); } }); }
-    if (this.solveButton) { this.solveButton.addEventListener('click', function () { if (self.solveHandler) { self.solveHandler(); } }); }
+    if (this.solveButton) { this.solveButton.addEventListener('click', function () { if (self.solveHandler) { self.showOutputPanel("results"); self.solveHandler(); } }); }
     if (this.cancelSolveButton) { this.cancelSolveButton.addEventListener('click', function () { if (self.cancelSolveHandler) { self.cancelSolveHandler(); } }); }
-    if (this.startConvergenceButton) { this.startConvergenceButton.addEventListener('click', function () { if (self.startConvergenceHandler) { self.startConvergenceHandler(); } }); }
+    if (this.startConvergenceButton) { this.startConvergenceButton.addEventListener('click', function () { if (self.startConvergenceHandler) { self.showOutputPanel("convergence"); self.startConvergenceHandler(); } }); }
     if (this.cancelConvergenceButton) { this.cancelConvergenceButton.addEventListener('click', function () { if (self.cancelConvergenceHandler) { self.cancelConvergenceHandler(); } }); }
     if (this.fitViewButton) { this.fitViewButton.addEventListener('click', function () { if (self.viewport) { self.viewport.fitCurrentModel(); } }); }
+    if (this.perspectiveToggle) {
+      this.perspectiveToggle.addEventListener('change', function () {
+        if (!self.viewport) { return; }
+        self.viewport.setProjection(self.perspectiveToggle.checked ? 'perspective' : 'orthographic');
+        self.navigationPreferences = self.viewport.getNavigationPreferences();
+        self.saveNavigationPreferences(); self.renderProjectionCommands();
+      });
+    }
     if (this.resetViewButton) { this.resetViewButton.addEventListener('click', function () { if (self.viewport) { self.viewport.resetView(); } }); }
     if (this.applicationMenu && root.PortableUIShellBehaviors) {
       this.menuController = root.PortableUIShellBehaviors.createMenuController({
@@ -274,6 +307,12 @@
           if (action === 'import-step' && self.importButton) { self.importButton.click(); }
           if (action === 'fit-view' && self.viewport) { self.viewport.fitCurrentModel(); }
           if (action === 'reset-view' && self.viewport) { self.viewport.resetView(); }
+          if (action.indexOf('camera-') === 0 && self.viewport) { self.viewport.setViewOrientation(action.slice(7)); }
+          if (action.indexOf('projection-') === 0 && self.viewport) {
+            self.viewport.setProjection(action.slice(11));
+            self.navigationPreferences = self.viewport.getNavigationPreferences();
+            self.saveNavigationPreferences(); self.renderProjectionCommands();
+          }
           if (action === 'settings') {
             self.openSettings(self.applicationMenu.querySelector('[data-ui-menu-action="settings"]').closest('[data-ui-menu-group]').querySelector('[data-ui-menu-button]'));
           }
@@ -524,7 +563,18 @@
     if (this.deformationAnimating) { this.stopDeformationAnimation(); } else { this.startDeformationAnimation(); }
   };
 
-  UIController.prototype.dispose = function () { this.stopDeformationAnimation(); };
+  UIController.prototype.dispose = function () {
+    this.stopDeformationAnimation();
+    if (this.workspaceLayout) { this.workspaceLayout.dispose(); }
+  };
+
+  UIController.prototype.showOutputPanel = function (panelId) {
+    var panel = this.outputPanels.find(function (item) { return item.dataset.outputPanel === panelId || item.id === panelId; });
+    if (!panel) { return false; }
+    if (this.workspaceLayout) { this.workspaceLayout.setPaneOpen("results", true); }
+    if (this.selectOutputTab) { this.selectOutputTab(panel.dataset.outputPanel, true); }
+    return true;
+  };
 
   UIController.prototype.resolveDeformationScale = function (mode) {
     var result = this.controller.document.results;
@@ -549,6 +599,7 @@
   };
 
   function formatNumber(value, unit) {
+    if (root.SpjutsimFEA.formatResultNumber) { return root.SpjutsimFEA.formatResultNumber(value) + (unit ? ' ' + unit : ''); }
     if (value === Infinity) { return '∞' + (unit ? ' ' + unit : ''); }
     if (!Number.isFinite(value)) { return '—'; }
     return value.toLocaleString(undefined, { maximumSignificantDigits: 5 }) + (unit ? ' ' + unit : '');
@@ -581,6 +632,7 @@
     });
     var initial = tabs.find(function (tab) { return tab.getAttribute('aria-selected') === 'true'; }) || tabs[0];
     if (initial) { select(initial.dataset.outputTab, false); }
+    return select;
   }
   function convergenceErrorMessage(error) {
     var value = error && error.diagnostic ? error.diagnostic : error;
@@ -635,13 +687,24 @@
     else if (preflight.status === 'failed') { message = (preflight.error && preflight.error.userMessage) || preflight.error && preflight.error.message || 'Preflight failed.'; }
     else if (execution.status === 'failed') { message = (execution.error && execution.error.userMessage) || 'Solve failed.'; }
     else if (execution.status === 'cancelled' || preflight.status === 'cancelled') { message = 'Solve cancelled; partial results were discarded.'; }
+    else if (execution.status === 'succeeded') { message = 'Solve complete.'; }
     else if (preflight.status === 'ready') {
       message = preflight.result.exceedsWasmCap ? 'Estimate exceeds the WebAssembly cap; generate a coarser mesh.' : 'Preflight complete. Review the estimate, then solve.';
     } else if (documentState.mesh) { message = 'Run preflight to validate constraints and estimate solve memory.'; }
     if (documentState.resultInvalidation && documentState.resultInvalidation.stale) { message += ' Previous results are stale.'; }
     if (this.solveStatus) { this.solveStatus.textContent = message; this.solveStatus.classList.toggle('fea-error', preflight.status === 'failed' || execution.status === 'failed'); }
+    if (this.solveOutputStatus) {
+      this.solveOutputStatus.hidden = !(running || preflight.status === 'failed' || execution.status === 'failed' ||
+        preflight.status === 'cancelled' || execution.status === 'cancelled' ||
+        (preflight.status === 'ready' && preflight.result.exceedsWasmCap));
+      this.solveOutputStatus.textContent = message;
+    }
     if (this.preflightButton) { this.preflightButton.disabled = !documentState.mesh || running || convergenceRunning; }
-    if (this.solveButton) { this.solveButton.disabled = preflight.status !== 'ready' || preflight.result.exceedsWasmCap || running || convergenceRunning; }
+    if (this.solveButton) {
+      this.solveButton.disabled = !documentState.mesh || (preflight.status === 'ready' && preflight.result.exceedsWasmCap) || running || convergenceRunning;
+      this.solveButton.title = !documentState.mesh ? 'Generate a mesh before solving' :
+        (preflight.status === 'ready' && preflight.result.exceedsWasmCap ? 'Generate a coarser mesh to fit the WebAssembly cap' : 'Check model and solve');
+    }
     if (this.cancelSolveButton) { this.cancelSolveButton.hidden = !running; }
     if (this.preflightSummary) {
       this.preflightSummary.hidden = preflight.status !== 'ready';
@@ -662,18 +725,25 @@
 
   UIController.prototype.renderResults = function (documentState) {
     var result = documentState.results;
+    if (this.resultSummaryModel !== result) {
+      this.resultSummaryModel = result;
+      if (this.peakLocationStatus) { this.peakLocationStatus.textContent = ''; }
+    }
     if (this.resultsEmpty) { this.resultsEmpty.hidden = Boolean(result); }
     if (this.resultsSummary) { this.resultsSummary.hidden = !result; }
     if (this.diagnosticsSummary) { this.diagnosticsSummary.hidden = !result; }
-    if (!result) { return; }
+    if (!result) { if (this.peakLocationStatus) { this.peakLocationStatus.textContent = ''; } return; }
+    if (this.peakHeadline) { this.peakHeadline.textContent = 'Peak von Mises — unaveraged solver samples: ' + formatNumber(result.extrema.rawVonMisesMax.valuePa / 1e6, 'MPa'); }
+    if (this.yieldHeadline) { this.yieldHeadline.textContent = result.factorOfSafety ? 'Yield FoS — unaveraged solver samples: ' + formatNumber(result.factorOfSafety.rawMinimum.value) : 'Yield FoS unavailable — supply a tensile or compressive yield strength.'; }
+    if (this.trustHeadline) { this.trustHeadline.textContent = 'Convergence: ' + convergenceStatusMessage(documentState.convergenceStudy) + ' Review support/load concentrations for possible singularities; one solve does not establish safety.'; }
     var entries = [
       ['Element', result.elementType.toUpperCase()],
       ['System', result.meshStatistics.nodeCount + ' nodes / ' + result.meshStatistics.elementCount + ' elements / ' + result.meshStatistics.nodeCount * 3 + ' DOF'],
       ['Max displacement', formatNumber(result.extrema.maxDisplacement.valueM * 1000, 'mm')],
       ['Max displacement location', result.extrema.maxDisplacement.locationM.map(function (v) { return formatNumber(v, 'm'); }).join(', ')],
-      ['Raw von Mises max', formatNumber(result.extrema.rawVonMisesMax.valuePa / 1e6, 'MPa')],
-      ['Raw von Mises location', result.extrema.rawVonMisesMax.locationM.map(function (v) { return formatNumber(v, 'm'); }).join(', ')],
-      ['Displayed VM max', formatNumber(result.extrema.displayedVonMisesMax.valuePa / 1e6, 'MPa')],
+      ['Peak von Mises — unaveraged solver samples', formatNumber(result.extrema.rawVonMisesMax.valuePa / 1e6, 'MPa')],
+      ['Interior solver sample location', result.extrema.rawVonMisesMax.locationM.map(function (v) { return formatNumber(v, 'm'); }).join(', ')],
+      ['Smoothed surface von Mises max', formatNumber(result.extrema.displayedVonMisesMax.valuePa / 1e6, 'MPa')],
       ['Max principal', formatNumber(result.extrema.rawMaxPrincipal.valuePa / 1e6, 'MPa')],
       ['Min principal', formatNumber(result.extrema.rawMinPrincipal.valuePa / 1e6, 'MPa')],
       ['Applied force', result.equilibrium.totalAppliedForceN.map(function (v) { return formatNumber(v, 'N'); }).join(', ')],
@@ -684,8 +754,8 @@
     ];
     if (result.factorOfSafety) {
       entries.splice(7, 0,
-        ['Raw minimum FoS', formatNumber(result.factorOfSafety.rawMinimum.value)],
-        ['Displayed minimum FoS', formatNumber(result.factorOfSafety.displayedMinimum)],
+        ['Yield FoS — unaveraged samples', formatNumber(result.factorOfSafety.rawMinimum.value)],
+        ['Smoothed surface minimum FoS (uncapped)', formatNumber(result.factorOfSafety.displayedMinimum)],
         ['FoS criterion', 'von Mises yield · ' + formatNumber(result.factorOfSafety.strength.valuePa / 1e6, 'MPa')]);
     }
     replaceDefinitionList(this.resultsValues, entries);
@@ -756,20 +826,24 @@
     var result = documentState.results;
     var presentation = documentState.viewportPresentation || {};
     var definitions = {
-      vonMises: ['approximate smoothed von Mises stress', 'MPa', 1e6], maxPrincipal: ['approximate smoothed maximum principal stress', 'MPa', 1e6],
-      factorOfSafety: ['approximate smoothed factor of safety (contour clipped)', '', 1], minPrincipal: ['approximate smoothed minimum principal stress', 'MPa', 1e6], displacementMagnitude: ['displacement magnitude', 'mm', 1e-3],
+      vonMises: ['von Mises', 'MPa', 1e6], maxPrincipal: ['approximate smoothed maximum principal stress', 'MPa', 1e6],
+      factorOfSafety: ['Smoothed surface yield FoS', '', 1], minPrincipal: ['approximate smoothed minimum principal stress', 'MPa', 1e6], displacementMagnitude: ['displacement magnitude', 'mm', 1e-3],
       ux: ['Ux', 'mm', 1e-3], uy: ['Uy', 'mm', 1e-3], uz: ['Uz', 'mm', 1e-3]
     };
     var definition = definitions[presentation.field];
-    var fieldRange = result && result.ranges[presentation.field];
+    var fieldRange = result && root.SpjutsimFEA.getResultDisplayRange(result, presentation.field);
     var show = Boolean(result && definition && (presentation.mode === 'stress' || presentation.mode === 'deformation'));
     if (!this.resultLegend) { return; }
     this.resultLegend.hidden = !show;
     if (!show) { return; }
-    this.legendTitle.textContent = definition[0] + ' (' + definition[1] + ')';
+    this.legendTitle.textContent = definition[0] + (definition[1] ? ' (' + definition[1] + ')' : '');
     this.legendMin.textContent = formatNumber(fieldRange.minimum / definition[2]);
     this.legendMax.textContent = formatNumber(fieldRange.maximum / definition[2]);
+    this.legendStatus.hidden = presentation.field === 'vonMises';
     this.legendStatus.textContent = legendRangeStatus(fieldRange, presentation.deformationScale);
+    this.resultLegend.title = presentation.field === 'vonMises' ?
+      'Colors show smoothed surface values. Scale: zero to the whole-model solver-sample peak. Smoothed surface maximum: ' +
+        formatNumber(result.ranges.vonMises.maximum / 1e6, 'MPa') + '.' : '';
   };
 
   UIController.prototype.renderProbe = function (probe) {

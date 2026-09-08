@@ -690,6 +690,7 @@
     supportTrigger.click();
     assert(state.selectedFaceIds.join('|') === 'face-x-', 'support setup row did not highlight its faces');
     supportTrigger = document.querySelector('[data-setup-kind="support"][data-item-id="support-1"] [data-setup-row-trigger]');
+    assert(supportTrigger.querySelector('.fea-chevron').textContent === '▶', 'Setup row lacks the Truss disclosure icon');
     assert(supportTrigger.getAttribute('aria-expanded') === 'true', 'selected setup row did not expose expanded state');
     assert(document.getElementById('setup-inspector-status').textContent === 'Editing Support 1.',
       'opening a setup item was not announced');

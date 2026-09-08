@@ -234,7 +234,9 @@ Before solve, show:
 - mesh-quality warnings;
 - memory warning level.
 
-The user explicitly chooses **Solve** after this preflight.
+The user explicitly chooses **Solve**. If preflight has not been run and is
+available, Solve runs it first and continues after a valid check. Explicit
+preflight remains available for inspecting the estimate before solving.
 
 ### Step 6 — Solve
 
@@ -1277,10 +1279,19 @@ The UI must distinguish:
 - **displayed smoothed peak**: maximum of the interpolated/averaged surface field used for visualization.
 
 Never silently report a smoothed contour peak as the sole "maximum stress".
-Task 22 requires displayed extrema/ranges to use only nodes referenced by the
-rendered boundary topology, not unused interior nodes. Whole-volume recovery
+Measured smoothed extrema/ranges use only nodes referenced by the rendered boundary
+topology, not unused interior nodes. Stress smoothing takes the mean of recovery
+samples within each element, then the unweighted mean of adjacent element
+values at each node; this method is unchanged. A sampled peak is not an exact
+continuum maximum. Whole-volume recovery
 peaks remain unchanged. Clearly identify sample versus surface locations and
 retain uncapped engineering FoS independently of the contour mapping.
+
+The von Mises legend and color mapping span zero to the whole-model unaveraged
+solver-sample peak. This presentation range is separate from boundary-only range
+metadata; the smoothed surface may never reach the top color. Keep the visible
+legend to “von Mises (MPa)” and its endpoints. Put the surface maximum and
+smoothing explanation in the legend tooltip and Results details.
 
 ### 11.4 Deformed shape
 
@@ -1565,7 +1576,9 @@ Use the internalized SpjutSim UI shell as the baseline application chrome:
 
 ```text
 +-------------------------------------------------------------------+
-| App title/status | File/View/etc menus       | Check model / Solve |
+| App title/status                      | File/View/etc menus       |
++-------------------------------------------------------------------+
+| Tools | Undo Redo Save Export              | Solve | Results        |
 +----------------------+--------------------------------------------+
 | Setup pane           | Canvas / Results layout                    |
 |  Model               | +---------------------+------------------+  |
@@ -1579,7 +1592,29 @@ Use the internalized SpjutSim UI shell as the baseline application chrome:
 
 The UI foundation already models a tools pane and a canvas/results area with resizable split behavior. Preserve the concepts of results modes (`hidden`, `split`, `expanded`), responsive stacking, a user-adjustable split ratio, and an active results tab.
 
-The primary **Solve** action belongs in the shell's primary-actions region rather than being buried inside the tools pane.
+The app-owned workspace controller persists version-1 width/collapse preferences
+independently of the analysis document. Setup widths are bounded to 220–520 CSS
+pixels and Results to 260–520, while retaining at least 320 pixels for the
+viewport in desktop split mode. Below 1000 pixels only one pane is active;
+below 680 pixels drawers overlay the full-width canvas and start closed upon
+entering that compact mode. Empty Results starts collapsed. Explicit output
+commands may open it; redraws preserve the user's choice. The UI controller's
+`showOutputPanel(panelId)` selects a known output tab and opens the pane.
+A shared CSS gizmo rectangle is measured by the renderer. Result legend/probe
+share a separate bounded area on the right; short-window actions scroll above
+it. A drawer may temporarily cover these areas until dismissed.
+
+The menubar places File/View menus immediately after the app title and runtime
+status at the far right. Solve retains its accent background.
+A separate action bar immediately below the menubar contains Tools on the left,
+Undo/Redo/Save/Export disabled placeholders, and Solve immediately left of
+Results on the right. Use Truss-style right/down disclosure triangles inside
+the Tools and Results panels. Solve runs preflight when needed and available,
+then continues only on a valid result, preserving the existing high-memory
+confirmation. Cancellation, model edits, failed checks, and the WASM memory cap
+must prevent automatic continuation. Show progress and failed checks in Results
+even when Tools is collapsed. Worker identity guards reject late replies
+from cancelled/replaced requests even at the same analysis revision.
 
 Recommended result tabs for v1:
 
@@ -1596,7 +1631,7 @@ Use ordinary semantic HTML controls enhanced by the internal UI helpers where us
 
 The whole left pane is **Setup**, without a nested Setup subpanel. Its fixed
 top-to-bottom order is Model, Material, Supports, Loads, and Mesh. Check model
-and Solve are adjacent topbar actions; check information lives in the output
+and Solve are adjacent action-bar controls (Check model is added in Plan 26); check information lives in the output
 pane. Model owns CAD import/replacement and orientation; clicking the empty
 Model row opens the file chooser, while an imported model collapses to a compact
 source/format/face/orientation summary. Material is a separate adjacent compact
@@ -1729,6 +1764,22 @@ The default viewport controls are:
 - arrow keys rotate the camera application-wide unless an editable control,
   modal, menu, or arrow-navigated widget owns the event.
 
+Default projection is orthographic and default orientation is equal-angle
+isometric internally; present the default three-face pose with a cube icon
+labelled “Reset view”, without an “Iso” label. View commands select ±X/±Y/±Z with
+deterministic pole-safe up vectors through the View menu and signed gizmo.
+Positive labels remain visible; reveal circles and negative labels only while
+the general gizmo area is hovered or contains keyboard focus (always on no-hover
+devices). Render labels with depth testing against the gizmo arrows. The 3D
+display controls include a Perspective on/off switch independent of angle. Switching
+projection preserves target and visible scale using `2*d*tan(fov/2)` and the
+orthographic zoom on the inverse switch. Navigation preferences use version 2;
+version-1 records retain their bindings and sensitivities. View transitions last
+180 ms, are immediate under reduced-motion, and cancel on navigation. Fit
+preserves orientation; importing geometry establishes a fresh reset pose. Reset
+uses the same 180 ms eased transition for orientation, target, and scale, with
+reduced-motion and navigation cancellation behavior.
+
 Camera navigation must preserve the current face selection. Provide fit/reset
 view, bounded zoom, pole-safe orbiting, pointer-capture cleanup, and usable
 mouse, trackpad, and touch behavior. Open Settings with `Control+,` or
@@ -1841,7 +1892,8 @@ The UI must clearly mark results stale and require a new solve.
 
 ### 15.11 Approved pre-v1 usability and STL improvement sequence
 
-Approved on 2026-09-07; **planned, not implemented**. Tasks 21–30 in
+Approved on 2026-09-07. **Tasks 21–23 implemented and accepted 2026-09-08;
+Tasks 24–30 planned.** Tasks 21–30 in
 `docs/plans/README.md` schedule independent delivery and mandatory owner reviews.
 These requirements refine the earlier UI descriptions where behavior changes.
 They preserve the numerical, worker, dependency, and direct-local requirements.
@@ -1853,13 +1905,14 @@ They preserve the numerical, worker, dependency, and direct-local requirements.
   browser zoom, and high-DPI changes; narrow-window robustness is not mobile support.
 - **Result clarity (22):** Headline peak von Mises and yield FoS use unaveraged
   recovery samples. The contour is explicitly a smoothed surface field with
-  boundary-only extrema, units, and smoothing explanation. Locate peak distinguishes
+  boundary-only extrema and units. The quiet von Mises key/colors span zero to
+  the model sample peak; tooltip/details explain smoothing. Locate peak distinguishes
   an interior sample from a surface location. Show convergence/singularity context;
   sampled peaks and contour appearance alone do not establish physical safety.
   Use consistent engineering-unit formatting without rounding stored SI values.
 - **Camera (23):** Orthographic projection and isometric orientation are defaults.
-  Perspective remains available independently. Signed ±X/±Y/±Z and isometric views
-  have gizmo and keyboard/menu paths. Preserve apparent scale/target when changing
+  Perspective has an independent display switch. Signed ±X/±Y/±Z views and a
+  graphical animated Reset view have gizmo and keyboard/menu paths. Preserve apparent scale/target when changing
   projection; exact principal views must avoid pole ambiguity. Camera transitions
   respect reduced motion and never rotate engineering geometry or invalidate results.
 - **Display (24):** Model/Mesh/Stress/Deformation use a compact primary selector
@@ -1902,7 +1955,10 @@ They preserve the numerical, worker, dependency, and direct-local requirements.
   an explicit owner scope decision; it does not waive the v1 gate.
 - **Manual acceptance (21–30):** Every plan ends in its named owner checkpoint.
   Provide a working review packet after automated checks, record the actual response,
-  and wait before starting the next plan. Task 30 checks the integrated workflow;
+  and wait before starting the next plan. The owner's 2026-09-07 execution
+  instruction authorizes batching implementation of 21–23 before a combined
+  M21–M23 review, accepted by the owner on 2026-09-08.
+  Task 30 checks the integrated workflow;
   only then may Task 20 freeze/audit the candidate. Old passing records do not certify
   changed behavior. Tagging/publication still require explicit owner authorization.
 
@@ -2315,6 +2371,26 @@ Worker responses should include:
 
 Do not make the main thread depend on Gmsh wrapper objects or C++/Emscripten-generated class bindings.
 
+Result schema version 2 now requires `rangeMetadataVersion: 1`. Each base
+rendered field range records `locationOwner: "surface-node"`, boundary-only
+minimum/maximum, their node indices and SI locations. Ties use the first node
+encountered in boundary connectivity. Raw extrema record
+`locationOwner: "solver-sample"`, their value, sample index, owning element,
+exact Float64 recovery position, and `isInterior: true` for the current Tet4
+centroid/Tet10 quadrature recovery rules. `nearbyBoundaryFaceId` (also retained
+as the legacy `faceId` for convergence grouping) is a nearby boundary hint, not
+the sample's physical location. Displacement maximum remains a whole-volume
+node extremum (`locationOwner: "volume-node"`). Validators reject contradictory
+values, ownership, node/sample linkage, nonfinite positions, or range metadata.
+The von Mises display range is derived separately as zero to
+`extrema.rawVonMisesMax.valuePa`; it never overwrites `ranges.vonMises`.
+
+FoS retains uncapped boundary minimum/maximum and node locations separately
+from finite color-mapped values capped at 10. The FoS contour's range is the
+actual capped boundary range, with clipping explicitly indicated.
+Native solver values and the worker envelope protocol version remain unchanged;
+older unversioned postprocessing results must be regenerated.
+
 ## 20. Performance Targets
 
 These are product targets, not hard physical limits.
@@ -2511,9 +2587,9 @@ evidence.
 - [x] Analytical and reference-solver validation tests pass agreed tolerances.
 - [x] Memory-estimator calibration tests have been run on supported browsers.
 - [x] Licensing/distribution posture for Gmsh has been resolved.
-- [ ] Responsive workspace/overlays and owner review M21 are accepted.
-- [ ] Boundary-only contour extrema, result explanation, and owner review M22 are accepted.
-- [ ] Orthographic/isometric and signed gizmo/menu views and M23 are accepted.
+- [x] Responsive workspace/overlays and owner review M21 are accepted.
+- [x] Boundary-only contour extrema, result explanation, and owner review M22 are accepted.
+- [x] Orthographic/isometric and signed gizmo/menu views and M23 are accepted.
 - [ ] Contextual display controls, independent mesh edges, vertical/horizontal legends, and M24 are accepted.
 - [ ] Transactional load/support previews and M25 are accepted.
 - [ ] Readable setup and explicit adjacent Check model/Solve workflow and M26 are accepted.

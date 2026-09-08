@@ -7,6 +7,15 @@
 </head>
 <body>
   <p id="test-status" role="status">Running…</p>
+  <nav id="application-menu"><div data-ui-menu-group data-open="false">
+    <button type="button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">View</button>
+    <div class="ui-menu-list" role="menu">
+      <button type="button" role="menuitemradio" data-ui-menu-action="projection-orthographic" aria-checked="true">Orthographic</button>
+      <button type="button" role="menuitemradio" data-ui-menu-action="projection-perspective" aria-checked="false">Perspective</button>
+      <button type="button" role="menuitem" data-ui-menu-action="camera-+y">View from +Y</button>
+    </div>
+  </div></nav>
+  <input id="perspective-toggle" type="checkbox">
   <button id="opener" type="button">Settings</button>
   <canvas id="viewport" aria-label="Navigation test viewport"></canvas>
   <div id="settings-backdrop" hidden><section id="settings-dialog" role="dialog" aria-modal="true">
@@ -15,6 +24,7 @@
     <button id="settings-tab-controls" type="button" role="tab">Controls</button>
     <div id="settings-panel-controls" role="tabpanel"><select id="navigation-rotate-button"><option value="0">Left</option><option value="2">Right</option></select></div>
   </section></div>
+  <script src="../../web/ui/shell-behaviors.js"></script>
   <script src="../../web/ui/settings-hub.js"></script>
   <script src="../../web/vendor/three/three.min.js"></script>
   <script src="../../web/js/render/viewport-navigation.js"></script>

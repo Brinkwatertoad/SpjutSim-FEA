@@ -56,9 +56,14 @@
   }
 
   function selectEveryFace(geometry) {
-    geometry.preview.faceRanges.forEach(function (range) {
-      assert(pickRange(geometry, range) === range.faceId, 'picked an unexpected opaque FaceId');
+    var projection = viewport.getProjection();
+    ['orthographic', 'perspective'].forEach(function (mode) {
+      viewport.setProjection(mode);
+      geometry.preview.faceRanges.forEach(function (range) {
+        assert(pickRange(geometry, range) === range.faceId, 'picked an unexpected opaque FaceId in ' + mode);
+      });
     });
+    viewport.setProjection(projection);
   }
 
   function testReplacementMigrationUI(geometry) {

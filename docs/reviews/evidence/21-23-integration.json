@@ -1,0 +1,50 @@
+{
+  "uniform": {
+    "rawPa": 1000.0000091943822,
+    "surfacePa": 1000,
+    "rawFoS": 249999.99770140447,
+    "locationM": [
+      0.8558379599360357,
+      0.987591967194108,
+      0.985428714144098
+    ],
+    "reactionN": [
+      -1000.0000000391757,
+      -1.487292186876951e-7,
+      -2.9033427478132693e-7
+    ],
+    "relativeResidual": 1.6427811398361873e-10
+  },
+  "cameraStatePreserved": true,
+  "constrained": {
+    "rawPa": 1518.2881864894243,
+    "surfacePa": 1224.4141845703125,
+    "rawFoS": 164659.1221776205,
+    "surfaceFoS": 204179.28125,
+    "locationM": [
+      0.03783671867096515,
+      0.988759229615907,
+      0.011240770384093074
+    ],
+    "reactionN": [
+      -999.9999999943924,
+      -3.8599384072357523e-7,
+      -5.931921985835586e-7
+    ],
+    "relativeResidual": 3.175162337307999e-10
+  },
+  "quietLegend": {
+    "title": "von Mises (MPa)",
+    "minimum": "0",
+    "maximum": "0.001518",
+    "tooltip": "Colors show smoothed surface values. Scale: zero to the whole-model solver-sample peak. Smoothed surface maximum: 0.001224 MPa.",
+    "statusHidden": true
+  },
+  "hover": {
+    "active": "true",
+    "negativeVisible": true
+  },
+  "hoverAfterMouseExit": "false",
+  "keyboardFocus": "true",
+  "errors": []
+}

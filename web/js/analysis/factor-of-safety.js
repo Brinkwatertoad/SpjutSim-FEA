@@ -27,6 +27,9 @@
     var minimum = Infinity;
     var sampleIndex = 0;
     var displayedMinimum = Infinity;
+    var displayedMaximum = -Infinity;
+    var minimumNode = -1;
+    var maximumNode = -1;
     var index;
     if (!strength.available) { return null; }
     rawStress = result.recoverySampleFields.vonMisesPa;
@@ -41,16 +44,29 @@
     }
     for (index = 0; index < surface.length; index += 1) {
       surface[index] = factor(strength.valuePa, surfaceStress[index]);
-      displayedMinimum = Math.min(displayedMinimum, surface[index]);
       contour[index] = Math.min(surface[index], contourCeiling);
+    }
+    var boundary = result.originalSurface && result.originalSurface.triangleConnectivity;
+    if (!(boundary instanceof Uint32Array) || !boundary.length || boundary.length % 3) {
+      throw new Error('Factor of safety requires valid result boundary triangles.');
+    }
+    for (index = 0; index < boundary.length; index += 1) {
+      var node = boundary[index];
+      if (node >= surface.length || !Number.isFinite(surfaceStress[node]) || surfaceStress[node] < 0) {
+        throw new Error('Factor of safety requires finite nonnegative boundary stresses.');
+      }
+      if (surface[node] < displayedMinimum || minimumNode < 0) { displayedMinimum = surface[node]; minimumNode = node; }
+      if (surface[node] > displayedMaximum) { displayedMaximum = surface[node]; maximumNode = node; }
     }
     return {
       criterion: 'von-mises-yield', strength: strength,
       rawValues: raw, surfaceValues: surface, contourValues: contour,
       contourCeiling: contourCeiling,
-      rawMinimum: { value: minimum, sampleIndex: sampleIndex,
+      rawMinimum: { value: minimum, sampleIndex: sampleIndex, locationOwner: 'solver-sample',
         elementIndex: result.recoverySampleFields.elementIndices[sampleIndex] },
-      displayedMinimum: displayedMinimum
+      displayedMinimum: displayedMinimum,
+      displayedRange: { minimum: displayedMinimum, maximum: displayedMaximum, locationOwner: 'surface-node',
+        minimumNodeIndex: minimumNode, maximumNodeIndex: maximumNode }
     };
   }
 
@@ -77,17 +93,27 @@
       factorOfSafety: factorOfSafety
     });
     if (factorOfSafety) {
+      var surfaceRange = factorOfSafety.displayedRange;
+      var positions = result.originalSurface.nodePositionsM;
+      surfaceRange.minimumLocationM = Array.prototype.slice.call(positions, surfaceRange.minimumNodeIndex * 3, surfaceRange.minimumNodeIndex * 3 + 3);
+      surfaceRange.maximumLocationM = Array.prototype.slice.call(positions, surfaceRange.maximumNodeIndex * 3, surfaceRange.maximumNodeIndex * 3 + 3);
       decorated.surfaceFields = Object.assign({}, result.surfaceFields, {
         factorOfSafety: factorOfSafety.contourValues
       });
       decorated.ranges = Object.assign({}, result.ranges, {
-        factorOfSafety: { minimum: Math.min(factorOfSafety.displayedMinimum, factorOfSafety.contourCeiling),
-          maximum: factorOfSafety.contourCeiling, clipped: true }
+        factorOfSafety: Object.assign({}, surfaceRange, {
+          minimum: Math.min(surfaceRange.minimum, factorOfSafety.contourCeiling),
+          maximum: Math.min(surfaceRange.maximum, factorOfSafety.contourCeiling),
+          clipped: surfaceRange.maximum > factorOfSafety.contourCeiling,
+          uncappedMinimum: surfaceRange.minimum, uncappedMaximum: surfaceRange.maximum })
       });
       decorated.extrema = Object.assign({}, result.extrema, {
         rawFactorOfSafetyMinimum: Object.assign({}, factorOfSafety.rawMinimum,
           { locationM: result.extrema.rawVonMisesMax.locationM }),
-        displayedFactorOfSafetyMinimum: { value: factorOfSafety.displayedMinimum }
+        displayedFactorOfSafetyMinimum: { value: factorOfSafety.displayedMinimum, locationOwner: 'surface-node',
+          nodeIndex: factorOfSafety.displayedRange.minimumNodeIndex,
+          locationM: Array.prototype.slice.call(result.originalSurface.nodePositionsM,
+            factorOfSafety.displayedRange.minimumNodeIndex * 3, factorOfSafety.displayedRange.minimumNodeIndex * 3 + 3) }
       });
     }
     return decorated;

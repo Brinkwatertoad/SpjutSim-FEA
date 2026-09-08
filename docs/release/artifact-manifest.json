@@ -155,7 +155,7 @@
         },
         {
           "path": "workers/solver-worker.js",
-          "sha256": "1f01b3a43ed5f019d2b09ffd6a1c490ddc757b72d785bb4d60fadc7ea0e6f0ad"
+          "sha256": "d60b27d99e0a2dd08ef7591a6e1b9b173958e53e24591e5a86002f238acadafe"
         }
       ],
       "build_recipe": {
@@ -242,7 +242,7 @@
       ],
       "build_recipe": {
         "path": "UI_FOUNDATION.md",
-        "sha256": "9cdad2e3cc5fef7c30523fd097f00665a54786d0e799c215c9d558ea7ab9d86d"
+        "sha256": "8d396759db674fdc4ea9720be0ea11ccf384eb1df1e469dc346ba3464eecfc89"
       },
       "modifications": "Copied as first-party source on 2026-08-25; FEA-owned adaptations and owner-approved GPL grant apply to these copies only. Current content is pinned per artifact.",
       "notices": [
@@ -829,7 +829,7 @@
     },
     {
       "path": "web/generated/local-runtime/solver-worker-source.js",
-      "sha256": "858ccd0313831b5993a0d266b3cb1fc78104a08479419f68bcda999cbd379c54",
+      "sha256": "d91e0bfca07e99503682d33ded9bb0a9054e4894db42fb26abdfbc7b0f67120a",
       "components": [
         "workers"
       ]

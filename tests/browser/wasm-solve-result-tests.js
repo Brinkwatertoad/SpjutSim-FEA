@@ -60,6 +60,22 @@
     return client.solve(revision, documentState.solveSettings, false);
   }).then(function (result) {
     assert(api.validateResultModel(result, revision).valid, 'WASM result model failed runtime validation');
+    assert(result.rangeMetadataVersion === 1 && result.extrema.rawVonMisesMax.locationOwner === 'solver-sample' &&
+      result.extrema.displayedVonMisesMax.locationOwner === 'surface-node', 'result peak ownership was not versioned');
+    function rejects(changes, message) {
+      assert(!api.validateResultModel(Object.assign({}, result, changes), revision).valid, message);
+    }
+    rejects({ rangeMetadataVersion: 99 }, 'unknown range metadata version was accepted');
+    rejects({ ranges: Object.assign({}, result.ranges, { vonMises: Object.assign({}, result.ranges.vonMises,
+      { maximum: result.ranges.vonMises.maximum + 1 }) }) }, 'contradictory surface range was accepted');
+    rejects({ extrema: Object.assign({}, result.extrema, { rawVonMisesMax: Object.assign({}, result.extrema.rawVonMisesMax,
+      { valuePa: result.extrema.rawVonMisesMax.valuePa + 1 }) }) }, 'contradictory solver-sample peak was accepted');
+    rejects({ extrema: Object.assign({}, result.extrema, { rawVonMisesMax: Object.assign({}, result.extrema.rawVonMisesMax,
+      { elementIndex: 999 }) }) }, 'sample-to-element linkage was not validated');
+    rejects({ extrema: Object.assign({}, result.extrema, { rawVonMisesMax: Object.assign({}, result.extrema.rawVonMisesMax,
+      { locationM: [Infinity, 0, 0] }) }) }, 'nonfinite recovery location was accepted');
+    rejects({ extrema: Object.assign({}, result.extrema, { displayedVonMisesMax: Object.assign({}, result.extrema.displayedVonMisesMax,
+      { locationOwner: 'solver-sample' }) }) }, 'surface node was accepted as solver sample');
     assert(result.solverStatistics.finalRelativeResidual < 1e-8, 'Tet4 solve did not converge to tolerance');
     var memoryPhases = result.solverStatistics.wasmMemoryByPhaseBytes;
     assert(memoryPhases && ['inputLoaded', 'graphPreflight', 'assembly', 'solve', 'postprocess'].every(function (phase) {

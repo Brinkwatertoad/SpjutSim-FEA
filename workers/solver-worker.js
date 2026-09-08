@@ -243,6 +243,46 @@ function range(field) {
   return { minimum: minimum, maximum: maximum };
 }
 
+// One boundary traversal updates every rendered field; repeated shared nodes are harmless.
+function boundaryRanges(connectivity, fields, positions, visitTriangle) {
+  var names = Object.keys(fields);
+  var ranges = {};
+  var nodeCount = positions.length / 3;
+  if (!(connectivity instanceof Uint32Array) || !connectivity.length || connectivity.length % 3) {
+    throw diagnostic('INVALID_RESULT_BOUNDARY', 'postprocess', 'The result boundary has no valid triangles.');
+  }
+  names.forEach(function (name) {
+    if (fields[name].length !== nodeCount) {
+      throw diagnostic('INVALID_RESULT_FIELD', 'postprocess', 'A result field does not match the mesh nodes.');
+    }
+    ranges[name] = { minimum: Infinity, maximum: -Infinity, locationOwner: 'surface-node',
+      minimumNodeIndex: -1, maximumNodeIndex: -1 };
+  });
+  for (var index = 0; index < connectivity.length; index += 1) {
+    var node = connectivity[index];
+    if (node >= nodeCount) {
+      throw diagnostic('INVALID_RESULT_BOUNDARY', 'postprocess', 'The result boundary references a missing node.');
+    }
+    if (visitTriangle && index % 3 === 0) { visitTriangle(index / 3); }
+    for (var field = 0; field < names.length; field += 1) {
+      var name = names[field];
+      var value = fields[name][node];
+      var range = ranges[name];
+      if (!Number.isFinite(value)) {
+        throw diagnostic('INVALID_RESULT_FIELD', 'postprocess', 'A displayed result contains a nonfinite value.');
+      }
+      if (value < range.minimum) { range.minimum = value; range.minimumNodeIndex = node; }
+      if (value > range.maximum) { range.maximum = value; range.maximumNodeIndex = node; }
+    }
+  }
+  names.forEach(function (name) {
+    var range = ranges[name];
+    range.minimumLocationM = Array.prototype.slice.call(positions, range.minimumNodeIndex * 3, range.minimumNodeIndex * 3 + 3);
+    range.maximumLocationM = Array.prototype.slice.call(positions, range.maximumNodeIndex * 3, range.maximumNodeIndex * 3 + 3);
+  });
+  return ranges;
+}
+
 function recoverySampleLocation(mesh, element, sample) {
   var location = [0, 0, 0];
   var weights = [0.25, 0.25, 0.25, 0.25];
@@ -266,7 +306,7 @@ function recoverySampleLocation(mesh, element, sample) {
   return location;
 }
 
-function boundaryMapping(mesh) {
+function boundaryMapping(mesh, fields) {
   var byKey = Object.create(null);
   var faces = [[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]];
   var boundary = mesh.boundaryFaces.triangleConnectivity;
@@ -303,9 +343,14 @@ function boundaryMapping(mesh) {
         elementIndices[triangle] = element;
       }
     }
-    for (triangle = faceRange.start / 3; triangle < (faceRange.start + faceRange.count) / 3; triangle += 1) { faceIndices[triangle] = index; }
   });
-  return { elementIndices: elementIndices, faceIndices: faceIndices };
+  var boundaryFace = 0;
+  var ranges = boundaryRanges(boundary, fields, mesh.nodePositionsM, function (triangleIndex) {
+    while (triangleIndex * 3 >= mesh.boundaryFaces.faceRanges[boundaryFace].start +
+        mesh.boundaryFaces.faceRanges[boundaryFace].count) { boundaryFace += 1; }
+    faceIndices[triangleIndex] = boundaryFace;
+  });
+  return { elementIndices: elementIndices, faceIndices: faceIndices, ranges: ranges };
 }
 
 function boundaryFaceForElement(mapping, surface, faceIds, elementIndex, locationM) {
@@ -352,36 +397,40 @@ function makeResult(Module, input, revision, preflight, memory) {
     minPrincipalPa: smooth(input.mesh.elementConnectivity, raw.minPrincipalPa, nodes, elementNodes),
     displacementMagnitudeM: new Float32Array(displacementMagnitude), uxM: component(displacement, 0),
     uyM: component(displacement, 1), uzM: component(displacement, 2) };
-  var mapping = boundaryMapping(input.mesh);
+  var mapping = boundaryMapping(input.mesh, { vonMises: surface.vonMisesPa, maxPrincipal: surface.maxPrincipalPa,
+    minPrincipal: surface.minPrincipalPa, displacementMagnitude: surface.displacementMagnitudeM,
+    ux: surface.uxM, uy: surface.uyM, uz: surface.uzM });
   var maximumDisplacement = range(displacementMagnitude).maximum;
   var maximumNode = displacementMagnitude.indexOf(maximumDisplacement);
   var rawVonMisesLocation = recoverySampleLocation(input.mesh, v(18), v(22));
+  var nearbyBoundaryFaceId = boundaryFaceForElement(mapping, { nodePositionsM: input.mesh.nodePositionsM,
+    triangleConnectivity: input.mesh.boundaryFaces.triangleConnectivity },
+  input.mesh.boundaryFaces.faceRanges.map(function (item) { return item.faceId; }), v(18), rawVonMisesLocation);
   var warnings = preflight.warnings.slice();
   if (Number.isFinite(input.mesh.statistics.boundingBoxDiagonalM) &&
       maximumDisplacement > 0.05 * input.mesh.statistics.boundingBoxDiagonalM) {
     warnings.push('Displacement exceeds 5% of the model diagonal; geometric nonlinearity may matter.');
   }
   return {
-    schemaVersion: 2, analysisRevision: revision, elementType: input.mesh.elementType,
+    schemaVersion: 2, rangeMetadataVersion: 1, analysisRevision: revision, elementType: input.mesh.elementType,
     originalSurface: { nodePositionsM: new Float32Array(input.mesh.nodePositionsM),
       triangleConnectivity: new Uint32Array(input.mesh.boundaryFaces.triangleConnectivity),
       faceIds: input.mesh.boundaryFaces.faceRanges.map(function (item) { return item.faceId; }),
       triangleFaceIndices: mapping.faceIndices, triangleElementIndices: mapping.elementIndices },
     displacementM: displacement, displacementMagnitudeM: displacementMagnitude, rawElementFields: raw,
     recoverySampleFields: recovery, surfaceFields: surface,
-    ranges: { vonMises: range(surface.vonMisesPa), maxPrincipal: range(surface.maxPrincipalPa),
-      minPrincipal: range(surface.minPrincipalPa), displacementMagnitude: range(surface.displacementMagnitudeM),
-      ux: range(surface.uxM), uy: range(surface.uyM), uz: range(surface.uzM) },
+    ranges: mapping.ranges,
     extrema: {
-      maxDisplacement: { valueM: maximumDisplacement, nodeIndex: maximumNode,
+      maxDisplacement: { valueM: maximumDisplacement, nodeIndex: maximumNode, locationOwner: 'volume-node',
         locationM: Array.prototype.slice.call(input.mesh.nodePositionsM, maximumNode * 3, maximumNode * 3 + 3) },
       rawVonMisesMax: { valuePa: v(15), elementIndex: v(18), sampleIndex: v(22), locationM: rawVonMisesLocation,
-        faceId: boundaryFaceForElement(mapping, { nodePositionsM: input.mesh.nodePositionsM,
-          triangleConnectivity: input.mesh.boundaryFaces.triangleConnectivity },
-        input.mesh.boundaryFaces.faceRanges.map(function (item) { return item.faceId; }), v(18), rawVonMisesLocation) },
-      displayedVonMisesMax: { valuePa: range(surface.vonMisesPa).maximum },
-      rawMaxPrincipal: { valuePa: v(16), elementIndex: v(19), sampleIndex: v(23), locationM: recoverySampleLocation(input.mesh, v(19), v(23)) },
-      rawMinPrincipal: { valuePa: v(17), elementIndex: v(20), sampleIndex: v(24), locationM: recoverySampleLocation(input.mesh, v(20), v(24)) }
+        locationOwner: 'solver-sample', isInterior: true,
+        nearbyBoundaryFaceId: nearbyBoundaryFaceId, faceId: nearbyBoundaryFaceId },
+      displayedVonMisesMax: { valuePa: mapping.ranges.vonMises.maximum,
+        locationOwner: 'surface-node', nodeIndex: mapping.ranges.vonMises.maximumNodeIndex,
+        locationM: mapping.ranges.vonMises.maximumLocationM },
+      rawMaxPrincipal: { locationOwner: 'solver-sample', isInterior: true, valuePa: v(16), elementIndex: v(19), sampleIndex: v(23), locationM: recoverySampleLocation(input.mesh, v(19), v(23)) },
+      rawMinPrincipal: { locationOwner: 'solver-sample', isInterior: true, valuePa: v(17), elementIndex: v(20), sampleIndex: v(24), locationM: recoverySampleLocation(input.mesh, v(20), v(24)) }
     },
     reactionsN: copyResultArray(Module, p(7), nodes * 3),
     equilibrium: { totalReactionN: [v(9), v(10), v(11)], totalAppliedForceN: [v(12), v(13), v(14)], relativeResidual: v(8) },
