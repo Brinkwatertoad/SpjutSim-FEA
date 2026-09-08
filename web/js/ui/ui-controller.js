@@ -28,6 +28,10 @@
     this.preflightButton = document.getElementById('preflight-button');
     this.solveButton = document.getElementById('solve-button');
     this.cancelSolveButton = document.getElementById('cancel-solve-button');
+    this.solveReadinessStatus = document.getElementById('solve-readiness');
+    this.checksRevision = document.getElementById('checks-revision');
+    this.checksFindings = document.getElementById('checks-findings');
+    this.checksSummary = document.getElementById('checks-summary');
     this.solveStatus = document.getElementById('solve-status');
     this.preflightSummary = document.getElementById('preflight-summary');
     this.solveOutputStatus = document.getElementById('solve-output-status');
@@ -324,7 +328,9 @@
     }
     if (this.deformationAnimationToggle) { this.deformationAnimationToggle.addEventListener('click', function () { self.toggleDeformationAnimation(); }); }
     if (this.meshOverlay) { this.meshOverlay.addEventListener('change', function () { self.updateViewportPresentation(); }); }
-    if (this.preflightButton) { this.preflightButton.addEventListener('click', function () { if (self.preflightHandler) { self.preflightHandler(); } }); }
+    if (this.preflightButton) { this.preflightButton.addEventListener('click', function () { if (self.preflightHandler) { self.showOutputPanel("checks"); self.preflightHandler(); } }); }
+    var viewChecks = document.getElementById('view-checks-button');
+    if (viewChecks) { viewChecks.addEventListener('click',function () { self.showOutputPanel('checks'); }); }
     if (this.solveButton) { this.solveButton.addEventListener('click', function () { if (self.solveHandler) { self.showOutputPanel("results"); self.solveHandler(); } }); }
     if (this.cancelSolveButton) { this.cancelSolveButton.addEventListener('click', function () { if (self.cancelSolveHandler) { self.cancelSolveHandler(); } }); }
     if (this.startConvergenceButton) { this.startConvergenceButton.addEventListener('click', function () { if (self.startConvergenceHandler) { self.showOutputPanel("convergence"); self.startConvergenceHandler(); } }); }
@@ -773,13 +779,14 @@
         (preflight.status === 'ready' && preflight.result.exceedsWasmCap));
       this.solveOutputStatus.textContent = message;
     }
-    if (this.preflightButton) { this.preflightButton.disabled = !documentState.mesh || running || convergenceRunning; }
-    if (this.solveButton) {
-      this.solveButton.disabled = !documentState.mesh || (preflight.status === 'ready' && preflight.result.exceedsWasmCap) || running || convergenceRunning;
-      this.solveButton.title = !documentState.mesh ? 'Generate a mesh before solving' :
-        (preflight.status === 'ready' && preflight.result.exceedsWasmCap ? 'Generate a coarser mesh to fit the WebAssembly cap' : 'Check model and solve');
-    }
+    var readiness = root.SpjutsimFEA.solveReadiness(documentState);
+    if (this.solveReadinessStatus) { this.solveReadinessStatus.textContent = readiness.label + (documentState.assignmentDraft ? ' · Apply/Cancel preview' : ''); this.solveReadinessStatus.title = readiness.message; }
+    if (this.preflightButton) { this.preflightButton.disabled = !readiness.canCheck; this.preflightButton.title = readiness.message; }
+    if (this.solveButton) { this.solveButton.disabled = !readiness.canSolve; this.solveButton.title = readiness.message; }
+    if (this.solveStatus) { this.solveStatus.textContent = message + ' ' + readiness.message; }
+    this.renderChecks(documentState);
     if (this.cancelSolveButton) { this.cancelSolveButton.hidden = !running; }
+    preflight = documentState.lastSolveCheck || preflight;
     if (this.preflightSummary) {
       this.preflightSummary.hidden = preflight.status !== 'ready';
       if (preflight.status === 'ready') {
@@ -794,6 +801,51 @@
           ['Quality', formatNumber(preflight.result.quality.minimum, 'γ min')]
         ]);
       }
+    }
+  };
+
+  UIController.prototype.renderChecks = function (state) {
+    if (!this.checksFindings) { return; }
+    var report = state.lastSolveCheck || state.solvePreflight;
+    var stale = report && report.analysisRevision !== null && report.analysisRevision !== undefined && report.analysisRevision !== state.analysisRevision;
+    this.checksRevision.textContent = !report || report.analysisRevision == null ? 'No completed check yet.' :
+      (stale ? 'Stale report' : 'Current report') + ' · setup revision ' + report.analysisRevision + (stale ? '; current revision ' + state.analysisRevision + '. Check again before solving.' : '.');
+    this.checksRevision.classList.toggle('fea-warning',Boolean(stale));
+    this.checksFindings.replaceChildren();
+    var self = this;
+    function finding(message,kind) {
+      var li = document.createElement('li'); li.append(document.createTextNode(message + ' '));
+      if (kind) {
+        var link = document.createElement('button'); link.type='button'; link.textContent='Open ' + kind;
+        link.addEventListener('click',function () {
+          if (self.workspaceLayout) { self.workspaceLayout.setPaneOpen('setup',true); }
+          if (self.analysisAuthoring) {
+            var item = kind === 'support' ? state.boundaryConditions[0] : kind === 'load' ? state.loads[0] : null;
+            self.analysisAuthoring.openInspectorRow(kind,item ? item.id : (kind === 'support' || kind === 'load' ? 'new' : kind),link);
+            var editor = document.getElementById(kind + '-editor');
+            var input = editor && editor.querySelector('input:not([disabled]),select:not([disabled]),button:not([disabled])');
+            if (input) { input.focus(); }
+          }
+        }); li.append(link);
+      }
+      self.checksFindings.append(li);
+    }
+    if (!state.geometry) { finding('Import one closed solid.','model'); }
+    if (!state.material) { finding('Define the material.','material'); }
+    if (!(state.boundaryConditions || []).length) { finding('Add supports to constrain rigid motion.','support'); }
+    if (!state.mesh) { finding('Generate a current mesh.','mesh'); }
+    if (state.assignmentDraft) { finding('Apply or Cancel the current assignment preview.'); }
+    if (report && report.error) {
+      var message = report.error.userMessage || report.error.message || 'The check failed. Review Setup and check again.';
+      var kind = /mesh|memory|cap/i.test(message) ? 'mesh' : /material|density/i.test(message) ? 'material' : /load|force/i.test(message) ? 'load' : 'support';
+      finding(message,kind);
+    }
+    var result = report && report.result;
+    this.checksSummary.replaceChildren();
+    if (result) {
+      if (result.exceedsWasmCap) { finding('Estimated memory exceeds the WebAssembly cap. Use a coarser mesh.','mesh'); }
+      if (result.requiresEightGiBConfirmation) { finding('This estimate is at least 8 GiB. Solve requires explicit high-memory confirmation.','mesh'); }
+      replaceDefinitionList(this.checksSummary,[['Estimated memory',formatBytes(result.estimatedPeakBytes)],['Constraints',result.constraintStability && result.constraintStability.status === 'fully-constrained' ? 'Fully constrained (mesh)' : 'Review supports']]);
     }
   };
 

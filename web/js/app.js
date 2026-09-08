@@ -112,7 +112,9 @@
     activeSolverRevision = null;
   }
 
-  function prepareSolve(continueToSolve) {
+  function prepareSolve() {
+    if (app.document.assignmentDraft || app.document.solvePreflight.status === 'running' || app.document.solveExecution.status === 'running' ||
+        activeImport || activeMesh || activeConvergence) { return; }
     var input;
     var revision;
     cancelConvergence();
@@ -132,7 +134,6 @@
     client.preflight(input, revision, root.navigator && root.navigator.deviceMemory).then(function (result) {
       if (activeSolver !== client) { return; }
       if (!app.completeSolvePreflight(revision, result)) { disposeSolver(); return; }
-      if (continueToSolve === true && !result.exceedsWasmCap) { solve(); }
     }).catch(function (error) {
       if (activeSolver === client) { app.failSolvePreflight(revision, error); disposeSolver(); }
     });
@@ -145,7 +146,7 @@
     if (!app.document.mesh || preflight.status === 'running' || app.document.solveExecution.status === 'running' ||
         (app.document.convergenceStudy && app.document.convergenceStudy.status === 'running')) { return; }
     if (preflight.status === 'ready' && preflight.result.exceedsWasmCap) { return; }
-    if (!activeSolver || preflight.status !== 'ready') { prepareSolve(true); return; }
+    if (app.document.assignmentDraft || !activeSolver || preflight.status !== 'ready' || preflight.analysisRevision !== app.document.analysisRevision) { return; }
     if (preflight.result.requiresEightGiBConfirmation) {
       confirmed = root.confirm('This solve is estimated at or above 8 GiB. Browser, OS, or WebAssembly limits may terminate it even when the device has more memory. Continue?');
     }

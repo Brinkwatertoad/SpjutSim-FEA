@@ -199,3 +199,17 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 .fea-color-ramp { background: linear-gradient(90deg, rgb(12% 29% 65%), rgb(18% 72% 64%), rgb(94% 83% 23%), rgb(84% 19% 15%)); }
 .fea-result-legend[data-orientation="vertical"] .fea-color-ramp { background: linear-gradient(0deg, rgb(12% 29% 65%), rgb(18% 72% 64%), rgb(94% 83% 23%), rgb(84% 19% 15%)); }
 .fea-draft-indicator { position: absolute; top: 64px; left: 10px; right: 10px; width: fit-content; max-width: calc(100% - 36px); margin: 0; padding: 6px; background: var(--surface, #202329); border: 1px dashed currentColor; pointer-events: none; font-size: 12px; }
+/* Setup values wrap at collapsed widths while preserving distinguishing data. */
+.fea-setup-row-summary, .fea-setup-row-meta, .fea-setup-row-primary { white-space: normal; overflow: visible; overflow-wrap: anywhere; text-overflow: clip; }
+#solve-button { margin-left: 0; }
+#solve-readiness { margin-left: auto; font-size: 12px; }
+#checks-findings { padding-left: 18px; }
+#checks-findings li { margin-block: 8px; }
+#checks-findings button { font-size: 12px; }
+.fea-results [role="tablist"] { overflow-x: auto; }
+@media (max-width: 800px) {
+  .fea-actionbar { gap: 4px; }
+  #view-checks-button { display: none; }
+  #solve-readiness { max-width: 76px; }
+  .fea-shell-actions { flex-shrink: 2; }
+}

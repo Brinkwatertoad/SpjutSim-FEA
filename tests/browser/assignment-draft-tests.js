@@ -35,6 +35,13 @@
     app.beginAssignmentDraft('load',id);app.replaceMaterial({youngsModulusPa:200e9,poissonsRatio:0.3});rejects(function(){app.commitAssignmentDraft();});app.cancelAssignmentDraft();
     app.replaceSelectedFaces(['face-x-']);app.createBoundaryCondition({type:'support',componentsM:{x:0}});
     app.beginAssignmentDraft('support',null,{type:'support',componentsM:{x:0.001}});rejects(function(){app.commitAssignmentDraft();});app.cancelAssignmentDraft();
+    var retainedResult = {unchanged:true}; app.document.results = retainedResult;
+    revision = app.document.analysisRevision;
+    app.renameAssignment('load',id,'  End force <test>  ');
+    assert(app.document.loads[0].name === 'End force <test>' && app.document.analysisRevision === revision && app.document.results === retainedResult, 'Rename changed numerical state or failed to trim');
+    rejects(function(){app.renameAssignment('load',id,'   ');});
+    app.beginAssignmentDraft('load',id);app.updateAssignmentDraft({definition:Object.assign({},app.document.assignmentDraft.definition,{name:'Final force'})});app.commitAssignmentDraft();
+    assert(app.document.analysisRevision === revision && app.document.results === retainedResult, 'Name-only Save invalidated results');
     document.getElementById('test-status').textContent='Passed';
   }catch(error){document.getElementById('test-status').textContent='Failed: '+error.message;}
 }());

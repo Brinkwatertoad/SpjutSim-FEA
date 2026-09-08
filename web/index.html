@@ -45,6 +45,10 @@
         <button type="button" data-placeholder="save" disabled title="Save — not implemented yet">Save</button>
         <button type="button" data-placeholder="export" disabled title="Export — not implemented yet">Export</button>
       </div>
+      <span id="solve-readiness" role="status" aria-live="polite">Check required</span>
+      <button id="view-checks-button" type="button">View checks</button>
+      <button id="preflight-button" type="button">Check model</button>
+      <button id="cancel-solve-button" type="button" hidden>Cancel</button>
       <button class="fea-primary" id="solve-button" type="button" disabled title="Generate a mesh before solving">Solve</button>
       <button id="toggle-results-pane" aria-controls="results-pane" aria-expanded="false" type="button" title="Show or hide Results">Results</button>
     </div>
@@ -104,6 +108,7 @@
             <div id="support-editor">
               <p class="fea-help">Supports attach to the currently selected CAD faces.</p>
               <form id="support-form" novalidate>
+                <label for="support-name">Name</label><input id="support-name" type="text" maxlength="160" required>
                 <label for="support-type">Preset</label><select id="support-type"><option value="fixed">Fixed (X, Y, Z = 0)</option><option value="custom">Choose components</option></select>
                 <fieldset id="support-component-fields" hidden>
                   <legend>Global constrained components (mm)</legend>
@@ -118,6 +123,7 @@
             <div id="load-editor">
               <p class="fea-help">Positive pressure acts inward. Total force is distributed by face area.</p>
               <form id="load-form" novalidate>
+                <label for="load-name">Name</label><input id="load-name" type="text" maxlength="160" required>
                 <label for="load-type">Type</label><select id="load-type"><option value="pressure">Pressure</option><option value="total-force">Total force</option></select>
                 <div id="pressure-fields"><label for="load-pressure">Pressure (MPa)</label><input id="load-pressure" type="number" step="any"></div>
                 <fieldset id="force-fields" hidden><legend>Total force vector (N)</legend>
@@ -163,13 +169,7 @@
             </div>
           </div>
         </section>
-        <section>
-          <h2>Solve preflight</h2>
-          <button id="preflight-button" type="button" disabled>Run preflight</button>
-          <button id="cancel-solve-button" type="button" hidden>Cancel</button>
-          <p id="solve-status" role="status" aria-live="polite">Generate a mesh and finish the analysis definition.</p>
-          <dl id="preflight-summary" class="fea-compact-diagnostics" hidden></dl>
-        </section>
+
       </aside>
       <div id="setup-splitter" class="fea-splitter" role="separator" tabindex="0" aria-label="Resize Setup pane" aria-orientation="vertical" aria-controls="setup-pane" aria-valuemin="220" aria-valuemax="520" aria-valuenow="280"></div>
       <section class="fea-canvas" aria-label="3D viewport">
@@ -230,6 +230,7 @@
       <aside id="results-pane" hidden class="fea-results" aria-label="Analysis output">
         <div role="tablist" aria-label="Output views">
           <button id="results-tab" role="tab" aria-selected="true" aria-controls="results-panel" data-output-tab="results">Results</button>
+          <button id="checks-tab" role="tab" aria-selected="false" aria-controls="checks-panel" data-output-tab="checks" tabindex="-1">Checks</button>
           <button id="convergence-tab" role="tab" aria-selected="false" aria-controls="convergence-summary" data-output-tab="convergence" tabindex="-1">Convergence</button>
           <button id="diagnostics-tab" role="tab" aria-selected="false" aria-controls="diagnostics-panel" data-output-tab="diagnostics" tabindex="-1">Diagnostics</button>
         </div>
@@ -241,6 +242,11 @@
             <button id="locate-peak-button" type="button">Locate peak</button><p id="peak-location-status" role="status"></p>
             <details><summary><span class="fea-chevron" aria-hidden="true">▶</span> How to read these results</summary><p>The headline is the peak von Mises stress among unaveraged solver recovery samples throughout the solid. A sampled maximum is not an exact continuum maximum.</p><p>The smoothed surface contour first averages recovery samples within each element, then takes an unweighted mean of adjacent element values at each node. Surface extrema include only nodes used by the displayed boundary. The von Mises color scale spans zero to the whole-model sample peak, so its top color may not appear on the surface. Smoothing can reduce peaks.</p><p>Yield factor of safety uses the unaveraged sample peak and the smaller available tensile/compressive yield strength. One linear solve does not establish safety; review convergence, constraints and stress concentrations.</p></details>
             <dl class="fea-output-list" id="results-values"></dl></section>
+        </section>
+        <section id="checks-panel" role="tabpanel" aria-labelledby="checks-tab" data-output-panel="checks" hidden>
+          <h2>Model checks</h2><p id="solve-status" role="status" aria-live="polite"></p>
+          <p id="checks-revision"></p><ul id="checks-findings"></ul><dl id="checks-summary" class="fea-output-list"></dl>
+          <details><summary><span class="fea-chevron" aria-hidden="true">▶</span> Mesh, system and runtime details</summary><dl id="preflight-summary" class="fea-compact-diagnostics" hidden></dl></details>
         </section>
         <section id="convergence-summary" role="tabpanel" aria-labelledby="convergence-tab" data-output-panel="convergence" hidden>
           <h2 id="convergence-title">Convergence</h2>
@@ -339,6 +345,7 @@
   <script src="js/analysis/convergence-runner.js"></script>
   <script src="js/analysis/analysis-document.js"></script>
   <script src="js/analysis/presentation.js"></script>
+<script src="js/analysis/solve-readiness.js"></script>
 <script src="js/analysis/app-controller.js"></script>
 <script src="js/analysis/assignment-draft.js"></script>
   <script src="js/render/viewport-navigation.js"></script>

@@ -24,22 +24,22 @@
 **Modify:** `web/js/ui/setup-inspector-summary.js`, `web/js/ui/analysis-authoring-ui.js`, `web/index.html`, `web/css/app.css`.
 **Tests:** `tests/browser/analysis-authoring-tests.js`, Task 21 workspace harness.
 
-- [ ] Test missing/ready/stale/running summaries, readable values at collapsed widths, and keyboard focus when editors move or close.
-- [ ] Show useful group status, assignment counts, rigid-motion summary, material properties, and mesh currency. Allow values to wrap sensibly instead of truncating all distinguishing information.
-- [ ] Keep in-place editors and highlight assigned surfaces when a row is selected. Preserve last authoring-type preferences and Task 25 Apply/Cancel semantics.
-- [ ] Permit descriptive support/load names while retaining automatic defaults and stable IDs. Names must be nonempty after trimming and displayed as text, never HTML. Renaming is metadata-only and must not invalidate a solve. Duplicate/suppress actions remain outside this package pending a separate product decision.
+- [x] Test missing/ready/stale/running summaries, readable values at collapsed widths, and keyboard focus when editors move or close.
+- [x] Show useful group status, assignment counts, rigid-motion summary, material properties, and mesh currency. Allow values to wrap sensibly instead of truncating all distinguishing information.
+- [x] Keep in-place editors and highlight assigned surfaces when a row is selected. Preserve last authoring-type preferences and Task 25 Apply/Cancel semantics.
+- [x] Permit descriptive support/load names while retaining automatic defaults and stable IDs. Names must be nonempty after trimming and displayed as text, never HTML. Renaming is metadata-only and must not invalidate a solve. Duplicate/suppress actions remain outside this package pending a separate product decision.
 
 ### 2. Move checks next to the solve action
 
 **Modify:** `web/index.html`, `web/js/ui/ui-controller.js`, `web/js/app.js`, `web/js/analysis/app-controller.js` where readiness needs consolidation.
 **Tests:** `tests/browser/wasm-solve-result-tests.js`, `tests/browser/convergence-runner-tests.js`; create `tests/browser/solve-checks-ui-tests.{html,js}`.
 
-- [ ] Test that import/mesh/presentation events do not call preflight, explicit Check model calls it once, and Solve stays disabled for absent/stale/failed/cap-blocked checks.
-- [ ] Put Check model and Solve together in the topbar with Ready to solve / Check required / Checking / Solving status. Explain a disabled action through persistent status text as well as help. A dirty assignment draft must be Applied or Cancelled before checking/solving.
-- [ ] Remove the long left-pane preflight block. Add a Checks output panel opened by Check model and by explicit View checks. Prioritize actionable errors/warnings, constraint readiness, and estimated memory; put node/DOF/nnz/device/runtime detail in expandable sections.
-- [ ] Keep validation findings linked to the relevant setup editor. Opening an old report must visibly identify its stale revision; never offer it as permission to solve the current model.
-- [ ] Preserve explicit Solve after review, high-memory confirmation, progress/cancel, and recovery after a rejected solve. Do not replace the existing solver gates with UI-only button state.
-- [ ] Update spec/README. Run focused tests and complete applicable Python, worker, authoring, preflight, result, convergence, cube, and direct-local suites.
+- [x] Test that import/mesh/presentation events do not call preflight, explicit Check model calls it once, and Solve stays disabled for absent/stale/failed/cap-blocked checks.
+- [x] Put Check model and Solve together in the topbar with Ready to solve / Check required / Checking / Solving status. Explain a disabled action through persistent status text as well as help. A dirty assignment draft must be Applied or Cancelled before checking/solving.
+- [x] Remove the long left-pane preflight block. Add a Checks output panel opened by Check model and by explicit View checks. Prioritize actionable errors/warnings, constraint readiness, and estimated memory; put node/DOF/nnz/device/runtime detail in expandable sections.
+- [x] Keep validation findings linked to the relevant setup editor. Opening an old report must visibly identify its stale revision; never offer it as permission to solve the current model.
+- [x] Preserve explicit Solve after review, high-memory confirmation, progress/cancel, and recovery after a rejected solve. Do not replace the existing solver gates with UI-only button state.
+- [x] Update spec/README. Run focused tests and complete applicable Python, worker, authoring, preflight, result, convergence, cube, and direct-local suites.
 
 ## Manual review M26 — setup to solve, about 20 minutes
 
@@ -51,3 +51,5 @@
 ## Done when
 
 Setup is readable, checks are explicit and adjacent to Solve, report state cannot misrepresent readiness, and M26 is accepted.
+
+Implementation verified; M26 awaits the requested grouped M24–M27 manual review.

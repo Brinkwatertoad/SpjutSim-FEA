@@ -554,19 +554,19 @@
     var load1;
     controller.replaceGeometry(cubeGeometry('cube-names'), { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([7]).buffer });
     controller.replaceSelectedFaces(['face-x-']);
-    support1 = controller.createBoundaryCondition({ name: 'Ignored', type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
+    support1 = controller.createBoundaryCondition({ name: 'Named support', type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
     support2 = controller.createBoundaryCondition({ type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
     controller.removeBoundaryCondition(support1);
     assert(state.boundaryConditions[0].name === 'Support 2', 'support deletion reused or changed a generated number');
     controller.createBoundaryCondition({ type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
     assert(state.boundaryConditions[1].name === 'Support 3', 'support sequence was not monotonic');
     controller.replaceBoundaryCondition(support2, { name: 'Renamed', type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
-    assert(state.boundaryConditions[0].name === 'Support 2', 'editing changed a generated support name');
+    assert(state.boundaryConditions[0].name === 'Renamed' && state.boundaryConditions[0].id === support2, 'renaming changed the support ID or lost its descriptive name');
     controller.replaceSelectedFaces(['face-x+']);
-    load1 = controller.createLoad({ name: 'Ignored', type: 'pressure', pressurePa: 1e6 });
+    load1 = controller.createLoad({ type: 'pressure', pressurePa: 1e6 });
     assert(state.loads[0].name === 'Load 1', 'load sequence was not independent from the support sequence');
     controller.replaceLoad(load1, { name: 'Renamed', type: 'pressure', pressurePa: 2e6 });
-    assert(state.loads[0].name === 'Load 1', 'editing changed a generated load name');
+    assert(state.loads[0].name === 'Renamed' && state.loads[0].id === load1, 'editing lost the descriptive load name or stable ID');
   }
 
   function runCompleteControllerProjectionTest() {

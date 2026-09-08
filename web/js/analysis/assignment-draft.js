@@ -13,7 +13,7 @@
     if (draft.baseAnalysisRevision !== state.analysisRevision || draft.geometryId !== (state.geometry && state.geometry.geometryId)) {
       return {valid:false,message:'The model changed during this preview. Cancel and reopen the editor.'};
     }
-    var candidate = Object.assign({}, draft.definition, {id:draft.itemId || 'preview',name:draft.definition.name || 'Preview',faceIds:draft.faceIds});
+    var candidate = Object.assign({}, draft.definition, {id:draft.itemId || 'preview',name:draft.definition.name === undefined ? 'Preview' : draft.definition.name,faceIds:draft.faceIds});
     var validation = (draft.kind === 'support' ? api.validateBoundaryCondition : api.validateLoad)(candidate,state.geometry && state.geometry.faceIds);
     if (!validation.valid) { return {valid:false,message:api.firstValidationMessage(validation)}; }
     if (draft.kind === 'support') {
@@ -35,6 +35,7 @@
   /** Begin one transient transaction. kind is support/load; itemId null adds; definition is SI data. */
   prototype.beginAssignmentDraft = function (kind, itemId, definition) {
     if (['support','load'].indexOf(kind) < 0) { throw new Error('Choose a support or load editor.'); }
+    if (api.engineeringBusy(this.document)) { throw new Error('Wait for the current operation or cancel it before editing.'); }
     if (!this.document.geometry) { throw new Error('Import geometry before adding assignments.'); }
     if (this.document.assignmentDraft) {
       if (this.document.assignmentDraft.dirty) { throw new Error('Apply or Cancel the current preview before opening another editor.'); }
@@ -91,6 +92,7 @@
     this.document.assignmentDraft = null;
     try {
       var id = draft.itemId;
+      if (!id && draft.definition.name === undefined) { delete validation.value.name; }
       if (draft.kind === 'support') {
         if (id) { this.replaceBoundaryCondition(id, validation.value); } else { id = this.createBoundaryCondition(validation.value); }
       } else {

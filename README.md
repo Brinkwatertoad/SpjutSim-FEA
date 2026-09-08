@@ -8,7 +8,7 @@ v1 is unreleased. The approved interface, result-clarity, and bounded STL work
 is tracked in [plans 21–30](docs/plans/README.md). Plans 21–23 are implemented
 and accepted in the [combined owner review](docs/reviews/21-23-review.md) on
 2026-09-08; plans
-24–25 are implemented pending the grouped owner review; 26–30 remain ahead of the final plan 20 candidate audit. No v1 acceptance is
+24–26 are implemented pending the grouped owner review; 27–30 remain ahead of the final plan 20 candidate audit. No v1 acceptance is
 implied by passing automated checks.
 
 ## Run locally
@@ -72,7 +72,7 @@ projection preference migration, exact peak marker, and pointer-cancellation che
 It should report `Passed`.
 
 Open `tests/browser/solve-workflow-tests.html` with local file access enabled (or
-from the HTTP server) to check automatic preflight before Solve, blocked checks,
+from the HTTP server) to check explicit model checks before Solve, blocked checks,
 cancellation, stale worker completion, and the existing memory confirmation.
 It should report `Passed`.
 
@@ -199,8 +199,8 @@ equilibrium and solver diagnostics. The workspace has persistent Setup/Results w
 toggles, and keyboard/pointer splitters. A separate action bar below the menubar
 places Tools on the left and Solve beside Results on the right, with disabled
 Undo/Redo/Save/Export placeholders. Disclosure triangles inside both panels match
-Truss. Solve runs an available preflight first and proceeds only after a valid
-check; explicit preflight remains available. Empty Results starts collapsed. Below
+Truss. Check model runs preflight explicitly and opens the Checks report. Solve
+is enabled only for a current valid check. Empty Results starts collapsed. Below
 1000 CSS pixels one pane is active at a time; below 680 pixels panes become
 explicitly opened drawers over a full-width canvas. View defaults to
 an orthographic three-face view. The 3D display Perspective switch preserves the
@@ -234,7 +234,7 @@ surface-patch identity, solid validation, and the accepted analysis path before
 v1. OBJ remains deferred.
 
 The left pane is one compact Setup sequence: Model, Material, Supports, Loads,
-Mesh, and Solve Preflight. Model owns CAD import/replacement and collapses to a
+and Mesh. Check model and Solve are adjacent in the action bar. Model owns CAD import/replacement and collapses to a
 small source/face/orientation summary; Material expands independently directly
 beneath it. Importing over an active model opens a side-by-side transfer flow.
 Each old support/load is highlighted in order while the user maps replacement
@@ -290,3 +290,10 @@ previous available view and leaves a completed solve intact. Dirty drafts stay
 open until Apply or Cancel. The preview reports selection area, global direction,
 and the distinction between constant pressure and total force across all faces.
 Run `tests/browser/assignment-draft-tests.html` for transactional regression checks.
+
+Checks remain available through View checks and the Checks output tab; stale
+reports are labeled with their setup revision. Numerical edits require a new
+check; camera/display changes and assignment renaming preserve readiness. A
+completed, failed, or cancelled solve needs a new explicit check before retrying
+because its worker has been disposed. `tests/browser/solve-checks-ui-tests.html`
+covers report currency, setup links, memory gates, and draft blocking.

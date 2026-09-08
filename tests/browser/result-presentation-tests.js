@@ -33,7 +33,7 @@
     var outline = api.buildPartEdgeIndices(new Uint32Array([0,1,2,0,2,3]), [{start:0,count:6}]);
     assert(outline.length === 8 && !Array.from(outline).some(function(v,i){return i%2===0 && v===0 && outline[i+1]===2;}), 'A planar face diagonal became a part outline');
     ui.renderSolve({mesh:{}});
-    assert(!document.getElementById('solve-button').disabled, 'Solve unavailable before an available preflight');
+    assert(document.getElementById('solve-button').disabled, 'Solve enabled without an explicit current check');
     ui.renderSolve({mesh:{},solvePreflight:{status:'running'}});
     assert(document.getElementById('solve-button').disabled, 'Solve enabled during preflight');
     ui.renderSolve({mesh:{},solvePreflight:{status:'ready',result:{exceedsWasmCap:true}}});

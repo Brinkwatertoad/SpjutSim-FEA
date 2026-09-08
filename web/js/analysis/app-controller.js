@@ -343,7 +343,7 @@
   AppController.prototype.createBoundaryCondition = function (definition) {
     var candidate = Object.assign({}, definition, {
       id: this.createAnalysisItemId('support'),
-      name: 'Support ' + this.nextSupportNameSequence,
+      name: definition.name === undefined ? 'Support ' + this.nextSupportNameSequence : definition.name,
       faceIds: this.document.selectedFaceIds.slice()
     });
     var validation = root.SpjutsimFEA.validateBoundaryCondition(candidate, this.document.geometry && this.document.geometry.faceIds);
@@ -361,13 +361,17 @@
     var existing = this.document.boundaryConditions[index];
     var candidate = Object.assign({}, definition, {
       id: id,
-      name: existing.name,
+      name: definition.name === undefined ? existing.name : definition.name,
       type: definition.type === undefined ? existing.type : definition.type,
       faceIds: definition.faceIds === undefined ? existing.faceIds.slice() : definition.faceIds
     });
     var validation = root.SpjutsimFEA.validateBoundaryCondition(candidate, this.document.geometry && this.document.geometry.faceIds);
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
+    if (JSON.stringify(existing) === JSON.stringify(validation.value)) { return; }
+    var previousDefinition = Object.assign({},existing,{name:''});
+    var nextDefinition = Object.assign({},validation.value,{name:''});
     this.document.boundaryConditions[index] = validation.value;
+    if (JSON.stringify(previousDefinition) === JSON.stringify(nextDefinition)) { this.notify(); return; }
     this.refreshConstraintStability();
     this.invalidateResults('boundary-conditions');
     this.notify();
@@ -390,7 +394,7 @@
   AppController.prototype.createLoad = function (definition) {
     var candidate = Object.assign({}, definition, {
       id: this.createAnalysisItemId('load'),
-      name: 'Load ' + this.nextLoadNameSequence,
+      name: definition.name === undefined ? 'Load ' + this.nextLoadNameSequence : definition.name,
       faceIds: this.document.selectedFaceIds.slice()
     });
     var validation = root.SpjutsimFEA.validateLoad(candidate, this.document.geometry && this.document.geometry.faceIds);
@@ -407,13 +411,17 @@
     var existing = this.document.loads[index];
     var candidate = Object.assign({}, definition, {
       id: id,
-      name: existing.name,
+      name: definition.name === undefined ? existing.name : definition.name,
       type: definition.type === undefined ? existing.type : definition.type,
       faceIds: definition.faceIds === undefined ? existing.faceIds.slice() : definition.faceIds
     });
     var validation = root.SpjutsimFEA.validateLoad(candidate, this.document.geometry && this.document.geometry.faceIds);
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
+    if (JSON.stringify(existing) === JSON.stringify(validation.value)) { return; }
+    var previousDefinition = Object.assign({},existing,{name:''});
+    var nextDefinition = Object.assign({},validation.value,{name:''});
     this.document.loads[index] = validation.value;
+    if (JSON.stringify(previousDefinition) === JSON.stringify(nextDefinition)) { this.notify(); return; }
     this.invalidateResults('loads');
     this.notify();
   };
@@ -429,6 +437,14 @@
     this.document.loads.splice(index, 1);
     this.invalidateResults('loads');
     this.notify();
+  };
+
+  AppController.prototype.renameAssignment = function (kind, id, name) {
+    if (['support','load'].indexOf(kind) < 0) { throw new Error('Choose a support or load.'); }
+    var items = kind === 'support' ? this.document.boundaryConditions : this.document.loads;
+    var item = items[findItem(items,id,kind)];
+    var definition = Object.assign({},item,{name:name});
+    if (kind === 'support') { this.replaceBoundaryCondition(id,definition); } else { this.replaceLoad(id,definition); }
   };
 
   AppController.prototype.replaceGravity = function (gravity) {
@@ -498,6 +514,7 @@
   };
 
   AppController.prototype.beginSolvePreflight = function () {
+    if (!root.SpjutsimFEA.solveReadiness(this.document).canCheck) { throw new Error(root.SpjutsimFEA.solveReadiness(this.document).message); }
     if (!this.document.mesh) { throw new Error('Generate a mesh before preflight.'); }
     this.document.solvePreflight = { status: 'running', result: null, error: null, progress: null,
       analysisRevision: this.document.analysisRevision };
@@ -518,6 +535,7 @@
     var validation = root.SpjutsimFEA.validatePreflightResult(result);
     if (!validation.valid) { throw new Error('Invalid solve preflight: ' + validation.reason); }
     this.document.solvePreflight = { status: 'ready', result: result, error: null, progress: null, analysisRevision: revision };
+    this.document.lastSolveCheck = this.document.solvePreflight;
     this.notify();
     return true;
   };
@@ -526,13 +544,14 @@
     if (revision !== this.document.analysisRevision) { return false; }
     this.document.solvePreflight = { status: 'failed', result: null,
       error: error && error.diagnostic ? error.diagnostic : error, progress: null, analysisRevision: revision };
+    this.document.lastSolveCheck = this.document.solvePreflight;
     this.notify();
     return true;
   };
 
   AppController.prototype.beginSolve = function () {
     var preflight = this.document.solvePreflight;
-    if (preflight.status !== 'ready' || preflight.analysisRevision !== this.document.analysisRevision || preflight.result.exceedsWasmCap) {
+    if (!root.SpjutsimFEA.solveReadiness(this.document).canSolve) {
       throw new Error('Complete a valid solve preflight before solving.');
     }
     this.document.solveExecution = { status: 'running', error: null, progress: null, analysisRevision: this.document.analysisRevision };

@@ -1609,12 +1609,13 @@ status at the far right. Solve retains its accent background.
 A separate action bar immediately below the menubar contains Tools on the left,
 Undo/Redo/Save/Export disabled placeholders, and Solve immediately left of
 Results on the right. Use Truss-style right/down disclosure triangles inside
-the Tools and Results panels. Solve runs preflight when needed and available,
-then continues only on a valid result, preserving the existing high-memory
-confirmation. Cancellation, model edits, failed checks, and the WASM memory cap
-must prevent automatic continuation. Show progress and failed checks in Results
-even when Tools is collapsed. Worker identity guards reject late replies
-from cancelled/replaced requests even at the same analysis revision.
+the Tools and Results panels. Check model explicitly runs preflight and opens
+Checks. Solve requires a current valid check and retains the high-memory
+confirmation; it never launches preflight implicitly. Import, mesh completion,
+form edits, presentation, and opening reports do not start checks. Cancellation,
+model edits, failed checks, and the WASM cap prevent solving. Worker identity
+guards reject late replies from cancelled/replaced requests even at the same
+analysis revision. Explicit convergence studies retain per-level checks.
 
 Recommended result tabs for v1:
 
@@ -1631,7 +1632,7 @@ Use ordinary semantic HTML controls enhanced by the internal UI helpers where us
 
 The whole left pane is **Setup**, without a nested Setup subpanel. Its fixed
 top-to-bottom order is Model, Material, Supports, Loads, and Mesh. Check model
-and Solve are adjacent action-bar controls (Check model is added in Plan 26); check information lives in the output
+and Solve are adjacent action-bar controls; check information lives in the output
 pane. Model owns CAD import/replacement and orientation; clicking the empty
 Model row opens the file chooser, while an imported model collapses to a compact
 source/format/face/orientation summary. Material is a separate adjacent compact
@@ -1690,7 +1691,7 @@ group when enabled; it is not part of the face-load collection.
 On creation, the controller assigns a stable default display name using a
 per-category monotonically increasing sequence: `Support 1`, `Support 2`, ... and `Load 1`, `Load 2`, .... Deleting an
 item does not reuse its number, and editing an item's type does not rename it.
-Task 26 permits optional descriptive renaming while preserving stable item IDs
+Task 26 implements optional descriptive renaming while preserving stable item IDs
 and non-reused automatic numbering. Renaming alone is metadata-only and does
 not invalidate numerical results. Names remain part of the analysis item
 contract for diagnostics and future document serialization.
@@ -2690,3 +2691,14 @@ Apply/Cancel for a dirty draft. Results enter a selectable view for authoring,
 and Cancel restores the prior available presentation. Face samples are cached
 per geometry/mesh with bounded per-face samples; the viewport reuses unchanged
 glyph resources and application updates coalesce to one animation frame.
+
+Plan 26: `solveReadiness(document)` centralizes canCheck/canSolve, status, and
+action guidance. Both controller gates and the UI use it. `lastSolveCheck` retains
+only compact preflight diagnostics and revision so a stale report remains
+inspectable without authorizing a solve. Reports prioritize actionable setup links,
+constraint readiness, and estimated memory; detailed topology/runtime figures
+are expandable. Completed/failed/cancelled solve workers require an explicit
+new check before retrying. Assignment names are trimmed nonempty text.
+`renameAssignment(kind,id,name)` and name-only assignment replacement are metadata
+edits; they retain numerical revision/results/preflight. Automatic name sequences
+still advance independently and monotonically.

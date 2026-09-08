@@ -27,7 +27,7 @@
         failSolve:function (revision,error) { state.solveExecution = {status:'failed',error:error}; },
         cancelSolve:function () { state.solvePreflight = {status:'cancelled'}; state.solveExecution = {status:'cancelled'}; }
       };
-      var fakeRoot = {navigator:{},addEventListener:noop,confirm:function () { confirmations++; return confirmResult; },SpjutsimFEA:{
+      var fakeRoot = {requestAnimationFrame:requestAnimationFrame.bind(window),navigator:{},addEventListener:noop,confirm:function () { confirmations++; return confirmResult; },SpjutsimFEA:{
         FEAColorSchemes:inert,createAnalysisDocument:noop,AppController:function () { return app; },
         UIController:function () { return new Proxy({setSolveHandlers:function (preflight,solve,cancel) { handlers = {preflight:preflight,solve:solve,cancel:cancel}; }}, {get:function (target,key) { return target[key] || noop; }}); },
         ViewportController:inert,ReplacementMigrationUI:inert,prepareSolverInput:function () { return {}; },
@@ -47,31 +47,35 @@
     }
     async function flush() { await Promise.resolve(); await Promise.resolve(); }
     var ready = {exceedsWasmCap:false,requiresEightGiBConfirmation:false};
-    var test = fixture(); test.handlers.solve();
-    assert(test.clients.length === 1 && test.state.solvePreflight.status === 'running' && test.solves() === 0, 'Solve did not start preflight first');
-    test.handlers.solve(); assert(test.clients.length === 1, 'Repeated Solve replaced the running preflight');
+    var test = fixture();
+    assert(test.clients.length === 0, 'Startup automatically checked the model');
+    test.handlers.solve();
+    assert(test.clients.length === 0 && test.solves() === 0, 'Solve implicitly ran an absent check');
+    test.handlers.preflight();
+    assert(test.clients.length === 1 && test.state.solvePreflight.status === 'running', 'Explicit Check model did not run once');
+    test.handlers.preflight(); assert(test.clients.length === 1, 'Repeated Check model replaced active worker');
     test.clients[0].preflight.resolve(ready); await flush();
-    assert(test.solves() === 1, 'Clean preflight did not continue to solve');
+    assert(test.solves() === 0, 'Checking implicitly solved');
+    test.handlers.solve(); assert(test.solves() === 1, 'Current check did not enable explicit solve');
     test.clients[0].result.resolve({}); await flush();
-    assert(test.state.solveExecution.status === 'succeeded', 'Automatic solve result was not applied');
-    test.handlers.solve(); assert(test.clients.length === 2, 'A repeated solve could not rebuild its disposed worker');
+    test.handlers.solve(); assert(test.clients.length === 1 && test.solves() === 1, 'Disposed worker silently restarted checks');
     for (var outcome of ['failure','cap','cancel','edit','confirmation']) {
-      test = fixture(); if (outcome === 'confirmation') { test.deny(); } test.handlers.solve();
+      test = fixture(); if (outcome === 'confirmation') { test.deny(); } test.handlers.preflight();
       if (outcome === 'cancel') { test.handlers.cancel(); }
       if (outcome === 'edit') { test.edit(); }
       if (outcome === 'failure') { test.clients[0].preflight.reject(new Error('Underconstrained')); }
       else { test.clients[0].preflight.resolve({exceedsWasmCap:outcome === 'cap',requiresEightGiBConfirmation:outcome === 'confirmation'}); }
-      await flush(); assert(test.solves() === 0, outcome + ' preflight continued to solve');
+      await flush(); test.handlers.solve();
+      assert(test.solves() === 0, outcome + ' check permitted solve');
       if (outcome === 'confirmation') { assert(test.confirmations() === 1, 'High-memory confirmation was bypassed'); }
     }
-    test = fixture(); test.handlers.preflight(); test.clients[0].preflight.resolve(ready); await flush();
-    assert(test.solves() === 0, 'Explicit preflight unexpectedly solved');
-    test.handlers.solve(); assert(test.solves() === 1 && test.clients.length === 1, 'Ready preflight was not reused');
-    // A cancelled worker can complete after a replacement at the same revision.
-    test = fixture(); test.handlers.solve(); test.handlers.cancel(); test.handlers.solve();
+    test = fixture(); test.state.assignmentDraft = {dirty:true}; test.handlers.preflight(); test.handlers.solve();
+    assert(test.clients.length === 0, 'Dirty draft reached worker preflight');
+    test = fixture(); test.handlers.preflight(); test.handlers.cancel(); test.handlers.preflight();
     test.clients[0].preflight.resolve(ready); await flush();
-    assert(test.solves() === 0 && !test.clients[1].client.disposed, 'Old worker completion took over the new request');
-    test.clients[1].preflight.resolve(ready); await flush(); assert(test.solves() === 1, 'Replacement preflight did not solve');
+    assert(test.solves() === 0 && !test.clients[1].client.disposed, 'Old worker completion took over new request');
+    test.clients[1].preflight.resolve(ready); await flush();
+    test.handlers.solve(); assert(test.solves() === 1, 'Replacement explicit check could not solve');
     document.getElementById('test-status').textContent = 'Passed';
   } catch (error) { document.getElementById('test-status').textContent = 'Failed: ' + error.message; console.error(error); }
 }());

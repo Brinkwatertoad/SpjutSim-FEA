@@ -346,6 +346,7 @@
         }
       });
     }
+    if (byId('support-name')) { support.name = byId('support-name').value; }
     return support;
   };
 
@@ -382,6 +383,7 @@
     var item = this.controller.document.boundaryConditions.find(function (entry) { return entry.id === id; });
     if (!item) { return; }
     this.editingSupportId = id;
+    if (byId('support-name')) { byId('support-name').value = item.name; }
     this.controller.selectBoundaryCondition(id);
     this.supportType.value = ['x', 'y', 'z'].every(function (axis) { return item.componentsM[axis] === 0; }) ? 'fixed' : 'custom';
     ['ux', 'uy', 'uz'].forEach(function (axis) {
@@ -397,6 +399,7 @@
   AnalysisAuthoringUI.prototype.resetSupportForm = function (renderNow) {
     this.editingSupportId = null;
     this.supportForm.reset();
+    if (byId('support-name')) { byId('support-name').value = 'Support ' + this.controller.nextSupportNameSequence; }
     this.supportType.value = this.lastSupportType;
     this.supportForm.querySelector('button[type="submit"]').textContent = 'Apply support';
     this.cancelSupportEdit.hidden = true;
@@ -455,6 +458,7 @@
     } else {
       load.forceN = ['fx', 'fy', 'fz'].map(function (axis) { return root.SpjutsimFEA.displayToSI('forceN', readNumber('load-' + axis, axis.toUpperCase() + ' force')); });
     }
+    if (byId('load-name')) { load.name = byId('load-name').value; }
     return load;
   };
 
@@ -491,6 +495,7 @@
     var item = this.controller.document.loads.find(function (entry) { return entry.id === id; });
     if (!item) { return; }
     this.editingLoadId = id;
+    if (byId('load-name')) { byId('load-name').value = item.name; }
     this.controller.selectLoad(id);
     this.loadType.value = item.type;
     byId('load-pressure').value = item.pressurePa === undefined ? '' : String(root.SpjutsimFEA.siToDisplay('pressurePa', item.pressurePa));
@@ -503,6 +508,7 @@
   AnalysisAuthoringUI.prototype.resetLoadForm = function (renderNow) {
     this.editingLoadId = null;
     this.loadForm.reset();
+    if (byId('load-name')) { byId('load-name').value = 'Load ' + this.controller.nextLoadNameSequence; }
     this.loadType.value = this.lastLoadType;
     this.loadForm.querySelector('button[type="submit"]').textContent = 'Apply load';
     this.cancelLoadEdit.hidden = true;
@@ -653,7 +659,7 @@
     try { definition = draft.kind === 'support' ? this.readSupport() : this.readLoad(); }
     catch (error) { definition = {type:draft.kind === 'support' ? 'support' : this.loadType.value, inputError:error.message}; }
     // The draft owns the engineering definition; DOM fields retain incomplete input text.
-    if (draft.definition.name) { definition.name = draft.definition.name; }
+    if (definition.name === undefined && draft.definition.name !== undefined) { definition.name = draft.definition.name; }
     this.controller.updateAssignmentDraft({definition:definition});
   };
 

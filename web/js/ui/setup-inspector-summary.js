@@ -73,6 +73,7 @@
     var preset = settings.preset.charAt(0).toUpperCase() + settings.preset.slice(1);
     var elementLabel = settings.elementType === 'tet10' ? 'Tet10' : 'Tet4';
     var metadata = documentState.meshMetadata;
+    if (documentState.meshGeneration && documentState.meshGeneration.status === 'generating') { return row('mesh','mesh','Mesh','Generating…',preset); }
     if (!metadata) { return row('mesh', 'mesh', 'Mesh', 'Not generated · ' + elementLabel, preset); }
     return row('mesh', 'mesh', 'Mesh', metadata.statistics.elementCount + ' ' + elementLabel + ' elements',
       metadata.statistics.nodeCount + ' nodes · ' + preset);
