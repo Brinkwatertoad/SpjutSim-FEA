@@ -2656,3 +2656,20 @@ Reference documentation consulted while preparing this specification:
 | v1 release bar | Milestone 4: post-processing + convergence complete |
 | Onshape API | Post-v1.0 |
 | Orthotropic printed-part model | Post-v1.0 |
+
+### Plans 24–27 implementation notes (owner review pending)
+
+The owner requested a combined manual review after all four implementations on
+2026-09-08. Intermediate M24–M27 acceptance gates remain unchecked until that review.
+
+Plan 24: presentation normalizes `lines` to `shaded-edges`; `shaded` and
+`wireframe` are explicit alternatives. Result part outlines follow CAD face
+boundaries separately from element overlay lines. Result colors use an unlit
+material with sRGB-to-linear vertex conversion to match the legend.
+`viewportPresentation.colorRange` holds `{mode, field, locked, minimum?, maximum?}`
+in SI units, separate from numerical result ranges. Manual bounds are finite and
+strictly ordered; an automatic locked uniform range may have equal endpoints.
+Limits reset on incompatible field changes and survive compatible unit changes.
+`legendOrientation` defaults to vertical, with two to seven height-aware labels;
+horizontal labels only endpoints. FoS cap reads `10+`. Units are Pa/kPa/MPa or
+m/mm. Only validated compact style and orientation preferences persist.

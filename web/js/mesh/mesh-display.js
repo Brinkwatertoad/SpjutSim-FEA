@@ -49,6 +49,25 @@
     }
   }
 
+  // Cancel internal triangle edges separately within each CAD/patch face.
+  // Only one face's edge set is live at a time; no mesh-sized object adjacency graph.
+  function buildPartEdgeIndices(triangles, faceRanges) {
+    var output = [];
+    faceRanges.forEach(function (range) {
+      var edges = new Set();
+      for (var i = range.start; i < range.start + range.count; i += 3) {
+        for (var j = 0; j < 3; j += 1) {
+          var a = triangles[i + j], b = triangles[i + (j + 1) % 3];
+          var key = (BigInt(Math.min(a,b)) << 32n) | BigInt(Math.max(a,b));
+          if (edges.has(key)) { edges.delete(key); } else { edges.add(key); }
+        }
+      }
+      edges.forEach(function (key) { output.push(Number(key >> 32n), Number(key & 0xffffffffn)); });
+    });
+    return new Uint32Array(output);
+  }
+
   root.SpjutsimFEA = root.SpjutsimFEA || {};
+  root.SpjutsimFEA.buildPartEdgeIndices = buildPartEdgeIndices;
   root.SpjutsimFEA.buildBoundaryMeshDisplay = buildBoundaryMeshDisplay;
 }(globalThis));

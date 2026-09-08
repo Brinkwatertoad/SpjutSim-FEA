@@ -17,7 +17,7 @@
       mesh: null,
       meshMetadata: null,
       viewportPresentation: {
-        mode: 'model', displayStyle: 'lines', field: 'vonMises', meshOverlay: false,
+        mode: 'model', displayStyle: 'shaded-edges', legendOrientation: 'vertical', colorRange: {mode: 'automatic', field: 'vonMises', locked: false}, field: 'vonMises', meshOverlay: false,
         deformationMode: 'undeformed', deformationScale: 0, userDeformationScale: 100
       },
       solveSettings: { relativeTolerance: 1e-8, equilibriumTolerance: 1e-6, maxIterations: 0 },

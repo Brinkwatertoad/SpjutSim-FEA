@@ -42,7 +42,7 @@
     var deformationModes = ['undeformed', 'true-scale', 'auto', 'user'];
     if (!presentation || typeof presentation !== 'object' || Array.isArray(presentation) ||
         ['model', 'mesh', 'stress', 'deformation'].indexOf(presentation.mode) < 0 ||
-        (presentation.displayStyle !== 'lines' && presentation.displayStyle !== 'wireframe')) {
+        (['lines', 'shaded', 'shaded-edges', 'wireframe'].indexOf(presentation.displayStyle) < 0)) {
       throw new Error('Invalid viewport presentation.');
     }
     if (presentation.mode === 'mesh' && !meshAvailable) {
@@ -60,7 +60,11 @@
       throw new Error('Deformation scale must be a finite non-negative value.');
     }
     return {
-      mode: presentation.mode, displayStyle: presentation.displayStyle,
+      mode: presentation.mode, displayStyle: presentation.displayStyle === 'lines' ? 'shaded-edges' : presentation.displayStyle,
+      stressUnit: ['Pa','kPa','MPa'].indexOf(presentation.stressUnit) >= 0 ? presentation.stressUnit : 'MPa',
+      lengthUnit: presentation.lengthUnit === 'm' ? 'm' : 'mm',
+      legendOrientation: presentation.legendOrientation === 'horizontal' ? 'horizontal' : 'vertical',
+      colorRange: root.SpjutsimFEA.validateColorRange(presentation.colorRange, presentation.field || 'vonMises'),
       field: presentation.field || (presentation.mode === 'deformation' ? 'displacementMagnitude' : 'vonMises'),
       meshOverlay: presentation.meshOverlay === true,
       deformationMode: presentation.deformationMode || 'undeformed',
@@ -150,7 +154,7 @@
     this.document.loads = [];
     this.document.meshMetadata = null;
     this.document.mesh = null;
-    this.document.viewportPresentation = { mode: 'model', displayStyle: this.document.viewportPresentation.displayStyle };
+    this.document.viewportPresentation = Object.assign({}, this.document.viewportPresentation, {mode: 'model'});
     this.document.meshGeneration = { status: 'idle', error: null, progress: null };
     this.refreshConstraintStability();
     this.invalidateResults('geometry');
@@ -231,7 +235,7 @@
     this.document.loads = [];
     this.document.meshMetadata = null;
     this.document.mesh = null;
-    this.document.viewportPresentation = { mode: 'model', displayStyle: this.document.viewportPresentation.displayStyle };
+    this.document.viewportPresentation = Object.assign({}, this.document.viewportPresentation, {mode: 'model'});
     this.document.meshGeneration = { status: 'idle', error: null, progress: null };
     this.refreshConstraintStability();
     this.invalidateResults('geometry');
@@ -443,7 +447,7 @@
     this.refreshConstraintStability();
     this.invalidateResults('mesh-settings');
     this.document.meshGeneration = { status: 'idle', error: null, progress: null };
-    this.document.viewportPresentation = { mode: 'model', displayStyle: this.document.viewportPresentation.displayStyle };
+    this.document.viewportPresentation = Object.assign({}, this.document.viewportPresentation, {mode: 'model'});
     this.notify();
   };
 
@@ -463,7 +467,7 @@
     var validation = root.SpjutsimFEA.validateVolumeMeshResult(mesh, this.document.geometry && this.document.geometry.faceIds);
     if (!validation.valid) { throw new Error('Invalid volume mesh: ' + validation.reason); }
     this.document.mesh = mesh;
-    this.document.viewportPresentation = { mode: 'mesh', displayStyle: this.document.viewportPresentation.displayStyle };
+    this.document.viewportPresentation = Object.assign({}, this.document.viewportPresentation, {mode: 'mesh'});
     this.document.meshMetadata = { statistics: mesh.statistics, quality: mesh.quality, memoryInputs: mesh.memoryInputs };
     this.refreshConstraintStability();
     this.invalidateResults('mesh');
@@ -477,7 +481,7 @@
     this.refreshConstraintStability();
     this.invalidateResults('mesh');
     this.document.meshGeneration = { status: 'idle', error: null, progress: null };
-    this.document.viewportPresentation = { mode: 'model', displayStyle: this.document.viewportPresentation.displayStyle };
+    this.document.viewportPresentation = Object.assign({}, this.document.viewportPresentation, {mode: 'model'});
     this.notify();
   };
 

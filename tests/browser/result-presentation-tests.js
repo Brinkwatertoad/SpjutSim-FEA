@@ -14,6 +14,24 @@
     factorOfSafety:{rawMinimum:{value:2},displayedMinimum:2.5,strength:{valuePa:10000}}
   };
   try {
+    var display = Object.create(api.ViewportController.prototype);
+    display.presentation = {mode:'stress', displayStyle:'lines', meshOverlay:false};
+    display.resultSurface = {material:{}};
+    display.resultDisplay = {userData:{lines:{visible:true},partEdges:{visible:false}}};
+    display.applyPresentation();
+    assert(!display.resultDisplay.userData.lines.visible, 'Mesh overlay off still displays element lines');
+    assert(display.resultDisplay.userData.partEdges.visible, 'Shaded edges lost part boundaries');
+    var ticks = api.buildLegendTicks({minimum:-4,maximum:8}, 'vertical', 280);
+    assert(ticks.length >= 5 && ticks.length <= 7 && ticks[0].value === 8 && ticks[0].position === 0 && ticks[ticks.length-1].value === -4, 'Vertical signed ticks are not ordered top to bottom');
+    assert(api.buildLegendTicks({minimum:0,maximum:1}, 'horizontal', 280).length === 2, 'Horizontal key must only label endpoints');
+    assert(api.buildLegendTicks({minimum:3,maximum:3}, 'vertical', 80).every(function(t){return Number.isFinite(t.position) && t.value === 3;}), 'Uniform key has invalid ticks');
+    assert(api.buildLegendTicks({minimum:0,maximum:1}, 'vertical', 80).length === 2, 'Short legend is crowded');
+    var range = api.resolveColorRange(result, {field:'vonMises',colorRange:{mode:'manual',field:'vonMises',minimum:2000,maximum:3000}});
+    assert(range.minimum === 2000 && range.maximum === 3000 && range.clipped, 'Manual range does not describe clipping');
+    assert(api.resolveColorRange(result,{field:'factorOfSafety',colorRange:{mode:'manual',field:'vonMises',minimum:2000,maximum:3000}}).maximum === 2.5, 'An incompatible field reused manual bounds');
+    assert(api.resultFieldDefinition('vonMises',{stressUnit:'kPa'})[2] === 1000 && api.resultFieldDefinition('uz',{lengthUnit:'m'})[2] === 1, 'Unit changes have incorrect scale');
+    var outline = api.buildPartEdgeIndices(new Uint32Array([0,1,2,0,2,3]), [{start:0,count:6}]);
+    assert(outline.length === 8 && !Array.from(outline).some(function(v,i){return i%2===0 && v===0 && outline[i+1]===2;}), 'A planar face diagonal became a part outline');
     ui.renderSolve({mesh:{}});
     assert(!document.getElementById('solve-button').disabled, 'Solve unavailable before an available preflight');
     ui.renderSolve({mesh:{},solvePreflight:{status:'running'}});
@@ -51,7 +69,7 @@
     renderer.presentation = {field:'vonMises',deformationScale:0}; renderer.deformationAnimationMultiplier = 1;
     renderer.updateResultPresentation();
     var color = geometry.getAttribute('color').array;
-    assert(Math.abs(color[3] - 0.56) < 1e-6 && Math.abs(color[4] - 0.775) < 1e-6 && Math.abs(color[5] - 0.435) < 1e-6, 'Surface color does not use the same zero-to-sample-peak scale as legend');
+    assert(Math.abs(color[3] - 0.2738384) < 1e-6 && Math.abs(color[4] - 0.5623174) < 1e-6 && Math.abs(color[5] - 0.1587321) < 1e-6, 'Surface color does not use the same zero-to-sample-peak scale as legend');
     renderer.resultModel.extrema = {rawVonMisesMax:{valuePa:0}};
     renderer.resultModel.surfaceFields.vonMisesPa.fill(0); renderer.updateResultPresentation();
     assert(Array.from(color).every(Number.isFinite), 'Zero stress produced nonfinite colors');

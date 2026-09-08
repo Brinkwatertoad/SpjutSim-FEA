@@ -959,6 +959,10 @@
     target[0] = stops[low][0] + (stops[low + 1][0] - stops[low][0]) * fraction;
     target[1] = stops[low][1] + (stops[low + 1][1] - stops[low][1]) * fraction;
     target[2] = stops[low][2] + (stops[low + 1][2] - stops[low][2]) * fraction;
+    for (var channel = 0; channel < 3; channel += 1) {
+      var value = target[channel];
+      target[channel] = value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+    }
   }
 
   ViewportController.prototype.clearResultDisplay = function () {
@@ -1019,7 +1023,7 @@
     geometry.setAttribute('color', new root.THREE.BufferAttribute(new Float32Array(result.originalSurface.nodePositionsM.length), 3));
     geometry.setIndex(new root.THREE.BufferAttribute(result.originalSurface.triangleConnectivity, 1));
     geometry.computeVertexNormals();
-    material = new root.THREE.MeshStandardMaterial({ vertexColors: true, side: root.THREE.DoubleSide, roughness: 0.72, metalness: 0.02 });
+    material = new root.THREE.MeshBasicMaterial({ vertexColors: true, side: root.THREE.DoubleSide, toneMapped: false });
     surface = new root.THREE.Mesh(geometry, material);
     surface.name = 'result-surface';
     triangles = result.originalSurface.triangleConnectivity;
@@ -1036,7 +1040,21 @@
     lines.name = 'result-mesh-overlay';
     group = new root.THREE.Group();
     group.name = 'result-display';
-    group.add(surface, lines);
+    var partGeometry = new root.THREE.BufferGeometry();
+    partGeometry.setAttribute('position', geometry.getAttribute('position'));
+    partGeometry.setIndex(new root.THREE.BufferAttribute(root.SpjutsimFEA.buildPartEdgeIndices(triangles, (function () {
+      var faceIndices = result.originalSurface.triangleFaceIndices, ranges = [], start = 0;
+      for (var i = 1; i <= faceIndices.length; i += 1) {
+        if (i === faceIndices.length || faceIndices[i] !== faceIndices[start]) {
+          ranges.push({start:start * 3,count:(i - start) * 3}); start = i;
+        }
+      }
+      return ranges;
+    }())), 1));
+    var partEdges = new root.THREE.LineSegments(partGeometry, new root.THREE.LineBasicMaterial({color: '#263445', transparent:true, opacity:0.45}));
+    partEdges.name = 'result-part-edges';
+    group.userData.partEdges = partEdges;
+    group.add(surface, lines, partEdges);
     group.userData.lines = lines;
     this.scene.add(group);
     this.resultDisplay = group;
@@ -1074,7 +1092,7 @@
     var rgb = [0, 0, 0];
     if (!result || !this.resultSurface) { return; }
     field = this.activeResultField();
-    fieldRange = root.SpjutsimFEA.getResultDisplayRange(result, this.presentation.field) || root.SpjutsimFEA.getResultDisplayRange(result, 'vonMises');
+    fieldRange = root.SpjutsimFEA.resolveColorRange(result, this.presentation) || root.SpjutsimFEA.getResultDisplayRange(result, 'vonMises');
     position = this.resultSurface.geometry.getAttribute('position');
     linePosition = this.resultDisplay.userData.lines.geometry.getAttribute('position');
     colors = this.resultSurface.geometry.getAttribute('color');
@@ -1148,7 +1166,7 @@
 
   ViewportController.prototype.setPresentation = function (presentation) {
     if (!presentation || ['model', 'mesh', 'stress', 'deformation'].indexOf(presentation.mode) < 0 ||
-        (presentation.displayStyle !== 'lines' && presentation.displayStyle !== 'wireframe')) {
+        (['lines', 'shaded', 'shaded-edges', 'wireframe'].indexOf(presentation.displayStyle) < 0)) {
       throw new Error('Invalid viewport presentation.');
     }
     this.presentation = Object.assign({ field: 'vonMises', meshOverlay: false, deformationScale: 0,
@@ -1173,20 +1191,22 @@
     var meshMaterials;
     if (this.previewMesh) {
       modelVisible = this.presentation.mode === 'model' || (!this.meshSurface && !this.resultSurface);
-      this.previewMesh.visible = modelVisible && this.presentation.displayStyle === 'lines';
+      this.previewMesh.visible = modelVisible;
       featureEdges = this.importedGeometry.getObjectByName('imported-geometry-feature-edges');
-      if (featureEdges) { featureEdges.visible = modelVisible; }
+      this.previewMesh.material.forEach(function (material) { material.wireframe = this.presentation.displayStyle === 'wireframe'; }, this);
+      if (featureEdges) { featureEdges.visible = modelVisible && this.presentation.displayStyle !== 'shaded'; }
     }
     if (this.meshDisplay) {
       this.meshDisplay.visible = this.presentation.mode === 'mesh';
       meshMaterials = this.meshSurface.material;
       meshMaterials.forEach(function (material) { material.wireframe = this.presentation.displayStyle === 'wireframe'; }, this);
-      this.meshDisplay.userData.lines.visible = this.presentation.displayStyle === 'lines';
+      this.meshDisplay.userData.lines.visible = this.presentation.displayStyle !== 'wireframe';
     }
     if (this.resultDisplay) {
       this.resultDisplay.visible = this.presentation.mode === 'stress' || this.presentation.mode === 'deformation';
       this.resultSurface.material.wireframe = this.presentation.displayStyle === 'wireframe';
-      this.resultDisplay.userData.lines.visible = this.presentation.meshOverlay === true || this.presentation.displayStyle === 'lines';
+      this.resultDisplay.userData.lines.visible = this.presentation.meshOverlay === true;
+      if (this.resultDisplay.userData.partEdges) { this.resultDisplay.userData.partEdges.visible = this.presentation.displayStyle === 'shaded-edges' || this.presentation.displayStyle === 'lines'; }
     }
   };
 

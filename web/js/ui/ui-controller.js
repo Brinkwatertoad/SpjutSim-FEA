@@ -53,6 +53,15 @@
     this.legendTitle = document.getElementById('legend-title');
     this.legendMin = document.getElementById('legend-min');
     this.legendMax = document.getElementById('legend-max');
+    this.stressUnit = document.getElementById('stress-unit');
+    this.lengthUnit = document.getElementById('length-unit');
+    this.legendOrientation = document.getElementById('legend-orientation');
+    this.colorRangeMode = document.getElementById('color-range-mode');
+    this.colorRangeMin = document.getElementById('color-range-min');
+    this.colorRangeMax = document.getElementById('color-range-max');
+    this.colorRangeLock = document.getElementById('color-range-lock');
+    this.colorRangeError = document.getElementById('color-range-error');
+    this.legendTicks = document.getElementById('legend-ticks');
     this.legendStatus = document.getElementById('legend-status');
     this.probeOutput = document.getElementById('probe-output');
     this.customMeshSizes = null;
@@ -68,6 +77,14 @@
     this.workspaceLayout = null;
     this.selectOutputTab = null;
     this.navigationPreferences = this.loadNavigationPreferences();
+    try {
+      var saved = JSON.parse(root.localStorage.getItem('spjutsim-fea-display-v1'));
+      if (saved && this.controller.document.viewportPresentation) {
+        var current = this.controller.document.viewportPresentation;
+        current.legendOrientation = saved.legendOrientation === 'horizontal' ? 'horizontal' : 'vertical';
+        current.displayStyle = ['shaded', 'shaded-edges', 'wireframe'].indexOf(saved.displayStyle) >= 0 ? saved.displayStyle : 'shaded-edges';
+      }
+    } catch (ignored) { /* Invalid or unavailable preferences use defaults. */ }
     this.applicationMenu = document.getElementById('application-menu');
     this.fitViewButton = document.getElementById('fit-view-button');
     this.perspectiveToggle = document.getElementById('perspective-toggle');
@@ -274,6 +291,29 @@
     if (this.displayStyle) {
       this.displayStyle.addEventListener('change', function () { self.updateViewportPresentation(); });
     }
+    Array.from(document.querySelectorAll('[data-view-mode]')).forEach(function (button) {
+      button.addEventListener('click', function () { self.viewportMode.value = button.dataset.viewMode; self.updateViewportPresentation(); });
+    });
+    [this.stressUnit, this.lengthUnit, this.legendOrientation, this.colorRangeMode, this.colorRangeMin, this.colorRangeMax, this.colorRangeLock].forEach(function (control) {
+      if (control) { control.addEventListener('change', function () { self.updateViewportPresentation(); }); }
+    });
+    var displayPopover = document.getElementById('display-popover');
+    if (displayPopover) {
+      displayPopover.addEventListener('toggle', function () {
+        if (!displayPopover.open) { return; }
+        var bounds = displayPopover.getBoundingClientRect(), canvas = document.getElementById('viewport').getBoundingClientRect();
+        var options = displayPopover.querySelector('.fea-display-options');
+        options.style.left = Math.max(canvas.left + 6, Math.min(bounds.left, canvas.right - 266)) + 'px';
+        options.style.top = Math.min(bounds.bottom + 4, canvas.bottom - 100) + 'px';
+        options.style.maxHeight = Math.max(70, canvas.bottom - parseFloat(options.style.top) - 12) + 'px';
+      });
+      document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && displayPopover.open) { displayPopover.open = false; displayPopover.querySelector('summary').focus(); event.preventDefault(); } });
+      document.addEventListener('pointerdown', function (event) { if (!displayPopover.contains(event.target)) { displayPopover.open = false; } });
+    }
+    if (this.resultLegend && root.ResizeObserver) {
+      this.legendResizeObserver = new root.ResizeObserver(function () { self.renderLegend(self.controller.document); });
+      this.legendResizeObserver.observe(this.resultLegend.parentElement);
+    }
     if (this.resultField) { this.resultField.addEventListener('change', function () { self.updateViewportPresentation(); }); }
     if (this.deformationMode) { this.deformationMode.addEventListener('change', function () { self.updateViewportPresentation(); }); }
     if (this.deformationScale) {
@@ -452,14 +492,31 @@
     if (mode === 'stress' && ['vonMises', 'factorOfSafety', 'maxPrincipal', 'minPrincipal'].indexOf(field) < 0) { field = 'vonMises'; }
     if (mode === 'deformation' && ['displacementMagnitude', 'ux', 'uy', 'uz'].indexOf(field) < 0) { field = 'displacementMagnitude'; }
     try {
+      var range = current.colorRange;
+      if (this.colorRangeMode && this.controller.document.results) {
+        var automatic = root.SpjutsimFEA.getResultDisplayRange(this.controller.document.results, field);
+        var unitScale = root.SpjutsimFEA.resultFieldDefinition(field, current)[2];
+        var manual = this.colorRangeMode.value === 'manual';
+        range = {field:field, mode:manual ? 'manual' : 'automatic', locked:this.colorRangeLock.checked,
+          minimum:manual ? (this.colorRangeMin.value === '' ? NaN : Number(this.colorRangeMin.value) * unitScale) : automatic.minimum,
+          maximum:manual ? (this.colorRangeMax.value === '' ? NaN : Number(this.colorRangeMax.value) * unitScale) : automatic.maximum};
+        if (field !== current.field) { range = {field:field,mode:'automatic',locked:false}; }
+        else if (!manual && range.locked && current.colorRange && current.colorRange.locked) { range = current.colorRange; }
+      }
       this.controller.replaceViewportPresentation({
-        mode: mode, displayStyle: this.displayStyle ? this.displayStyle.value : 'lines', field: field,
+        stressUnit: this.stressUnit ? this.stressUnit.value : current.stressUnit,
+        lengthUnit: this.lengthUnit ? this.lengthUnit.value : current.lengthUnit,
+        legendOrientation: this.legendOrientation ? this.legendOrientation.value : current.legendOrientation,
+        colorRange: range,
+        mode: mode, displayStyle: this.displayStyle ? this.displayStyle.value : 'shaded-edges', field: field,
         meshOverlay: Boolean(this.meshOverlay && this.meshOverlay.checked), deformationMode: deformationMode,
         deformationScale: this.resolveDeformationScale(deformationMode),
         userDeformationScale: Math.max(0, Number(this.deformationScale && this.deformationScale.value) || 0)
       });
+      if (this.colorRangeError) { this.colorRangeError.textContent = ''; }
+      try { root.localStorage.setItem('spjutsim-fea-display-v1', JSON.stringify({legendOrientation:this.controller.document.viewportPresentation.legendOrientation,displayStyle:this.controller.document.viewportPresentation.displayStyle})); } catch (ignored) {}
     } catch (error) {
-      this.renderViewportPresentation(this.controller.document);
+      if (this.colorRangeError) { this.colorRangeError.textContent = error.message; }
     }
   };
   UIController.prototype.renderViewportPresentation = function (documentState) {
@@ -474,6 +531,23 @@
       if (meshOption) { meshOption.disabled = !meshAvailable; }
       if (stressOption) { stressOption.disabled = !resultsAvailable; }
       if (deformationOption) { deformationOption.disabled = !resultsAvailable; }
+    }
+    Array.from(document.querySelectorAll('[data-view-mode]')).forEach(function (button) {
+      button.disabled = button.dataset.viewMode === 'mesh' ? !meshAvailable : (button.dataset.viewMode !== 'model' && !resultsAvailable);
+      button.setAttribute('aria-pressed', String(button.dataset.viewMode === presentation.mode));
+    });
+    var resultContext = document.getElementById('result-context');
+    if (resultContext) { resultContext.hidden = !resultsAvailable || ['stress','deformation'].indexOf(presentation.mode) < 0; }
+    var deformationContext = document.getElementById('deformation-context');
+    if (deformationContext) { deformationContext.hidden = !resultsAvailable || presentation.mode !== 'deformation'; }
+    if (this.stressUnit) { this.stressUnit.value = presentation.stressUnit || 'MPa'; }
+    if (this.lengthUnit) { this.lengthUnit.value = presentation.lengthUnit || 'mm'; }
+    if (this.legendOrientation) { this.legendOrientation.value = presentation.legendOrientation || 'vertical'; }
+    if (this.colorRangeMode) {
+      this.colorRangeMode.value = presentation.colorRange && presentation.colorRange.mode || 'automatic';
+      this.colorRangeLock.checked = Boolean(presentation.colorRange && presentation.colorRange.locked);
+      [this.colorRangeMode,this.colorRangeLock].forEach(function (control) { control.disabled = !resultsAvailable; });
+      [this.colorRangeMin,this.colorRangeMax].forEach(function (control) { control.disabled = !resultsAvailable || this.colorRangeMode.value !== 'manual'; }, this);
     }
     if (this.displayStyle) {
       this.displayStyle.value = presentation.displayStyle;
@@ -825,13 +899,8 @@
   UIController.prototype.renderLegend = function (documentState) {
     var result = documentState.results;
     var presentation = documentState.viewportPresentation || {};
-    var definitions = {
-      vonMises: ['von Mises', 'MPa', 1e6], maxPrincipal: ['approximate smoothed maximum principal stress', 'MPa', 1e6],
-      factorOfSafety: ['Smoothed surface yield FoS', '', 1], minPrincipal: ['approximate smoothed minimum principal stress', 'MPa', 1e6], displacementMagnitude: ['displacement magnitude', 'mm', 1e-3],
-      ux: ['Ux', 'mm', 1e-3], uy: ['Uy', 'mm', 1e-3], uz: ['Uz', 'mm', 1e-3]
-    };
-    var definition = definitions[presentation.field];
-    var fieldRange = result && root.SpjutsimFEA.getResultDisplayRange(result, presentation.field);
+    var definition = root.SpjutsimFEA.resultFieldDefinition(presentation.field, presentation);
+    var fieldRange = result && root.SpjutsimFEA.resolveColorRange(result, presentation);
     var show = Boolean(result && definition && (presentation.mode === 'stress' || presentation.mode === 'deformation'));
     if (!this.resultLegend) { return; }
     this.resultLegend.hidden = !show;
@@ -839,7 +908,23 @@
     this.legendTitle.textContent = definition[0] + (definition[1] ? ' (' + definition[1] + ')' : '');
     this.legendMin.textContent = formatNumber(fieldRange.minimum / definition[2]);
     this.legendMax.textContent = formatNumber(fieldRange.maximum / definition[2]);
-    this.legendStatus.hidden = presentation.field === 'vonMises';
+    var orientation = presentation.legendOrientation || 'vertical';
+    this.resultLegend.dataset.orientation = orientation;
+    if (this.legendTicks) {
+      var height = Math.max(44, Math.min(264, (this.resultLegend.closest('.fea-canvas') || this.resultLegend.parentElement).clientHeight - 240));
+      this.resultLegend.style.setProperty('--legend-height', height + 'px');
+      this.legendTicks.replaceChildren();
+      root.SpjutsimFEA.buildLegendTicks(fieldRange, orientation, height).forEach(function (tick) {
+        var label = document.createElement('span');
+        label.style.top = (tick.position * 100) + '%';
+        label.textContent = formatNumber(tick.value / definition[2]) + (presentation.field === 'factorOfSafety' && tick.value === 10 ? '+' : '');
+        this.legendTicks.appendChild(label);
+      }, this);
+    }
+    if (presentation.field === 'factorOfSafety' && fieldRange.maximum === 10) { this.legendMax.textContent = '10+'; }
+    if (this.colorRangeMin && document.activeElement !== this.colorRangeMin) { this.colorRangeMin.value = fieldRange.minimum / definition[2]; }
+    if (this.colorRangeMax && document.activeElement !== this.colorRangeMax) { this.colorRangeMax.value = fieldRange.maximum / definition[2]; }
+    this.legendStatus.hidden = !fieldRange.clipped && presentation.field === 'vonMises';
     this.legendStatus.textContent = legendRangeStatus(fieldRange, presentation.deformationScale);
     this.resultLegend.title = presentation.field === 'vonMises' ?
       'Colors show smoothed surface values. Scale: zero to the whole-model solver-sample peak. Smoothed surface maximum: ' +

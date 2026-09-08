@@ -175,22 +175,38 @@
       <section class="fea-canvas" aria-label="3D viewport">
         <canvas id="viewport" tabindex="0" aria-describedby="viewport-help" aria-label="3D viewport. Left drag rotates, right drag pans, wheel or pinch zooms, and arrow keys rotate."></canvas>
         <div class="fea-viewport-actions" aria-label="3D display">
-          <label for="viewport-mode">View</label>
-          <select id="viewport-mode" aria-label="Viewport presentation mode"><option value="model">Model</option><option value="mesh">Mesh</option><option value="stress">Stress</option><option value="deformation">Deformation</option></select>
-          <label for="display-style">Display style</label>
-          <select id="display-style" aria-label="Viewport display style"><option value="lines">Shaded with edges</option><option value="wireframe">Wireframe</option></select>
+          <select id="viewport-mode" aria-label="Viewport presentation mode" hidden><option value="model">Model</option><option value="mesh">Mesh</option><option value="stress">Stress</option><option value="deformation">Deformation</option></select>
+          <div id="view-segments" class="ui-segmented-control" role="group" aria-label="View">
+            <button type="button" data-view-mode="model">Model</button><button type="button" data-view-mode="mesh">Mesh</button><button type="button" data-view-mode="stress">Stress</button><button type="button" data-view-mode="deformation">Deformation</button>
+          </div>
+          <div id="result-context" class="fea-context-row" hidden>
           <label for="result-field">Field</label>
           <select id="result-field" aria-label="Displayed result field" disabled>
             <option value="vonMises">von Mises stress</option><option value="factorOfSafety">Factor of safety</option><option value="maxPrincipal">Maximum principal stress</option>
             <option value="minPrincipal">Minimum principal stress</option><option value="displacementMagnitude">Displacement magnitude</option>
             <option value="ux">Ux</option><option value="uy">Uy</option><option value="uz">Uz</option>
           </select>
+          </div>
+          <div id="deformation-context" class="fea-context-row" hidden>
           <label for="deformation-mode">Shape</label>
           <select id="deformation-mode" aria-label="Deformation scale mode" disabled><option value="undeformed">Undeformed</option><option value="true-scale">True scale</option><option value="auto">Auto</option><option value="user">User scale</option></select>
           <button id="deformation-animation-toggle" type="button" aria-label="Play deformed shape animation" aria-pressed="false" hidden>Play</button>
           <input id="deformation-scale" type="range" min="1" max="1000" step="1" value="100" aria-label="Deformed shape scale multiplier" hidden>
           <output id="deformation-scale-readout" for="deformation-scale" hidden>x100</output>
+          </div>
+          <details id="display-popover" class="fea-display-popover"><summary>Display</summary><div class="fea-display-options">
+          <label for="display-style">Style</label>
+          <select id="display-style"><option value="shaded">Shaded</option><option value="shaded-edges" selected>Shaded with part edges</option><option value="wireframe">Wireframe</option></select>
           <label class="fea-overlay-check" for="mesh-overlay"><input id="mesh-overlay" type="checkbox" disabled> Mesh overlay</label>
+          <label for="stress-unit">Stress units</label><select id="stress-unit"><option>Pa</option><option>kPa</option><option selected>MPa</option></select>
+          <label for="length-unit">Displacement units</label><select id="length-unit"><option>m</option><option selected>mm</option></select>
+          <label for="legend-orientation">Legend</label><select id="legend-orientation"><option value="vertical">Vertical</option><option value="horizontal">Horizontal</option></select>
+          <label for="color-range-mode">Color range</label><select id="color-range-mode"><option value="automatic">Automatic</option><option value="manual">Manual</option></select>
+          <label for="color-range-min">Minimum (display units)</label><input id="color-range-min" type="number" step="any">
+          <label for="color-range-max">Maximum (display units)</label><input id="color-range-max" type="number" step="any">
+          <label><input id="color-range-lock" type="checkbox"> Lock range for this field</label>
+          <p id="color-range-error" role="status"></p><small>Values outside the range use the endpoint colors. Numerical peaks remain unchanged.</small>
+          </div></details>
           <button id="fit-view-button" type="button">Fit model</button>
           <label class="fea-overlay-check" for="perspective-toggle"><input id="perspective-toggle" type="checkbox" role="switch"> Perspective</label>
         </div>
@@ -204,7 +220,7 @@
           <button id="reset-view-button" type="button" aria-label="Reset view" title="Reset view"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 22 7.5v9L12 22 2 16.5v-9Z M2 7.5 12 13l10-5.5 M12 13v9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
         </div>
         <div class="fea-result-overlays">
-        <div id="result-legend" class="fea-result-legend" hidden><strong id="legend-title"></strong><div class="fea-color-ramp"></div><div><span id="legend-min"></span><span id="legend-max"></span></div><small id="legend-status"></small></div>
+        <div id="result-legend" class="fea-result-legend" hidden><strong id="legend-title"></strong><div class="fea-color-ramp"></div><div class="fea-legend-endpoints"><span id="legend-min"></span><span id="legend-max"></span></div><div id="legend-ticks"></div><small id="legend-status"></small></div>
         <output id="probe-output" class="fea-probe" hidden></output>
         </div>
         <p class="fea-viewport-help" id="viewport-help">Left drag rotates · Right drag pans · Wheel or pinch zooms · Arrow keys rotate</p>
@@ -321,7 +337,8 @@
   <script src="js/analysis/convergence.js"></script>
   <script src="js/analysis/convergence-runner.js"></script>
   <script src="js/analysis/analysis-document.js"></script>
-  <script src="js/analysis/app-controller.js"></script>
+  <script src="js/analysis/presentation.js"></script>
+<script src="js/analysis/app-controller.js"></script>
   <script src="js/render/viewport-navigation.js"></script>
   <script src="js/render/analysis-glyphs.js"></script>
   <script src="js/render/deformation-animation.js"></script>
@@ -330,7 +347,8 @@
   <script src="js/ui/analysis-authoring-ui.js"></script>
   <script src="js/ui/result-formatting.js"></script>
   <script src="js/ui/workspace-layout.js"></script>
-  <script src="js/ui/ui-controller.js"></script>
+  <script src="js/ui/result-legend.js"></script>
+<script src="js/ui/ui-controller.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source-part-001.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source-part-002.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source-part-003.js"></script>
