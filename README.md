@@ -8,7 +8,7 @@ v1 is unreleased. The approved interface, result-clarity, and bounded STL work
 is tracked in [plans 21–30](docs/plans/README.md). Plans 21–23 are implemented
 and accepted in the [combined owner review](docs/reviews/21-23-review.md) on
 2026-09-08; plans
-24 is implemented pending the grouped owner review; 25–30 remain ahead of the final plan 20 candidate audit. No v1 acceptance is
+24–25 are implemented pending the grouped owner review; 26–30 remain ahead of the final plan 20 candidate audit. No v1 acceptance is
 implied by passing automated checks.
 
 ## Run locally
@@ -283,3 +283,10 @@ and deformation controls. Display contains independent mesh overlay, shaded/part
 wireframe styles, units, vertical/horizontal legend, and Automatic/Manual limits.
 Range lock retains SI limits for the same field across results; field changes reset
 incompatible limits. Compact style/orientation preferences persist locally.
+
+Support/load editors now preview changes before Apply/Save. Click faces to toggle
+without Shift; background clicks preserve the draft. Cancel/Escape restores the
+previous available view and leaves a completed solve intact. Dirty drafts stay
+open until Apply or Cancel. The preview reports selection area, global direction,
+and the distinction between constant pressure and total force across all faces.
+Run `tests/browser/assignment-draft-tests.html` for transactional regression checks.

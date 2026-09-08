@@ -111,7 +111,7 @@
                   <label class="fea-component"><input id="support-uy-enabled" type="checkbox"><span>Uy</span><input id="support-uy" type="number" step="any" aria-label="Uy displacement in millimeters"></label>
                   <label class="fea-component"><input id="support-uz-enabled" type="checkbox"><span>Uz</span><input id="support-uz" type="number" step="any" aria-label="Uz displacement in millimeters"></label>
                 </fieldset>
-                <button class="ui-button-primary" type="submit">Add support</button><button id="cancel-support-edit" type="button" hidden>Cancel edit</button><button id="remove-support-item-button" type="button" data-action-intent="danger" hidden>Remove support</button>
+                <button class="ui-button-primary" type="submit">Apply support</button><button id="cancel-support-edit" type="button" hidden>Cancel edit</button><button id="remove-support-item-button" type="button" data-action-intent="danger" hidden>Remove support</button>
               </form>
               <p id="support-status" role="status" aria-live="polite">Import geometry and select faces to add a support.</p>
             </div>
@@ -125,7 +125,7 @@
                   <label for="load-fy">Fy</label><input id="load-fy" type="number" step="any">
                   <label for="load-fz">Fz</label><input id="load-fz" type="number" step="any">
                 </fieldset>
-                <button class="ui-button-primary" type="submit">Add load</button><button id="cancel-load-edit" type="button" hidden>Cancel edit</button><button id="remove-load-item-button" type="button" data-action-intent="danger" hidden>Remove load</button>
+                <button class="ui-button-primary" type="submit">Apply load</button><button id="cancel-load-edit" type="button" hidden>Cancel edit</button><button id="remove-load-item-button" type="button" data-action-intent="danger" hidden>Remove load</button>
               </form>
               <p id="load-status" role="status" aria-live="polite">Import geometry and select faces to add a load.</p>
             </div>
@@ -210,6 +210,7 @@
           <button id="fit-view-button" type="button">Fit model</button>
           <label class="fea-overlay-check" for="perspective-toggle"><input id="perspective-toggle" type="checkbox" role="switch"> Perspective</label>
         </div>
+        <p id="assignment-preview-indicator" class="fea-draft-indicator" role="status" hidden>Preview · click faces to toggle · Apply or Cancel in Setup</p>
         <div class="fea-gizmo-bounds" role="group" aria-label="Camera orientation">
           <button type="button" data-view-orientation="+x" aria-label="View from +X · YZ plane" title="View from +X · YZ plane"></button>
           <button type="button" data-view-orientation="-x" aria-label="View from -X · YZ plane" title="View from -X · YZ plane"></button>
@@ -339,6 +340,7 @@
   <script src="js/analysis/analysis-document.js"></script>
   <script src="js/analysis/presentation.js"></script>
 <script src="js/analysis/app-controller.js"></script>
+<script src="js/analysis/assignment-draft.js"></script>
   <script src="js/render/viewport-navigation.js"></script>
   <script src="js/render/analysis-glyphs.js"></script>
   <script src="js/render/deformation-animation.js"></script>

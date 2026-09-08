@@ -346,6 +346,18 @@
       }
     };
     this.canvas.addEventListener('click', this.pointerClickListener);
+    this.draftHoverListener = function (event) {
+      if (!self.assignmentDraftActive || self.activePointers.size) { return; }
+      self.draftHoverPointer = {clientX:event.clientX,clientY:event.clientY};
+      if (self.draftHoverFrame) { return; }
+      self.draftHoverFrame = root.requestAnimationFrame(function () {
+        self.draftHoverFrame = null;
+        self.showDraftHover(self.assignmentDraftActive ? self.pickFaceAtPointer(self.draftHoverPointer) : null);
+      });
+    };
+    this.draftHoverLeave = function () { self.showDraftHover(null); };
+    this.canvas.addEventListener('pointermove',this.draftHoverListener);
+    this.canvas.addEventListener('pointerleave',this.draftHoverLeave);
   };
 
   ViewportController.prototype.observeGizmoInteraction = function () {
@@ -1128,12 +1140,17 @@
     var glyphLength = Math.max(this.modelExtent * 0.14, 0.000001);
     var loadColor = themeColor('--ui-color-load', '#ef4444');
     var supportColor = themeColor('--ui-color-support', '#22c55e');
-    this.clearAnalysisOverlay();
-    if (!this.analysisOverlayState) { return; }
+    if (!this.analysisOverlayState) { this.clearAnalysisOverlay(); return; }
+    var previous = this.analysisOverlay;
+    var reusable = new Map();
+    if (previous) { previous.children.forEach(function (object) { reusable.set(object.userData.glyphKey,object); }); }
     descriptors = root.SpjutsimFEA.buildAnalysisGlyphDescriptors(this.analysisOverlayState);
     group = new root.THREE.Group();
     group.name = 'analysis-overlay';
     descriptors.forEach(function (descriptor) {
+      var key = JSON.stringify([descriptor,loadColor,supportColor,glyphLength]);
+      var reused = reusable.get(key);
+      if (reused) { group.add(reused); reusable.delete(key); return; }
       var direction = new root.THREE.Vector3().fromArray(descriptor.direction).normalize();
       var position = new root.THREE.Vector3().fromArray(descriptor.positionM);
       var object;
@@ -1148,11 +1165,16 @@
       } else {
         object = cylinderConeArrow(direction, position, glyphLength, loadColor, 'analysis-glyph-' + descriptor.type);
       }
+      if (descriptor.preview) {
+        object.traverse(function (child) { if (child.material) { child.material.transparent = true; child.material.opacity = 0.55; child.material.depthTest = false; } });
+      }
+      object.userData.glyphKey = key;
       object.userData.descriptor = descriptor;
       object.userData.tipPositionM = descriptor.positionM.slice();
       object.renderOrder = 10;
       group.add(object);
     });
+    if (previous) { this.scene.remove(previous); disposeObjectResources(previous); }
     this.scene.add(group);
     this.analysisOverlay = group;
   };
@@ -1160,6 +1182,7 @@
   /** Replace load/support glyphs without altering geometry, mesh, or numeric analysis data. */
   ViewportController.prototype.setAnalysisOverlay = function (documentState) {
     this.analysisOverlayState = documentState || null;
+    if (!documentState || !documentState.assignmentDraft) { this.showDraftHover(null); }
     this.rebuildAnalysisOverlay();
     this.render();
   };
@@ -1169,6 +1192,9 @@
         (['lines', 'shaded', 'shaded-edges', 'wireframe'].indexOf(presentation.displayStyle) < 0)) {
       throw new Error('Invalid viewport presentation.');
     }
+    var presentationKey = JSON.stringify(presentation);
+    if (this.presentationKey === presentationKey) { return; }
+    this.presentationKey = presentationKey;
     this.presentation = Object.assign({ field: 'vonMises', meshOverlay: false, deformationScale: 0,
       deformationMode: 'undeformed', userDeformationScale: 1 }, presentation);
     this.updateResultPresentation();
@@ -1191,9 +1217,9 @@
     var meshMaterials;
     if (this.previewMesh) {
       modelVisible = this.presentation.mode === 'model' || (!this.meshSurface && !this.resultSurface);
-      this.previewMesh.visible = modelVisible;
+      this.previewMesh.visible = modelVisible && this.presentation.displayStyle !== 'wireframe';
       featureEdges = this.importedGeometry.getObjectByName('imported-geometry-feature-edges');
-      this.previewMesh.material.forEach(function (material) { material.wireframe = this.presentation.displayStyle === 'wireframe'; }, this);
+      this.previewMesh.material.forEach(function (material) { material.wireframe = false; });
       if (featureEdges) { featureEdges.visible = modelVisible && this.presentation.displayStyle !== 'shaded'; }
     }
     if (this.meshDisplay) {
@@ -1210,6 +1236,22 @@
     }
   };
 
+  ViewportController.prototype.showDraftHover = function (faceId) {
+    var surface = this.presentation.mode === 'mesh' ? this.meshSurface : this.previewMesh;
+    if (!faceId || !surface) { if (this.draftHoverMesh) { this.draftHoverMesh.visible = false; this.render(); } return; }
+    if (this.draftHoverSource !== surface.geometry) {
+      if (this.draftHoverMesh) { this.scene.remove(this.draftHoverMesh); disposeObjectResources(this.draftHoverMesh); }
+      var geometry = new root.THREE.BufferGeometry();
+      geometry.setAttribute('position',surface.geometry.getAttribute('position'));
+      geometry.setIndex(surface.geometry.index);
+      this.draftHoverMesh = new root.THREE.Mesh(geometry,new root.THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.22,side:root.THREE.DoubleSide,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));
+      this.draftHoverSource = surface.geometry; this.scene.add(this.draftHoverMesh);
+    }
+    var index = surface.userData.faceIdsByRange.indexOf(faceId), range = surface.geometry.groups[index];
+    if (!range) { return; }
+    this.draftHoverMesh.geometry.setDrawRange(range.start,range.count); this.draftHoverMesh.visible = true; this.render();
+  };
+
   ViewportController.prototype.setSelectedFaceIds = function (faceIds) {
     var knownFaceIds;
     var rangeIndex;
@@ -1224,6 +1266,9 @@
         throw new Error('Unknown CAD face identifier.');
       }
     });
+    var selectionKey = JSON.stringify(faceIds);
+    if (this.selectionKey === selectionKey && this.selectionPreview === this.previewMesh && this.selectionMesh === this.meshSurface) { return; }
+    this.selectionKey = selectionKey; this.selectionPreview = this.previewMesh; this.selectionMesh = this.meshSurface;
     this.selectedFaceIds = new Set(faceIds);
     [this.previewMesh, this.meshSurface].forEach(function (surface) {
       if (!surface) { return; }
@@ -1339,6 +1384,9 @@
     if (this.resizeObserver) { this.resizeObserver.disconnect(); }
     if (this.resizeListener) { root.removeEventListener('resize', this.resizeListener); }
     if (this.pointerClickListener) { this.canvas.removeEventListener('click', this.pointerClickListener); }
+    if (this.draftHoverFrame) { root.cancelAnimationFrame(this.draftHoverFrame); }
+    if (this.draftHoverMesh) { this.scene.remove(this.draftHoverMesh); disposeObjectResources(this.draftHoverMesh); }
+    this.canvas.removeEventListener('pointermove',this.draftHoverListener); this.canvas.removeEventListener('pointerleave',this.draftHoverLeave);
     if (this.pointerDownListener) { this.canvas.removeEventListener('pointerdown', this.pointerDownListener); }
     if (this.pointerMoveListener) { this.canvas.removeEventListener('pointermove', this.pointerMoveListener); }
     if (this.pointerUpListener) {

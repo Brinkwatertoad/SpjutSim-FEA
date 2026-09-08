@@ -754,12 +754,23 @@
     var loadItemId = state.loads[0].id;
     var loadTrigger = document.querySelector('[data-setup-kind="load"][data-item-id="' + loadItemId + '"] [data-setup-row-trigger]');
     loadTrigger.focus(); loadTrigger.click();
-    document.getElementById('load-pressure').value = '2.25';
+    var draftRevision = state.analysisRevision;
+    var pressureInput = document.getElementById('load-pressure');
+    pressureInput.focus(); pressureInput.value = '2.25';
+    pressureInput.dispatchEvent(new Event('input',{bubbles:true}));
+    assert(state.assignmentDraft.definition.pressurePa === 2.25e6 && state.analysisRevision === draftRevision && state.loads[0].pressurePa !== 2.25e6, 'Live input committed or failed to update the authoritative draft');
+    assert(document.activeElement === pressureInput, 'Live input lost focus during preview rendering');
+    document.getElementById('setup-add-support-button').click();
+    assert(authoring.activeInspectorKind === 'load' && state.assignmentDraft.kind === 'load', 'Switching editors silently discarded a dirty draft');
     document.getElementById('load-form').requestSubmit();
     assert(state.loads[0].pressurePa === 2.25e6, 'inline load save did not update the controller state');
     assert(!document.getElementById('load-form').closest('[data-setup-editor-host]'), 'successful save did not close the inline editor');
     assert(document.activeElement && document.activeElement.closest('[data-item-id="' + loadItemId + '"]'), 'save did not return focus to the updated row');
 
+    document.querySelector('[data-setup-kind="load"][data-item-id="' + loadItemId + '"] [data-setup-row-trigger]').click();
+    var unchangedRevision = state.analysisRevision;
+    document.getElementById('load-form').requestSubmit();
+    assert(state.analysisRevision === unchangedRevision, 'Unchanged inline Save invalidated the analysis');
     document.querySelector('[data-setup-kind="load"][data-item-id="' + loadItemId + '"] [data-setup-row-trigger]').click();
     var removeLoad = document.getElementById('remove-load-item-button');
     assert(removeLoad, 'inline load editor omitted its remove action');

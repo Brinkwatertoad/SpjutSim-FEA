@@ -88,6 +88,7 @@
     this.document.results = null;
     this.document.convergenceStudy = null;
     this.document.analysisRevision = (this.document.analysisRevision || 0) + 1;
+    if (this.document.assignmentDraft) { this.refreshAssignmentDraft(); }
     this.document.resultInvalidation = { reason: reason, revision: this.document.analysisRevision, stale: hadResults };
     this.document.solvePreflight = { status: 'idle', result: null, error: null, progress: null, analysisRevision: null };
     this.document.solveExecution = { status: 'idle', error: null, progress: null, analysisRevision: null };

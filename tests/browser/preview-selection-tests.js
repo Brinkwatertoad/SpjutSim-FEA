@@ -254,6 +254,14 @@
         'load arrow tip did not touch its sampled surface point');
       assert(viewport.analysisOverlay.getObjectByName('support-axis-x') && viewport.analysisOverlay.getObjectByName('support-axis-y') &&
         viewport.analysisOverlay.getObjectByName('support-axis-z'), 'support glyph omitted enabled global-axis cues');
+      var savedSupport = viewport.analysisOverlay.getObjectByName('analysis-glyph-support');
+      overlayState.assignmentDraft = {kind:'load',itemId:'load',validation:{valid:true,value:{id:'load',type:'total-force',faceIds:[geometry.faceIds[1]],forceN:[0,1,0]}}};
+      viewport.setAnalysisOverlay(overlayState);
+      assert(viewport.analysisOverlay.getObjectByName('analysis-glyph-support') === savedSupport, 'Draft edit rebuilt unchanged committed glyphs');
+      assert(viewport.analysisOverlay.children.filter(function(item){return item.userData.descriptor.itemId === 'load';}).length === 0, 'Edited original glyphs double-displayed');
+      assert(viewport.analysisOverlay.children.some(function(item){return item.userData.descriptor.preview;}), 'Draft glyphs lack preview identity');
+      overlayState.assignmentDraft = null; viewport.setAnalysisOverlay(overlayState);
+      oldLoadGlyph = viewport.analysisOverlay.getObjectByName('analysis-glyph-total-force');
       oldLoadGlyph.getObjectByName('glyph-shaft').geometry.addEventListener('dispose', function () { overlayGeometryDisposed = true; });
       document.documentElement.style.setProperty('--ui-color-load', '#123456');
       overlayState.loads[0].forceN = [1e9, 0, 0];

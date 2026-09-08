@@ -198,3 +198,4 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 .fea-result-legend[data-orientation="vertical"] #legend-ticks, .fea-result-legend[data-orientation="vertical"]:has(small:not([hidden])) #legend-ticks { grid-column: 2; grid-row: 2; position: relative; left: auto; bottom: auto; }
 .fea-color-ramp { background: linear-gradient(90deg, rgb(12% 29% 65%), rgb(18% 72% 64%), rgb(94% 83% 23%), rgb(84% 19% 15%)); }
 .fea-result-legend[data-orientation="vertical"] .fea-color-ramp { background: linear-gradient(0deg, rgb(12% 29% 65%), rgb(18% 72% 64%), rgb(94% 83% 23%), rgb(84% 19% 15%)); }
+.fea-draft-indicator { position: absolute; top: 64px; left: 10px; right: 10px; width: fit-content; max-width: calc(100% - 36px); margin: 0; padding: 6px; background: var(--surface, #202329); border: 1px dashed currentColor; pointer-events: none; font-size: 12px; }

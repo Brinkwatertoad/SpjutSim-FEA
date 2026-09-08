@@ -2673,3 +2673,20 @@ Limits reset on incompatible field changes and survive compatible unit changes.
 `legendOrientation` defaults to vertical, with two to seven height-aware labels;
 horizontal labels only endpoints. FoS cap reads `10+`. Units are Pa/kPa/MPa or
 m/mm. Only validated compact style and orientation preferences persist.
+
+Plan 25: `assignmentDraft` is the sole transient support/load transaction, with
+`kind`, optional `itemId`, `faceIds`, SI `definition`, `baseAnalysisRevision`,
+geometry identity, dirty state, and validation feedback. Controller commands
+`beginAssignmentDraft(kind, itemId?, definition?)`, `updateAssignmentDraft(patch)`,
+`toggleDraftFace(faceId)`, `commitAssignmentDraft()`, and `cancelAssignmentDraft()`
+separate previews from committed engineering state. Validation rejects stale
+revisions, malformed values/faces, and conflicting prescribed components on the
+same face. Existing mesh/native checks remain authoritative for shared-node
+conflicts across different faces. Apply uses one existing invalidation boundary;
+unchanged Save and Cancel preserve revision, mesh, preflight, and results.
+Plain draft clicks toggle faces; background preserves the set. Escape cancels
+before ordinary selection clearing. Opening another editor requires explicit
+Apply/Cancel for a dirty draft. Results enter a selectable view for authoring,
+and Cancel restores the prior available presentation. Face samples are cached
+per geometry/mesh with bounded per-face samples; the viewport reuses unchanged
+glyph resources and application updates coalesce to one animation frame.

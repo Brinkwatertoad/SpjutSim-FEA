@@ -17,6 +17,7 @@
   var displayedGeometry = null;
   var displayedMesh = null;
   var displayedResults = null;
+  var overlayFrame = null;
 
   function importFailure(code, userMessage, developerMessage) {
     var error = new Error(userMessage);
@@ -230,7 +231,9 @@
   setText('launch-mode', location.protocol === 'file:' ? 'Direct local file' : (root.crossOriginIsolated ? 'HTTP, isolated' : 'HTTP, portable'));
   root.addEventListener('pagehide', function () { if (activeMesh) { activeMesh.cancel(); } if (activeConvergence) { activeConvergence.cancel(); } disposeSolver(); replacementMigrationUI.dispose(); ui.dispose(); viewport.dispose(); }, { once: true });
   viewport.setFacePickHandler(function (faceId, additive) {
-    if (!faceId) {
+    if (app.document.assignmentDraft) {
+      if (faceId) { app.toggleDraftFace(faceId); }
+    } else if (!faceId) {
       app.clearSelectedFaces();
     } else if (additive) {
       app.toggleSelectedFace(faceId);
@@ -261,8 +264,11 @@
       viewport.setResultModel(displayedResults);
     }
     viewport.setPresentation(documentState.viewportPresentation || { mode: 'model', displayStyle: 'lines' });
-    viewport.setSelectedFaceIds(documentState.selectedFaceIds || []);
-    viewport.setAnalysisOverlay(documentState);
+    viewport.setSelectedFaceIds(documentState.assignmentDraft && documentState.assignmentDraft.baseAnalysisRevision === documentState.analysisRevision ? documentState.assignmentDraft.faceIds.filter(function (id) { return documentState.geometry.faceIds.indexOf(id) >= 0; }) : documentState.selectedFaceIds || []);
+    if (overlayFrame === null) { overlayFrame = root.requestAnimationFrame(function () { overlayFrame = null; viewport.setAnalysisOverlay(app.document); }); }
+    var indicator = document.getElementById('assignment-preview-indicator');
+    indicator.hidden = !documentState.assignmentDraft;
+    viewport.assignmentDraftActive = Boolean(documentState.assignmentDraft);
   });
   ui.setImportHandler(importCadFile);
   ui.setMeshHandlers(generateMesh, function () { if (activeMesh) { activeMesh.cancel(); } }, function () {

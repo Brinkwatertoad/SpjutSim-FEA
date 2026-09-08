@@ -265,7 +265,7 @@
     }
     if (this.clearFaceSelectionButton) {
       this.clearFaceSelectionButton.addEventListener('click', function () {
-        self.controller.clearSelectedFaces();
+        if (self.controller.document.assignmentDraft) { self.controller.updateAssignmentDraft({faceIds:[]}); } else { self.controller.clearSelectedFaces(); }
       });
     }
     if (this.meshPreset) {
@@ -940,7 +940,7 @@
       ' · ' + probe.fieldLabel + ' ' + formatNumber(probe.fieldValue / probe.unitScale, probe.unit);
   };
   UIController.prototype.renderFaceSelection = function (documentState) {
-    var selectedFaceIds = Array.isArray(documentState.selectedFaceIds) ? documentState.selectedFaceIds : [];
+    var selectedFaceIds = documentState.assignmentDraft ? documentState.assignmentDraft.faceIds : (documentState.selectedFaceIds || []);
     var message;
     if (!documentState.geometry) {
       message = 'Import geometry to select faces.';

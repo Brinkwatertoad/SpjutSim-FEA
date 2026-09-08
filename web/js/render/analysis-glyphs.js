@@ -1,6 +1,8 @@
 (function (root) {
   'use strict';
 
+  var sampleCache = new WeakMap();
+
   function surfaceSource(documentState) {
     if (documentState.mesh) {
       return {
@@ -96,8 +98,8 @@
     return { triangles: triangles, totalAreaM2: totalAreaM2 };
   }
 
-  function sampleFaceGlyphPoints(surface, faceId, options) {
-    var data = faceTriangles(surface, faceId);
+  function sampleFaceGlyphPoints(surface, faceId, options, data) {
+    data = data || faceTriangles(surface, faceId);
     var spacingM = Number(options && options.spacingM);
     var minimum = Math.max(1, Number(options && options.minCount) || 1);
     var maximum = Math.max(minimum, Number(options && options.maxCount) || 12);
@@ -136,26 +138,61 @@
     return Math.max(maximum[0] - minimum[0], maximum[1] - minimum[1], maximum[2] - minimum[2], 1e-6) * 0.5;
   }
 
+  function cachedFaceSamples(documentState, faceId) {
+    var owner = documentState.mesh || documentState.geometry;
+    if (!owner) { return {samples:[],areaM2:0}; }
+    var cache = sampleCache.get(owner);
+    if (!cache) {
+      var surface = surfaceSource(documentState);
+      cache = {surface:surface,spacingM:defaultGlyphSpacing(surface),faces:new Map()}; sampleCache.set(owner,cache);
+    }
+    if (!cache.faces.has(faceId)) {
+      var data = faceTriangles(cache.surface,faceId);
+      cache.faces.set(faceId,{areaM2:data.totalAreaM2,samples:sampleFaceGlyphPoints(cache.surface,faceId,{spacingM:cache.spacingM,minCount:1,maxCount:12},data)});
+    }
+    return cache.faces.get(faceId);
+  }
+  function describeAssignmentDraft(state) {
+    var draft = state.assignmentDraft;
+    if (!draft) { return ''; }
+    var area = draft.faceIds.reduce(function (sum,id) { return sum + cachedFaceSamples(state,id).areaM2; },0);
+    var text = 'Area ≈ ' + area.toPrecision(4) + ' m². ';
+    if (draft.definition.type === 'total-force' && draft.definition.forceN && draft.definition.forceN.every(Number.isFinite)) {
+      text += Math.hypot.apply(Math,draft.definition.forceN).toPrecision(4) + ' N total across selection; global [ ' + draft.definition.forceN.join(', ') + ' ] N. Adding faces redistributes this total.';
+    } else if (draft.definition.type === 'pressure' && Number.isFinite(draft.definition.pressurePa)) {
+      text += draft.definition.pressurePa + ' Pa constant inward pressure on every selected face.';
+    } else if (draft.kind === 'support') {
+      text += 'Prescribed global displacement: ' + Object.keys(draft.definition.componentsM || {}).map(function(axis){return axis.toUpperCase() + ' = ' + draft.definition.componentsM[axis] + ' m';}).join(', ') + '.';
+    }
+    return text + ' Preview arrows show direction, not magnitude.';
+  }
+
   function buildAnalysisGlyphDescriptors(documentState) {
     var surface = surfaceSource(documentState);
     var descriptors = [];
     if (!surface) { return descriptors; }
-    var sampling = { spacingM: defaultGlyphSpacing(surface), minCount: 1, maxCount: 12 };
-    documentState.boundaryConditions.forEach(function (condition) {
+    var draft = documentState.assignmentDraft;
+    var supports = documentState.boundaryConditions.filter(function (item) { return !draft || item.id !== draft.itemId; });
+    var loads = documentState.loads.filter(function (item) { return !draft || item.id !== draft.itemId; });
+    if (draft && draft.validation.valid) {
+      var preview = Object.assign({},draft.validation.value,{id:'assignment-preview',preview:true});
+      (draft.kind === 'support' ? supports : loads).push(preview);
+    }
+    supports.forEach(function (condition) {
       condition.faceIds.forEach(function (faceId) {
-        sampleFaceGlyphPoints(surface, faceId, sampling).forEach(function (sample) {
-          descriptors.push({ type: condition.type, itemId: condition.id, faceId: faceId, positionM: sample.positionM,
+        cachedFaceSamples(documentState, faceId).samples.forEach(function (sample) {
+          descriptors.push({ type: condition.type, itemId: condition.id, preview:condition.preview === true, faceId: faceId, positionM: sample.positionM,
             direction: sample.outwardNormal, components: ['x', 'y', 'z'].filter(function (axis) { return condition.componentsM[axis] !== undefined; }) });
         });
       });
     });
-    documentState.loads.forEach(function (load) {
+    loads.forEach(function (load) {
       load.faceIds.forEach(function (faceId) {
-        sampleFaceGlyphPoints(surface, faceId, sampling).forEach(function (sample) {
+        cachedFaceSamples(documentState, faceId).samples.forEach(function (sample) {
           var direction = load.type === 'pressure'
             ? sample.outwardNormal.map(function (value) { return -value; })
             : normalized(load.forceN);
-          descriptors.push({ type: load.type, itemId: load.id, faceId: faceId, positionM: sample.positionM, direction: direction });
+          descriptors.push({ type: load.type, itemId: load.id, preview:load.preview === true, faceId: faceId, positionM: sample.positionM, direction: direction });
         });
       });
     });
@@ -171,6 +208,7 @@
   }
 
   root.SpjutsimFEA = root.SpjutsimFEA || {};
+  root.SpjutsimFEA.describeAssignmentDraft = describeAssignmentDraft;
   root.SpjutsimFEA.faceCentroidNormal = faceCentroidNormal;
   root.SpjutsimFEA.sampleFaceGlyphPoints = sampleFaceGlyphPoints;
   root.SpjutsimFEA.buildAnalysisGlyphDescriptors = buildAnalysisGlyphDescriptors;
