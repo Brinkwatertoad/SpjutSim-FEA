@@ -4,7 +4,7 @@
   /** @typedef {'youngsModulusPa'|'densityKgM3'|'strengthPa'|'displacementM'|'pressurePa'|'forceN'} EngineeringQuantity */
   /** @typedef {{name?: string, youngsModulusPa: number, poissonsRatio: number, densityKgM3?: number, tensileYieldPa?: number, compressiveYieldPa?: number, ultimateTensilePa?: number, ultimateCompressivePa?: number}} IsotropicMaterial */
   /** @typedef {{id: string, name: string, type: 'support', faceIds: string[], componentsM: {x?: number, y?: number, z?: number}}} BoundaryCondition */
-  /** @typedef {{id: string, name: string, type: 'pressure'|'total-force', faceIds: string[], pressurePa?: number, direction?: 'surface-normal', forceN?: number[]}} SurfaceLoad */
+  /** @typedef {{id: string, name: string, type: 'pressure'|'total-force', faceIds: string[], pressurePa?: number, direction?: 'surface-normal', magnitudeN?: number, sense?: 'push'|'pull', forceN?: number[]}} SurfaceLoad */
   /** @typedef {{enabled: boolean, accelerationMS2: number[]}} GravityLoad */
 
   var DISPLAY_UNITS = {
@@ -178,6 +178,10 @@
         value.pressurePa = item.pressurePa;
         value.direction = 'surface-normal';
       }
+    } else if (item.direction === 'surface-normal') {
+      if (!Number.isFinite(item.magnitudeN) || item.magnitudeN <= 0 || ['push','pull'].indexOf(item.sense) < 0) {
+        errors.push(issue('INVALID_NORMAL_FORCE', 'Enter a positive force magnitude and choose Push or Pull.', 'magnitudeN'));
+      } else { value.direction='surface-normal'; value.magnitudeN=item.magnitudeN; value.sense=item.sense; }
     } else if (!nonzeroVector(item.forceN)) {
       errors.push(issue('INVALID_FORCE_VECTOR', 'Total force must be a finite, non-zero three-component vector.', 'forceN'));
     } else {

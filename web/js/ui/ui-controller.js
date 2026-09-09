@@ -253,8 +253,7 @@
     var self = this;
     this.applySettingsShortcutPresentation();
     if (this.locatePeakButton) { this.locatePeakButton.addEventListener('click', function () {
-      var peak = self.viewport && self.viewport.locatePeak();
-      if (peak && self.peakLocationStatus) { self.peakLocationStatus.textContent = 'Interior solver sample · undeformed xyz ' + peak.locationM.map(function (value) { return formatNumber(value, 'm'); }).join(', ') + '. Marker shows the sample through the surface.'; }
+      if(self.viewport)self.viewport.locatePeak();
     }); }
     this.renderProjectionCommands();
     this.selectOutputTab = configureOutputTabs(this.outputTabs, this.outputPanels);
@@ -301,7 +300,7 @@
       button.addEventListener('click', function () { self.viewportMode.value = button.dataset.viewMode; self.updateViewportPresentation(); });
     });
     [this.stressUnit, this.lengthUnit, this.legendOrientation, this.colorRangeMode, this.colorRangeMin, this.colorRangeMax, this.colorRangeLock].forEach(function (control) {
-      if (control) { control.addEventListener('change', function () { self.updateViewportPresentation(); }); }
+      if (control) { control.addEventListener('change', function () { if (control === self.colorRangeMin || control === self.colorRangeMax) { self.colorRangeMode.value = 'manual'; } self.updateViewportPresentation(); }); }
     });
     var displayPopover = document.getElementById('display-popover');
     if (displayPopover) {
@@ -316,10 +315,13 @@
       document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && displayPopover.open) { displayPopover.open = false; displayPopover.querySelector('summary').focus(); event.preventDefault(); } });
       document.addEventListener('pointerdown', function (event) { if (!displayPopover.contains(event.target)) { displayPopover.open = false; } });
     }
-    if (this.resultLegend && root.ResizeObserver) {
+    if (this.resultLegend && root.SpjutsimFEA.LegendLayout && this.resultLegend.closest('.fea-canvas')) {
+      this.legendLayout = new root.SpjutsimFEA.LegendLayout(this.resultLegend,function(){ self.renderLegend(self.controller.document); });
+    } else if (this.resultLegend && root.ResizeObserver) {
       this.legendResizeObserver = new root.ResizeObserver(function () { self.renderLegend(self.controller.document); });
       this.legendResizeObserver.observe(this.resultLegend.parentElement);
     }
+    ['show-loads','show-gravity'].forEach(function(id){var control=document.getElementById(id);if(control)control.addEventListener('change',function(){self.controller.replaceViewportPresentation(Object.assign({},self.controller.document.viewportPresentation,id==='show-loads'?{showLoads:control.checked}:{showGravity:control.checked}));});});
     if (this.resultField) { this.resultField.addEventListener('change', function () { self.updateViewportPresentation(); }); }
     if (this.deformationMode) { this.deformationMode.addEventListener('change', function () { self.updateViewportPresentation(); }); }
     if (this.deformationScale) {
@@ -336,7 +338,7 @@
     });
     var viewChecks = document.getElementById('view-checks-button');
     if (viewChecks) { viewChecks.addEventListener('click',function () { self.showOutputPanel('checks'); }); }
-    if (this.solveButton) { this.solveButton.addEventListener('click', function () { if (self.solveHandler) { self.showOutputPanel("results"); self.solveHandler(); } }); }
+    if (this.solveButton) { this.solveButton.addEventListener('click', function () { if (self.solveHandler) { self.solveHandler(); } }); }
     if (this.cancelSolveButton) { this.cancelSolveButton.addEventListener('click', function () { if (self.cancelSolveHandler) { self.cancelSolveHandler(); } }); }
     if (this.startConvergenceButton) { this.startConvergenceButton.addEventListener('click', function () { if (self.startConvergenceHandler) { self.showOutputPanel("convergence"); self.startConvergenceHandler(); } }); }
     if (this.cancelConvergenceButton) { this.cancelConvergenceButton.addEventListener('click', function () { if (self.cancelConvergenceHandler) { self.cancelConvergenceHandler(); } }); }
@@ -414,6 +416,7 @@
       }
       if (self.settingsOpen) { return; }
       if (self.analysisAuthoring && self.analysisAuthoring.handleDocumentKeyDown(event)) { return; }
+      if(event.key==='Escape' && !editable && self.viewport && self.viewport.selectedResultPoint){self.viewport.selectResultPoint(null);event.preventDefault();return;}
       if (event.key !== 'Escape' || !self.controller.document.selectedFaceIds.length) { return; }
       self.controller.clearSelectedFaces();
       event.preventDefault();
@@ -442,7 +445,7 @@
       if (action === 'undo') { this.controller.undoEngineeringEdit(); } else { this.controller.redoEngineeringEdit(); }
       if (this.analysisAuthoring) { this.analysisAuthoring.announceSetup(this.controller.historyNotice); }
     } catch(error) {
-      var status=document.getElementById('history-status'); if (status) { status.textContent=error.message; }
+      var status=document.getElementById('app-status') || document.getElementById('history-status'); if (status) { status.textContent=error.message; }
     }
   };
   UIController.prototype.handleHistoryShortcut = function (event) {
@@ -461,8 +464,27 @@
     event.preventDefault(); this.runHistoryAction(action); return true;
   };
 
+  UIController.prototype.renderActivity = function (state) {
+    var element=document.getElementById('app-status'),spinner=document.getElementById('activity-spinner');if(!element)return;
+    var tasks=[state.solveExecution,state.solvePreflight,state.meshGeneration,state.geometryImport,state.convergenceStudy].filter(Boolean);
+    var active=tasks.find(function(task){return ['running','generating','importing'].indexOf(task.status)>=0;});
+    var message=this.runtimeStatus || 'Starting…';
+    if(active){message=active.progress && active.progress.userMessage || (active===state.meshGeneration?'Generating mesh…':active===state.geometryImport?'Importing geometry…':active===state.solvePreflight?'Checking model…':active===state.convergenceStudy?'Running convergence study…':'Solving…');}
+    else {
+      var failed=tasks.find(function(task){return task.status==='failed';});
+      if(failed)message=failed.error && (failed.error.userMessage || failed.error.message) || 'Operation failed. Open Checks for details.';
+      else if(state.assignmentDraft)message='Previewing '+state.assignmentDraft.kind+' · Apply or Cancel';
+      else if(state.solveExecution && state.solveExecution.status==='cancelled')message='Simulation cancelled';
+      else if(state.results)message='Solve complete';
+      else if(state.solvePreflight && state.solvePreflight.status==='ready')message=state.solvePreflight.result.exceedsWasmCap?'Memory limit reached · use a coarser mesh':'Model checks passed';
+      else if(state.meshGeneration && state.meshGeneration.status==='succeeded')message='Mesh ready';
+      else if(state.geometry)message='Model ready';
+    }
+    element.textContent=message;element.title=message;if(spinner)spinner.hidden=!active;
+  };
   UIController.prototype.render = function (documentState) {
     this.renderHistory();
+    this.renderActivity(documentState);
     var state = documentState.geometryImport || { status: 'idle' };
     var convergenceRunning = Boolean(documentState.convergenceStudy && documentState.convergenceStudy.status === 'running');
     var message = 'Choose a STEP, IGES, or BREP solid to begin.';
@@ -542,7 +564,7 @@
     var current = this.controller.document.viewportPresentation || {};
     var mode = this.viewportMode ? this.viewportMode.value : 'model';
     var field = this.resultField ? this.resultField.value : current.field;
-    var deformationMode = mode === 'stress' ? 'undeformed' : (this.deformationMode ? this.deformationMode.value : current.deformationMode);
+    var deformationMode = mode === 'stress' ? 'undeformed' : (mode === 'deformation' && current.mode !== 'deformation' ? 'auto' : (this.deformationMode ? this.deformationMode.value : current.deformationMode));
     if (mode === 'stress' && ['vonMises', 'factorOfSafety', 'maxPrincipal', 'minPrincipal'].indexOf(field) < 0) { field = 'vonMises'; }
     if (mode === 'deformation' && ['displacementMagnitude', 'ux', 'uy', 'uz'].indexOf(field) < 0) { field = 'displacementMagnitude'; }
     try {
@@ -561,7 +583,7 @@
         stressUnit: this.stressUnit ? this.stressUnit.value : current.stressUnit,
         lengthUnit: this.lengthUnit ? this.lengthUnit.value : current.lengthUnit,
         legendOrientation: this.legendOrientation ? this.legendOrientation.value : current.legendOrientation,
-        colorRange: range,
+        colorRange: range, showGravity:current.showGravity, showLoads:current.showLoads,
         mode: mode, displayStyle: this.displayStyle ? this.displayStyle.value : 'shaded-edges', field: field,
         meshOverlay: Boolean(this.meshOverlay && this.meshOverlay.checked), deformationMode: deformationMode,
         deformationScale: this.resolveDeformationScale(deformationMode),
@@ -576,6 +598,7 @@
   };
   UIController.prototype.renderViewportPresentation = function (documentState) {
     var presentation = documentState.viewportPresentation || { mode: 'model', displayStyle: 'lines' };
+    ['show-loads','show-gravity'].forEach(function(id){var c=document.getElementById(id);if(c){c.checked=presentation[id==='show-loads'?'showLoads':'showGravity']!==false;c.disabled=id==='show-gravity' && !documentState.gravity.enabled;}});
     var meshAvailable = Boolean(documentState.mesh);
     var resultsAvailable = Boolean(documentState.results);
     if (this.viewportMode) {
@@ -602,7 +625,7 @@
       this.colorRangeMode.value = presentation.colorRange && presentation.colorRange.mode || 'automatic';
       this.colorRangeLock.checked = Boolean(presentation.colorRange && presentation.colorRange.locked);
       [this.colorRangeMode,this.colorRangeLock].forEach(function (control) { control.disabled = !resultsAvailable; });
-      [this.colorRangeMin,this.colorRangeMax].forEach(function (control) { control.disabled = !resultsAvailable || this.colorRangeMode.value !== 'manual'; }, this);
+      [this.colorRangeMin,this.colorRangeMax].forEach(function (control) { control.disabled = !resultsAvailable; }, this);
     }
     if (this.displayStyle) {
       this.displayStyle.value = presentation.displayStyle;
@@ -696,6 +719,7 @@
     this.stopDeformationAnimation();
     if (this.workspaceLayout) { this.workspaceLayout.dispose(); }
     if (this.legendResizeObserver) { this.legendResizeObserver.disconnect(); }
+    if (this.legendLayout) { this.legendLayout.dispose(); }
   };
 
   UIController.prototype.showOutputPanel = function (panelId) {
@@ -812,15 +836,15 @@
     var running = preflight.status === 'running' || execution.status === 'running';
     var convergenceRunning = Boolean(documentState.convergenceStudy && documentState.convergenceStudy.status === 'running');
     var message = 'Generate a mesh and finish the analysis definition.';
-    if (preflight.status === 'running') { message = (preflight.progress && preflight.progress.userMessage) || 'Running solve preflight…'; }
+    if (preflight.status === 'running') { message = (preflight.progress && preflight.progress.userMessage) || 'Checking model…'; }
     else if (execution.status === 'running') { message = (execution.progress && execution.progress.userMessage) || 'Solving…'; }
-    else if (preflight.status === 'failed') { message = (preflight.error && preflight.error.userMessage) || preflight.error && preflight.error.message || 'Preflight failed.'; }
+    else if (preflight.status === 'failed') { message = (preflight.error && preflight.error.userMessage) || preflight.error && preflight.error.message || 'Model check failed.'; }
     else if (execution.status === 'failed') { message = (execution.error && execution.error.userMessage) || 'Solve failed.'; }
     else if (execution.status === 'cancelled' || preflight.status === 'cancelled') { message = 'Solve cancelled; partial results were discarded.'; }
     else if (execution.status === 'succeeded') { message = 'Solve complete.'; }
     else if (preflight.status === 'ready') {
-      message = preflight.result.exceedsWasmCap ? 'Estimate exceeds the WebAssembly cap; generate a coarser mesh.' : 'Preflight complete. Review the estimate, then solve.';
-    } else if (documentState.mesh) { message = 'Run preflight to validate constraints and estimate solve memory.'; }
+      message = preflight.result.exceedsWasmCap ? 'Estimate exceeds the WebAssembly cap; generate a coarser mesh.' : 'Checks passed. Solve can proceed.';
+    } else if (documentState.mesh) { message = 'Solve will check constraints and memory before starting.'; }
     if (documentState.resultInvalidation && documentState.resultInvalidation.stale) { message += ' Previous results are stale.'; }
     if (this.solveStatus) { this.solveStatus.textContent = message; this.solveStatus.classList.toggle('fea-error', preflight.status === 'failed' || execution.status === 'failed'); }
     if (this.solveOutputStatus) {
@@ -832,7 +856,7 @@
     var readiness = root.SpjutsimFEA.solveReadiness(documentState);
     if (this.solveReadinessStatus) { this.solveReadinessStatus.textContent = readiness.label + (documentState.assignmentDraft ? ' · Apply/Cancel preview' : ''); this.solveReadinessStatus.title = readiness.message; }
     if (this.preflightButton) { this.preflightButton.disabled = !readiness.canCheck; this.preflightButton.title = readiness.message; }
-    if (this.solveButton) { this.solveButton.disabled = !readiness.canSolve; this.solveButton.title = readiness.message; }
+    if (this.solveButton) { this.solveButton.disabled = !readiness.canRequestSolve; this.solveButton.title = readiness.message; }
     if (this.solveStatus) { this.solveStatus.textContent = message + ' ' + readiness.message; }
     this.renderChecks(documentState);
     if (this.cancelSolveButton) { this.cancelSolveButton.hidden = !running; }
@@ -856,9 +880,9 @@
 
   UIController.prototype.renderChecks = function (state) {
     if (!this.checksFindings) { return; }
-    var report = state.lastSolveCheck || state.solvePreflight;
+    var report = state.solvePreflight.status === 'running' ? state.solvePreflight : state.lastSolveCheck || state.solvePreflight;
     var stale = report && report.analysisRevision !== null && report.analysisRevision !== undefined && report.analysisRevision !== state.analysisRevision;
-    this.checksRevision.textContent = !report || report.analysisRevision == null ? 'No completed check yet.' :
+    this.checksRevision.textContent = report && report.status==='running' ? 'Checking current setup…' : !report || report.analysisRevision == null ? 'No completed check yet.' :
       (stale ? 'Stale report' : 'Current report') + ' · setup revision ' + report.analysisRevision + (stale ? '; current revision ' + state.analysisRevision + '. Check again before solving.' : '.');
     this.checksRevision.classList.toggle('fea-warning',Boolean(stale));
     this.checksFindings.replaceChildren();
@@ -866,7 +890,7 @@
     function finding(message,kind) {
       var li = document.createElement('li'); li.append(document.createTextNode(message + ' '));
       if (kind) {
-        var link = document.createElement('button'); link.type='button'; link.textContent='Open ' + kind;
+        var link = document.createElement('button'); link.type='button'; link.textContent={model:'Import model',material:'Edit material',support:'Edit supports',load:'Edit loads',mesh:'Edit mesh settings'}[kind];
         link.addEventListener('click',function () {
           if (self.workspaceLayout) { self.workspaceLayout.setPaneOpen('setup',true); }
           if (self.analysisAuthoring) {
@@ -884,11 +908,13 @@
     if (!state.material) { finding('Define the material.','material'); }
     if (!(state.boundaryConditions || []).length) { finding('Add supports to constrain rigid motion.','support'); }
     if (!state.mesh) { finding('Generate a current mesh.','mesh'); }
+    if (state.constraintStability && state.constraintStability.status !== 'fully-constrained') { finding('Unrestrained motion: '+state.constraintStability.modes.filter(function(m){return m.status!=='constrained';}).map(function(m){return m.id;}).join(', ')+'. Add support components that prevent these motions.','support'); }
     if (state.assignmentDraft) { finding('Apply or Cancel the current assignment preview.'); }
     if (report && report.error) {
       var message = report.error.userMessage || report.error.message || 'The check failed. Review Setup and check again.';
       var kind = /mesh|memory|cap/i.test(message) ? 'mesh' : /material|density/i.test(message) ? 'material' : /load|force/i.test(message) ? 'load' : 'support';
-      finding(message,kind);
+      var repair=kind==='support' ? ' Constrain the free translations/rotations listed below by adding or changing support components.' : kind==='material' ? ' Enter valid stiffness, Poisson ratio, and density when using gravity.' : kind==='mesh' ? ' Choose Coarse (or increase the custom element size), regenerate the mesh, then select Solve.' : ' Check the load value, direction, and assigned faces, then select Solve.';
+      finding(message+repair,kind);
     }
     var result = report && report.result;
     this.checksSummary.replaceChildren();
@@ -1012,8 +1038,10 @@
     this.legendMax.textContent = formatNumber(fieldRange.maximum / definition[2]);
     var orientation = presentation.legendOrientation || 'vertical';
     this.resultLegend.dataset.orientation = orientation;
+    if (this.legendLayout) { this.legendLayout.apply(); }
     if (this.legendTicks) {
       var height = Math.max(44, Math.min(264, (this.resultLegend.closest('.fea-canvas') || this.resultLegend.parentElement).clientHeight - 240));
+      if (this.legendLayout) { height = this.resultLegend.querySelector('.fea-legend-scale').clientHeight; }
       this.resultLegend.style.setProperty('--legend-height', height + 'px');
       this.legendTicks.replaceChildren();
       root.SpjutsimFEA.buildLegendTicks(fieldRange, orientation, height).forEach(function (tick) {
@@ -1033,13 +1061,23 @@
         formatNumber(result.ranges.vonMises.maximum / 1e6, 'MPa') + '.' : '';
   };
 
+  UIController.prototype.positionProbe = function (point) {
+    if(!this.probeOutput)return;
+    var canvas=document.getElementById('viewport');if(!canvas)return;
+    this.probeOutput.hidden=!point.visible;
+    var width=this.probeOutput.offsetWidth,height=this.probeOutput.offsetHeight;
+    this.probeOutput.style.left=Math.max(0,Math.min(canvas.clientWidth-width,point.x+12))+'px';
+    this.probeOutput.style.top=Math.max(0,Math.min(canvas.clientHeight-height,point.y+12))+'px';
+  };
   UIController.prototype.renderProbe = function (probe) {
     if (!this.probeOutput) { return; }
     this.probeOutput.hidden = !probe;
     if (!probe) { return; }
-    this.probeOutput.textContent = 'FaceId ' + probe.faceId + ' · xyz ' + probe.coordinatesM.map(function (v) { return formatNumber(v, 'm'); }).join(', ') +
-      ' · u ' + probe.displacementM.map(function (v) { return formatNumber(v * 1000, 'mm'); }).join(', ') +
-      ' · ' + probe.fieldLabel + ' ' + formatNumber(probe.fieldValue / probe.unitScale, probe.unit);
+    this.probeOutput.textContent = probe.fieldLabel + ': ' + formatNumber(probe.fieldValue / probe.unitScale,probe.unit) +
+      '\nUndeformed xyz: ' + probe.coordinatesM.map(function(v){return formatNumber(v,'m');}).join(', ') +
+      (probe.displacementM ? '\nu: '+probe.displacementM.map(function(v){return formatNumber(v*1000,'mm');}).join(', ') : '') +
+      (probe.faceId ? '\nFace: '+probe.faceId : '\nInternal recovery sample; shown through the surface.') + '\nClick background or Escape to clear.';
+
   };
   UIController.prototype.renderFaceSelection = function (documentState) {
     var selectedFaceIds = documentState.assignmentDraft ? documentState.assignmentDraft.faceIds : (documentState.selectedFaceIds || []);

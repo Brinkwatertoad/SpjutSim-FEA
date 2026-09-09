@@ -130,6 +130,14 @@
     });
     this.cancelLoadEdit.addEventListener('click', function () { self.closeInspectorRow({ restoreFocus: true, cancelEdit: true }); });
     this.removeLoadItemButton.addEventListener('click', function () { self.removeActiveLoad(); });
+    if (byId('load-force-mode')) { byId('load-force-mode').addEventListener('change',function(){self.renderLoadType();}); }
+    if (byId('setup-gravity-button')) { byId('setup-gravity-button').addEventListener('click',function(){self.openInspectorRow('gravity','gravity',this);}); }
+    if (byId('gravity-direction')) { byId('gravity-direction').addEventListener('change',function(){
+      if(this.value==='custom')return;var direction=this.value,magnitude=Math.hypot.apply(Math,['x','y','z'].map(function(a){return Number(byId('gravity-'+a).value);}))||9.80665;
+      ['x','y','z'].forEach(function(a){byId('gravity-'+a).value=direction[1]===a ? (direction[0]==='-'?-1:1)*magnitude : 0;});
+    }); }
+    if (byId('gravity-enabled')) { byId('gravity-enabled').addEventListener('change',function(){if(this.checked && byId('gravity-visible'))byId('gravity-visible').checked=true;}); }
+    if (byId('gravity-visible')) { byId('gravity-visible').addEventListener('change',function(){self.controller.replaceViewportPresentation(Object.assign({},self.controller.document.viewportPresentation,{showGravity:this.checked}));}); }
     this.gravityForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveGravity(); });
     if (this.rotateModelPositiveButton) { this.rotateModelPositiveButton.addEventListener('click', function () { self.rotateModel(1); }); }
     if (this.rotateModelNegativeButton) { this.rotateModelNegativeButton.addEventListener('click', function () { self.rotateModel(-1); }); }
@@ -448,13 +456,18 @@
   AnalysisAuthoringUI.prototype.renderLoadType = function () {
     var pressure = this.loadType.value === 'pressure';
     this.pressureFields.hidden = !pressure;
-    this.forceFields.hidden = pressure;
+    var normal=byId('load-force-mode') && byId('load-force-mode').value === 'normal';
+    this.forceFields.hidden = pressure || normal;
+    if(byId('force-mode-fields'))byId('force-mode-fields').hidden=pressure;
+    if(byId('normal-force-fields'))byId('normal-force-fields').hidden=pressure || !normal;
   };
 
   AnalysisAuthoringUI.prototype.readLoad = function () {
     var load = { type: this.loadType.value, faceIds: (this.controller.document.assignmentDraft ? this.controller.document.assignmentDraft.faceIds : this.controller.document.selectedFaceIds).slice() };
     if (load.type === 'pressure') {
       load.pressurePa = root.SpjutsimFEA.displayToSI('pressurePa', readNumber('load-pressure', 'pressure'));
+    } else if (byId('load-force-mode') && byId('load-force-mode').value==='normal') {
+      load.direction='surface-normal';load.magnitudeN=root.SpjutsimFEA.displayToSI('forceN',readNumber('load-magnitude','force magnitude'));load.sense=byId('load-sense').value;
     } else {
       load.forceN = ['fx', 'fy', 'fz'].map(function (axis) { return root.SpjutsimFEA.displayToSI('forceN', readNumber('load-' + axis, axis.toUpperCase() + ' force')); });
     }
@@ -498,8 +511,11 @@
     if (byId('load-name')) { byId('load-name').value = item.name; }
     this.controller.selectLoad(id);
     this.loadType.value = item.type;
-    byId('load-pressure').value = item.pressurePa === undefined ? '' : String(root.SpjutsimFEA.siToDisplay('pressurePa', item.pressurePa));
-    ['x', 'y', 'z'].forEach(function (axis, index) { byId('load-f' + axis).value = item.forceN ? String(item.forceN[index]) : ''; });
+    if(byId('load-force-mode'))byId('load-force-mode').value=item.direction==='surface-normal' && item.type==='total-force' ? 'normal' : 'components';
+    if(byId('load-magnitude'))byId('load-magnitude').value=item.magnitudeN || 1;
+    if(byId('load-sense'))byId('load-sense').value=item.sense || 'push';
+    byId('load-pressure').value = item.pressurePa === undefined ? '1' : String(root.SpjutsimFEA.siToDisplay('pressurePa', item.pressurePa));
+    ['x', 'y', 'z'].forEach(function (axis, index) { byId('load-f' + axis).value = item.forceN ? String(item.forceN[index]) : (index===1?'1':'0'); });
     this.loadForm.querySelector('button[type="submit"]').textContent = 'Save changes';
     this.cancelLoadEdit.hidden = false;
     this.renderLoadType();
@@ -536,6 +552,7 @@
         enabled: enabled,
         accelerationMS2: ['x', 'y', 'z'].map(function (axis) { return readNumber('gravity-' + axis, 'gravity ' + axis.toUpperCase()); })
       });
+      if(byId('gravity-visible'))this.controller.replaceViewportPresentation(Object.assign({},this.controller.document.viewportPresentation,{showGravity:byId('gravity-visible').checked}));
       this.gravityFeedback = { message: enabled ? 'Gravity enabled.' : 'Gravity disabled.' };
       this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: this.gravityFeedback.message });
     } catch (error) {
@@ -546,6 +563,11 @@
 
   AnalysisAuthoringUI.prototype.renderGravity = function (documentState) {
     var gravity = documentState.gravity;
+    if(byId('gravity-visible')){byId('gravity-visible').checked=documentState.viewportPresentation.showGravity!==false;byId('gravity-visible').disabled=!gravity.enabled;}
+    if(byId('gravity-direction') && !this.gravityForm.contains(document.activeElement)){
+      var nonzero=gravity.accelerationMS2.map(function(v,i){return v ? i : -1;}).filter(function(i){return i>=0;});
+      byId('gravity-direction').value=nonzero.length===1 ? (gravity.accelerationMS2[nonzero[0]]<0?'-':'+')+'xyz'[nonzero[0]] : 'custom';
+    }
     if (document.activeElement !== byId('gravity-enabled') && !this.gravityForm.contains(document.activeElement)) {
       byId('gravity-enabled').checked = gravity.enabled;
       byId('gravity-x').value = String(gravity.accelerationMS2[0]);
@@ -708,7 +730,7 @@
     var editor = byId(kind + '-editor');
     if (!host || !editor) { return; }
     host.append(editor);
-    if (kind === 'load' && itemId === 'new') { host.append(byId('gravity-editor')); }
+
   };
 
   AnalysisAuthoringUI.prototype.renderSetupInspector = function (documentState) {
@@ -727,6 +749,7 @@
     this.setupLoadList.replaceChildren();
     this.setupMeshList.replaceChildren();
     var definitions = root.SpjutsimFEA.buildSetupInspectorRows(documentState).slice();
+    if (this.activeInspectorKind === 'gravity' && !documentState.gravity.enabled) { definitions.push({kind:'gravity',itemId:'gravity',primaryText:'Gravity',secondaryText:'Disabled',metaText:'Body load',ariaLabel:'Gravity settings'}); }
     if (this.activeInspectorItemId === 'new') {
       definitions.push({
         kind: this.activeInspectorKind, itemId: 'new',

@@ -109,19 +109,42 @@
     if (!(data.totalAreaM2 > 0)) { return samples; }
     if (!(spacingM > 0)) { throw new Error('Surface glyph spacing must be greater than zero.'); }
     count = Math.max(minimum, Math.min(maximum, Math.ceil(data.totalAreaM2 / (spacingM * spacingM))));
-    for (index = 0; index < count; index += 1) {
-      var targetArea = (index + 0.5) * data.totalAreaM2 / count;
-      var triangle = data.triangles.find(function (item) { return item.cumulativeAreaM2 >= targetArea; }) || data.triangles[data.triangles.length - 1];
-      var u = ((index + 1) * 0.7548776662466927) % 1;
-      var v = ((index + 1) * 0.5698402909980532) % 1;
-      var rootU = Math.sqrt(u);
-      var weights = [1 - rootU, rootU * (1 - v), rootU * v];
-      samples.push({
-        positionM: [0, 1, 2].map(function (axis) {
-          return triangle.points[0][axis] * weights[0] + triangle.points[1][axis] * weights[1] + triangle.points[2][axis] * weights[2];
-        }),
-        outwardNormal: triangle.outwardNormal.slice()
-      });
+    var first=data.triangles[0],normal=first.outwardNormal;
+    var planar=data.triangles.every(function(t){return t.outwardNormal.reduce(function(sum,n,k){return sum+n*normal[k];},0)>0.9999;});
+    if(planar) {
+      var drop=normal.map(Math.abs).indexOf(Math.max.apply(Math,normal.map(Math.abs))),axes=[0,1,2].filter(function(a){return a!==drop;});
+      var bounds=[Infinity,Infinity,-Infinity,-Infinity];
+      data.triangles.forEach(function(t){t.points.forEach(function(p){axes.forEach(function(a,k){bounds[k]=Math.min(bounds[k],p[a]);bounds[k+2]=Math.max(bounds[k+2],p[a]);});});});
+      var rows=Math.max(1,Math.min(count,Math.round(Math.sqrt(count*(bounds[3]-bounds[1])/(bounds[2]-bounds[0])))));
+      for(var row=0;row<rows;row++) {
+        var columns=Math.floor(count/rows)+(row<count%rows?1:0);
+        for(var column=0;column<columns;column++) {
+          var x=bounds[0]+(column+0.5)/columns*(bounds[2]-bounds[0]),y=bounds[1]+(row+0.5)/rows*(bounds[3]-bounds[1]);
+          for(var ti=0;ti<data.triangles.length;ti++) {
+            var t=data.triangles[ti],a=t.points[0],b=t.points[1],c=t.points[2],ax=axes[0],ay=axes[1];
+            var denominator=(b[ay]-c[ay])*(a[ax]-c[ax])+(c[ax]-b[ax])*(a[ay]-c[ay]);
+            var wa=((b[ay]-c[ay])*(x-c[ax])+(c[ax]-b[ax])*(y-c[ay]))/denominator;
+            var wb=((c[ay]-a[ay])*(x-c[ax])+(a[ax]-c[ax])*(y-c[ay]))/denominator;
+            if(wa>=-1e-9 && wb>=-1e-9 && wa+wb<=1+1e-9){samples.push({positionM:a.map(function(n,k){return n*wa+b[k]*wb+c[k]*(1-wa-wb);}),outwardNormal:t.outwardNormal.slice()});break;}
+          }
+        }
+      }
+      if(samples.length>=count*0.7)return samples;
+      samples=[];
+    }
+    // Curved/trimmed surfaces: bounded area-stratified candidates with farthest-point spacing.
+    var candidates=[],candidateCount=Math.max(64,count*32);
+    for(index=0;index<candidateCount;index++) {
+      var targetArea=(index+0.5)*data.totalAreaM2/candidateCount,lo=0,hi=data.triangles.length-1;
+      while(lo<hi){var mid=(lo+hi)>>1;if(data.triangles[mid].cumulativeAreaM2<targetArea)lo=mid+1;else hi=mid;}
+      var triangle=data.triangles[lo],u=((index+1)*0.7548776662466927)%1,v=((index+1)*0.5698402909980532)%1,rootU=Math.sqrt(u),weights=[1-rootU,rootU*(1-v),rootU*v];
+      candidates.push({positionM:[0,1,2].map(function(axis){return triangle.points.reduce(function(sum,p,k){return sum+p[axis]*weights[k];},0);}),outwardNormal:triangle.outwardNormal.slice(),distance:Infinity});
+    }
+    var next=0;
+    for(index=0;index<count;index++) {
+      var chosen=candidates[next];samples.push({positionM:chosen.positionM,outwardNormal:chosen.outwardNormal});chosen.distance=-1;
+      var best=-1;
+      candidates.forEach(function(candidate,k){if(candidate.distance<0)return;var distance=candidate.positionM.reduce(function(sum,v,axis){return sum+Math.pow(v-chosen.positionM[axis],2);},0);candidate.distance=Math.min(candidate.distance,distance);if(candidate.distance>best){best=candidate.distance;next=k;}});
     }
     return samples;
   }
@@ -135,7 +158,7 @@
         maximum[axis] = Math.max(maximum[axis], surface.positionsM[index + axis]);
       }
     }
-    return Math.max(maximum[0] - minimum[0], maximum[1] - minimum[1], maximum[2] - minimum[2], 1e-6) * 0.5;
+    return Math.max(maximum[0] - minimum[0], maximum[1] - minimum[1], maximum[2] - minimum[2], 1e-6) * 0.3;
   }
 
   function cachedFaceSamples(documentState, faceId) {
@@ -157,7 +180,9 @@
     if (!draft) { return ''; }
     var area = draft.faceIds.reduce(function (sum,id) { return sum + cachedFaceSamples(state,id).areaM2; },0);
     var text = 'Area ≈ ' + area.toPrecision(4) + ' m². ';
-    if (draft.definition.type === 'total-force' && draft.definition.forceN && draft.definition.forceN.every(Number.isFinite)) {
+    if (draft.definition.type === 'total-force' && draft.definition.direction === 'surface-normal') {
+      text += draft.definition.magnitudeN + ' N distributed by area, ' + draft.definition.sense + ' along each local normal. Opposing directions can cancel in the net force.';
+    } else if (draft.definition.type === 'total-force' && draft.definition.forceN && draft.definition.forceN.every(Number.isFinite)) {
       text += Math.hypot.apply(Math,draft.definition.forceN).toPrecision(4) + ' N total across selection; global [ ' + draft.definition.forceN.join(', ') + ' ] N. Adding faces redistributes this total.';
     } else if (draft.definition.type === 'pressure' && Number.isFinite(draft.definition.pressurePa)) {
       text += draft.definition.pressurePa + ' Pa constant inward pressure on every selected face.';
@@ -173,7 +198,7 @@
     if (!surface) { return descriptors; }
     var draft = documentState.assignmentDraft;
     var supports = documentState.boundaryConditions.filter(function (item) { return !draft || item.id !== draft.itemId; });
-    var loads = documentState.loads.filter(function (item) { return !draft || item.id !== draft.itemId; });
+    var loads = documentState.loads.filter(function (item) { return (!documentState.viewportPresentation || documentState.viewportPresentation.showLoads !== false) && (!draft || item.id !== draft.itemId); });
     if (draft && draft.validation.valid) {
       var preview = Object.assign({},draft.validation.value,{id:'assignment-preview',preview:true});
       (draft.kind === 'support' ? supports : loads).push(preview);
@@ -189,14 +214,14 @@
     loads.forEach(function (load) {
       load.faceIds.forEach(function (faceId) {
         cachedFaceSamples(documentState, faceId).samples.forEach(function (sample) {
-          var direction = load.type === 'pressure'
-            ? sample.outwardNormal.map(function (value) { return -value; })
+          var direction = load.type === 'pressure' || load.direction === 'surface-normal'
+            ? sample.outwardNormal.map(function (value) { return value * (load.type === 'pressure' ? -Math.sign(load.pressurePa) : load.sense === 'pull' ? 1 : -1); })
             : normalized(load.forceN);
           descriptors.push({ type: load.type, itemId: load.id, preview:load.preview === true, faceId: faceId, positionM: sample.positionM, direction: direction });
         });
       });
     });
-    if (documentState.gravity && documentState.gravity.enabled && documentState.geometry) {
+    if (documentState.gravity && documentState.gravity.enabled && (!documentState.viewportPresentation || documentState.viewportPresentation.showGravity !== false) && documentState.geometry) {
       var bounds = documentState.geometry.boundingBoxM;
       descriptors.push({
         type: 'gravity', itemId: 'gravity', faceId: null,

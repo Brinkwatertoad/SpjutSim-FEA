@@ -155,7 +155,7 @@
         },
         {
           "path": "workers/solver-worker.js",
-          "sha256": "d60b27d99e0a2dd08ef7591a6e1b9b173958e53e24591e5a86002f238acadafe"
+          "sha256": "a020496be4065ef2afc8d58e8f732290834241c1621634e16573695a759f9abc"
         }
       ],
       "build_recipe": {
@@ -829,7 +829,7 @@
     },
     {
       "path": "web/generated/local-runtime/solver-worker-source.js",
-      "sha256": "d91e0bfca07e99503682d33ded9bb0a9054e4894db42fb26abdfbc7b0f67120a",
+      "sha256": "fcda22fa44469850bc722c764b5639af7a283a0ecfa150876e4332b678638ce2",
       "components": [
         "workers"
       ]

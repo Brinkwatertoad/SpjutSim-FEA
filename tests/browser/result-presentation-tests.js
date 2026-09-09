@@ -34,7 +34,7 @@
     var outline = api.buildPartEdgeIndices(new Uint32Array([0,1,2,0,2,3]), [{start:0,count:6}]);
     assert(outline.length === 8 && !Array.from(outline).some(function(v,i){return i%2===0 && v===0 && outline[i+1]===2;}), 'A planar face diagonal became a part outline');
     ui.renderSolve({mesh:{}});
-    assert(document.getElementById('solve-button').disabled, 'Solve enabled without an explicit current check');
+    assert(!document.getElementById('solve-button').disabled && !api.solveReadiness({mesh:{}}).canSolve, 'Solve must be available to check while execution remains gated');
     ui.renderSolve({mesh:{},solvePreflight:{status:'running'}});
     assert(document.getElementById('solve-button').disabled, 'Solve enabled during preflight');
     ui.renderSolve({mesh:{},solvePreflight:{status:'ready',result:{exceedsWasmCap:true}}});
@@ -42,7 +42,7 @@
     ui.renderSolve({mesh:{},solvePreflight:{status:'failed',error:{userMessage:'Add supports to constrain rigid-body motion.'}}});
     assert(!document.getElementById('solve-output-status').hidden && document.getElementById('solve-output-status').textContent.includes('Add supports'), 'Preflight failure is not visible in Results when Tools is collapsed');
     ui.renderSolve({mesh:null});
-    assert(document.getElementById('solve-button').disabled, 'Solve enabled without mesh');
+    assert(!document.getElementById('solve-button').disabled, 'Incomplete model cannot show actionable checks');
     var before = JSON.stringify(result);
     ui.renderResults({results:result});
     assert(document.getElementById('peak-headline').textContent.includes('0.005 MPa'), 'Engineering headline did not use sample peak');

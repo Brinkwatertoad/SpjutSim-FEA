@@ -58,6 +58,8 @@
     var summary;
     if (item.type === 'pressure') {
       summary = 'Pressure · ' + formatNumber(root.SpjutsimFEA.siToDisplay('pressurePa', item.pressurePa)) + ' MPa';
+    } else if (item.direction === 'surface-normal') {
+      summary='Force · '+formatNumber(item.magnitudeN)+' N · '+item.sense+' normal';
     } else {
       summary = 'Force · [' + item.forceN.map(formatNumber).join(', ') + '] N';
     }

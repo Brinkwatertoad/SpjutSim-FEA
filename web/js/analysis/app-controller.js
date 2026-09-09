@@ -68,7 +68,7 @@
       legendOrientation: presentation.legendOrientation === 'horizontal' ? 'horizontal' : 'vertical',
       colorRange: root.SpjutsimFEA.validateColorRange(presentation.colorRange, presentation.field || 'vonMises'),
       field: presentation.field || (presentation.mode === 'deformation' ? 'displacementMagnitude' : 'vonMises'),
-      meshOverlay: presentation.meshOverlay === true,
+      meshOverlay: presentation.meshOverlay === true, showGravity:presentation.showGravity !== false, showLoads:presentation.showLoads !== false,
       deformationMode: presentation.deformationMode || 'undeformed',
       deformationScale: Number.isFinite(presentation.deformationScale) ? presentation.deformationScale : 0,
       userDeformationScale: Number.isFinite(presentation.userDeformationScale) ? presentation.userDeformationScale : 1
@@ -469,6 +469,7 @@
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
     if (root.SpjutsimFEA.sameEngineeringDefinition(this.document.gravity,validation.value)) { return; }
     this.recordEngineeringEdit('gravity',this.document.gravity,validation.value,'Edit gravity');
+    if (!this.document.gravity.enabled && validation.value.enabled) { this.document.viewportPresentation.showGravity = true; }
     this.document.gravity = validation.value;
     this.invalidateResults('gravity');
     this.notify();

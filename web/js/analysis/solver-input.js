@@ -128,7 +128,7 @@
         if (!validated.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validated)); }
         surface = selectedBoundary(mesh, load.faceIds);
         return Object.assign({}, validated.value, surface, {
-          equivalentNodalForcesN: load.type === 'pressure'
+          equivalentNodalForcesN: load.direction === 'surface-normal' && load.type === 'total-force' ? null : load.type === 'pressure'
             ? equivalentPressureForces(surface, load.pressurePa)
             : equivalentTotalForce(surface, load.forceN)
         });

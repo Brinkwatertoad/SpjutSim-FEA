@@ -149,6 +149,34 @@ function buildConstraints(input) {
     valuesM: new Float64Array(entries.map(function (item) { return item[1]; })) };
 }
 
+// Match native tri6_area's three-point quadrature; normalization stays off the UI thread.
+function normalForcePressure(load, positions) {
+  if (!(Number.isFinite(load.magnitudeN) && load.magnitudeN > 0) || ['push','pull'].indexOf(load.sense) < 0) {
+    throw diagnostic('INVALID_NORMAL_FORCE','preflight','Enter a positive normal force and choose Push or Pull.');
+  }
+  var connectivity=load.surfaceConnectivity, nodes=load.surfaceElementType === 'tri6' ? 6 : 3, area=0;
+  var points=[[2/3,1/6,1/6],[1/6,2/3,1/6],[1/6,1/6,2/3]], dl=[[-1,-1],[1,0],[0,1]], edges=[[0,1],[1,2],[2,0]],u=[0,0,0],v=[0,0,0];
+  for(var start=0;start<connectivity.length;start+=nodes) {
+    for(var q=0;q<(nodes===6?3:1);q++) {
+      var l=points[q];u[0]=u[1]=u[2]=v[0]=v[1]=v[2]=0;
+      for(var node=0;node<nodes;node++) {
+        var dr,ds;
+        if(nodes===3) { dr=dl[node][0];ds=dl[node][1]; }
+        else if(node<3) { dr=(4*l[node]-1)*dl[node][0];ds=(4*l[node]-1)*dl[node][1]; }
+        else { var e=edges[node-3];dr=4*(dl[e[0]][0]*l[e[1]]+l[e[0]]*dl[e[1]][0]);ds=4*(dl[e[0]][1]*l[e[1]]+l[e[0]]*dl[e[1]][1]); }
+        var index=connectivity[start+node]*3;
+        for(var axis=0;axis<3;axis++){u[axis]+=positions[index+axis]*dr;v[axis]+=positions[index+axis]*ds;}
+      }
+      var jacobian=Math.hypot(u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]);
+      if(!(jacobian>0) || !Number.isFinite(jacobian))throw diagnostic('INVALID_LOAD_SURFACE','preflight','The selected load surface is degenerate. Regenerate the mesh.');
+      area+=jacobian/(nodes===6?6:2);
+    }
+  }
+  var pressure=(load.sense==='pull'?-1:1)*load.magnitudeN/area;
+  if(!Number.isFinite(pressure) || !area)throw diagnostic('INVALID_NORMAL_FORCE','preflight','The normal force or selected area is outside the supported range.');
+  return pressure;
+}
+
 function loadAnalysis(Module, input) {
   var context = Module._fem_create();
   var constraints;
@@ -173,9 +201,9 @@ function loadAnalysis(Module, input) {
     input.loads.forEach(function (load) {
       var faceNodes = load.surfaceElementType === 'tri6' ? 6 : 3;
       withWasmArray(Module, load.surfaceConnectivity, function (triangles) {
-        if (load.type === 'pressure') {
+        if (load.type === 'pressure' || load.direction === 'surface-normal') {
           checkNative(Module, context, Module._fem_add_pressure(context, triangles,
-            load.surfaceConnectivity.length / faceNodes, faceNodes, load.pressurePa), 'preflight');
+            load.surfaceConnectivity.length / faceNodes, faceNodes, load.type === 'pressure' ? load.pressurePa : normalForcePressure(load,input.mesh.nodePositionsM)), 'preflight');
         } else {
           withWasmArray(Module, new Float64Array(load.forceN), function (force) {
             checkNative(Module, context, Module._fem_add_total_face_force(context, triangles,

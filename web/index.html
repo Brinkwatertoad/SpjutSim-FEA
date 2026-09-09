@@ -39,7 +39,7 @@
         </div>
         <a class="ui-menu-button" href="licenses/index.html" target="_blank" rel="noopener">Licenses</a>
       </nav>
-      <span id="app-status" role="status">Starting…</span>
+      <div class="fea-activity" role="status" aria-live="polite"><span id="app-status">Starting…</span><span id="activity-spinner" class="fea-spinner" aria-hidden="true" hidden></span></div>
     </header>
     <div class="fea-actionbar" role="group" aria-label="Model actions">
       <button id="toggle-setup-pane" aria-controls="setup-pane" aria-expanded="true" type="button" title="Show or hide Tools">Tools</button>
@@ -49,9 +49,7 @@
         <button type="button" data-placeholder="save" disabled title="Save — not implemented yet">Save</button>
         <button type="button" data-placeholder="export" disabled title="Export — not implemented yet">Export</button>
       </div>
-      <span id="solve-readiness" role="status" aria-live="polite">Check required</span>
-      <button id="view-checks-button" type="button">View checks</button>
-      <button id="preflight-button" type="button">Check model</button>
+      <span id="solve-readiness" hidden></span>
       <button id="cancel-solve-button" type="button" hidden>Cancel</button>
       <button class="fea-primary" id="solve-button" type="button" disabled title="Generate a mesh before solving">Solve</button>
       <button id="toggle-results-pane" aria-controls="results-pane" aria-expanded="false" type="button" title="Show or hide Results">Results</button>
@@ -65,7 +63,7 @@
           <div class="fea-setup-group"><h2>Model</h2><ul id="setup-inspector-model-list" class="fea-setup-list"></ul></div>
           <div class="fea-setup-group"><h2>Material</h2><ul id="setup-inspector-material-list" class="fea-setup-list"></ul></div>
           <div class="fea-setup-group"><div class="fea-setup-group-heading"><h2>Supports</h2><button id="setup-add-support-button" type="button">Add</button></div><p id="constraint-stability-summary" class="fea-constraint-stability" role="status" aria-live="polite">Import a model to check rigid-body stability.</p><ul id="setup-inspector-support-list" class="fea-setup-list"></ul></div>
-          <div class="fea-setup-group"><div class="fea-setup-group-heading"><h2>Loads</h2><button id="setup-add-load-button" type="button">Add</button></div><ul id="setup-inspector-load-list" class="fea-setup-list"></ul></div>
+          <div class="fea-setup-group"><div class="fea-setup-group-heading"><h2>Loads</h2><button id="setup-add-load-button" type="button">Add</button><button id="setup-gravity-button" type="button">Gravity…</button></div><ul id="setup-inspector-load-list" class="fea-setup-list"></ul></div>
           <div class="fea-setup-group"><h2>Mesh</h2><ul id="setup-inspector-mesh-list" class="fea-setup-list"></ul></div>
           <div id="setup-inspector-form-stash" hidden>
             <div id="model-editor">
@@ -126,15 +124,17 @@
               <p id="support-status" role="status" aria-live="polite">Import geometry and select faces to add a support.</p>
             </div>
             <div id="load-editor">
-              <p class="fea-help">Positive pressure acts inward. Total force is distributed by face area.</p>
+              <p class="fea-help">Positive pressure pushes inward. Normal force is distributed by area along each local normal; components use global axes.</p>
               <form id="load-form" novalidate>
                 <label for="load-name">Name</label><input id="load-name" type="text" maxlength="160" required>
                 <label for="load-type">Type</label><select id="load-type"><option value="pressure">Pressure</option><option value="total-force">Total force</option></select>
-                <div id="pressure-fields"><label for="load-pressure">Pressure (MPa)</label><input id="load-pressure" type="number" step="any"></div>
+                <div id="pressure-fields"><label for="load-pressure">Pressure (MPa)</label><input id="load-pressure" type="number" step="any" value="1"></div>
+                <div id="force-mode-fields" hidden><label for="load-force-mode">Direction</label><select id="load-force-mode"><option value="normal">Surface normal</option><option value="components">Components</option></select></div>
+                <div id="normal-force-fields" hidden><label for="load-magnitude">Magnitude (N)</label><input id="load-magnitude" type="number" step="any" min="0" value="1"><label for="load-sense">Direction along normal</label><select id="load-sense"><option value="push">Push inward</option><option value="pull">Pull outward</option></select></div>
                 <fieldset id="force-fields" hidden><legend>Total force vector (N)</legend>
-                  <label for="load-fx">Fx</label><input id="load-fx" type="number" step="any">
-                  <label for="load-fy">Fy</label><input id="load-fy" type="number" step="any">
-                  <label for="load-fz">Fz</label><input id="load-fz" type="number" step="any">
+                  <label for="load-fx">Fx</label><input id="load-fx" type="number" step="any" value="0">
+                  <label for="load-fy">Fy</label><input id="load-fy" type="number" step="any" value="1">
+                  <label for="load-fz">Fz</label><input id="load-fz" type="number" step="any" value="0">
                 </fieldset>
                 <button class="ui-button-primary" type="submit">Apply load</button><button id="cancel-load-edit" type="button" hidden>Cancel edit</button><button id="remove-load-item-button" type="button" data-action-intent="danger" hidden>Remove load</button>
               </form>
@@ -142,7 +142,9 @@
             </div>
             <div id="gravity-editor">
               <form id="gravity-form" class="fea-gravity-form" novalidate>
-                <label class="fea-inline-check" for="gravity-enabled"><input id="gravity-enabled" type="checkbox"><span>Enable gravity</span></label>
+                <label class="fea-inline-check" for="gravity-enabled"><input id="gravity-enabled" type="checkbox"><span>Enable gravity in calculation</span></label>
+                <label for="gravity-direction">Direction</label><select id="gravity-direction"><option value="-z">−Z</option><option value="+z">+Z</option><option value="-y">−Y</option><option value="+y">+Y</option><option value="-x">−X</option><option value="+x">+X</option><option value="custom">Components</option></select>
+                <label class="fea-inline-check"><input id="gravity-visible" type="checkbox" checked><span>Show gravity arrow</span></label>
                 <fieldset><legend>Acceleration (m/s²)</legend>
                   <label for="gravity-x">X</label><input id="gravity-x" type="number" step="any" value="0">
                   <label for="gravity-y">Y</label><input id="gravity-y" type="number" step="any" value="0">
@@ -205,6 +207,7 @@
           <label class="fea-overlay-check" for="mesh-overlay"><input id="mesh-overlay" type="checkbox" disabled> Mesh overlay</label>
           <label for="stress-unit">Stress units</label><select id="stress-unit"><option>Pa</option><option>kPa</option><option selected>MPa</option></select>
           <label for="length-unit">Displacement units</label><select id="length-unit"><option>m</option><option selected>mm</option></select>
+          <label><input id="show-loads" type="checkbox" checked> Show load arrows</label><label><input id="show-gravity" type="checkbox" checked> Show gravity arrow</label>
           <label for="legend-orientation">Legend</label><select id="legend-orientation"><option value="vertical">Vertical</option><option value="horizontal">Horizontal</option></select>
           <label for="color-range-mode">Color range</label><select id="color-range-mode"><option value="automatic">Automatic</option><option value="manual">Manual</option></select>
           <label for="color-range-min">Minimum (display units)</label><input id="color-range-min" type="number" step="any">
@@ -226,7 +229,7 @@
           <button id="reset-view-button" type="button" aria-label="Reset view" title="Reset view"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 22 7.5v9L12 22 2 16.5v-9Z M2 7.5 12 13l10-5.5 M12 13v9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
         </div>
         <div class="fea-result-overlays">
-        <div id="result-legend" class="fea-result-legend" hidden><strong id="legend-title"></strong><div class="fea-color-ramp"></div><div class="fea-legend-endpoints"><span id="legend-min"></span><span id="legend-max"></span></div><div id="legend-ticks"></div><small id="legend-status"></small></div>
+        <div id="result-legend" class="fea-result-legend" hidden><strong id="legend-title" tabindex="0" role="button" aria-label="Move legend with arrow keys or drag"></strong><div class="fea-legend-scale"><div class="fea-color-ramp"></div><div class="fea-legend-endpoints"><span id="legend-min"></span><span id="legend-max"></span></div><div id="legend-ticks"></div></div><small id="legend-status"></small><button id="legend-resize" type="button" aria-label="Resize legend with arrow keys or drag" title="Resize legend">◢</button></div>
         <output id="probe-output" class="fea-probe" hidden></output>
         </div>
         <p class="fea-viewport-help" id="viewport-help">Left drag rotates · Right drag pans · Wheel or pinch zooms · Arrow keys rotate</p>
@@ -234,8 +237,8 @@
       <div id="results-splitter" class="fea-splitter" role="separator" tabindex="0" aria-label="Resize Results pane" aria-orientation="vertical" aria-controls="results-pane" aria-valuemin="260" aria-valuemax="520" aria-valuenow="340" hidden></div>
       <aside id="results-pane" hidden class="fea-results" aria-label="Analysis output">
         <div role="tablist" aria-label="Output views">
-          <button id="results-tab" role="tab" aria-selected="true" aria-controls="results-panel" data-output-tab="results">Results</button>
           <button id="checks-tab" role="tab" aria-selected="false" aria-controls="checks-panel" data-output-tab="checks" tabindex="-1">Checks</button>
+          <button id="results-tab" role="tab" aria-selected="true" aria-controls="results-panel" data-output-tab="results">Results</button>
           <button id="convergence-tab" role="tab" aria-selected="false" aria-controls="convergence-summary" data-output-tab="convergence" tabindex="-1">Convergence</button>
           <button id="diagnostics-tab" role="tab" aria-selected="false" aria-controls="diagnostics-panel" data-output-tab="diagnostics" tabindex="-1">Diagnostics</button>
         </div>
@@ -244,12 +247,12 @@
           <p id="results-empty">No analysis results.</p>
           <section id="results-summary" hidden><h2>Results</h2>
             <p id="peak-headline"></p><p id="yield-headline"></p><p id="trust-headline"></p>
-            <button id="locate-peak-button" type="button">Locate peak</button><p id="peak-location-status" role="status"></p>
+            <button id="view-checks-button" type="button">View checks</button><button id="locate-peak-button" type="button">Locate peak</button><p id="peak-location-status" role="status"></p>
             <details><summary><span class="fea-chevron" aria-hidden="true">▶</span> How to read these results</summary><p>The headline is the peak von Mises stress among unaveraged solver recovery samples throughout the solid. A sampled maximum is not an exact continuum maximum.</p><p>The smoothed surface contour first averages recovery samples within each element, then takes an unweighted mean of adjacent element values at each node. Surface extrema include only nodes used by the displayed boundary. The von Mises color scale spans zero to the whole-model sample peak, so its top color may not appear on the surface. Smoothing can reduce peaks.</p><p>Yield factor of safety uses the unaveraged sample peak and the smaller available tensile/compressive yield strength. One linear solve does not establish safety; review convergence, constraints and stress concentrations.</p></details>
             <dl class="fea-output-list" id="results-values"></dl></section>
         </section>
         <section id="checks-panel" role="tabpanel" aria-labelledby="checks-tab" data-output-panel="checks" hidden>
-          <h2>Model checks</h2><p id="solve-status" role="status" aria-live="polite"></p>
+          <h2>Model checks</h2><p>These checks run before solving. Fix any issues below, then select Solve again.</p><button id="preflight-button" type="button">Run checks only</button><p id="solve-status" role="status" aria-live="polite"></p>
           <p id="checks-revision"></p><ul id="checks-findings"></ul><dl id="checks-summary" class="fea-output-list"></dl>
           <details><summary><span class="fea-chevron" aria-hidden="true">▶</span> Mesh, system and runtime details</summary><dl id="preflight-summary" class="fea-compact-diagnostics" hidden></dl></details>
         </section>
@@ -363,6 +366,7 @@
   <script src="js/ui/result-formatting.js"></script>
   <script src="js/ui/workspace-layout.js"></script>
   <script src="js/ui/result-legend.js"></script>
+<script src="js/ui/legend-layout.js"></script>
 <script src="js/ui/ui-controller.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source-part-001.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source-part-002.js"></script>

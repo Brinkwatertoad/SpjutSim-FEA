@@ -8,6 +8,7 @@
   var viewport = new api.ViewportController(document.getElementById('viewport'));
   var replacementMigrationUI = new api.ReplacementMigrationUI();
   ui.setViewportController(viewport);
+  viewport.probePositionHandler=function(point){ui.positionProbe(point);};
   var wasmBytes = new Uint8Array([0,97,115,109,1,0,0,0]);
   var activeImport = null;
   var activeMesh = null;
@@ -112,9 +113,10 @@
     activeSolverRevision = null;
   }
 
-  function prepareSolve() {
+  function prepareSolve(continueToSolve) {
     if (app.document.assignmentDraft || app.document.solvePreflight.status === 'running' || app.document.solveExecution.status === 'running' ||
         activeImport || activeMesh || activeConvergence) { return; }
+    ui.showOutputPanel("checks");
     var input;
     var revision;
     cancelConvergence();
@@ -134,6 +136,7 @@
     client.preflight(input, revision, root.navigator && root.navigator.deviceMemory).then(function (result) {
       if (activeSolver !== client) { return; }
       if (!app.completeSolvePreflight(revision, result)) { disposeSolver(); return; }
+      if(continueToSolve === true && !result.exceedsWasmCap)solve();
     }).catch(function (error) {
       if (activeSolver === client) { app.failSolvePreflight(revision, error); disposeSolver(); }
     });
@@ -143,15 +146,17 @@
     var preflight = app.document.solvePreflight;
     var confirmed = true;
     var revision;
-    if (!app.document.mesh || preflight.status === 'running' || app.document.solveExecution.status === 'running' ||
+    if (activeImport || activeMesh || preflight.status === 'running' || app.document.solveExecution.status === 'running' ||
         (app.document.convergenceStudy && app.document.convergenceStudy.status === 'running')) { return; }
     if (preflight.status === 'ready' && preflight.result.exceedsWasmCap) { return; }
-    if (app.document.assignmentDraft || !activeSolver || preflight.status !== 'ready' || preflight.analysisRevision !== app.document.analysisRevision) { return; }
+    if (app.document.assignmentDraft) { return; }
+    if (!activeSolver || preflight.status !== 'ready' || preflight.analysisRevision !== app.document.analysisRevision) { prepareSolve(true); return; }
     if (preflight.result.requiresEightGiBConfirmation) {
       confirmed = root.confirm('This solve is estimated at or above 8 GiB. Browser, OS, or WebAssembly limits may terminate it even when the device has more memory. Continue?');
     }
     if (!confirmed) { return; }
     try { revision = app.beginSolve(); } catch (error) { return; }
+    ui.showOutputPanel("results");
     var client = activeSolver;
     client.solve(revision, app.document.solveSettings, confirmed).then(function (result) {
       if (activeSolver === client) { app.completeSolve(revision, result); disposeSolver(); }
@@ -292,9 +297,9 @@
     var mesher = checks[0];
     setText('worker-status', 'Gmsh ' + mesher.diagnostics.gmshVersion + '; box ' + mesher.smoke.volume + ' m³ / ' + mesher.smoke.surfaceCount + ' faces');
     setText('wasm-status', 'FEM API ' + checks[1].result.apiVersion + '; ' + Math.round(checks[1].result.wasmMemoryBytes / 1048576) + ' MiB initial memory');
-    setText('app-status', 'Local runtime ready');
+    ui.runtimeStatus='Local runtime ready';ui.renderActivity(app.document);
   }).catch(function (error) {
-    setText('app-status', 'Compatibility check failed');
+    ui.runtimeStatus='Compatibility check failed';ui.renderActivity(app.document);
     setText('worker-status', error.diagnostic ? error.diagnostic.code : error.message);
   });
 }(globalThis));

@@ -610,11 +610,17 @@ Use plain component-based support objects and discriminated load objects:
   direction: 'surface-normal'
 }
 
-// Total distributed force vector over selected faces
+// Component mode: total distributed global force vector over selected faces
 {
   type: 'total-force',
   faceIds: ['face-id', ...],
   forceN: [1000, 0, 0]
+}
+
+// Default force mode: sum of local force magnitudes, distributed by area
+{
+  type: 'total-force', faceIds: ['face-id', ...],
+  direction: 'surface-normal', magnitudeN: 1, sense: 'push' // or 'pull'
 }
 ```
 
@@ -935,7 +941,17 @@ The sign convention must be explicit in the UI. Prefer positive pressure meaning
 
 A requested total force vector is distributed over the selected faces consistently by surface integration. Do not simply divide by the number of mesh nodes.
 
-The integrated equivalent nodal forces should sum to the requested total force within numerical tolerance.
+For component mode, integrated equivalent nodal forces sum to the requested
+vector within numerical tolerance. In normal mode, positive `magnitudeN` is the
+sum of distributed local force magnitudes, not necessarily the net vector norm.
+Use uniform pressure ±magnitude/selected area, positive for Push and negative for
+Pull. Opposing local normals may cancel. In the solver worker, Tri3 uses triangle
+area and Tri6 uses the same three-point surface quadrature as native `tri6_area`.
+This normalization then calls the unchanged native pressure integration. The
+protocol-2 surface-load record adds optional normal magnitude/sense; normal loads
+omit the preview-only equivalent nodal force array (`null`). No native API or
+WASM binary change is needed. Malformed magnitudes and degenerate areas fail
+with actionable errors.
 
 #### Gravity
 
@@ -1338,6 +1354,14 @@ The user should be able to click the rendered surface and see approximate local 
 - stress metric;
 - face ID for developer diagnostics.
 
+Use barycentric interpolation at the clicked rendered point, not the triangle
+centroid. One selected-point marker and nearby bounded HTML detail label serve
+both surface probes and Locate peak. Raw interior samples are labeled explicitly
+and shown through the surface at their undeformed coordinates; surface markers
+follow the current deformation. Locate peak does not change the camera. A new
+point replaces the old selection; background click, Escape, a second Locate peak
+click, or result invalidation clears it.
+
 ### 11.7 Result summary
 
 A completed analysis summary should include:
@@ -1609,9 +1633,9 @@ status at the far right. Solve retains its accent background.
 A separate action bar immediately below the menubar contains Tools on the left,
 engineering Undo/Redo, disabled Save/Export placeholders, and Solve immediately left of
 Results on the right. Use Truss-style right/down disclosure triangles inside
-the Tools and Results panels. Check model explicitly runs preflight and opens
-Checks. Solve requires a current valid check and retains the high-memory
-confirmation; it never launches preflight implicitly. Import, mesh completion,
+the Tools and Results panels. Solve opens Checks and runs preflight if no current
+prepared worker exists, then continues automatically when permitted. Execution
+still requires a current valid check and retains high-memory confirmation. Import, mesh completion,
 form edits, presentation, and opening reports do not start checks. Cancellation,
 model edits, failed checks, and the WASM cap prevent solving. Worker identity
 guards reject late replies from cancelled/replaced requests even at the same
@@ -1631,9 +1655,8 @@ The exact tab names may change, but numerical results and convergence should liv
 Use ordinary semantic HTML controls enhanced by the internal UI helpers where useful.
 
 The whole left pane is **Setup**, without a nested Setup subpanel. Its fixed
-top-to-bottom order is Model, Material, Supports, Loads, and Mesh. Check model
-and Solve are adjacent action-bar controls; check information lives in the output
-pane. Model owns CAD import/replacement and orientation; clicking the empty
+top-to-bottom order is Model, Material, Supports, Loads, and Mesh. Solve runs
+checks before execution; the output pane places Checks before Results. Model owns CAD import/replacement and orientation; clicking the empty
 Model row opens the file chooser, while an imported model collapses to a compact
 source/format/face/orientation summary. Material is a separate adjacent compact
 row whose existing editor expands in place. Supports and Loads follow.
@@ -1655,8 +1678,8 @@ Escape closes the inline editor before it clears transient face selection.
 
 Mesh is a single expandable row after Loads. It summarizes element/node counts
 after generation and offers modify/regenerate and delete actions in its one
-editor. Explicit Check model opens its report next to numerical output rather
-than appending a long preflight report below the compact rows.
+editor. Solve opens Checks during preflight and Results during execution.
+Run checks only remains in the Checks tab; reports are never appended below Setup.
 Expanded editors may use their own bounded overflow when necessary, but
 collapsed setup summaries remain compact and readable.
 
@@ -1932,7 +1955,7 @@ They preserve the numerical, worker, dependency, and direct-local requirements.
   editing tasks or checking/solving. Clearly distinguish total force across all
   selected faces from constant pressure; glyph count/size does not encode magnitude.
 - **Setup/checks (26):** Preserve the editable setup sequence with readable group
-  readiness and optional assignment names. Check model and Solve are adjacent.
+  readiness and optional assignment names. Solve runs checks first; Checks precedes Results.
   Preflight is explicitly user-triggered; its report opens in Checks, prioritizing
   actionable findings and memory/stability above expandable solver detail. Engineering
   changes require a new check; presentation and metadata-only changes do not.
@@ -2593,7 +2616,7 @@ evidence.
 - [x] Orthographic/isometric and signed gizmo/menu views and M23 are accepted.
 - [ ] Contextual display controls, independent mesh edges, vertical/horizontal legends, and M24 are accepted.
 - [ ] Transactional load/support previews and M25 are accepted.
-- [ ] Readable setup and explicit adjacent Check model/Solve workflow and M26 are accepted.
+- [ ] Readable setup and the reviewed check-then-solve workflow and M26 are accepted.
 - [ ] Bounded engineering edit undo/redo and M27 are accepted.
 - [ ] STL feasibility, units/validation/patch contract, and M28 owner scope decision are accepted.
 - [ ] The accepted STL analysis subset passes topology, numerical, corpus, resource, direct-local, and M29 reviews.
@@ -2718,3 +2741,32 @@ and toolbar labels identify the command; status explains recheck/remesh needs.
 Platform shortcuts exclude editable fields, composition, modals, and Settings,
 and leave browser commands untouched when no app history action is available.
 Assignment drafts also block convergence startup before disposing a ready solver.
+
+
+### M24–M27 manual-review corrections (acceptance pending)
+
+The owner requested these changes after the first combined review. They supersede
+Task 26's originally explicit separate check-then-Solve interaction. Solve checks
+and then runs; cap/failure/draft/busy gates and large-memory confirmation remain.
+Cancelled or disposed workers are rechecked on retry. Import, mesh completion,
+opening a report, and presentation changes do not start checks by themselves.
+Checks explain concrete repairs with editor links and named free rigid motions.
+
+Deformation defaults to Auto on entry. Editing minimum/maximum chooses Manual;
+input widths match Display selects. Legends are movable/resizable by pointer or
+keyboard, with bounds clamped to the central viewport and compact validated
+per-orientation placement preferences. Horizontal defaults wider. The color bar
+fills available width/height as the legend resizes. Tools/Results use accent and
+selection-text tokens when engaged, including light themes.
+
+Planar glyph samples use a regular surface grid; curved or trimmed surfaces use
+bounded area-stratified candidates and farthest-point spacing. Samples retain
+local normals and are cached per surface. Glyphs are qualitative direction cues.
+Apply/Save clears selected faces. Force defaults to normal magnitude 1 N with
+Push/Pull; component defaults are [0,1,0] N and pressure defaults to 1 MPa. Gravity
+has its own Loads editor, directional components/presets, calculation enable,
+and independent presentation visibility. Enabling gravity restores its arrow;
+disabled gravity never draws arrows. Top-right status and activity icon report
+worker progress and short outcomes; routine history prose beneath Setup is hidden.
+Transfer uses almost the full viewport with original, mapped, and current preview
+glyphs in the respective model views. M24–M27 remain pending another owner check.

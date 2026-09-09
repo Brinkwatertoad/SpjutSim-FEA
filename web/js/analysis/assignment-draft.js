@@ -44,7 +44,7 @@
     var item = itemId ? collection(this.document,kind).find(function (value) { return value.id === itemId; }) : null;
     if (itemId && !item) { throw new Error('This assignment no longer exists.'); }
     this.assignmentDraftReturn = {presentation:copy(this.document.viewportPresentation),selectedFaceIds:this.document.selectedFaceIds.slice()};
-    var initial = copy(item || definition || (kind === 'support' ? {type:'support',componentsM:{x:0,y:0,z:0}} : {type:'pressure',pressurePa:0}));
+    var initial = copy(item || definition || (kind === 'support' ? {type:'support',componentsM:{x:0,y:0,z:0}} : {type:'pressure',pressurePa:1e6}));
     delete initial.faceIds; delete initial.id;
     this.document.assignmentDraft = {kind:kind,itemId:itemId || null,faceIds:item ? item.faceIds.slice() : this.document.selectedFaceIds.slice(),definition:initial,
       baseAnalysisRevision:this.document.analysisRevision,geometryId:this.document.geometry.geometryId};
@@ -84,7 +84,7 @@
     if (!validation.valid) { this.notify(); throw new Error(validation.message); }
     var existing = draft.itemId && collection(this.document,draft.kind).find(function (item) { return item.id === draft.itemId; });
     if (existing && api.sameEngineeringDefinition(existing,validation.value)) {
-      var unchangedId = draft.itemId; this.cancelAssignmentDraft(); return unchangedId;
+      var unchangedId = draft.itemId; this.cancelAssignmentDraft(); this.clearSelectedFaces(); return unchangedId;
     }
     var selected = this.document.selectedFaceIds, revision = this.document.analysisRevision;
     this.document.selectedFaceIds = draft.faceIds.slice();
@@ -101,6 +101,7 @@
       if (this.document.analysisRevision === revision) {
         this.document.assignmentDraft = draft; this.cancelAssignmentDraft();
       } else { this.assignmentDraftReturn = null; }
+      this.clearSelectedFaces();
       return id;
     } catch (error) {
       this.document.assignmentDraft = draft; this.document.selectedFaceIds = selected; throw error;

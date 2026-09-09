@@ -338,7 +338,7 @@
         return;
       }
       if ((self.presentation.mode === 'stress' || self.presentation.mode === 'deformation') && self.resultModel) {
-        if (self.probeHandler) { self.probeHandler(self.pickResultAtPointer(event)); }
+        self.selectResultPoint(self.pickResultAtPointer(event));
         return;
       }
       faceId = self.pickFaceAtPointer(event);
@@ -996,31 +996,35 @@
   };
 
   ViewportController.prototype.clearPeakMarker = function () {
-    if (!this.peakMarker) { return; }
-    this.scene.remove(this.peakMarker); disposeObjectResources(this.peakMarker); this.peakMarker = null;
+    if (this.peakMarker) { this.scene.remove(this.peakMarker); disposeObjectResources(this.peakMarker); }
+    this.peakMarker=null; this.selectedResultPoint=null;
+    if(this.probeHandler)this.probeHandler(null);
   };
 
+  ViewportController.prototype.selectResultPoint = function (probe) {
+    this.clearPeakMarker();
+    if(!probe){this.render();return;}
+    this.selectedResultPoint=probe;
+    var group=new root.THREE.Group();group.name=probe.isInterior?'raw-peak-marker':'selected-result-point';
+    group.position.fromArray(probe.coordinatesM);group.userData.locationOwner=probe.isInterior?'solver-sample':'surface';group.userData.isInterior=Boolean(probe.isInterior);
+    var dot=new root.THREE.Mesh(new root.THREE.SphereGeometry(5,12,8),new root.THREE.MeshBasicMaterial({color:'#ffdb40',depthTest:false,depthWrite:false}));
+    dot.renderOrder=1000;group.add(dot);this.peakMarker=group;this.scene.add(group);
+    this.refreshSelectedResultPoint();this.render();
+  };
+  ViewportController.prototype.refreshSelectedResultPoint = function () {
+    var probe=this.selectedResultPoint;if(!probe)return;
+    var field=probe.isInterior?'vonMises':this.presentation.field,definition=root.SpjutsimFEA.resultFieldDefinition(field,this.presentation);
+    if(!probe.isInterior){var values=this.activeResultField();probe.fieldValue=probe.nodes.reduce(function(sum,node,i){return sum+values[node]*probe.weights[i];},0);}
+    probe.fieldLabel=probe.isInterior?'Peak von Mises · interior solver sample':definition[0]+' · approximate surface value';probe.unit=definition[1];probe.unitScale=definition[2];
+    if(this.probeHandler)this.probeHandler(probe);
+  };
   ViewportController.prototype.locatePeak = function () {
-    var peak = this.resultModel && this.resultModel.extrema && this.resultModel.extrema.rawVonMisesMax;
-    if (!peak || !Array.isArray(peak.locationM) || peak.locationM.length !== 3 || !peak.locationM.every(Number.isFinite)) { return null; }
-    this.cancelViewAnimation(); this.clearPeakMarker();
-    var group = new root.THREE.Group();
-    group.name = 'raw-peak-marker'; group.position.fromArray(peak.locationM);
-    group.userData.locationOwner = 'solver-sample'; group.userData.isInterior = true;
-    var dot = new root.THREE.Mesh(new root.THREE.SphereGeometry(5, 12, 8),
-      new root.THREE.MeshBasicMaterial({ color: '#f59e0b', depthTest: false, depthWrite: false }));
-    dot.renderOrder = 1000; group.add(dot);
-    var labelCanvas = document.createElement('canvas'); labelCanvas.width = 400; labelCanvas.height = 56;
-    var context = labelCanvas.getContext('2d');
-    context.fillStyle = '#111827'; context.fillRect(0, 0, 400, 56);
-    context.font = '24px sans-serif'; context.textBaseline = 'middle'; context.fillStyle = '#ffffff';
-    context.fillText('Raw peak · interior solver sample', 10, 28);
-    var label = new root.THREE.Sprite(new root.THREE.SpriteMaterial({ map: new root.THREE.CanvasTexture(labelCanvas), depthTest: false, depthWrite: false }));
-    label.scale.set(200, 28, 1); label.center.set(-0.05, 0.5); label.renderOrder = 1001;
-    group.add(label); this.peakMarker = group; this.scene.add(group);
-    var movement = group.position.clone().sub(this.viewTarget);
-    this.viewTarget.copy(group.position); this.camera.position.add(movement); this.camera.updateMatrixWorld();
-    this.render(); return peak;
+    if(this.selectedResultPoint && this.selectedResultPoint.isInterior){this.selectResultPoint(null);return null;}
+    var peak=this.resultModel && this.resultModel.extrema && this.resultModel.extrema.rawVonMisesMax;
+    if(!peak || !Array.isArray(peak.locationM) || !peak.locationM.every(Number.isFinite))return null;
+    this.cancelViewAnimation();
+    this.selectResultPoint({isInterior:true,coordinatesM:peak.locationM.slice(),elementIndex:peak.elementIndex,fieldValue:peak.valuePa});
+    this.render();return peak;
   };
 
   ViewportController.prototype.setResultModel = function (result) {
@@ -1079,6 +1083,7 @@
     this.resultSurface = surface;
     this.resultModel = result;
     this.updateResultPresentation();
+    this.refreshSelectedResultPoint();
     this.applyPresentation();
     this.render();
   };
@@ -1207,6 +1212,7 @@
     this.presentation = Object.assign({ field: 'vonMises', meshOverlay: false, deformationScale: 0,
       deformationMode: 'undeformed', userDeformationScale: 1 }, presentation);
     this.updateResultPresentation();
+    this.refreshSelectedResultPoint();
     this.applyPresentation();
     this.render();
   };
@@ -1345,16 +1351,20 @@
     indices = this.resultModel.originalSurface.triangleConnectivity;
     nodes = [indices[triangle * 3], indices[triangle * 3 + 1], indices[triangle * 3 + 2]];
     field = this.activeResultField(); displacement = this.resultModel.displacementM;
-    nodes.forEach(function (node) {
+    var positions=this.resultSurface.geometry.getAttribute('position');
+    var vertices=nodes.map(function(node){return new root.THREE.Vector3().fromBufferAttribute(positions,node);});
+    var barycentric=new root.THREE.Vector3();root.THREE.Triangle.getBarycoord(intersections[0].point,vertices[0],vertices[1],vertices[2],barycentric);
+    var weights=barycentric.toArray();
+    nodes.forEach(function (node,index) {
       for (axis = 0; axis < 3; axis += 1) {
-        point[axis] += this.resultModel.originalSurface.nodePositionsM[node * 3 + axis] / 3;
-        vector[axis] += displacement[node * 3 + axis] / 3;
+        point[axis] += this.resultModel.originalSurface.nodePositionsM[node * 3 + axis] * weights[index];
+        vector[axis] += displacement[node * 3 + axis] * weights[index];
       }
     }, this);
     return { faceId: this.resultModel.originalSurface.faceIds[this.resultModel.originalSurface.triangleFaceIndices[triangle]],
-      elementIndex: this.resultModel.originalSurface.triangleElementIndices[triangle], coordinatesM: point,
+      elementIndex: this.resultModel.originalSurface.triangleElementIndices[triangle], coordinatesM: point, nodes:nodes, weights:weights,
       displacementM: vector, fieldLabel: definition[0] + (this.presentation.field === 'factorOfSafety' && this.resultModel.ranges.factorOfSafety.clipped ? ' (contour capped at 10)' : ''), unit: definition[1], unitScale: definition[2],
-      fieldValue: (field[nodes[0]] + field[nodes[1]] + field[nodes[2]]) / 3 };
+      fieldValue: nodes.reduce(function(sum,node,i){return sum+field[node]*weights[i];},0) };
   };
 
   ViewportController.prototype.observeResize = function () {
@@ -1383,9 +1393,13 @@
     this.axisTriad.quaternion.copy(this.camera.quaternion).invert();
     this.updateGizmoTargets();
     if (this.peakMarker) {
-      var pixelScale = 2 * this.orbitDistance * Math.tan(this.camera.fov * Math.PI / 360) / Math.max(this.canvas.clientHeight, 1);
+      var probe=this.selectedResultPoint,scale=(this.presentation.deformationScale || 0)*this.deformationAnimationMultiplier;
+      this.peakMarker.position.fromArray(probe.coordinatesM);
+      if(probe.displacementM)this.peakMarker.position.addScaledVector(new root.THREE.Vector3().fromArray(probe.displacementM),scale);
+      var pixelScale=this.camera.isOrthographicCamera ? (this.camera.top-this.camera.bottom)/this.camera.zoom/Math.max(this.canvas.clientHeight,1) : 2*this.camera.position.distanceTo(this.peakMarker.position)*Math.tan(this.camera.fov*Math.PI/360)/Math.max(this.canvas.clientHeight,1);
       this.peakMarker.scale.setScalar(pixelScale);
-      this.peakMarker.visible = this.presentation.mode === 'stress' || this.presentation.mode === 'deformation';
+      this.peakMarker.visible=this.presentation.mode==='stress' || this.presentation.mode==='deformation';
+      if(this.probePositionHandler){var point=this.peakMarker.position.clone().project(this.camera);this.probePositionHandler({x:(point.x+1)*this.canvas.clientWidth/2,y:(1-point.y)*this.canvas.clientHeight/2,visible:this.peakMarker.visible && point.z>=-1 && point.z<=1});}
     }
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
