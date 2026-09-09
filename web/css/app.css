@@ -213,3 +213,8 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
   #solve-readiness { max-width: 76px; }
   .fea-shell-actions { flex-shrink: 2; }
 }
+.fea-setup-row-button { grid-template-columns: 14px minmax(0, 1fr) minmax(76px, 1fr); }
+.fea-setup-row-button strong { white-space: normal; overflow-wrap: anywhere; }
+[data-setup-kind="model"] .fea-setup-row-button strong { grid-column: 2 / -1; }
+[data-setup-kind="model"] .fea-setup-row-summary { grid-column: 2; grid-row: 2; text-align: left; }
+[data-setup-kind="model"] .fea-setup-row-meta { grid-column: 3; grid-row: 2; }

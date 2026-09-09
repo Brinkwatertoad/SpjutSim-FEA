@@ -18,6 +18,10 @@
           <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="import-step">Import CAD…</button></div>
         </div>
         <div class="ui-menu-group" data-ui-menu-group data-open="false">
+          <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">Edit</button>
+          <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="undo" data-history-action="undo" disabled>Undo</button><button type="button" role="menuitem" data-ui-menu-action="redo" data-history-action="redo" disabled>Redo</button></div>
+        </div>
+        <div class="ui-menu-group" data-ui-menu-group data-open="false">
           <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">View</button>
           <div class="ui-menu-list" role="menu">
             <button type="button" role="menuitem" data-ui-menu-action="fit-view">Fit model</button>
@@ -40,8 +44,8 @@
     <div class="fea-actionbar" role="group" aria-label="Model actions">
       <button id="toggle-setup-pane" aria-controls="setup-pane" aria-expanded="true" type="button" title="Show or hide Tools">Tools</button>
       <div class="fea-shell-actions">
-        <button type="button" data-placeholder="undo" disabled title="Undo — not implemented yet">Undo</button>
-        <button type="button" data-placeholder="redo" disabled title="Redo — not implemented yet">Redo</button>
+        <button type="button" id="undo-button" data-history-action="undo" disabled title="Undo setup edit">Undo</button>
+        <button type="button" id="redo-button" data-history-action="redo" disabled title="Redo setup edit">Redo</button>
         <button type="button" data-placeholder="save" disabled title="Save — not implemented yet">Save</button>
         <button type="button" data-placeholder="export" disabled title="Export — not implemented yet">Export</button>
       </div>
@@ -55,6 +59,7 @@
     <main class="fea-workspace">
       <aside id="setup-pane" class="fea-tools" aria-label="Setup">
         <h1 id="setup-inspector-title">Setup</h1>
+        <p id="history-status" class="fea-help" role="status" aria-live="polite">Import, replacement, and removal clear Undo/Redo history.</p>
         <section id="setup-inspector" class="fea-setup-inspector" aria-labelledby="setup-inspector-title">
           <p id="setup-inspector-status" class="fea-visually-hidden" role="status" aria-live="polite"></p>
           <div class="fea-setup-group"><h2>Model</h2><ul id="setup-inspector-model-list" class="fea-setup-list"></ul></div>
@@ -348,6 +353,7 @@
 <script src="js/analysis/solve-readiness.js"></script>
 <script src="js/analysis/app-controller.js"></script>
 <script src="js/analysis/assignment-draft.js"></script>
+<script src="js/analysis/engineering-history.js"></script>
   <script src="js/render/viewport-navigation.js"></script>
   <script src="js/render/analysis-glyphs.js"></script>
   <script src="js/render/deformation-animation.js"></script>

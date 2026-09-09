@@ -4,6 +4,8 @@
   function AppController(options) {
     this.document = options.document;
     this.listeners = [];
+    this.history = new root.SpjutsimFEA.EngineeringHistory();
+    this.historyNotice = 'Undo/Redo covers setup edits. Import, replacement, and removal clear history.';
     this.geometrySource = null;
     this.nextAnalysisItemSequence = 1;
     this.nextSupportNameSequence = 1;
@@ -148,6 +150,7 @@
         !(source.sourceBytes instanceof ArrayBuffer) || source.sourceBytes.byteLength === 0) {
       throw new Error('A non-empty canonical CAD source matching the geometry format is required.');
     }
+    this.clearEngineeringHistory();
     this.geometrySource = { sourceName: source.sourceName, sourceFormat: source.sourceFormat, sourceBytes: source.sourceBytes };
     this.document.geometry = geometry;
     this.document.selectedFaceIds = [];
@@ -205,6 +208,7 @@
     }
     viewportPreferences = transfer.viewportPreferences || {};
 
+    this.clearEngineeringHistory();
     this.geometrySource = { sourceName: source.sourceName, sourceFormat: source.sourceFormat, sourceBytes: source.sourceBytes };
     this.document.geometry = geometry;
     this.document.material = materialValidation.value;
@@ -220,7 +224,7 @@
     this.refreshConstraintStability();
     this.invalidateResults('geometry');
     this.document.viewportPresentation = {
-      mode: 'model', displayStyle: viewportPreferences.displayStyle || 'lines', field: 'vonMises', meshOverlay: false,
+      mode: 'model', displayStyle: viewportPreferences.displayStyle === 'lines' ? 'shaded-edges' : viewportPreferences.displayStyle || 'shaded-edges', field: 'vonMises', meshOverlay: false,
       deformationMode: 'undeformed', deformationScale: 0,
       userDeformationScale: Number.isFinite(viewportPreferences.userDeformationScale) ? viewportPreferences.userDeformationScale : 100
     };
@@ -229,6 +233,7 @@
   };
 
   AppController.prototype.clearGeometry = function () {
+    this.clearEngineeringHistory();
     this.geometrySource = null;
     this.document.geometry = null;
     this.document.selectedFaceIds = [];
@@ -248,6 +253,8 @@
     var validation;
     validation = root.SpjutsimFEA.validateGeometryModel(oriented);
     if (!validation.valid) { throw new Error('Invalid oriented geometry: ' + validation.reason); }
+    if (root.SpjutsimFEA.sameEngineeringDefinition(this.document.geometry.orientation,oriented.orientation)) { return this.document.geometry.orientation; }
+    this.recordEngineeringEdit('orientation',this.document.geometry.orientation,oriented.orientation,'Rotate model');
     this.document.geometry = oriented;
     this.document.mesh = null;
     this.document.meshMetadata = null;
@@ -327,6 +334,8 @@
   AppController.prototype.replaceMaterial = function (material) {
     var validation = root.SpjutsimFEA.validateIsotropicMaterial(material, this.document.gravity);
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
+    if (root.SpjutsimFEA.sameEngineeringDefinition(this.document.material,validation.value)) { return validation; }
+    this.recordEngineeringEdit('material',this.document.material,validation.value,'Edit material');
     this.document.material = validation.value;
     this.invalidateResults('material');
     this.notify();
@@ -335,6 +344,8 @@
 
   AppController.prototype.clearMaterial = function () {
     if (this.document.gravity.enabled) { throw new Error('Disable gravity before removing the material.'); }
+    if (!this.document.material) { return; }
+    this.recordEngineeringEdit('material',this.document.material,null,'Remove material');
     this.document.material = null;
     this.invalidateResults('material');
     this.notify();
@@ -348,6 +359,7 @@
     });
     var validation = root.SpjutsimFEA.validateBoundaryCondition(candidate, this.document.geometry && this.document.geometry.faceIds);
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
+    this.recordEngineeringEdit('support',null,validation.value,'Add support',this.document.boundaryConditions.length);
     this.document.boundaryConditions.push(validation.value);
     this.nextSupportNameSequence += 1;
     this.refreshConstraintStability();
@@ -367,11 +379,12 @@
     });
     var validation = root.SpjutsimFEA.validateBoundaryCondition(candidate, this.document.geometry && this.document.geometry.faceIds);
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
-    if (JSON.stringify(existing) === JSON.stringify(validation.value)) { return; }
+    if (root.SpjutsimFEA.sameEngineeringDefinition(existing,validation.value)) { return; }
     var previousDefinition = Object.assign({},existing,{name:''});
     var nextDefinition = Object.assign({},validation.value,{name:''});
+    this.recordEngineeringEdit('support',existing,validation.value,root.SpjutsimFEA.sameEngineeringDefinition(previousDefinition,nextDefinition) ? 'Rename support' : 'Edit support',index);
     this.document.boundaryConditions[index] = validation.value;
-    if (JSON.stringify(previousDefinition) === JSON.stringify(nextDefinition)) { this.notify(); return; }
+    if (root.SpjutsimFEA.sameEngineeringDefinition(previousDefinition,nextDefinition)) { this.notify(); return; }
     this.refreshConstraintStability();
     this.invalidateResults('boundary-conditions');
     this.notify();
@@ -385,6 +398,7 @@
 
   AppController.prototype.removeBoundaryCondition = function (id) {
     var index = findItem(this.document.boundaryConditions, id, 'support');
+    this.recordEngineeringEdit('support',this.document.boundaryConditions[index],null,'Delete support',index);
     this.document.boundaryConditions.splice(index, 1);
     this.refreshConstraintStability();
     this.invalidateResults('boundary-conditions');
@@ -399,6 +413,7 @@
     });
     var validation = root.SpjutsimFEA.validateLoad(candidate, this.document.geometry && this.document.geometry.faceIds);
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
+    this.recordEngineeringEdit('load',null,validation.value,'Add load',this.document.loads.length);
     this.document.loads.push(validation.value);
     this.nextLoadNameSequence += 1;
     this.invalidateResults('loads');
@@ -417,11 +432,12 @@
     });
     var validation = root.SpjutsimFEA.validateLoad(candidate, this.document.geometry && this.document.geometry.faceIds);
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
-    if (JSON.stringify(existing) === JSON.stringify(validation.value)) { return; }
+    if (root.SpjutsimFEA.sameEngineeringDefinition(existing,validation.value)) { return; }
     var previousDefinition = Object.assign({},existing,{name:''});
     var nextDefinition = Object.assign({},validation.value,{name:''});
+    this.recordEngineeringEdit('load',existing,validation.value,root.SpjutsimFEA.sameEngineeringDefinition(previousDefinition,nextDefinition) ? 'Rename load' : 'Edit load',index);
     this.document.loads[index] = validation.value;
-    if (JSON.stringify(previousDefinition) === JSON.stringify(nextDefinition)) { this.notify(); return; }
+    if (root.SpjutsimFEA.sameEngineeringDefinition(previousDefinition,nextDefinition)) { this.notify(); return; }
     this.invalidateResults('loads');
     this.notify();
   };
@@ -434,6 +450,7 @@
 
   AppController.prototype.removeLoad = function (id) {
     var index = findItem(this.document.loads, id, 'load');
+    this.recordEngineeringEdit('load',this.document.loads[index],null,'Delete load',index);
     this.document.loads.splice(index, 1);
     this.invalidateResults('loads');
     this.notify();
@@ -450,6 +467,8 @@
   AppController.prototype.replaceGravity = function (gravity) {
     var validation = root.SpjutsimFEA.validateGravity(gravity, this.document.material);
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
+    if (root.SpjutsimFEA.sameEngineeringDefinition(this.document.gravity,validation.value)) { return; }
+    this.recordEngineeringEdit('gravity',this.document.gravity,validation.value,'Edit gravity');
     this.document.gravity = validation.value;
     this.invalidateResults('gravity');
     this.notify();
@@ -458,6 +477,8 @@
   AppController.prototype.replaceMeshSettings = function (settings) {
     var validation = root.SpjutsimFEA.validateMeshSettings(settings, this.document.geometry && this.document.geometry.boundingBoxM);
     if (!validation.valid) { throw new Error('Invalid mesh settings: ' + validation.reason); }
+    if (root.SpjutsimFEA.sameEngineeringDefinition(this.document.meshSettings,settings)) { return; }
+    this.recordEngineeringEdit('meshSettings',this.document.meshSettings,settings,'Edit mesh settings');
     this.document.meshSettings = Object.assign({}, settings);
     this.document.mesh = null;
     this.document.meshMetadata = null;
@@ -567,13 +588,14 @@
     this.document.solveExecution = { status: 'succeeded', error: null, progress: null, analysisRevision: revision };
     this.document.resultInvalidation = null;
     this.document.viewportPresentation = Object.assign({}, this.document.viewportPresentation, {
-      mode: 'stress', field: 'vonMises', deformationMode: 'undeformed', deformationScale: 0
+      mode: 'stress', field: 'vonMises', colorRange: root.SpjutsimFEA.validateColorRange(this.document.viewportPresentation.colorRange,'vonMises'), deformationMode: 'undeformed', deformationScale: 0
     });
     this.notify();
     return true;
   };
 
   AppController.prototype.beginConvergenceStudy = function (settings) {
+    if (this.document.assignmentDraft) { throw new Error('Apply or Cancel the assignment draft before starting convergence.'); }
     if (!this.document.geometry || !this.document.material || !this.geometrySource) {
       throw new Error('Import geometry and define a material before starting convergence.');
     }

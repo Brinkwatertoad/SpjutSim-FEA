@@ -48,8 +48,8 @@ records and must remain blocked while any Section 26 gate is unchecked.
 
 ## Approved pre-v1 implementation sequence
 
-Execute in the current agent, following repository AGENTS.md. These are plans,
-not completed features. Each package includes nontrivial regression tests,
+Execute in the current agent, following repository AGENTS.md. Implementation and
+acceptance status are recorded separately below. Each package includes nontrivial regression tests,
 documentation, one complete-diff review, the complete applicable suites from the
 repository README, and the manual checkpoint below. Do not create tests that
 merely mirror implementation or turn each mechanical step into an approval gate.
@@ -57,10 +57,10 @@ merely mirror implementation or turn each mechanical step into an approval gate.
 21. [x] [Responsive workspace and overlays](21-responsive-workspace-and-overlays.md) — implemented and M21 accepted 2026-09-08
 22. [x] [Stress extrema and result clarity](22-stress-extrema-and-result-clarity.md) — implemented and M22 accepted 2026-09-08
 23. [x] [Orthographic camera and interactive gizmo](23-orthographic-camera-and-view-gizmo.md) — implemented and M23 accepted 2026-09-08
-24. [ ] [Contextual display controls and stress legend](24-display-controls-and-stress-legend.md)
-25. [ ] [Support/load preview authoring](25-support-and-load-preview-authoring.md)
-26. [ ] [Setup workflow and solve checks](26-setup-workflow-and-solve-checks.md)
-27. [ ] [Engineering edit undo/redo](27-engineering-edit-undo-and-redo.md)
+24. [ ] [Contextual display controls and stress legend](24-display-controls-and-stress-legend.md) — implemented; grouped owner review pending
+25. [ ] [Support/load preview authoring](25-support-and-load-preview-authoring.md) — implemented; grouped owner review pending
+26. [ ] [Setup workflow and solve checks](26-setup-workflow-and-solve-checks.md) — implemented; grouped owner review pending
+27. [ ] [Engineering edit undo/redo](27-engineering-edit-undo-and-redo.md) — implemented; grouped owner review pending
 28. [ ] [STL feasibility and surface patch contract](28-stl-feasibility-and-surface-patch-contract.md)
 29. [ ] [STL import, meshing, and validation](29-stl-import-meshing-and-validation.md)
 30. [ ] [Integrated usability and pre-release regression](30-integrated-usability-and-pre-release-regression.md)
@@ -79,11 +79,15 @@ not required by this sequence.
 The owner's 2026-09-07 instruction to accomplish a few plans before a manual
 check authorizes one implementation batch for **21–23**, including parallel
 assistance. This overrides those plans' per-package stop/no-subagent notes for
-this batch only. [The combined review packet](../reviews/21-23-review.md) records the owner’s 2026-09-08 acceptance of M21, M22, and M23. Task 24 is next. The later review schedule and all release gates remain unchanged.
+this batch only. [The combined review packet](../reviews/21-23-review.md) records the owner’s 2026-09-08 acceptance of M21, M22, and M23. The owner subsequently requested plans **24–27** as one implementation batch,
+with manual checks after the group and commits along the way. These four plans
+were executed in the current agent without subagents. Their per-package stops
+are replaced by [one grouped review packet](../reviews/24-27-review.md);
+M24–M27 remain pending. Task 28 awaits that review. Later gates remain unchanged.
 
 This is a milestone schedule, not calendar appointments or automated reminders.
 M21–M23 are **Accepted**; later reviews remain **Pending**. Reserve review time when the preceding implementation
-is ready, not before a runnable result exists. At each checkpoint the agent must
+is ready, not before a runnable result exists. At each checkpoint (or the end of an explicitly authorized batch), the agent must
 stop, provide the review packet, and wait for the owner's explicit acceptance
 before starting the next plan. Automated checks are necessary but cannot approve
 usability on the owner's behalf. Corrections and focused rechecks belong to the
@@ -94,10 +98,10 @@ same checkpoint. Silence is not acceptance.
 | M21 | Plan 21 | Resize/zoom, split/collapse panes, overlay visibility | 10 min | `docs/reviews/21-workspace.md` |
 | M22 | Plan 22 | Read peaks/FoS, explain smoothing, locate peak | 15 min | `docs/reviews/22-result-clarity.md` |
 | M23 | Plan 23 | Six views, animated reset, projection switching, picking | 15 min | `docs/reviews/23-camera.md` |
-| M24 | Plan 24 | View/field/shape controls, mesh toggle, legend ranges | 15 min | `docs/reviews/24-display.md` |
-| M25 | Plan 25 | Add/edit/toggle/preview/Apply/Cancel assignments | 20 min | `docs/reviews/25-assignment-drafts.md` |
-| M26 | Plan 26 | Setup → explicit checks → solve, errors and recovery | 20 min | `docs/reviews/26-setup-checks.md` |
-| M27 | Plan 27 | Undo/redo with text fields, drafts, and stale results | 10 min | `docs/reviews/27-history.md` |
+| M24 | Plan 24 | View/field/shape controls, mesh toggle, legend ranges | 15 min | `docs/reviews/24-27-review.md` |
+| M25 | Plan 25 | Add/edit/toggle/preview/Apply/Cancel assignments | 20 min | `docs/reviews/24-27-review.md` |
+| M26 | Plan 26 | Setup → explicit checks → solve, errors and recovery | 20 min | `docs/reviews/24-27-review.md` |
+| M27 | Plan 27 | Undo/redo with text fields, drafts, and stale results | 10 min | `docs/reviews/24-27-review.md` |
 | M28 | Plan 28 | STL units/patch demo and feasibility/scope decision | 20 min | `docs/reviews/28-stl-contract.md` |
 | M29 | Plan 29 | STL import → patch assignments → mesh → solve | 20 min | `docs/reviews/29-stl-workflow.md` |
 | M30 | Plan 30 | Combined workflow and final usability acceptance | 30–45 min | `docs/reviews/30-integrated-usability.md` |

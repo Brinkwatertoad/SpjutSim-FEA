@@ -14,6 +14,9 @@
     var revision=app.document.analysisRevision, mesh=app.document.mesh;
     app.beginAssignmentDraft('load',null,{type:'total-force',forceN:[100,0,0]});
     assert(app.document.viewportPresentation.mode === 'mesh','Draft did not enter selectable presentation');
+    var convergenceError='';
+    try { app.beginConvergenceStudy(); } catch(error) { convergenceError=error.message; }
+    assert(/Apply or Cancel/.test(convergenceError),'Convergence must explicitly reject an assignment draft');
     rejects(function(){app.commitAssignmentDraft();});
     app.toggleDraftFace('face-x+'); app.toggleDraftFace('face-y+'); app.toggleDraftFace('face-y+');
     assert(app.document.assignmentDraft.faceIds.join() === 'face-x+','Plain toggles do not maintain set');
@@ -40,8 +43,10 @@
     app.renameAssignment('load',id,'  End force <test>  ');
     assert(app.document.loads[0].name === 'End force <test>' && app.document.analysisRevision === revision && app.document.results === retainedResult, 'Rename changed numerical state or failed to trim');
     rejects(function(){app.renameAssignment('load',id,'   ');});
+    app.document.viewportPresentation.mode='stress';
     app.beginAssignmentDraft('load',id);app.updateAssignmentDraft({definition:Object.assign({},app.document.assignmentDraft.definition,{name:'Final force'})});app.commitAssignmentDraft();
     assert(app.document.analysisRevision === revision && app.document.results === retainedResult, 'Name-only Save invalidated results');
+    assert(app.document.viewportPresentation.mode==='stress','Metadata-only Save did not restore its available result view');
     document.getElementById('test-status').textContent='Passed';
   }catch(error){document.getElementById('test-status').textContent='Failed: '+error.message;}
 }());

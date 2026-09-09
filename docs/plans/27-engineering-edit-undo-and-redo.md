@@ -24,18 +24,18 @@
 **Create:** `web/js/analysis/engineering-history.js`, `tests/browser/engineering-history-tests.{html,js}`.
 **Modify:** `web/js/analysis/app-controller.js`, `web/js/geometry/rigid-orientation.js` only for compact reversible orientation data.
 
-- [ ] Write failing command-sequence tests: add → edit → undo → redo, delete → undo with original ID, rename without numerical invalidation, redo cleared after a new edit, and no-op save without a history entry.
-- [ ] Store before/after small definitions and labels, with a cap of 50 entries and 2 MiB of serialized definition data. Evict oldest entries deterministically. Store rigid transforms rather than duplicate geometry arrays; never include typed mesh/result buffers in entries.
-- [ ] Route command execution through existing validation and invalidation. Undoing a load leaves mesh usable but disposes stale results/preflight; undoing orientation invalidates mesh as normal. Never restore old analysis revisions or silently reuse cached result snapshots.
-- [ ] Preserve assignment IDs and monotonically allocated names across undo/redo. Clear incompatible history on imported-geometry changes and reject stale FaceIds. Cover busy state, history eviction, and mixed metadata/engineering operations.
+- [x] Write failing command-sequence tests: add → edit → undo → redo, delete → undo with original ID, rename without numerical invalidation, redo cleared after a new edit, and no-op save without a history entry.
+- [x] Store before/after small definitions and labels, with a cap of 50 entries and 2 MiB of serialized definition data. Evict oldest entries deterministically. Store rigid transforms rather than duplicate geometry arrays; never include typed mesh/result buffers in entries.
+- [x] Route command execution through existing validation and invalidation. Undoing a load leaves mesh usable but disposes stale results/preflight; undoing orientation invalidates mesh as normal. Never restore old analysis revisions or silently reuse cached result snapshots.
+- [x] Preserve assignment IDs and monotonically allocated names across undo/redo. Clear incompatible history on imported-geometry changes and reject stale FaceIds. Cover busy state, history eviction, and mixed metadata/engineering operations.
 
 ### 2. Expose clear history actions
 
 **Modify:** `web/index.html`, `web/js/ui/ui-controller.js`, `web/js/ui/analysis-authoring-ui.js`.
 
-- [ ] Provide menu actions with descriptive labels such as Undo “Edit load”. Bind platform-standard Undo/Redo shortcuts with editable-field, modal, draft, and Settings exclusions; do not capture a browser command when the app has no valid action.
-- [ ] Announce the changed setup and any required remesh/recheck. Cancelling a draft creates no history item; Apply/Save creates exactly one.
-- [ ] Update spec/README to explain supported history boundaries. Run history tests, full applicable Python/browser authoring/invalidation suites, cube solve, and direct-local startup.
+- [x] Provide menu actions with descriptive labels such as Undo “Edit load”. Bind platform-standard Undo/Redo shortcuts with editable-field, modal, draft, and Settings exclusions; do not capture a browser command when the app has no valid action.
+- [x] Announce the changed setup and any required remesh/recheck. Cancelling a draft creates no history item; Apply/Save creates exactly one.
+- [x] Update spec/README to explain supported history boundaries. Run history tests, full applicable Python/browser authoring/invalidation suites, cube solve, and direct-local startup.
 
 ## Manual review M27 — correcting mistakes, about 10 minutes
 

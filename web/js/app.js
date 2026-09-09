@@ -174,7 +174,7 @@
     var revision;
     var resolved;
     var diagonal;
-    if (activeImport || activeMesh) { return; }
+    if (activeImport || activeMesh || app.document.assignmentDraft) { return; }
     if (activeConvergence) { activeConvergence.cancel(); }
     disposeSolver();
     try {

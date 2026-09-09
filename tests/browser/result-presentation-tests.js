@@ -26,6 +26,7 @@
     assert(api.buildLegendTicks({minimum:0,maximum:1}, 'horizontal', 280).length === 2, 'Horizontal key must only label endpoints');
     assert(api.buildLegendTicks({minimum:3,maximum:3}, 'vertical', 80).every(function(t){return Number.isFinite(t.position) && t.value === 3;}), 'Uniform key has invalid ticks');
     assert(api.buildLegendTicks({minimum:0,maximum:1}, 'vertical', 80).length === 2, 'Short legend is crowded');
+    assert(api.buildLegendTicks({minimum:-1e308,maximum:1e308},'vertical',280).every(function(t){return Number.isFinite(t.value);}), 'Finite signed limits produced invalid legend ticks');
     var range = api.resolveColorRange(result, {field:'vonMises',colorRange:{mode:'manual',field:'vonMises',minimum:2000,maximum:3000}});
     assert(range.minimum === 2000 && range.maximum === 3000 && range.clipped, 'Manual range does not describe clipping');
     assert(api.resolveColorRange(result,{field:'factorOfSafety',colorRange:{mode:'manual',field:'vonMises',minimum:2000,maximum:3000}}).maximum === 2.5, 'An incompatible field reused manual bounds');
@@ -70,6 +71,11 @@
     renderer.updateResultPresentation();
     var color = geometry.getAttribute('color').array;
     assert(Math.abs(color[3] - 0.2738384) < 1e-6 && Math.abs(color[4] - 0.5623174) < 1e-6 && Math.abs(color[5] - 0.1587321) < 1e-6, 'Surface color does not use the same zero-to-sample-peak scale as legend');
+    var positionVersion = geometry.getAttribute('position').version, colorVersion = geometry.getAttribute('color').version;
+    renderer.presentation.legendOrientation = 'horizontal'; renderer.updateResultPresentation();
+    assert(geometry.getAttribute('position').version === positionVersion && geometry.getAttribute('color').version === colorVersion, 'Legend-only change rewrote bulk result buffers');
+    renderer.presentation.deformationScale = 10;renderer.updateResultPresentation();
+    assert(geometry.getAttribute('color').version === colorVersion, 'Deformation animation rebuilt unchanged colors');
     renderer.resultModel.extrema = {rawVonMisesMax:{valuePa:0}};
     renderer.resultModel.surfaceFields.vonMisesPa.fill(0); renderer.updateResultPresentation();
     assert(Array.from(color).every(Number.isFinite), 'Zero stress produced nonfinite colors');
@@ -86,6 +92,11 @@
     document.getElementById('peak-location-status').textContent = 'Old peak';
     ui.renderResults({results:null});
     assert(document.getElementById('peak-location-status').textContent === '', 'Stale peak location survived result invalidation');
+    var emitted = null;
+    var contextUI = new api.UIController({document:{viewportPresentation:{mode:'deformation',field:'displacementMagnitude'}},replaceViewportPresentation:function(value){emitted=value;}});
+    contextUI.viewportMode={value:'stress'};contextUI.deformationMode={value:'user'};contextUI.deformationScale={value:'50'};
+    contextUI.updateViewportPresentation();
+    assert(emitted && emitted.deformationScale===0 && emitted.deformationMode==='undeformed','Stress retains inaccessible deformation scaling');
     document.getElementById('test-status').textContent = 'Passed';
   } catch (error) { document.getElementById('test-status').textContent = 'Failed: ' + error.message; }
 }());

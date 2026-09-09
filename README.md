@@ -8,7 +8,7 @@ v1 is unreleased. The approved interface, result-clarity, and bounded STL work
 is tracked in [plans 21–30](docs/plans/README.md). Plans 21–23 are implemented
 and accepted in the [combined owner review](docs/reviews/21-23-review.md) on
 2026-09-08; plans
-24–26 are implemented pending the grouped owner review; 27–30 remain ahead of the final plan 20 candidate audit. No v1 acceptance is
+24–27 are implemented pending the grouped owner review; 28–30 remain ahead of the final plan 20 candidate audit. No v1 acceptance is
 implied by passing automated checks.
 
 ## Run locally
@@ -197,8 +197,8 @@ as a pinned single-threaded embedded WASM worker runtime. Solves return validate
 transferable result models with raw and smoothed stress fields, reactions,
 equilibrium and solver diagnostics. The workspace has persistent Setup/Results width preferences, visible pane
 toggles, and keyboard/pointer splitters. A separate action bar below the menubar
-places Tools on the left and Solve beside Results on the right, with disabled
-Undo/Redo/Save/Export placeholders. Disclosure triangles inside both panels match
+places Tools and engineering Undo/Redo on the left and Solve beside Results on
+the right. Save/Export remain disabled placeholders. Disclosure triangles inside both panels match
 Truss. Check model runs preflight explicitly and opens the Checks report. Solve
 is enabled only for a current valid check. Empty Results starts collapsed. Below
 1000 CSS pixels one pane is active at a time; below 680 pixels panes become
@@ -297,3 +297,22 @@ check; camera/display changes and assignment renaming preserve readiness. A
 completed, failed, or cancelled solve needs a new explicit check before retrying
 because its worker has been disposed. `tests/browser/solve-checks-ui-tests.html`
 covers report currency, setup links, memory gates, and draft blocking.
+
+Engineering Undo/Redo covers committed support/load add, edit, delete, and rename;
+material, gravity, mesh settings; and rigid model orientation. Toolbar and Edit
+menu actions show the available edit. History retains at most 50 small definitions
+and 2 MiB of serialized data, with no source, mesh, result, or worker snapshots.
+Undoing engineering values clears stale results and requires a new check;
+orientation and mesh-setting changes also require remeshing. Renames preserve
+valid results. Import, replacement, and removal clear history. Undo/Redo is
+unavailable during assignment previews or worker execution. Ctrl/Cmd+Z and the
+platform Redo shortcut leave text fields, modals, and Settings to their own undo.
+
+Open `tests/browser/engineering-history-tests.html` for command, invalidation,
+identity, memory-bound, and shortcut regressions. Open
+`tests/browser/grouped-authoring-tests.html` from the optional HTTP server or in
+Chromium with local-file access enabled to exercise the real app through import,
+Tet10 meshing, preview/Apply/Cancel, explicit check/solve, legends at four viewport
+sizes, rename/undo, and stale-check recovery. The
+[grouped M24–M27 review packet](docs/reviews/24-27-review.md) supplies the owner
+checks; automated passes do not constitute manual acceptance.

@@ -272,6 +272,9 @@
       assert(newLoadGlyph.getObjectByName('glyph-shaft').geometry.parameters.height === oldLoadGlyph.getObjectByName('glyph-shaft').geometry.parameters.height,
         'glyph visual scale changed with numeric load magnitude');
       document.documentElement.style.removeProperty('--ui-color-load');
+      viewport.setSelectedFaceIds([geometry.faceIds[0]]);viewport.showDraftHover(geometry.faceIds[0]);
+      viewport.clearGeometryPreview();
+      assert(!viewport.draftHoverSource && !viewport.draftHoverMesh && !viewport.selectionPreview && !viewport.selectionMesh, 'Clearing geometry retained hover/selection numerical buffers');
     });
   }
 

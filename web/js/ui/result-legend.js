@@ -5,7 +5,7 @@
     var count = orientation === 'horizontal' ? 2 : Math.max(2, Math.min(7, Math.floor(height / 44) + 1));
     var ticks = [];
     for (var i = 0; i < count; i += 1) {
-      ticks.push({position: i / (count - 1), value: range.maximum + (range.minimum - range.maximum) * i / (count - 1)});
+      ticks.push({position: i / (count - 1), value: range.maximum * (1 - i / (count - 1)) + range.minimum * (i / (count - 1))});
     }
     return ticks;
   }

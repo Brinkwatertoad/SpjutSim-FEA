@@ -22,7 +22,7 @@
       var bar = doc.querySelector('.fea-actionbar');
       assert(bar && bar.getBoundingClientRect().top >= doc.querySelector('.fea-topbar').getBoundingClientRect().bottom && bar.getBoundingClientRect().bottom <= shell.getBoundingClientRect().top, 'Action bar is not between menubar and workspace');
       ['toggle-setup-pane','toggle-results-pane','solve-button'].forEach(function (id) { assert(bar.contains(doc.getElementById(id)), id + ' is outside action bar'); });
-      ['undo','redo','save','export'].forEach(function (name) { assert(bar.querySelector('[data-placeholder="' + name + '"]').disabled, name + ' placeholder is enabled'); });
+      ['save','export'].forEach(function (name) { assert(bar.querySelector('[data-placeholder="' + name + '"]').disabled, name + ' placeholder is enabled'); });
       assert(doc.getElementById('toggle-results-pane').getBoundingClientRect().right > 1400, 'Results toggle is not at right edge');
       assert(doc.getElementById('solve-button').getBoundingClientRect().right > 1300 && doc.getElementById('solve-button').nextElementSibling.id === 'toggle-results-pane', 'Solve is not adjacent to Results');
       var title = doc.querySelector('.fea-topbar strong').getBoundingClientRect();

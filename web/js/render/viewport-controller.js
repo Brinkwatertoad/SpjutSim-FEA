@@ -175,6 +175,7 @@
     this.resultDisplay = null;
     this.resultSurface = null;
     this.resultModel = null;
+    this.updatedResultModel = null;
     this.analysisOverlay = null;
     this.analysisOverlayState = null;
     this.themeObserver = null;
@@ -808,6 +809,8 @@
   };
 
   ViewportController.prototype.clearGeometryPreview = function () {
+    this.clearDraftHover();
+    this.selectionPreview = null; this.selectionMesh = null; this.selectionKey = null;
     if (this.importedGeometry) {
       this.scene.remove(this.importedGeometry);
       disposeObjectResources(this.importedGeometry);
@@ -903,6 +906,8 @@
   };
 
   ViewportController.prototype.clearMeshDisplay = function () {
+    this.selectionMesh = null;
+    if (this.meshSurface && this.draftHoverSource === this.meshSurface.geometry) { this.clearDraftHover(); }
     if (!this.meshDisplay) { return; }
     this.scene.remove(this.meshDisplay);
     disposeObjectResources(this.meshDisplay);
@@ -986,6 +991,7 @@
     this.resultDisplay = null;
     this.resultSurface = null;
     this.resultModel = null;
+    this.updatedResultModel = null;
     if (this.probeHandler) { this.probeHandler(null); }
   };
 
@@ -1046,7 +1052,7 @@
       lineIndices[triangle * 6 + 4] = triangles[triangle * 3 + 2]; lineIndices[triangle * 6 + 5] = triangles[triangle * 3];
     }
     lineGeometry = new root.THREE.BufferGeometry();
-    lineGeometry.setAttribute('position', new root.THREE.BufferAttribute(new Float32Array(result.originalSurface.nodePositionsM), 3));
+    lineGeometry.setAttribute('position', geometry.getAttribute('position'));
     lineGeometry.setIndex(new root.THREE.BufferAttribute(lineIndices, 1));
     lines = new root.THREE.LineSegments(lineGeometry, new root.THREE.LineBasicMaterial({ color: themeColor('--ui-color-grid-major', '#334155'), transparent: true, opacity: 0.8 }));
     lines.name = 'result-mesh-overlay';
@@ -1095,7 +1101,6 @@
     var field;
     var fieldRange;
     var position;
-    var linePosition;
     var colors;
     var original;
     var displacement;
@@ -1106,25 +1111,29 @@
     field = this.activeResultField();
     fieldRange = root.SpjutsimFEA.resolveColorRange(result, this.presentation) || root.SpjutsimFEA.getResultDisplayRange(result, 'vonMises');
     position = this.resultSurface.geometry.getAttribute('position');
-    linePosition = this.resultDisplay.userData.lines.geometry.getAttribute('position');
     colors = this.resultSurface.geometry.getAttribute('color');
     original = result.originalSurface.nodePositionsM;
     displacement = result.displacementM;
     scale = (Number(this.presentation.deformationScale) || 0) * this.deformationAnimationMultiplier;
+    var positionChanged = this.updatedResultModel !== result || this.updatedResultScale !== scale;
+    var colorKey = [this.presentation.field,fieldRange.minimum,fieldRange.maximum].join('|');
+    var colorChanged = this.updatedResultModel !== result || this.updatedResultColorKey !== colorKey;
+    if (!positionChanged && !colorChanged) { return; }
+    this.updatedResultModel = result; this.updatedResultScale = scale; this.updatedResultColorKey = colorKey;
     for (node = 0; node < field.length; node += 1) {
-      position.array[node * 3] = original[node * 3] + displacement[node * 3] * scale;
-      position.array[node * 3 + 1] = original[node * 3 + 1] + displacement[node * 3 + 1] * scale;
-      position.array[node * 3 + 2] = original[node * 3 + 2] + displacement[node * 3 + 2] * scale;
-      linePosition.array[node * 3] = position.array[node * 3];
-      linePosition.array[node * 3 + 1] = position.array[node * 3 + 1];
-      linePosition.array[node * 3 + 2] = position.array[node * 3 + 2];
-      resultColor(fieldRange.maximum === fieldRange.minimum ? 0.5 :
-        (field[node] - fieldRange.minimum) / (fieldRange.maximum - fieldRange.minimum), rgb);
-      colors.array[node * 3] = rgb[0]; colors.array[node * 3 + 1] = rgb[1]; colors.array[node * 3 + 2] = rgb[2];
+      if (positionChanged) {
+        position.array[node * 3] = original[node * 3] + displacement[node * 3] * scale;
+        position.array[node * 3 + 1] = original[node * 3 + 1] + displacement[node * 3 + 1] * scale;
+        position.array[node * 3 + 2] = original[node * 3 + 2] + displacement[node * 3 + 2] * scale;
+      }
+      if (colorChanged) {
+        resultColor(fieldRange.maximum === fieldRange.minimum ? 0.5 :
+          (Number.isFinite(fieldRange.maximum - fieldRange.minimum) ? (field[node] - fieldRange.minimum) / (fieldRange.maximum - fieldRange.minimum) : (field[node] / 2 - fieldRange.minimum / 2) / (fieldRange.maximum / 2 - fieldRange.minimum / 2)), rgb);
+        colors.array[node * 3] = rgb[0]; colors.array[node * 3 + 1] = rgb[1]; colors.array[node * 3 + 2] = rgb[2];
+      }
     }
-    position.needsUpdate = true; linePosition.needsUpdate = true; colors.needsUpdate = true;
-    this.resultSurface.geometry.computeVertexNormals();
-    this.resultSurface.geometry.computeBoundingSphere();
+    if (positionChanged) { position.needsUpdate = true; this.resultSurface.geometry.computeBoundingSphere(); }
+    if (colorChanged) { colors.needsUpdate = true; }
   };
 
   ViewportController.prototype.clearAnalysisOverlay = function () {
@@ -1234,6 +1243,12 @@
       this.resultDisplay.userData.lines.visible = this.presentation.meshOverlay === true;
       if (this.resultDisplay.userData.partEdges) { this.resultDisplay.userData.partEdges.visible = this.presentation.displayStyle === 'shaded-edges' || this.presentation.displayStyle === 'lines'; }
     }
+  };
+
+  ViewportController.prototype.clearDraftHover = function () {
+    if (this.draftHoverFrame) { root.cancelAnimationFrame(this.draftHoverFrame); this.draftHoverFrame = null; }
+    if (this.draftHoverMesh) { this.scene.remove(this.draftHoverMesh); disposeObjectResources(this.draftHoverMesh); }
+    this.draftHoverMesh = null; this.draftHoverSource = null;
   };
 
   ViewportController.prototype.showDraftHover = function (faceId) {
@@ -1384,8 +1399,7 @@
     if (this.resizeObserver) { this.resizeObserver.disconnect(); }
     if (this.resizeListener) { root.removeEventListener('resize', this.resizeListener); }
     if (this.pointerClickListener) { this.canvas.removeEventListener('click', this.pointerClickListener); }
-    if (this.draftHoverFrame) { root.cancelAnimationFrame(this.draftHoverFrame); }
-    if (this.draftHoverMesh) { this.scene.remove(this.draftHoverMesh); disposeObjectResources(this.draftHoverMesh); }
+    this.clearDraftHover();
     this.canvas.removeEventListener('pointermove',this.draftHoverListener); this.canvas.removeEventListener('pointerleave',this.draftHoverLeave);
     if (this.pointerDownListener) { this.canvas.removeEventListener('pointerdown', this.pointerDownListener); }
     if (this.pointerMoveListener) { this.canvas.removeEventListener('pointermove', this.pointerMoveListener); }

@@ -1604,10 +1604,10 @@ A shared CSS gizmo rectangle is measured by the renderer. Result legend/probe
 share a separate bounded area on the right; short-window actions scroll above
 it. A drawer may temporarily cover these areas until dismissed.
 
-The menubar places File/View menus immediately after the app title and runtime
+The menubar places File/Edit/View menus immediately after the app title and runtime
 status at the far right. Solve retains its accent background.
 A separate action bar immediately below the menubar contains Tools on the left,
-Undo/Redo/Save/Export disabled placeholders, and Solve immediately left of
+engineering Undo/Redo, disabled Save/Export placeholders, and Solve immediately left of
 Results on the right. Use Truss-style right/down disclosure triangles inside
 the Tools and Results panels. Check model explicitly runs preflight and opens
 Checks. Solve requires a current valid check and retains the high-memory
@@ -1894,7 +1894,7 @@ The UI must clearly mark results stale and require a new solve.
 ### 15.11 Approved pre-v1 usability and STL improvement sequence
 
 Approved on 2026-09-07. **Tasks 21–23 implemented and accepted 2026-09-08;
-Tasks 24–30 planned.** Tasks 21–30 in
+Tasks 24–27 implemented pending grouped owner review; Tasks 28–30 planned.** Tasks 21–30 in
 `docs/plans/README.md` schedule independent delivery and mandatory owner reviews.
 These requirements refine the earlier UI descriptions where behavior changes.
 They preserve the numerical, worker, dependency, and direct-local requirements.
@@ -2702,3 +2702,19 @@ new check before retrying. Assignment names are trimmed nonempty text.
 `renameAssignment(kind,id,name)` and name-only assignment replacement are metadata
 edits; they retain numerical revision/results/preflight. Automatic name sequences
 still advance independently and monotonically.
+
+Plan 27: controller-owned `EngineeringHistory` retains at most 50 commands and
+2 MiB of UTF-8 serialized definitions, evicting oldest entries deterministically.
+An individual oversized command clears incompatible history. Commands contain
+small before/after definitions, labels, geometry identity, and assignment order;
+rigid orientation uses rotation matrices and operation metadata. Source bytes,
+mesh/result typed arrays, worker objects, and WASM contexts are excluded. Undo
+and redo use ordinary validation/invalidation, retain assignment IDs, and never
+rewind name/ID allocators or analysis revisions. A new edit discards redo;
+no-op Save and cancelled drafts add nothing. Metadata-only rename replay keeps
+results and preflight. Import/replacement/removal clear history after validation.
+Undo/Redo is disabled during any assignment draft or worker execution. Edit-menu
+and toolbar labels identify the command; status explains recheck/remesh needs.
+Platform shortcuts exclude editable fields, composition, modals, and Settings,
+and leave browser commands untouched when no app history action is available.
+Assignment drafts also block convergence startup before disposing a ready solver.

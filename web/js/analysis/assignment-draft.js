@@ -83,10 +83,10 @@
     var draft = this.refreshAssignmentDraft(), validation = draft.validation;
     if (!validation.valid) { this.notify(); throw new Error(validation.message); }
     var existing = draft.itemId && collection(this.document,draft.kind).find(function (item) { return item.id === draft.itemId; });
-    if (existing && JSON.stringify(existing) === JSON.stringify(validation.value)) {
+    if (existing && api.sameEngineeringDefinition(existing,validation.value)) {
       var unchangedId = draft.itemId; this.cancelAssignmentDraft(); return unchangedId;
     }
-    var selected = this.document.selectedFaceIds;
+    var selected = this.document.selectedFaceIds, revision = this.document.analysisRevision;
     this.document.selectedFaceIds = draft.faceIds.slice();
     // Clear transient state before notifying subscribers of the committed edit.
     this.document.assignmentDraft = null;
@@ -98,7 +98,10 @@
       } else {
         if (id) { this.replaceLoad(id, validation.value); } else { id = this.createLoad(validation.value); }
       }
-      this.assignmentDraftReturn = null; return id;
+      if (this.document.analysisRevision === revision) {
+        this.document.assignmentDraft = draft; this.cancelAssignmentDraft();
+      } else { this.assignmentDraftReturn = null; }
+      return id;
     } catch (error) {
       this.document.assignmentDraft = draft; this.document.selectedFaceIds = selected; throw error;
     }

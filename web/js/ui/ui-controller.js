@@ -85,8 +85,10 @@
       var saved = JSON.parse(root.localStorage.getItem('spjutsim-fea-display-v1'));
       if (saved && this.controller.document.viewportPresentation) {
         var current = this.controller.document.viewportPresentation;
-        current.legendOrientation = saved.legendOrientation === 'horizontal' ? 'horizontal' : 'vertical';
-        current.displayStyle = ['shaded', 'shaded-edges', 'wireframe'].indexOf(saved.displayStyle) >= 0 ? saved.displayStyle : 'shaded-edges';
+        this.controller.replaceViewportPresentation(Object.assign({},current,{
+          legendOrientation:saved.legendOrientation === 'horizontal' ? 'horizontal' : 'vertical',
+          displayStyle:['shaded', 'shaded-edges', 'wireframe'].indexOf(saved.displayStyle) >= 0 ? saved.displayStyle : 'shaded-edges'
+        }));
       }
     } catch (ignored) { /* Invalid or unavailable preferences use defaults. */ }
     this.applicationMenu = document.getElementById('application-menu');
@@ -329,6 +331,9 @@
     if (this.deformationAnimationToggle) { this.deformationAnimationToggle.addEventListener('click', function () { self.toggleDeformationAnimation(); }); }
     if (this.meshOverlay) { this.meshOverlay.addEventListener('change', function () { self.updateViewportPresentation(); }); }
     if (this.preflightButton) { this.preflightButton.addEventListener('click', function () { if (self.preflightHandler) { self.showOutputPanel("checks"); self.preflightHandler(); } }); }
+    Array.from(document.querySelectorAll('[data-history-action]:not([data-ui-menu-action])')).forEach(function (button) {
+      button.addEventListener('click',function () { self.runHistoryAction(button.dataset.historyAction); });
+    });
     var viewChecks = document.getElementById('view-checks-button');
     if (viewChecks) { viewChecks.addEventListener('click',function () { self.showOutputPanel('checks'); }); }
     if (this.solveButton) { this.solveButton.addEventListener('click', function () { if (self.solveHandler) { self.showOutputPanel("results"); self.solveHandler(); } }); }
@@ -350,6 +355,7 @@
         menuBar: this.applicationMenu,
         document: document,
         dispatchAction: function (action) {
+          if (action === 'undo' || action === 'redo') { self.runHistoryAction(action); }
           if (action === 'import-step' && self.importButton) { self.importButton.click(); }
           if (action === 'fit-view' && self.viewport) { self.viewport.fitCurrentModel(); }
           if (action === 'reset-view' && self.viewport) { self.viewport.resetView(); }
@@ -400,6 +406,7 @@
       var tag = String(target && target.tagName || '').toUpperCase();
       var editable = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (target && target.isContentEditable);
       if (event.defaultPrevented) { return; }
+      if (self.handleHistoryShortcut(event)) { return; }
       if (self.isSettingsShortcut(event) && !editable && !self.settingsOpen) {
         event.preventDefault();
         self.openSettings(document.activeElement);
@@ -414,7 +421,48 @@
     this.renderNavigationPreferences();
     this.controller.subscribe(function (documentState) { self.render(documentState); });
   };
+  UIController.prototype.renderHistory = function () {
+    if (!this.controller.historyState) { return; }
+    var state=this.controller.historyState();
+    Array.from(document.querySelectorAll('[data-history-action]')).forEach(function (button) {
+      var undo=button.dataset.historyAction === 'undo', label=undo ? state.undoLabel : state.redoLabel;
+      button.disabled=undo ? !state.canUndo : !state.canRedo;
+      var text=(undo ? 'Undo' : 'Redo') + (label ? ' “' + label + '”' : '');
+      if (button.dataset.uiMenuAction) { button.textContent=text; }
+      button.setAttribute('aria-label',text); button.title=button.disabled ? state.message : text;
+    });
+    var status=document.getElementById('history-status');
+    if (status) { status.textContent=state.message; }
+  };
+  UIController.prototype.runHistoryAction = function (action) {
+    if (!this.controller.historyState) { return; }
+    var state=this.controller.historyState();
+    if (!(action === 'undo' ? state.canUndo : state.canRedo)) { return; }
+    try {
+      if (action === 'undo') { this.controller.undoEngineeringEdit(); } else { this.controller.redoEngineeringEdit(); }
+      if (this.analysisAuthoring) { this.analysisAuthoring.announceSetup(this.controller.historyNotice); }
+    } catch(error) {
+      var status=document.getElementById('history-status'); if (status) { status.textContent=error.message; }
+    }
+  };
+  UIController.prototype.handleHistoryShortcut = function (event) {
+    if (event.defaultPrevented || event.altKey || event.isComposing || this.settingsOpen || !this.controller.historyState) { return false; }
+    var target=event.target, tag=target && target.tagName;
+    if (['INPUT','TEXTAREA','SELECT'].indexOf(tag) >= 0 || (target && target.isContentEditable)) { return false; }
+    if (Array.from(document.querySelectorAll('[role="dialog"],dialog[open]')).some(function (dialog) { return !dialog.closest('[hidden]') && dialog.getClientRects().length; })) { return false; }
+    var mac=/Mac|iPhone|iPad/.test(root.navigator && root.navigator.platform || '');
+    if (mac ? (!event.metaKey || event.ctrlKey) : (!event.ctrlKey || event.metaKey)) { return false; }
+    var key=event.key.toLowerCase(), action;
+    if (key === 'z') { action=event.shiftKey ? 'redo' : 'undo'; }
+    else if (!mac && key === 'y' && !event.shiftKey) { action='redo'; }
+    else { return false; }
+    var state=this.controller.historyState();
+    if (!(action === 'undo' ? state.canUndo : state.canRedo)) { return false; }
+    event.preventDefault(); this.runHistoryAction(action); return true;
+  };
+
   UIController.prototype.render = function (documentState) {
+    this.renderHistory();
     var state = documentState.geometryImport || { status: 'idle' };
     var convergenceRunning = Boolean(documentState.convergenceStudy && documentState.convergenceStudy.status === 'running');
     var message = 'Choose a STEP, IGES, or BREP solid to begin.';
@@ -494,7 +542,7 @@
     var current = this.controller.document.viewportPresentation || {};
     var mode = this.viewportMode ? this.viewportMode.value : 'model';
     var field = this.resultField ? this.resultField.value : current.field;
-    var deformationMode = this.deformationMode ? this.deformationMode.value : current.deformationMode;
+    var deformationMode = mode === 'stress' ? 'undeformed' : (this.deformationMode ? this.deformationMode.value : current.deformationMode);
     if (mode === 'stress' && ['vonMises', 'factorOfSafety', 'maxPrincipal', 'minPrincipal'].indexOf(field) < 0) { field = 'vonMises'; }
     if (mode === 'deformation' && ['displacementMagnitude', 'ux', 'uy', 'uz'].indexOf(field) < 0) { field = 'displacementMagnitude'; }
     try {
@@ -523,6 +571,7 @@
       try { root.localStorage.setItem('spjutsim-fea-display-v1', JSON.stringify({legendOrientation:this.controller.document.viewportPresentation.legendOrientation,displayStyle:this.controller.document.viewportPresentation.displayStyle})); } catch (ignored) {}
     } catch (error) {
       if (this.colorRangeError) { this.colorRangeError.textContent = error.message; }
+      if (this.colorRangeMode && this.colorRangeMode.value === 'manual' && this.controller.document.results) { this.colorRangeMin.disabled = false; this.colorRangeMax.disabled = false; }
     }
   };
   UIController.prototype.renderViewportPresentation = function (documentState) {
@@ -646,6 +695,7 @@
   UIController.prototype.dispose = function () {
     this.stopDeformationAnimation();
     if (this.workspaceLayout) { this.workspaceLayout.dispose(); }
+    if (this.legendResizeObserver) { this.legendResizeObserver.disconnect(); }
   };
 
   UIController.prototype.showOutputPanel = function (panelId) {
@@ -903,7 +953,7 @@
     var otherWorkerRunning = documentState.geometryImport.status === 'importing' ||
       documentState.meshGeneration.status === 'generating' || documentState.solvePreflight.status === 'running' ||
       documentState.solveExecution.status === 'running';
-    if (this.startConvergenceButton) { this.startConvergenceButton.disabled = running || otherWorkerRunning || !documentState.geometry || !documentState.material; }
+    if (this.startConvergenceButton) { this.startConvergenceButton.disabled = running || otherWorkerRunning || Boolean(documentState.assignmentDraft) || !documentState.geometry || !documentState.material; }
     if (this.startConvergenceButton) { this.startConvergenceButton.textContent = study ? 'Restart study' : 'Start study'; }
     if (this.cancelConvergenceButton) { this.cancelConvergenceButton.hidden = !running; }
     if (this.convergenceStatus) {
@@ -979,7 +1029,7 @@
     this.legendStatus.hidden = !fieldRange.clipped && presentation.field === 'vonMises';
     this.legendStatus.textContent = legendRangeStatus(fieldRange, presentation.deformationScale);
     this.resultLegend.title = presentation.field === 'vonMises' ?
-      'Colors show smoothed surface values. Scale: zero to the whole-model solver-sample peak. Smoothed surface maximum: ' +
+      'Colors show smoothed surface values. ' + (presentation.colorRange && (presentation.colorRange.mode === 'manual' || presentation.colorRange.locked) ? 'User color limits; clipped values use endpoint colors. ' : 'Scale: zero to the whole-model solver-sample peak. ') + 'Smoothed surface maximum: ' +
         formatNumber(result.ranges.vonMises.maximum / 1e6, 'MPa') + '.' : '';
   };
 
