@@ -55,3 +55,7 @@ Draft interactions are transactional and responsive, force/support numerics are 
 
 Implementation and automated regression checks complete. M25 remains pending
 the user-requested combined M24–M27 review.
+
+Owner-requested corrections are implemented in the
+[combined follow-up](../reviews/24-27-followup.md). Its revised workflow supersedes
+the original interaction details above; owner acceptance remains pending.

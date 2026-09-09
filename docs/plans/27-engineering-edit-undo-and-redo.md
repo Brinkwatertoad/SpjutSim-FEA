@@ -46,3 +46,7 @@
 ## Done when
 
 The scoped edits are reversible through validated commands, memory retention is bounded, invalidation remains correct, and M27 is accepted.
+
+Owner-requested corrections are implemented in the
+[combined follow-up](../reviews/24-27-followup.md). Its revised workflow supersedes
+the original interaction details above; owner acceptance remains pending.

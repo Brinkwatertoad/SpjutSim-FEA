@@ -72,7 +72,7 @@ projection preference migration, exact peak marker, and pointer-cancellation che
 It should report `Passed`.
 
 Open `tests/browser/solve-workflow-tests.html` with local file access enabled (or
-from the HTTP server) to check explicit model checks before Solve, blocked checks,
+from the HTTP server) to check automatic preflight before solving, blocked checks,
 cancellation, stale worker completion, and the existing memory confirmation.
 It should report `Passed`.
 
@@ -199,8 +199,8 @@ equilibrium and solver diagnostics. The workspace has persistent Setup/Results w
 toggles, and keyboard/pointer splitters. A separate action bar below the menubar
 places Tools and engineering Undo/Redo on the left and Solve beside Results on
 the right. Save/Export remain disabled placeholders. Disclosure triangles inside both panels match
-Truss. Check model runs preflight explicitly and opens the Checks report. Solve
-is enabled only for a current valid check. Empty Results starts collapsed. Below
+Truss. Solve opens Checks, runs preflight, and continues to Results when the
+check passes. Large-memory confirmation and cancellation remain available. Empty Results starts collapsed. Below
 1000 CSS pixels one pane is active at a time; below 680 pixels panes become
 explicitly opened drawers over a full-width canvas. View defaults to
 an orthographic three-face view. The 3D display Perspective switch preserves the
@@ -227,14 +227,15 @@ when stopped.
 The compact Model editor can rotate the part around a global X, Y, or Z axis by
 an adjustable angle (90 degrees by default), reset the imported orientation, or
 align one selected CAD face normal to a signed global axis. Geometry orientation
-invalidates the mesh and results; loads, gravity, support components, material,
-and CAD `FaceId` references remain in the global analysis frame. STL is not
+invalidates the mesh and results. Component forces, gravity, and support
+components stay in global axes; pressure and normal force follow their assigned
+surfaces. Material and CAD `FaceId` references are retained. STL is not
 implemented yet; plans 28–29 schedule explicit units, durable
 surface-patch identity, solid validation, and the accepted analysis path before
 v1. OBJ remains deferred.
 
 The left pane is one compact Setup sequence: Model, Material, Supports, Loads,
-and Mesh. Check model and Solve are adjacent in the action bar. Model owns CAD import/replacement and collapses to a
+and Mesh. Solve runs checks before execution; the Checks tab precedes Results. Model owns CAD import/replacement and collapses to a
 small source/face/orientation summary; Material expands independently directly
 beneath it. Importing over an active model opens a side-by-side transfer flow.
 Each old support/load is highlighted in order while the user maps replacement
@@ -294,8 +295,8 @@ Run `tests/browser/assignment-draft-tests.html` for transactional regression che
 Checks remain available through View checks and the Checks output tab; stale
 reports are labeled with their setup revision. Numerical edits require a new
 check; camera/display changes and assignment renaming preserve readiness. A
-completed, failed, or cancelled solve needs a new explicit check before retrying
-because its worker has been disposed. `tests/browser/solve-checks-ui-tests.html`
+completed, failed, or cancelled solve gets a fresh check on the next Solve
+because its worker has been disposed. Run checks only remains in the Checks tab. `tests/browser/solve-checks-ui-tests.html`
 covers report currency, setup links, memory gates, and draft blocking.
 
 Engineering Undo/Redo covers committed support/load add, edit, delete, and rename;
@@ -312,7 +313,32 @@ Open `tests/browser/engineering-history-tests.html` for command, invalidation,
 identity, memory-bound, and shortcut regressions. Open
 `tests/browser/grouped-authoring-tests.html` from the optional HTTP server or in
 Chromium with local-file access enabled to exercise the real app through import,
-Tet10 meshing, preview/Apply/Cancel, explicit check/solve, legends at four viewport
+Tet10 meshing, preview/Apply/Cancel, check-then-solve, legends at four viewport
 sizes, rename/undo, and stale-check recovery. The
 [grouped M24–M27 review packet](docs/reviews/24-27-review.md) supplies the owner
 checks; automated passes do not constitute manual acceptance.
+
+
+The M24–M27 manual-review corrections are ready for another
+[combined check](docs/reviews/24-27-followup.md). Deformation opens with Auto scale.
+Editing either color limit selects Manual. Drag the legend title or use its
+arrow keys to move it; drag the bottom-right handle or use its arrow keys to
+resize it. Both orientations remember their own size/position and stay within
+the central viewport. Clicking a result selects the actual surface point with
+interpolated values and a nearby detail label. Locate peak selects an internal
+recovery sample through the same interface; background-click/Escape clears it.
+
+Force defaults to a magnitude of 1 N along local surface normals, with Push/Pull.
+Components default to [0, 1, 0] N. Pressure defaults to 1 MPa. Normal magnitude is
+distributed by area; opposing normal directions can cancel in the resultant.
+Its normalization uses the native integration rule on solver faces in the worker,
+then calls the existing pressure kernel. `review-contract-tests.html` covers
+normal-force validation, flat/curved Tri6 normalization, and glyph spacing.
+The grouped harness compares a normal-force Tet10 solve with its vector equivalent.
+Gravity has a separate Loads editor for direction and calculation enable/disable,
+and independent arrow visibility in Display. Enabling it shows an arrow in its
+chosen direction; disabling removes it. Successful assignment Apply/Save clears
+face selection. Transfer setup uses nearly the whole screen and shows original,
+mapped, and active preview assignments on the two models. The top-right status
+shows the current operation with an activity icon; routine history text below
+Setup is hidden.

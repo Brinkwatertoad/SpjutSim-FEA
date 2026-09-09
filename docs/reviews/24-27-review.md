@@ -1,5 +1,9 @@
 # Combined M24–M27 owner review
 
+The owner supplied corrections after this packet. Use the
+[follow-up recheck packet](24-27-followup.md) for the current workflow, including
+automatic checks on Solve and normal-force authoring.
+
 Status: **Pending owner review**. Implementation and automated checks complete;
 manual usability acceptance is not inferred. The owner requested all four plans
 as one batch with incremental commits. Task 28 remains outside this batch.

@@ -82,7 +82,7 @@ assistance. This overrides those plans' per-package stop/no-subagent notes for
 this batch only. [The combined review packet](../reviews/21-23-review.md) records the owner’s 2026-09-08 acceptance of M21, M22, and M23. The owner subsequently requested plans **24–27** as one implementation batch,
 with manual checks after the group and commits along the way. These four plans
 were executed in the current agent without subagents. Their per-package stops
-are replaced by [one grouped review packet](../reviews/24-27-review.md);
+are replaced by [the grouped review and follow-up](../reviews/24-27-followup.md);
 M24–M27 remain pending. Task 28 awaits that review. Later gates remain unchanged.
 
 This is a milestone schedule, not calendar appointments or automated reminders.

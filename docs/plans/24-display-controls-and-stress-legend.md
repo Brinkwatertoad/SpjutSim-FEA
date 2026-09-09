@@ -54,3 +54,7 @@ Display controls are contextual, mesh visibility is independent, legends reflect
 
 Implementation verified by focused browser, real cube solve, workspace/direct-local,
 and 77 Python checks. M24 is pending the user-requested grouped M24–M27 review.
+
+Owner-requested corrections are implemented in the
+[combined follow-up](../reviews/24-27-followup.md). Its revised workflow supersedes
+the original interaction details above; owner acceptance remains pending.

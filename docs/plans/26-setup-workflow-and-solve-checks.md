@@ -53,3 +53,7 @@
 Setup is readable, checks are explicit and adjacent to Solve, report state cannot misrepresent readiness, and M26 is accepted.
 
 Implementation verified; M26 awaits the requested grouped M24–M27 manual review.
+
+Owner-requested corrections are implemented in the
+[combined follow-up](../reviews/24-27-followup.md). Its revised workflow supersedes
+the original interaction details above; owner acceptance remains pending.
