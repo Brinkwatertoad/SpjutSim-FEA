@@ -56,4 +56,7 @@ Implementation verified; M26 awaits the requested grouped M24–M27 manual revie
 
 Owner-requested corrections are implemented in the
 [combined follow-up](../reviews/24-27-followup.md). Its revised workflow supersedes
-the original interaction details above; owner acceptance remains pending.
+the original interaction details above; the owner accepted the group on 2026-09-10, including final adjustments in `0ed6e31`.
+
+The manual checklist above is retained as review reference. The owner’s grouped
+approval completes this milestone; no further individual acceptance stop remains.

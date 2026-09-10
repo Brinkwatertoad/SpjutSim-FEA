@@ -1,10 +1,18 @@
-# M24–M27 corrections — owner recheck
+# M24–M27 corrections — accepted owner review
 
-Status: **Ready for owner recheck; acceptance pending**. This implements the
-owner's follow-up to the [first combined packet](24-27-review.md), including the
-clarifications about automatic checks, normal force, and gravity. Work remains
-on `work/plans-24-27`. This packet also includes the second manual-feedback
-round of September 10, implemented in `cc8212e`. Main is unchanged.
+Status: **Accepted by the owner on 2026-09-10**. The owner approved the group with
+final adjustments for imperial result units, Truss icons, animated Fit model,
+Setup naming, the material placeholder, and Edit-menu hotkey labels. Those changes
+are implemented in `0ed6e31`; the earlier follow-ups are `c7a1de5` and `cc8212e`.
+The approved `work/plans-24-27` group is merged into main. The checklists below
+remain as review reference, not outstanding acceptance gates.
+
+The final changes preserve SI storage while displaying psi/ksi/inch in legends,
+manual limits, point displacement values, and Results summaries. Fit model moves
+to the lower-left of the gizmo and uses the cancellable camera transition with
+reduced-motion support. Setup replaces Tools and the duplicate pane title is gone.
+Undo/Redo/Save/Export use Truss icons; Setup/Results keep icons plus labels.
+Ctrl+Z and Ctrl+Y remain visible beside dynamic Edit-menu descriptions.
 
 Open `web/index.html` directly or use `python3 tools/serve.py`. The shared cube
 and material in the first packet remain useful. This time, press **Solve**:
@@ -64,6 +72,12 @@ confirmation and hard memory cap still apply.
 
 ## Verification
 
+The final acceptance delta also passes the 23 browser harnesses, 77 Python tests,
+8 native tests, distribution audit, and direct-file/HTTP workflows. Added coverage
+checks psi/ksi/inch conversion, SI range preservation, imperial point details,
+menu shortcut retention, animated fit and reduced-motion behavior. Toolbar/gizmo
+placement and narrow layouts were visually checked in Chromium.
+
 - 23 browser harnesses pass: the previous 22 plus `review-contract-tests.html`.
   `grouped-authoring-tests.html` now exercises the revised workflow, including
   a real normal-force Tet10 solve compared with its component-force equivalent,
@@ -82,4 +96,4 @@ confirmation and hard memory cap still apply.
   worker cancellation/identity, bounded sample/cache/legend state, accessibility,
   and direct-local loading. No dependency or vendor changes.
 
-Owner decision/corrections: **Pending**.
+Owner decision: **Approved with the final adjustments, now implemented and verified.**

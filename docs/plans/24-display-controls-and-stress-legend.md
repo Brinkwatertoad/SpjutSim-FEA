@@ -53,8 +53,11 @@
 Display controls are contextual, mesh visibility is independent, legends reflect the chosen mapping, numerical outputs are unchanged, and M24 is accepted.
 
 Implementation verified by focused browser, real cube solve, workspace/direct-local,
-and 77 Python checks. M24 is pending the user-requested grouped M24–M27 review.
+and 77 Python checks. M24 was accepted in the user-requested grouped M24–M27 review on 2026-09-10.
 
 Owner-requested corrections are implemented in the
 [combined follow-up](../reviews/24-27-followup.md). Its revised workflow supersedes
-the original interaction details above; owner acceptance remains pending.
+the original interaction details above; the owner accepted the group on 2026-09-10, including final adjustments in `0ed6e31`.
+
+The manual checklist above is retained as review reference. The owner’s grouped
+approval completes this milestone; no further individual acceptance stop remains.

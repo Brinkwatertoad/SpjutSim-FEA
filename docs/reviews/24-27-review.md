@@ -4,15 +4,16 @@ The owner supplied corrections after this packet. Use the
 [follow-up recheck packet](24-27-followup.md) for the current workflow, including
 automatic checks on Solve and normal-force authoring.
 
-Status: **Pending owner review**. Implementation and automated checks complete;
-manual usability acceptance is not inferred. The owner requested all four plans
-as one batch with incremental commits. Task 28 remains outside this batch.
+Status: **Accepted by the owner on 2026-09-10**, including the final imperial-unit
+and toolbar adjustments in `0ed6e31`. The checklist below is the original review
+reference; the [follow-up record](24-27-followup.md) contains the accepted behavior.
+Task 28 remains outside this batch.
 
 Prior accepted work was fast-forwarded into `main` and pushed before creating
-`work/plans-24-27` from `b947a84`. The new work stays on that branch for this review.
+`work/plans-24-27` from `b947a84`. The approved group is merged back into main.
 Plans 24, 25, and 26 are committed as `447e90a`, `a500755`, and `4e332c8`;
 the final implementation commit contains plan 27 and grouped regression fixes.
-Use `git log main..work/plans-24-27` to inspect the complete commit group.
+Use `git log b947a84..work/plans-24-27` to inspect the complete commit group.
 
 Open `web/index.html` directly, or run `python3 tools/serve.py` and open
 `http://127.0.0.1:8000/web/`. Allow roughly 40–60 minutes for the combined checks.
@@ -125,5 +126,5 @@ Verified 2026-09-09 on Linux x86_64, cached Chromium 1234 with software WebGL:
   accessibility, memory retention, repeated mesh work, and error recovery.
   No native kernel, dependency, vendor, or generated runtime changes.
 
-Owner decision and corrections: **Pending**. M24, M25, M26, and M27 remain
-unchecked until the owner provides the combined manual result.
+Owner decision: **Approved with the final requested adjustments**, implemented in
+`0ed6e31` and verified. M24, M25, M26, and M27 are accepted.

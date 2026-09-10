@@ -57,10 +57,10 @@ merely mirror implementation or turn each mechanical step into an approval gate.
 21. [x] [Responsive workspace and overlays](21-responsive-workspace-and-overlays.md) — implemented and M21 accepted 2026-09-08
 22. [x] [Stress extrema and result clarity](22-stress-extrema-and-result-clarity.md) — implemented and M22 accepted 2026-09-08
 23. [x] [Orthographic camera and interactive gizmo](23-orthographic-camera-and-view-gizmo.md) — implemented and M23 accepted 2026-09-08
-24. [ ] [Contextual display controls and stress legend](24-display-controls-and-stress-legend.md) — implemented; grouped owner review pending
-25. [ ] [Support/load preview authoring](25-support-and-load-preview-authoring.md) — implemented; grouped owner review pending
-26. [ ] [Setup workflow and solve checks](26-setup-workflow-and-solve-checks.md) — implemented; grouped owner review pending
-27. [ ] [Engineering edit undo/redo](27-engineering-edit-undo-and-redo.md) — implemented; grouped owner review pending
+24. [x] [Contextual display controls and stress legend](24-display-controls-and-stress-legend.md) — implemented and accepted 2026-09-10
+25. [x] [Support/load preview authoring](25-support-and-load-preview-authoring.md) — implemented and accepted 2026-09-10
+26. [x] [Setup workflow and solve checks](26-setup-workflow-and-solve-checks.md) — implemented and accepted 2026-09-10
+27. [x] [Engineering edit undo/redo](27-engineering-edit-undo-and-redo.md) — implemented and accepted 2026-09-10
 28. [ ] [STL feasibility and surface patch contract](28-stl-feasibility-and-surface-patch-contract.md)
 29. [ ] [STL import, meshing, and validation](29-stl-import-meshing-and-validation.md)
 30. [ ] [Integrated usability and pre-release regression](30-integrated-usability-and-pre-release-regression.md)
@@ -83,7 +83,9 @@ this batch only. [The combined review packet](../reviews/21-23-review.md) record
 with manual checks after the group and commits along the way. These four plans
 were executed in the current agent without subagents. Their per-package stops
 are replaced by [the grouped review and follow-up](../reviews/24-27-followup.md);
-M24–M27 remain pending. Task 28 awaits that review. Later gates remain unchanged.
+The owner approved M24–M27 on 2026-09-10 with the final imperial-unit and toolbar
+adjustments, implemented in `0ed6e31`. Task 28 is eligible for the next batch;
+later gates remain unchanged.
 
 This is a milestone schedule, not calendar appointments or automated reminders.
 M21–M23 are **Accepted**; later reviews remain **Pending**. Reserve review time when the preceding implementation
