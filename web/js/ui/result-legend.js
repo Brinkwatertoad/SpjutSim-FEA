@@ -11,7 +11,8 @@
   }
   function resultFieldDefinition(field, presentation) {
     var stressUnit = presentation.stressUnit || 'MPa', lengthUnit = presentation.lengthUnit || 'mm';
-    var stressScale = {Pa:1,kPa:1e3,MPa:1e6}[stressUnit], lengthScale = {m:1,mm:1e-3}[lengthUnit];
+    var scales = root.SpjutsimFEA.RESULT_UNIT_SCALES;
+    var stressScale = scales[stressUnit], lengthScale = scales[lengthUnit];
     var definitions = {
       vonMises:['von Mises',stressUnit,stressScale], maxPrincipal:['Max principal (smoothed)',stressUnit,stressScale],
       minPrincipal:['Min principal (smoothed)',stressUnit,stressScale], factorOfSafety:['Yield FoS (smoothed)','',1],

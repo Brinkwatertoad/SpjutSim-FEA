@@ -82,7 +82,7 @@
     assert(!api.shouldHandleViewportArrowKey(arrowEvent(document.body), canvas, document), 'open menu did not retain arrow-key ownership');
     document.getElementById('opener').setAttribute('aria-expanded', 'false');
     var beforeFit = viewport.orbitDistance;
-    viewport.fitCurrentModel();
+    viewport.fitCurrentModel({animate:false});
     assert(viewport.orbitDistance !== beforeFit, 'fit view did not reframe the model');
     viewport.resetView({animate:false});
     assert(viewport.viewTarget.distanceTo(initialTarget) < 0.000001, 'reset view did not restore the initial target');
@@ -249,6 +249,12 @@
     root.cancelAnimationFrame = function () { callback = null; cancelled = true; };
     root.matchMedia = function () { return { matches: false }; };
     try {
+      viewport.panByPixels(50,30);viewport.zoomByWheelDelta(300);
+      var fitStart=viewport.camera.position.clone(),fitRotation=viewport.camera.quaternion.clone();
+      viewport.fitCurrentModel();
+      assert(viewport.viewAnimationFrame===97 && viewport.camera.position.equals(fitStart),'Fit model jumped instead of animating');
+      callback(0);callback(90);assert(!viewport.camera.position.equals(fitStart),'Fit animation did not advance');callback(180);
+      assert(viewport.viewTarget.distanceTo(viewport.modelCenter)<1e-10 && viewport.camera.quaternion.angleTo(fitRotation)<1e-7,'Fit changed viewing angle or failed to center');
       viewport.setViewOrientation('+x');
       assert(viewport.viewAnimationFrame === 97, 'view transition was not animated');
       callback(0); callback(90);
@@ -271,6 +277,7 @@
       root.matchMedia = function () { return { matches: true }; };
       viewport.resetView();
       assert(viewport.viewAnimationFrame === null, 'Reduced-motion reset was animated');
+      viewport.fitCurrentModel();assert(viewport.viewAnimationFrame===null,'Reduced-motion fit was animated');
       viewport.setViewOrientation('+y');
       assert(viewport.viewAnimationFrame === null && viewport.camera.position.y > viewport.viewTarget.y &&
         Math.abs(viewport.camera.position.z - viewport.viewTarget.z) < 1e-12, 'reduced motion did not apply the view immediately');

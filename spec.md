@@ -2804,3 +2804,24 @@ Material summaries put E in GPa at the left of the second line; Poisson's ratio
 remains editable in the material form. Empty Supports/Loads offer Add support… /
 Add load… rows. The CAD editor has no face-selection status or Clear selection
 button; viewport selection and background/Escape deselection remain available.
+
+### M24–M27 approval adjustments (2026-09-10)
+
+Result stress units include Pa, kPa, MPa, psi, and ksi; displacement units include
+m, mm, and inch (`in`). Stored results and color limits remain SI. Conversion
+uses the international pound and inch with standard gravity: 1 psi =
+0.45359237 × 9.80665 / 0.0254² Pa, 1 ksi = 1000 psi, and 1 in = 0.0254 m.
+Legends, manual limits, result summaries, and point displacement values follow the
+selected units without invalidating analysis. Coordinate labels retain explicit m.
+
+Fit model uses a brief, cancellable camera animation that preserves the viewing
+angle and honors reduced-motion preferences. Its Truss zoom-to-fit icon is below
+and left of the view gizmo, opposite Reset, with the same hover/focus styling.
+Undo, Redo, Save, Export, Setup, and Results reuse the Truss action icons; Setup
+and Results retain text labels, while Save/Export remain disabled placeholders.
+The Setup toggle replaces the panel's duplicate title. Add material has no
+“required before solving” subtitle. Edit shows Ctrl+Z and Ctrl+Y beside its dynamic
+Undo/Redo descriptions.
+
+The owner approved M24–M27 with these adjustments. Acceptance covers this grouped
+workflow; plans 28–30 and the final release audit remain separate gates.

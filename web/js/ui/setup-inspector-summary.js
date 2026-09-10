@@ -36,7 +36,7 @@
 
   function summarizeMaterialRow(documentState) {
     var material = documentState.material;
-    if (!material) { return row('material', 'material', 'Add material…', 'Required before solving', 'No material'); }
+    if (!material) { return row('material', 'material', 'Add material…', '', 'No material'); }
     return row('material', 'material', material.name || 'Unnamed material',
       'E: ' + formatNumber(material.youngsModulusPa / 1e9) + ' GPa',
       material.densityKgM3 ? formatNumber(material.densityKgM3) + ' kg/m³' : 'Density not set');

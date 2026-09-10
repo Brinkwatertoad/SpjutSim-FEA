@@ -6,7 +6,8 @@
     var api = root.SpjutsimFEA;
     [[0, 'N', '0 N'], [-0, 'N', '0 N'], [-1234.567, 'N', '-1235 N'],
       [1e-12, 'N', '1e-12 N'], [1e12, 'Pa', '1e+12 Pa'], [1234567, 'MPa', '1.235 MPa'],
-      [0.000012345, 'mm', '0.01235 mm']].forEach(function (item) {
+      [0.000012345, 'mm', '0.01235 mm'], [6894.757293168361, 'psi', '1 psi'],
+      [6894757.293168361, 'ksi', '1 ksi'], [0.0254, 'in', '1 in']].forEach(function (item) {
       assert(api.formatResultMagnitude(item[0], item[1]) === item[2], 'incorrect magnitude: ' + item[0] + ' ' + item[1]);
     });
     assert(api.formatResultNumber(Infinity) === '∞', 'unbounded FoS was presented as a finite value');

@@ -56,6 +56,12 @@
     assert(document.getElementById('legend-status').hidden && document.getElementById('result-legend').title.includes('0.004 MPa'), 'Smoothing detail is not confined to the tooltip');
     assert(api.getResultDisplayRange(result, 'vonMises').maximum === 5000 && result.ranges.vonMises.maximum === 4000, 'Display range replaced boundary metadata');
     assert(api.getResultDisplayRange(result, 'factorOfSafety') === result.ranges.factorOfSafety, 'Other field ranges changed');
+    var imperial = {mode:'stress',field:'vonMises',stressUnit:'psi',lengthUnit:'in'};
+    ui.renderResults({results:result,viewportPresentation:imperial});ui.renderLegend({results:result,viewportPresentation:imperial});
+    assert(document.getElementById('peak-headline').textContent.includes('0.7252 psi') && document.getElementById('legend-title').textContent==='von Mises (psi)', 'Imperial stress units do not agree between summary and legend');
+    assert(document.getElementById('results-values').textContent.includes('3.937e-5 in'), 'Displacement summary omitted inch conversion');
+    assert(api.resultFieldDefinition('ux',imperial)[2]===0.0254 && Math.abs(api.resultFieldDefinition('maxPrincipal',{stressUnit:'ksi'})[2]-6894757.293168361)<1e-8,'Imperial field scales are incorrect');
+    assert(JSON.stringify(result)===before,'Display units mutated SI result data');
     // Exercise the actual color-buffer update, independently of camera/WebGL startup.
     var renderer = Object.create(api.ViewportController.prototype);
     var geometry = new THREE.BufferGeometry();

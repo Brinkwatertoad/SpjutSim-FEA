@@ -8,7 +8,7 @@ v1 is unreleased. The approved interface, result-clarity, and bounded STL work
 is tracked in [plans 21–30](docs/plans/README.md). Plans 21–23 are implemented
 and accepted in the [combined owner review](docs/reviews/21-23-review.md) on
 2026-09-08; plans
-24–27 are implemented pending the grouped owner review; 28–30 remain ahead of the final plan 20 candidate audit. No v1 acceptance is
+24–27 are implemented and accepted in the [grouped owner review](docs/reviews/24-27-followup.md) on 2026-09-10; 28–30 remain ahead of the final plan 20 candidate audit. No v1 acceptance is
 implied by passing automated checks.
 
 ## Run locally
@@ -319,8 +319,8 @@ sizes, rename/undo, and stale-check recovery. The
 checks; automated passes do not constitute manual acceptance.
 
 
-The M24–M27 manual-review corrections are ready for another
-[combined check](docs/reviews/24-27-followup.md). Deformation opens with Auto scale.
+The M24–M27 manual-review corrections are accepted in the
+[combined review](docs/reviews/24-27-followup.md). Deformation opens with Auto scale.
 Editing either color limit selects Manual. Drag the legend title or use its
 arrow keys to move it; drag the bottom-right handle or use its arrow keys to
 resize it. Both orientations remember their own size/position and stay within
@@ -348,3 +348,9 @@ color limits to Auto. Display contains Perspective and separate support/load/gra
 arrow visibility. File → Settings → Controls allows middle-button rotation or pan.
 Help → About contains application information and license notices. Empty Supports
 and Loads rows open their corresponding editors directly.
+
+Result display units include psi/ksi for stress and inch for displacement, with
+SI storage unchanged. Legends, manual limits, point details, and Results summaries
+follow the selected units. Fit model is the icon below-left of the view gizmo;
+it animates to fit while preserving the viewing angle. Setup/Results and the
+history/save/export toolbar use the Truss icons, and Edit shows Ctrl+Z/Ctrl+Y.

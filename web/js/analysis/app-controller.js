@@ -63,8 +63,8 @@
     }
     return {
       mode: presentation.mode, displayStyle: presentation.displayStyle === 'lines' ? 'shaded-edges' : presentation.displayStyle,
-      stressUnit: ['Pa','kPa','MPa'].indexOf(presentation.stressUnit) >= 0 ? presentation.stressUnit : 'MPa',
-      lengthUnit: presentation.lengthUnit === 'm' ? 'm' : 'mm',
+      stressUnit: ['Pa','kPa','MPa','psi','ksi'].indexOf(presentation.stressUnit) >= 0 ? presentation.stressUnit : 'MPa',
+      lengthUnit: ['m','mm','in'].indexOf(presentation.lengthUnit) >= 0 ? presentation.lengthUnit : 'mm',
       legendOrientation: presentation.legendOrientation === 'horizontal' ? 'horizontal' : 'vertical',
       colorRange: root.SpjutsimFEA.validateColorRange(presentation.colorRange, presentation.field || 'vonMises'),
       field: presentation.field || (presentation.mode === 'deformation' ? 'displacementMagnitude' : 'vonMises'),

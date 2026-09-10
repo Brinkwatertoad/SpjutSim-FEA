@@ -60,6 +60,10 @@
       doc.getElementById('color-range-lock').checked=true;doc.getElementById('color-range-lock').dispatchEvent(new win.Event('change',{bubbles:true}));
       fill('stress-unit','Pa');
       assert(app.document.viewportPresentation.colorRange.maximum===500,'Unit change altered locked SI range');
+      fill('stress-unit','psi');assert(app.document.viewportPresentation.colorRange.maximum===500 && doc.getElementById('legend-title').textContent.includes('(psi)'),'psi changed locked SI limits or omitted legend units');
+      fill('color-range-max','0.25');assert(Math.abs(app.document.viewportPresentation.colorRange.maximum-1723.6893232920903)<1e-9,'Manual psi limit did not convert to SI');
+      fill('stress-unit','ksi');assert(Math.abs(Number(doc.getElementById('color-range-max').value)-0.00025)<1e-14,'ksi switch changed manual range');
+      fill('stress-unit','Pa');fill('color-range-max','500');
       assert(app.document.results===result && app.document.analysisRevision===revision && !viewport.resultDisplay.userData.lines.visible,'Display invalidated result or forced mesh overlay');
       fill('legend-orientation','horizontal');assert(doc.querySelectorAll('#legend-ticks span').length===2,'Horizontal key contains intermediate labels');
       fill('result-field','maxPrincipal');assert(app.document.viewportPresentation.colorRange.mode==='automatic' && !app.document.viewportPresentation.colorRange.locked,'Field change reused incompatible limits');
@@ -87,6 +91,9 @@
       var probe=viewport.pickResultAtPointer({clientX:canvasRect.left+(point.x+1)*canvasRect.width/2,clientY:canvasRect.top+(1-point.y)*canvasRect.height/2});
       assert(probe && probe.weights.some(function(v){return Math.abs(v-1/3)>0.01;}),'Probe snapped to triangle center');
       viewport.selectResultPoint(probe);assert(viewport.peakMarker && !doc.getElementById('probe-output').hidden,'Clicked point has no visible marker/details');
+      fill('stress-unit','psi');fill('length-unit','in');
+      assert(doc.getElementById('probe-output').textContent.includes(' psi') && doc.getElementById('probe-output').textContent.includes(' in') && app.document.results===result,'Imperial point details changed the result or retained SI display units');
+      fill('stress-unit','Pa');fill('length-unit','mm');
       assert(doc.getElementById('probe-output').getBoundingClientRect().height<250,'Point detail label stretches across the viewport');
       click('#locate-peak-button');assert(viewport.selectedResultPoint.isInterior && doc.getElementById('probe-output').textContent.includes('interior'),'Peak uses different point details');
       doc.body.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));assert(!viewport.selectedResultPoint && doc.getElementById('probe-output').hidden,'Escape did not clear peak');
@@ -134,6 +141,7 @@
       assert(migrationUI.oldViewport.analysisOverlay.children.length && migrationUI.newViewport.analysisOverlay.children.some(function(g){return g.userData.descriptor.preview;}),'Transfer preview missing on one of the models');
       migrationUI.recordMapping();assert(migrationUI.newViewport.analysisOverlay.children.some(function(g){return !g.userData.descriptor.preview;}),'Mapped transfer assignment disappeared');migrationUI.cancel();
       app.renameAssignment('load',app.document.loads[0].id,'Renamed force');click('#undo-button');
+      assert(doc.querySelector('[data-ui-menu-action="undo"] .ui-menu-shortcut').textContent==='Ctrl+Z' && doc.querySelector('[data-ui-menu-action="redo"] .ui-menu-shortcut').textContent==='Ctrl+Y','History update removed menu shortcuts');
       assert(app.document.loads[0].name==='Axial force' && app.document.results===result,'Rename undo invalidated numerical state');click('#redo-button');
       app.replaceLoad(app.document.loads[0].id,{type:'total-force',forceN:[1500,0,0]});click('#undo-button');
       assert(app.document.loads[0].forceN[0]===1000 && app.document.mesh===mesh && !app.document.results,'Engineering undo restored stale result or lost mesh');

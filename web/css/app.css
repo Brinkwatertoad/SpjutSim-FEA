@@ -164,8 +164,10 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 .fea-output-list { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .fea-output-list dt { overflow-wrap: anywhere; }
 
-.fea-gizmo-bounds #reset-view-button { left: 96px; top: 102px; width: 28px; height: 28px; border-radius: 4px; display: grid; place-items: center; }
-.fea-gizmo-bounds #reset-view-button:hover { background: var(--surface, #202329); }
+.fea-gizmo-bounds :is(#fit-view-button, #reset-view-button) { top: 102px; width: 28px; height: 28px; border-radius: 4px; display: grid; place-items: center; }
+.fea-gizmo-bounds #reset-view-button { left: 96px; }
+.fea-gizmo-bounds #fit-view-button { left: 16px; }
+.fea-gizmo-bounds :is(#fit-view-button, #reset-view-button):hover { border-color: var(--border, #3a3e46); background: var(--surface, #202329); }
 
 /* Match Truss disclosure triangles: right when closed, down when expanded. */
 .fea-chevron { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; flex: 0 0 14px; font-size: 14px; line-height: 1; transition: transform 0.18s ease; }
@@ -248,3 +250,7 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 .fea-about-dialog { width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); box-sizing: border-box; overflow: auto; padding: 24px; color: var(--ui-color-text); background: var(--ui-color-surface); border: 1px solid var(--ui-color-border); border-radius: var(--ui-radius-xl); }
 .fea-about-dialog::backdrop { background: #0008; }
 .fea-about-dialog form { text-align: right; }
+
+/* Action icon geometry matches the Truss toolbar. */
+.fea-action-icon { width: 20px; height: 20px; flex: none; display: block; }
+.fea-actionbar button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }

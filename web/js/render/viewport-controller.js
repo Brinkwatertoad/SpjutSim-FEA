@@ -640,20 +640,21 @@
     this.applyOrbitCamera();
   };
 
+  function fitOrbitDistance(camera, extent, minimum, maximum) {
+    var verticalFov = camera.fov * Math.PI / 180;
+    var horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * Math.max(camera.aspect,0.01));
+    return root.SpjutsimFEA.clampViewportOrbitDistance(extent * 0.95 / Math.sin(Math.min(verticalFov,horizontalFov) / 2),minimum,maximum);
+  }
+
   ViewportController.prototype.fitModel = function (center, extent, makeResetView) {
     this.cancelViewAnimation();
     var safeExtent = Math.max(Number(extent) || 0, 0.000001);
-    var verticalFov = this.camera.fov * Math.PI / 180;
-    var horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * Math.max(this.camera.aspect, 0.01));
-    var limitingFov = Math.min(verticalFov, horizontalFov);
     this.modelCenter.copy(center || new root.THREE.Vector3());
     this.viewTarget.copy(this.modelCenter);
     this.modelExtent = safeExtent;
     this.minimumOrbitDistance = Math.max(safeExtent * 0.02, 0.000001);
     this.maximumOrbitDistance = Math.max(safeExtent * 100, 10);
-    this.orbitDistance = root.SpjutsimFEA.clampViewportOrbitDistance(
-      safeExtent * 0.95 / Math.sin(limitingFov / 2), this.minimumOrbitDistance, this.maximumOrbitDistance
-    );
+    this.orbitDistance = fitOrbitDistance(this.camera,safeExtent,this.minimumOrbitDistance,this.maximumOrbitDistance);
     if (makeResetView !== false) {
       this.orbitAzimuth = Math.PI / 4;
       this.orbitPolar = Math.acos(1 / Math.sqrt(3));
@@ -663,8 +664,13 @@
     this.applyOrbitCamera();
   };
 
-  ViewportController.prototype.fitCurrentModel = function () {
-    this.fitModel(this.modelCenter, this.modelExtent, false);
+  ViewportController.prototype.fitCurrentModel = function (options) {
+    var target = this.modelCenter.clone();
+    var distance = fitOrbitDistance(this.camera,this.modelExtent,this.minimumOrbitDistance,this.maximumOrbitDistance);
+    var eyeDistance = this.camera.isOrthographicCamera ? Math.max(distance,this.modelExtent*2) : distance;
+    var finalCamera = this.camera.clone();
+    finalCamera.position.set(0,0,eyeDistance).applyQuaternion(this.camera.quaternion).add(target);
+    this.animateViewTo(finalCamera,target,distance,options);
   };
 
   ViewportController.prototype.observeCameraInteraction = function () {

@@ -434,7 +434,10 @@
       var undo=button.dataset.historyAction === 'undo', label=undo ? state.undoLabel : state.redoLabel;
       button.disabled=undo ? !state.canUndo : !state.canRedo;
       var text=(undo ? 'Undo' : 'Redo') + (label ? ' “' + label + '”' : '');
-      if (button.dataset.uiMenuAction) { button.textContent=text; }
+      if (button.dataset.uiMenuAction) {
+        var labelElement = button.querySelector('[data-history-label]');
+        if (labelElement) { labelElement.textContent=text; } else { button.textContent=text; }
+      }
       button.setAttribute('aria-label',text); button.title=button.disabled ? state.message : text;
     });
     var status=document.getElementById('history-status');
@@ -937,19 +940,23 @@
     if (this.resultsSummary) { this.resultsSummary.hidden = !result; }
     if (this.diagnosticsSummary) { this.diagnosticsSummary.hidden = !result; }
     if (!result) { if (this.peakLocationStatus) { this.peakLocationStatus.textContent = ''; } return; }
-    if (this.peakHeadline) { this.peakHeadline.textContent = 'Peak von Mises — unaveraged solver samples: ' + formatNumber(result.extrema.rawVonMisesMax.valuePa / 1e6, 'MPa'); }
+    var presentation = documentState.viewportPresentation || {};
+    var stressUnit = presentation.stressUnit || 'MPa', lengthUnit = presentation.lengthUnit || 'mm';
+    function stress(value) { return root.SpjutsimFEA.formatResultMagnitude(value,stressUnit); }
+    function displacement(value) { return root.SpjutsimFEA.formatResultMagnitude(value,lengthUnit); }
+    if (this.peakHeadline) { this.peakHeadline.textContent = 'Peak von Mises — unaveraged solver samples: ' + stress(result.extrema.rawVonMisesMax.valuePa); }
     if (this.yieldHeadline) { this.yieldHeadline.textContent = result.factorOfSafety ? 'Yield FoS — unaveraged solver samples: ' + formatNumber(result.factorOfSafety.rawMinimum.value) : 'Yield FoS unavailable — supply a tensile or compressive yield strength.'; }
     if (this.trustHeadline) { this.trustHeadline.textContent = 'Convergence: ' + convergenceStatusMessage(documentState.convergenceStudy) + ' Review support/load concentrations for possible singularities; one solve does not establish safety.'; }
     var entries = [
       ['Element', result.elementType.toUpperCase()],
       ['System', result.meshStatistics.nodeCount + ' nodes / ' + result.meshStatistics.elementCount + ' elements / ' + result.meshStatistics.nodeCount * 3 + ' DOF'],
-      ['Max displacement', formatNumber(result.extrema.maxDisplacement.valueM * 1000, 'mm')],
+      ['Max displacement', displacement(result.extrema.maxDisplacement.valueM)],
       ['Max displacement location', result.extrema.maxDisplacement.locationM.map(function (v) { return formatNumber(v, 'm'); }).join(', ')],
-      ['Peak von Mises — unaveraged solver samples', formatNumber(result.extrema.rawVonMisesMax.valuePa / 1e6, 'MPa')],
+      ['Peak von Mises — unaveraged solver samples', stress(result.extrema.rawVonMisesMax.valuePa)],
       ['Interior solver sample location', result.extrema.rawVonMisesMax.locationM.map(function (v) { return formatNumber(v, 'm'); }).join(', ')],
-      ['Smoothed surface von Mises max', formatNumber(result.extrema.displayedVonMisesMax.valuePa / 1e6, 'MPa')],
-      ['Max principal', formatNumber(result.extrema.rawMaxPrincipal.valuePa / 1e6, 'MPa')],
-      ['Min principal', formatNumber(result.extrema.rawMinPrincipal.valuePa / 1e6, 'MPa')],
+      ['Smoothed surface von Mises max', stress(result.extrema.displayedVonMisesMax.valuePa)],
+      ['Max principal', stress(result.extrema.rawMaxPrincipal.valuePa)],
+      ['Min principal', stress(result.extrema.rawMinPrincipal.valuePa)],
       ['Applied force', result.equilibrium.totalAppliedForceN.map(function (v) { return formatNumber(v, 'N'); }).join(', ')],
       ['Reaction', result.equilibrium.totalReactionN.map(function (v) { return formatNumber(v, 'N'); }).join(', ')],
       ['Strain energy', formatNumber(result.solverStatistics.strainEnergyJ, 'J')],
@@ -960,7 +967,7 @@
       entries.splice(7, 0,
         ['Yield FoS — unaveraged samples', formatNumber(result.factorOfSafety.rawMinimum.value)],
         ['Smoothed surface minimum FoS (uncapped)', formatNumber(result.factorOfSafety.displayedMinimum)],
-        ['FoS criterion', 'von Mises yield · ' + formatNumber(result.factorOfSafety.strength.valuePa / 1e6, 'MPa')]);
+        ['FoS criterion', 'von Mises yield · ' + stress(result.factorOfSafety.strength.valuePa)]);
     }
     replaceDefinitionList(this.resultsValues, entries);
     replaceDefinitionList(this.diagnosticsValues, [
@@ -1060,7 +1067,7 @@
     this.legendStatus.textContent = legendRangeStatus(fieldRange, presentation.deformationScale);
     this.resultLegend.title = presentation.field === 'vonMises' ?
       'Colors show smoothed surface values. ' + (presentation.colorRange && (presentation.colorRange.mode === 'manual' || presentation.colorRange.locked) ? 'User color limits; clipped values use endpoint colors. ' : 'Scale: zero to the whole-model solver-sample peak. ') + 'Smoothed surface maximum: ' +
-        formatNumber(result.ranges.vonMises.maximum / 1e6, 'MPa') + '.' : '';
+        root.SpjutsimFEA.formatResultMagnitude(result.ranges.vonMises.maximum,presentation.stressUnit || 'MPa') + '.' : '';
   };
 
   UIController.prototype.positionProbe = function (point) {
@@ -1077,7 +1084,7 @@
     if (!probe) { return; }
     this.probeOutput.textContent = probe.fieldLabel + ': ' + formatNumber(probe.fieldValue / probe.unitScale,probe.unit) +
       '\nUndeformed xyz: ' + probe.coordinatesM.map(function(v){return formatNumber(v,'m');}).join(', ') +
-      (probe.displacementM ? '\nu: '+probe.displacementM.map(function(v){return formatNumber(v*1000,'mm');}).join(', ') : '') +
+      (probe.displacementM ? '\nu: '+probe.displacementM.map(function(v){return root.SpjutsimFEA.formatResultMagnitude(v,(this.controller.document.viewportPresentation || {}).lengthUnit || 'mm');},this).join(', ') : '') +
       (probe.faceId ? '\nFace: '+probe.faceId : '\nInternal recovery sample; shown through the surface.') + '\nClick background or Escape to clear.';
 
   };
