@@ -120,7 +120,7 @@
     ['ux', 'uy', 'uz'].forEach(function (axis) {
       byId('support-' + axis + '-enabled').addEventListener('change', function () { self.renderSupportComponents(); });
     });
-    [this.supportForm, this.loadForm].forEach(function (form) {
+    [this.supportForm, this.loadForm, this.gravityForm].forEach(function (form) {
       ['input','change'].forEach(function (eventName) { form.addEventListener(eventName, function () { self.updateDraftFromForm(); }); });
     });
     this.loadForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveLoad(); });
@@ -132,11 +132,16 @@
     this.removeLoadItemButton.addEventListener('click', function () { self.removeActiveLoad(); });
     if (byId('load-force-mode')) { byId('load-force-mode').addEventListener('change',function(){self.renderLoadType();}); }
     if (byId('setup-gravity-button')) { byId('setup-gravity-button').addEventListener('click',function(){self.openInspectorRow('gravity','gravity',this);}); }
-    if (byId('gravity-direction')) { byId('gravity-direction').addEventListener('change',function(){
+    if (byId('gravity-direction')) { ['input','change'].forEach(function(eventName){byId('gravity-direction').addEventListener(eventName,function(){
       if(this.value==='custom')return;var direction=this.value,magnitude=Math.hypot.apply(Math,['x','y','z'].map(function(a){return Number(byId('gravity-'+a).value);}))||9.80665;
       ['x','y','z'].forEach(function(a){byId('gravity-'+a).value=direction[1]===a ? (direction[0]==='-'?-1:1)*magnitude : 0;});
-    }); }
-    if (byId('gravity-enabled')) { byId('gravity-enabled').addEventListener('change',function(){if(this.checked && byId('gravity-visible'))byId('gravity-visible').checked=true;}); }
+    });}); }
+    byId('cancel-gravity-edit').addEventListener('click',function(){self.closeInspectorRow({restoreFocus:true,cancelEdit:true});});
+    byId('remove-gravity-button').addEventListener('click',function(){
+      self.controller.cancelAssignmentDraft();
+      self.controller.replaceGravity(Object.assign({},self.controller.document.gravity,{enabled:false}));
+      self.closeInspectorRow({restoreFocus:true,cancelEdit:false,message:'Gravity removed.'});
+    });
     if (byId('gravity-visible')) { byId('gravity-visible').addEventListener('change',function(){self.controller.replaceViewportPresentation(Object.assign({},self.controller.document.viewportPresentation,{showGravity:this.checked}));}); }
     this.gravityForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveGravity(); });
     if (this.rotateModelPositiveButton) { this.rotateModelPositiveButton.addEventListener('click', function () { self.rotateModel(1); }); }
@@ -545,36 +550,35 @@
       : (documentState.loads.length ? documentState.loads.length + ' load item(s) defined.' : 'Select one or more faces, then add a load.'));
   };
 
+  AnalysisAuthoringUI.prototype.readGravity = function () {
+    return {enabled:true,accelerationMS2:['x','y','z'].map(function (axis) { return readNumber('gravity-'+axis,'gravity '+axis.toUpperCase()); })};
+  };
+
   AnalysisAuthoringUI.prototype.saveGravity = function () {
     try {
-      var enabled = byId('gravity-enabled').checked;
-      this.controller.replaceGravity({
-        enabled: enabled,
-        accelerationMS2: ['x', 'y', 'z'].map(function (axis) { return readNumber('gravity-' + axis, 'gravity ' + axis.toUpperCase()); })
-      });
-      if(byId('gravity-visible'))this.controller.replaceViewportPresentation(Object.assign({},this.controller.document.viewportPresentation,{showGravity:byId('gravity-visible').checked}));
-      this.gravityFeedback = { message: enabled ? 'Gravity enabled.' : 'Gravity disabled.' };
-      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: this.gravityFeedback.message });
+      this.controller.updateAssignmentDraft({definition:this.readGravity()});
+      this.controller.commitAssignmentDraft();
+      this.gravityFeedback = null;
+      this.closeInspectorRow({restoreFocus:true,cancelEdit:false,message:'Gravity applied.'});
     } catch (error) {
-      this.gravityFeedback = { error: true, message: error.message };
+      this.gravityFeedback = {error:true,message:error.message};
       this.render(this.controller.document);
     }
   };
 
   AnalysisAuthoringUI.prototype.renderGravity = function (documentState) {
-    var gravity = documentState.gravity;
-    if(byId('gravity-visible')){byId('gravity-visible').checked=documentState.viewportPresentation.showGravity!==false;byId('gravity-visible').disabled=!gravity.enabled;}
-    if(byId('gravity-direction') && !this.gravityForm.contains(document.activeElement)){
-      var nonzero=gravity.accelerationMS2.map(function(v,i){return v ? i : -1;}).filter(function(i){return i>=0;});
-      byId('gravity-direction').value=nonzero.length===1 ? (gravity.accelerationMS2[nonzero[0]]<0?'-':'+')+'xyz'[nonzero[0]] : 'custom';
+    var draft = documentState.assignmentDraft;
+    var gravity = draft && draft.kind === 'gravity' ? draft.definition : documentState.gravity;
+    byId('gravity-visible').checked = documentState.viewportPresentation.showGravity !== false;
+    byId('gravity-visible').disabled = !documentState.gravity.enabled;
+    if (!this.gravityForm.contains(document.activeElement) && gravity.accelerationMS2) {
+      var nonzero = gravity.accelerationMS2.map(function(v,i){return v ? i : -1;}).filter(function(i){return i>=0;});
+      byId('gravity-direction').value = nonzero.length===1 ? (gravity.accelerationMS2[nonzero[0]]<0?'-':'+')+'xyz'[nonzero[0]] : 'custom';
+      ['x','y','z'].forEach(function(axis,i){byId('gravity-'+axis).value=String(gravity.accelerationMS2[i]);});
     }
-    if (document.activeElement !== byId('gravity-enabled') && !this.gravityForm.contains(document.activeElement)) {
-      byId('gravity-enabled').checked = gravity.enabled;
-      byId('gravity-x').value = String(gravity.accelerationMS2[0]);
-      byId('gravity-y').value = String(gravity.accelerationMS2[1]);
-      byId('gravity-z').value = String(gravity.accelerationMS2[2]);
-    }
-    setFeedback(this.gravityStatus, this.gravityFeedback, gravity.enabled ? 'Gravity is active.' : 'Gravity is off.');
+    byId('apply-gravity-button').textContent = documentState.gravity.enabled ? 'Save changes' : 'Apply gravity';
+    byId('remove-gravity-button').hidden = !documentState.gravity.enabled;
+    setFeedback(this.gravityStatus,this.gravityFeedback,documentState.gravity.enabled ? 'Gravity is active.' : 'Apply to add gravity to the calculation.');
   };
 
   AnalysisAuthoringUI.prototype.rotateModel = function (direction) {
@@ -629,9 +633,8 @@
     if (this.resetModelOrientationButton && documentState.geometry) {
       this.resetModelOrientationButton.disabled = documentState.geometry.orientation.operations.length === 0;
     }
-    setFeedback(this.modelOrientationStatus, this.orientationFeedback, disabled
-      ? 'Import geometry to adjust orientation.'
-      : (documentState.geometry.orientation.operations.length ? documentState.geometry.orientation.operations.join(' · ') : 'Original orientation.'));
+    setFeedback(this.modelOrientationStatus,this.orientationFeedback,'');
+    if (this.modelOrientationStatus) { this.modelOrientationStatus.hidden = !this.orientationFeedback; }
   };
 
   AnalysisAuthoringUI.prototype.openInspectorRow = function (kind, itemId, opener) {
@@ -663,6 +666,13 @@
     this.announceSetup('Editing ' + (selectedItem ? selectedItem.name : (itemId === 'new' ? 'new ' + kind : kind)) + '.');
     if (kind === 'support' && itemId !== 'new') { this.beginSupportEdit(itemId); }
     else if (kind === 'load' && itemId !== 'new') { this.beginLoadEdit(itemId); }
+    if (kind === 'gravity') {
+      this.gravityFeedback = null;
+      try {
+        this.controller.beginAssignmentDraft('gravity',this.controller.document.gravity.enabled ? 'gravity' : null,
+          Object.assign({},this.controller.document.gravity,{enabled:true}));
+      } catch (error) { this.announceSetup(error.message); }
+    }
     if (kind === 'support' || kind === 'load') {
       try {
         var definition;
@@ -678,7 +688,7 @@
     var draft = this.controller.document.assignmentDraft;
     if (!draft) { return; }
     var definition;
-    try { definition = draft.kind === 'support' ? this.readSupport() : this.readLoad(); }
+    try { definition = draft.kind === 'gravity' ? this.readGravity() : draft.kind === 'support' ? this.readSupport() : this.readLoad(); }
     catch (error) { definition = {type:draft.kind === 'support' ? 'support' : this.loadType.value, inputError:error.message}; }
     // The draft owns the engineering definition; DOM fields retain incomplete input text.
     if (definition.name === undefined && draft.definition.name !== undefined) { definition.name = draft.definition.name; }
@@ -749,8 +759,8 @@
     this.setupLoadList.replaceChildren();
     this.setupMeshList.replaceChildren();
     var definitions = root.SpjutsimFEA.buildSetupInspectorRows(documentState).slice();
-    if (this.activeInspectorKind === 'gravity' && !documentState.gravity.enabled) { definitions.push({kind:'gravity',itemId:'gravity',primaryText:'Gravity',secondaryText:'Disabled',metaText:'Body load',ariaLabel:'Gravity settings'}); }
-    if (this.activeInspectorItemId === 'new') {
+    if (this.activeInspectorKind === 'gravity' && !documentState.gravity.enabled) { definitions.push({kind:'gravity',itemId:'gravity',primaryText:'Gravity',secondaryText:'Not applied',metaText:'Body load',ariaLabel:'Gravity settings'}); }
+    if (this.activeInspectorItemId === 'new' && !definitions.some(function(row){return row.kind === self.activeInspectorKind && row.itemId === 'new';})) {
       definitions.push({
         kind: this.activeInspectorKind, itemId: 'new',
         primaryText: this.activeInspectorKind === 'support' ? 'New support' : 'New load',
@@ -792,15 +802,6 @@
       item.append(trigger, editorHost);
       list.append(item);
     });
-    [
-      { list: this.setupSupportList, kind: 'support', text: 'No supports.' },
-      { list: this.setupLoadList, kind: 'load', text: 'No loads.' }
-    ].forEach(function (emptyState) {
-      if (emptyState.list && !emptyState.list.children.length) {
-        var empty = document.createElement('li');
-        empty.className = 'fea-empty-list'; empty.textContent = emptyState.text; emptyState.list.append(empty);
-      }
-    });
     if (this.activeInspectorKind) { this.mountInlineEditor(this.activeInspectorKind, this.activeInspectorItemId); }
     if (focused && focused.isConnected && focused.closest('.fea-setup-editor') && !focused.closest('[hidden]')) { focused.focus({preventScroll:true}); }
   };
@@ -815,11 +816,11 @@
     this.renderSetupInspector(documentState);
     var draft = documentState.assignmentDraft;
     if (draft) {
-      var status = draft.kind === 'support' ? this.supportStatus : this.loadStatus;
+      var status = draft.kind === 'gravity' ? this.gravityStatus : draft.kind === 'support' ? this.supportStatus : this.loadStatus;
       var summary = root.SpjutsimFEA.describeAssignmentDraft ? root.SpjutsimFEA.describeAssignmentDraft(documentState) : '';
-      status.textContent = 'Preview · ' + draft.faceIds.length + ' face(s). ' + summary + (draft.validation.valid ? '' : ' ' + (draft.definition.inputError || draft.validation.message));
+      status.textContent = 'Preview · ' + (draft.kind === 'gravity' ? '' : draft.faceIds.length + ' face(s). ') + summary + (draft.validation.valid ? '' : ' ' + (draft.definition.inputError || draft.validation.message));
       status.classList.toggle('fea-error', !draft.validation.valid);
-      (draft.kind === 'support' ? this.cancelSupportEdit : this.cancelLoadEdit).hidden = false;
+      (draft.kind === 'gravity' ? byId('cancel-gravity-edit') : draft.kind === 'support' ? this.cancelSupportEdit : this.cancelLoadEdit).hidden = false;
     }
   };
 

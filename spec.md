@@ -2764,9 +2764,43 @@ bounded area-stratified candidates and farthest-point spacing. Samples retain
 local normals and are cached per surface. Glyphs are qualitative direction cues.
 Apply/Save clears selected faces. Force defaults to normal magnitude 1 N with
 Push/Pull; component defaults are [0,1,0] N and pressure defaults to 1 MPa. Gravity
-has its own Loads editor, directional components/presets, calculation enable,
-and independent presentation visibility. Enabling gravity restores its arrow;
+has its own Loads editor, directional components/presets, Apply/Save, Cancel edit,
+Remove gravity, and independent presentation visibility. Enabling gravity restores its arrow;
 disabled gravity never draws arrows. Top-right status and activity icon report
 worker progress and short outcomes; routine history prose beneath Setup is hidden.
 Transfer uses almost the full viewport with original, mapped, and current preview
 glyphs in the respective model views. M24–M27 remain pending another owner check.
+
+### M24–M27 second manual-review corrections (acceptance pending)
+
+A new solve preserves the previously selected viewport mode, result field,
+deformation mode, and user scale through engineering edits, assignment drafts,
+and remeshing. The first solve defaults to von Mises stress. Color limits reset
+to Automatic and unlocked after each solve; Auto deformation recomputes its scale
+from the new result. Convergence result updates follow the same rule.
+
+Gravity uses the assignment transaction with no face selection: its live preview
+changes neither calculation nor history; Apply enables calculation directly,
+Save changes edits it, Cancel restores the prior state, and Remove gravity disables
+it. Existing draft/busy/validation/history gates apply. Arrow visibility stays a
+presentation choice. Display independently controls support, load, and gravity
+arrows; valid active assignment previews remain visible while editing.
+
+Surface glyphs use at least six samples per nondegenerate CAD face, with target
+spacing one quarter of the model's largest extent. Area and face span both set
+density so thin surfaces also receive coverage. Planar grids constrain both axis
+spacings; curved/trimmed sampling adds points until the bounded candidate coverage
+meets the target. A 128-sample per-face cap bounds pathological surfaces; at this
+cap the spacing target may be exceeded. Samples stay deterministic and cached.
+
+Viewport controls are centered, with result/deformation controls below the primary
+row. Perspective is in Display. Rotate and pan bindings each allow left, middle,
+or right mouse buttons; assigning an occupied button swaps the other binding,
+and the navigation hint follows the selected buttons. Preferences remain local.
+
+Settings is in File, and Help → About provides application information and license
+notices. Model summaries show format and face count without orientation status.
+Material summaries put E in GPa at the left of the second line; Poisson's ratio
+remains editable in the material form. Empty Supports/Loads offer Add support… /
+Add load… rows. The CAD editor has no face-selection status or Clear selection
+button; viewport selection and background/Escape deselection remain available.

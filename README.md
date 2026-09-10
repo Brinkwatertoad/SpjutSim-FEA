@@ -270,7 +270,7 @@ green. A compact labeled, theme-colored XYZ triad remains fixed and fully inside
 the lower-left viewport corner while rotating with the camera; its pixel-space
 layout preserves label proportions across resize and aspect-ratio changes.
 
-Settings → Appearance provides FEA Classic, Light Mode, Dark Mode, and Vivid
+File → Settings → Appearance provides FEA Classic, Light Mode, Dark Mode, and Vivid
 schemes using the UI Kit portable color contract. Scheme changes apply live to
 the interface and semantic viewport colors, persist locally when storage is
 available, and support portable version-3 JSON import/export. Imported schemes
@@ -335,10 +335,16 @@ Its normalization uses the native integration rule on solver faces in the worker
 then calls the existing pressure kernel. `review-contract-tests.html` covers
 normal-force validation, flat/curved Tri6 normalization, and glyph spacing.
 The grouped harness compares a normal-force Tet10 solve with its vector equivalent.
-Gravity has a separate Loads editor for direction and calculation enable/disable,
+Gravity has a separate Loads editor with direction, Apply/Save, Cancel edit, and Remove gravity,
 and independent arrow visibility in Display. Enabling it shows an arrow in its
 chosen direction; disabling removes it. Successful assignment Apply/Save clears
 face selection. Transfer setup uses nearly the whole screen and shows original,
 mapped, and active preview assignments on the two models. The top-right status
 shows the current operation with an activity icon; routine history text below
 Setup is hidden.
+
+New solves retain the chosen view, field, and deformation settings while resetting
+color limits to Auto. Display contains Perspective and separate support/load/gravity
+arrow visibility. File → Settings → Controls allows middle-button rotation or pan.
+Help → About contains application information and license notices. Empty Supports
+and Loads rows open their corresponding editors directly.

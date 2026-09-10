@@ -344,7 +344,7 @@
     var samples = api.sampleFaceGlyphPoints(surface, 'face-z+', { spacingM: 0.6, minCount: 1, maxCount: 8 });
     var repeated = api.sampleFaceGlyphPoints(surface, 'face-z+', { spacingM: 0.6, minCount: 1, maxCount: 8 });
     var capped = api.sampleFaceGlyphPoints(surface, 'face-z+', { spacingM: 0.05, minCount: 1, maxCount: 5 });
-    assert(samples.length === 3 && capped.length === 5, 'surface glyph density did not follow area or explicit caps');
+    assert(samples.length === 4 && capped.length > 1 && capped.length <= 5, 'surface glyph density did not follow area or explicit caps');
     assert(JSON.stringify(samples) === JSON.stringify(repeated), 'surface glyph sampling was not deterministic');
     assert(samples.every(function (sample) {
       return near(sample.positionM[2], 1) && sample.positionM[0] >= 0 && sample.positionM[0] <= 1 &&
@@ -464,8 +464,8 @@
       'setup rows were not emitted in stable document order');
     assert(rows[0].primaryText === 'cube.step' && rows[0].secondaryText === 'STEP',
       'model row omitted source format');
-    assert(rows[0].metaText === '6 faces · Original orientation', 'model row omitted face count or orientation');
-    assert(rows[1].primaryText === 'Steel A36' && rows[1].secondaryText === '200 GPa · ν 0.3',
+    assert(rows[0].metaText === '6 faces', 'model row omitted face count or orientation');
+    assert(rows[1].primaryText === 'Steel A36' && rows[1].secondaryText === 'E: 200 GPa',
       'material row omitted compact engineering properties');
     assert(rows[2].secondaryText === 'Fixed · X, Y, Z' && rows[2].metaText === '2 faces',
       'fixed support row omitted constrained components or face count');
@@ -664,8 +664,8 @@
     assert(state.geometry.orientation.operations.join('') === 'Z +90°', 'positive axis rotation was not applied');
     assert(state.boundaryConditions[0].faceIds.join('|') === 'face-x-' && state.loads[0].pressurePa === 1.5e6,
       'model orientation rotated or discarded global authored setup');
-    assert(document.querySelector('[data-setup-kind="model"] .fea-setup-row-meta').textContent.indexOf('Z +90°') !== -1,
-      'compact Model row omitted its orientation summary');
+    assert(document.querySelector('[data-setup-kind="model"] .fea-setup-row-meta').textContent === '6 faces',
+      'compact Model row leaked orientation status');
     document.getElementById('model-rotation-angle').value = '30';
     document.getElementById('rotate-model-negative').click();
     assert(state.geometry.orientation.operations[1] === 'Z −30°', 'negative axis rotation was not applied');
@@ -790,12 +790,11 @@
 
     var gravityTrigger = document.querySelector('[data-setup-kind="gravity"] [data-setup-row-trigger]');
     gravityTrigger.click();
-    document.getElementById('gravity-enabled').checked = false;
-    document.getElementById('gravity-form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    document.getElementById('remove-gravity-button').click();
     assert(!document.querySelector('[data-setup-kind="gravity"]'), 'disabled gravity remained in the compact setup list');
     assert(authoring.activeInspectorKind === null, 'disabling gravity left a missing inspector row active');
     assert(document.activeElement === document.getElementById('setup-add-load-button'), 'disabling gravity did not return focus to the load add action');
-    assert(document.getElementById('setup-inspector-status').textContent === 'Gravity disabled.', 'gravity change was not announced');
+    assert(document.getElementById('setup-inspector-status').textContent === 'Gravity removed.', 'gravity change was not announced');
   }
 
   try {

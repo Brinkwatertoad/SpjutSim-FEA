@@ -13,6 +13,12 @@
     var samples=api.sampleFaceGlyphPoints(surface,'face-x+',{spacingM:0.3,minCount:1,maxCount:12});
     var minDistance=Infinity; samples.forEach(function(a,i){samples.slice(i+1).forEach(function(b){minDistance=Math.min(minDistance,Math.hypot.apply(Math,a.positionM.map(function(v,k){return v-b.positionM[k];})));});});
     assert(samples.length>=8 && minDistance>0.2,'Surface arrows are clustered or too sparse');
+    var tiny={positionsM:new Float64Array([0,0,0,0.01,0,0,0.01,0.01,0,0,0.01,0]),indices:new Uint32Array([0,1,2,0,2,3]),faceMap:{patch:{start:0,count:6}}};
+    assert(api.sampleFaceGlyphPoints(tiny,'patch',{spacingM:0.2}).length>=6,'Small faces need multiple arrows');
+    var strip=Object.assign({},tiny,{positionsM:new Float64Array([0,0,0,1,0,0,1,0.001,0,0,0.001,0])});
+    var stripSamples=api.sampleFaceGlyphPoints(strip,'patch',{spacingM:0.1});
+    var xs=stripSamples.map(function(p){return p.positionM[0];}).sort(function(a,b){return a-b;});
+    assert(xs.length>=10 && xs.every(function(x,i){return !i || x-xs[i-1]<=0.100001;}),'Long thin faces violate arrow spacing');
     var source=await(await fetch('../../workers/solver-worker.js')).text();
     var pressure=new Function('self','createSpjutsimFemModule',source+';return normalForcePressure;')({postMessage:function(){}},function(){return Promise.resolve({});});
     var positions=new Float64Array([0,0,0,1,0,0,0,1,0,0.5,0,0,0.5,0.5,0,0,0.5,0]);

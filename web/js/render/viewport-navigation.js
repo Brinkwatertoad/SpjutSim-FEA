@@ -32,7 +32,7 @@
     var source = value && typeof value === 'object' ? value : {};
     var rotateButton = Number(source.rotateButton);
     var panButton = Number(source.panButton);
-    if (!((rotateButton === 0 || rotateButton === 2) && (panButton === 0 || panButton === 2) && rotateButton !== panButton)) {
+    if (!([0,1,2].indexOf(rotateButton) >= 0 && [0,1,2].indexOf(panButton) >= 0 && rotateButton !== panButton)) {
       rotateButton = DEFAULT_PREFERENCES.rotateButton;
       panButton = DEFAULT_PREFERENCES.panButton;
     }
@@ -112,7 +112,7 @@
     var node = target;
     var exclusiveInteraction = documentRef && documentRef.querySelectorAll
       ? Array.from(documentRef.querySelectorAll(
-        '[role="dialog"][aria-modal="true"], [aria-haspopup][aria-expanded="true"], [data-ui-menu-group][data-open="true"]'
+        'dialog[open], [role="dialog"][aria-modal="true"], [aria-haspopup][aria-expanded="true"], [data-ui-menu-group][data-open="true"]'
       )).find(function (candidate) {
         return !candidate.closest || !candidate.closest('[hidden]');
       })

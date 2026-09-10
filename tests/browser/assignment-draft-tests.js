@@ -47,6 +47,18 @@
     app.beginAssignmentDraft('load',id);app.updateAssignmentDraft({definition:Object.assign({},app.document.assignmentDraft.definition,{name:'Final force'})});app.commitAssignmentDraft();
     assert(app.document.analysisRevision === revision && app.document.results === retainedResult, 'Name-only Save invalidated results');
     assert(app.document.viewportPresentation.mode==='stress','Metadata-only Save did not restore its available result view');
+    app.replaceMaterial({youngsModulusPa:200e9,poissonsRatio:0.3,densityKgM3:7850});
+    var beforeGravity=app.document.gravity, historyCount=app.history.cursor;
+    app.beginAssignmentDraft('gravity',null,{enabled:true,accelerationMS2:[0,9.81,0]});
+    assert(app.document.assignmentDraft.validation.valid && !app.historyState().canUndo,'Gravity draft must validate without faces and gate history');
+    app.updateAssignmentDraft({definition:{enabled:true,accelerationMS2:[9.81,0,0]}});
+    app.cancelAssignmentDraft();
+    assert(app.document.gravity===beforeGravity && app.history.cursor===historyCount,'Cancel gravity changed calculation or history');
+    app.beginAssignmentDraft('gravity',null,{enabled:true,accelerationMS2:[0,9.81,0]});app.commitAssignmentDraft();
+    assert(app.document.gravity.enabled && app.document.gravity.accelerationMS2[1]===9.81 && app.history.cursor===historyCount+1,'Apply gravity must create one history edit');
+    app.beginAssignmentDraft('gravity','gravity');app.commitAssignmentDraft();
+    assert(app.history.cursor===historyCount+1,'Unchanged gravity Save created history');
+    app.undoEngineeringEdit();assert(!app.document.gravity.enabled,'Gravity Apply cannot be undone');
     document.getElementById('test-status').textContent='Passed';
   }catch(error){document.getElementById('test-status').textContent='Failed: '+error.message;}
 }());

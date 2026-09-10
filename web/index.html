@@ -10,12 +10,21 @@
 </head>
 <body>
   <div class="fea-app" id="app-shell">
+    <dialog id="about-dialog" class="fea-about-dialog" aria-labelledby="about-title" aria-modal="true">
+      <h2 id="about-title">About SpjutSim FEA</h2>
+      <p>Static finite element analysis for a single solid model.</p>
+      <p>Geometry, meshing, and solving run locally on your computer.</p>
+      <p><a href="licenses/index.html" target="_blank" rel="noopener">Licenses and third-party notices</a></p>
+      <form method="dialog"><button autofocus>Close</button></form>
+    </dialog>
     <header class="fea-topbar">
       <div><strong>SpjutSim FEA</strong></div>
       <nav class="ui-menu-bar" id="application-menu" aria-label="Application menus">
         <div class="ui-menu-group" data-ui-menu-group data-open="false">
           <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">File</button>
-          <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="import-step">Import CAD…</button></div>
+          <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="import-step">Import CAD…</button>
+            <button type="button" role="menuitem" data-ui-menu-action="settings"><span>Settings…</span><span class="ui-menu-shortcut" aria-hidden="true"></span></button>
+          </div>
         </div>
         <div class="ui-menu-group" data-ui-menu-group data-open="false">
           <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">Edit</button>
@@ -34,10 +43,12 @@
             <button type="button" role="menuitem" data-ui-menu-action="camera--z">View from −Z · XY plane</button>
             <button type="button" role="menuitemradio" aria-checked="true" data-ui-menu-action="projection-orthographic">Orthographic</button>
             <button type="button" role="menuitemradio" aria-checked="false" data-ui-menu-action="projection-perspective">Perspective</button>
-            <button type="button" role="menuitem" data-ui-menu-action="settings"><span>Settings…</span><span class="ui-menu-shortcut" aria-hidden="true"></span></button>
           </div>
         </div>
-        <a class="ui-menu-button" href="licenses/index.html" target="_blank" rel="noopener">Licenses</a>
+        <div class="ui-menu-group" data-ui-menu-group data-open="false">
+          <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">Help</button>
+          <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="about">About</button></div>
+        </div>
       </nav>
       <div class="fea-activity" role="status" aria-live="polite"><span id="app-status">Starting…</span><span id="activity-spinner" class="fea-spinner" aria-hidden="true" hidden></span></div>
     </header>
@@ -70,8 +81,6 @@
               <button id="import-step-button" type="button">Import or replace CAD…</button>
               <input id="import-step-input" type="file" accept=".step,.stp,.iges,.igs,.brep" hidden>
               <p id="geometry-status">Choose a STEP, IGES, or BREP solid to begin.</p>
-              <p id="face-selection-status" role="status" aria-live="polite">Import geometry to select faces.</p>
-              <button id="clear-face-selection-button" type="button" disabled>Clear selected faces</button>
               <fieldset class="fea-orientation-controls"><legend>Model orientation</legend>
                 <div class="fea-orientation-fields">
                   <label for="model-rotation-axis">Global axis</label><select id="model-rotation-axis"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select>
@@ -82,7 +91,7 @@
                   <label for="model-face-direction">Selected face normal</label><select id="model-face-direction"><option value="+x">+X</option><option value="-x">−X</option><option value="+y">+Y</option><option value="-y">−Y</option><option value="+z" selected>+Z</option><option value="-z">−Z</option></select>
                   <button id="orient-selected-face" type="button">Orient selected face</button>
                 </div>
-                <p id="model-orientation-status" role="status" aria-live="polite">Import geometry to adjust orientation.</p>
+                <p id="model-orientation-status" role="status" aria-live="polite" hidden></p>
               </fieldset>
             </div>
             <div id="material-editor">
@@ -142,7 +151,6 @@
             </div>
             <div id="gravity-editor">
               <form id="gravity-form" class="fea-gravity-form" novalidate>
-                <label class="fea-inline-check" for="gravity-enabled"><input id="gravity-enabled" type="checkbox"><span>Enable gravity in calculation</span></label>
                 <label for="gravity-direction">Direction</label><select id="gravity-direction"><option value="-z">−Z</option><option value="+z">+Z</option><option value="-y">−Y</option><option value="+y">+Y</option><option value="-x">−X</option><option value="+x">+X</option><option value="custom">Components</option></select>
                 <label class="fea-inline-check"><input id="gravity-visible" type="checkbox" checked><span>Show gravity arrow</span></label>
                 <fieldset><legend>Acceleration (m/s²)</legend>
@@ -150,7 +158,9 @@
                   <label for="gravity-y">Y</label><input id="gravity-y" type="number" step="any" value="0">
                   <label for="gravity-z">Z</label><input id="gravity-z" type="number" step="any" value="-9.80665">
                 </fieldset>
-                <button type="submit">Apply gravity</button>
+                <button id="apply-gravity-button" type="submit">Apply gravity</button>
+                <button id="cancel-gravity-edit" type="button">Cancel edit</button>
+                <button id="remove-gravity-button" type="button" data-action-intent="danger" hidden>Remove gravity</button>
               </form>
               <p id="gravity-status" role="status" aria-live="polite">Gravity is off.</p>
             </div>
@@ -183,9 +193,29 @@
         <canvas id="viewport" tabindex="0" aria-describedby="viewport-help" aria-label="3D viewport. Left drag rotates, right drag pans, wheel or pinch zooms, and arrow keys rotate."></canvas>
         <div class="fea-viewport-actions" aria-label="3D display">
           <select id="viewport-mode" aria-label="Viewport presentation mode" hidden><option value="model">Model</option><option value="mesh">Mesh</option><option value="stress">Stress</option><option value="deformation">Deformation</option></select>
+          <div class="fea-viewport-primary-row">
           <div id="view-segments" class="ui-segmented-control" role="group" aria-label="View">
             <button type="button" data-view-mode="model">Model</button><button type="button" data-view-mode="mesh">Mesh</button><button type="button" data-view-mode="stress">Stress</button><button type="button" data-view-mode="deformation">Deformation</button>
           </div>
+          <details id="display-popover" class="fea-display-popover"><summary>Display</summary><div class="fea-display-options">
+          <label class="fea-overlay-check" for="perspective-toggle"><input id="perspective-toggle" type="checkbox" role="switch"> Perspective</label>
+          <label for="display-style">Style</label>
+          <select id="display-style"><option value="shaded">Shaded</option><option value="shaded-edges" selected>Shaded with part edges</option><option value="wireframe">Wireframe</option></select>
+          <label class="fea-overlay-check" for="mesh-overlay"><input id="mesh-overlay" type="checkbox" disabled> Mesh overlay</label>
+          <label for="stress-unit">Stress units</label><select id="stress-unit"><option>Pa</option><option>kPa</option><option selected>MPa</option></select>
+          <label for="length-unit">Displacement units</label><select id="length-unit"><option>m</option><option selected>mm</option></select>
+          <label><input id="show-supports" type="checkbox" checked> Show support arrows</label>
+          <label><input id="show-loads" type="checkbox" checked> Show load arrows</label><label><input id="show-gravity" type="checkbox" checked> Show gravity arrow</label>
+          <label for="legend-orientation">Legend</label><select id="legend-orientation"><option value="vertical">Vertical</option><option value="horizontal">Horizontal</option></select>
+          <label for="color-range-mode">Color range</label><select id="color-range-mode"><option value="automatic">Automatic</option><option value="manual">Manual</option></select>
+          <label for="color-range-min">Minimum (display units)</label><input id="color-range-min" type="number" step="any">
+          <label for="color-range-max">Maximum (display units)</label><input id="color-range-max" type="number" step="any">
+          <label><input id="color-range-lock" type="checkbox"> Lock range for this field</label>
+          <p id="color-range-error" role="status"></p><small>Values outside the range use the endpoint colors. Numerical peaks remain unchanged.</small>
+          </div></details>
+          <button id="fit-view-button" type="button">Fit model</button>
+          </div>
+          <div class="fea-viewport-context-row">
           <div id="result-context" class="fea-context-row" hidden>
           <label for="result-field">Field</label>
           <select id="result-field" aria-label="Displayed result field" disabled>
@@ -201,22 +231,7 @@
           <input id="deformation-scale" type="range" min="1" max="1000" step="1" value="100" aria-label="Deformed shape scale multiplier" hidden>
           <output id="deformation-scale-readout" for="deformation-scale" hidden>x100</output>
           </div>
-          <details id="display-popover" class="fea-display-popover"><summary>Display</summary><div class="fea-display-options">
-          <label for="display-style">Style</label>
-          <select id="display-style"><option value="shaded">Shaded</option><option value="shaded-edges" selected>Shaded with part edges</option><option value="wireframe">Wireframe</option></select>
-          <label class="fea-overlay-check" for="mesh-overlay"><input id="mesh-overlay" type="checkbox" disabled> Mesh overlay</label>
-          <label for="stress-unit">Stress units</label><select id="stress-unit"><option>Pa</option><option>kPa</option><option selected>MPa</option></select>
-          <label for="length-unit">Displacement units</label><select id="length-unit"><option>m</option><option selected>mm</option></select>
-          <label><input id="show-loads" type="checkbox" checked> Show load arrows</label><label><input id="show-gravity" type="checkbox" checked> Show gravity arrow</label>
-          <label for="legend-orientation">Legend</label><select id="legend-orientation"><option value="vertical">Vertical</option><option value="horizontal">Horizontal</option></select>
-          <label for="color-range-mode">Color range</label><select id="color-range-mode"><option value="automatic">Automatic</option><option value="manual">Manual</option></select>
-          <label for="color-range-min">Minimum (display units)</label><input id="color-range-min" type="number" step="any">
-          <label for="color-range-max">Maximum (display units)</label><input id="color-range-max" type="number" step="any">
-          <label><input id="color-range-lock" type="checkbox"> Lock range for this field</label>
-          <p id="color-range-error" role="status"></p><small>Values outside the range use the endpoint colors. Numerical peaks remain unchanged.</small>
-          </div></details>
-          <button id="fit-view-button" type="button">Fit model</button>
-          <label class="fea-overlay-check" for="perspective-toggle"><input id="perspective-toggle" type="checkbox" role="switch"> Perspective</label>
+          </div>
         </div>
         <p id="assignment-preview-indicator" class="fea-draft-indicator" role="status" hidden>Preview · click faces to toggle · Apply or Cancel in Setup</p>
         <div class="fea-gizmo-bounds" role="group" aria-label="Camera orientation">
@@ -292,8 +307,8 @@
           <div id="settings-panel-controls" role="tabpanel" aria-labelledby="settings-tab-controls">
             <section class="ui-settings-section fea-controls-settings">
               <p>These preferences affect only viewport navigation. They never change geometry, mesh, or analysis data.</p>
-              <label class="ui-settings-row" for="navigation-rotate-button"><span>Rotate mouse button</span><select id="navigation-rotate-button"><option value="0">Left button</option><option value="2">Right button</option></select></label>
-              <label class="ui-settings-row" for="navigation-pan-button"><span>Pan mouse button</span><select id="navigation-pan-button"><option value="2">Right button</option><option value="0">Left button</option></select></label>
+              <label class="ui-settings-row" for="navigation-rotate-button"><span>Rotate mouse button</span><select id="navigation-rotate-button"><option value="0">Left button</option><option value="1">Middle button</option><option value="2">Right button</option></select></label>
+              <label class="ui-settings-row" for="navigation-pan-button"><span>Pan mouse button</span><select id="navigation-pan-button"><option value="2">Right button</option><option value="0">Left button</option><option value="1">Middle button</option></select></label>
               <label class="ui-settings-row" for="navigation-reverse-zoom"><span>Reverse zoom direction</span><input id="navigation-reverse-zoom" type="checkbox" role="switch"></label>
               <label class="ui-settings-row" for="navigation-rotate-sensitivity"><span>Rotate sensitivity</span><input id="navigation-rotate-sensitivity" type="number" min="0.001" max="0.03" step="0.001"></label>
               <label class="ui-settings-row" for="navigation-pan-sensitivity"><span>Pan sensitivity</span><input id="navigation-pan-sensitivity" type="number" min="0.1" max="4" step="0.1"></label>

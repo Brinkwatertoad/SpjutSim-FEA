@@ -6,8 +6,6 @@
     this.importButton = document.getElementById('import-step-button');
     this.importInput = document.getElementById('import-step-input');
     this.geometryStatus = document.getElementById('geometry-status');
-    this.faceSelectionStatus = document.getElementById('face-selection-status');
-    this.clearFaceSelectionButton = document.getElementById('clear-face-selection-button');
     this.meshElementType = document.getElementById('mesh-element-type');
     this.meshPreset = document.getElementById('mesh-preset');
     this.meshCustomSizes = document.getElementById('mesh-custom-sizes');
@@ -152,6 +150,11 @@
   UIController.prototype.renderNavigationPreferences = function () {
     this.renderProjectionCommands();
     var preferences = this.navigationPreferences;
+    var buttons = ['Left','Middle','Right'];
+    var help = buttons[preferences.rotateButton] + ' drag rotates · ' + buttons[preferences.panButton] + ' drag pans · Wheel or pinch zooms · Arrow keys rotate';
+    var helpElement = document.getElementById('viewport-help'), canvas = document.getElementById('viewport');
+    if (helpElement) { helpElement.textContent = help; }
+    if (canvas) { canvas.setAttribute('aria-label','3D viewport. ' + help); }
     if (this.navigationRotateButton) { this.navigationRotateButton.value = String(preferences.rotateButton); }
     if (this.navigationPanButton) { this.navigationPanButton.value = String(preferences.panButton); }
     if (this.navigationReverseZoom) { this.navigationReverseZoom.checked = preferences.reverseZoom; }
@@ -172,8 +175,8 @@
       arrowStep: this.navigationArrowStep ? Number(this.navigationArrowStep.value) : this.navigationPreferences.arrowStep
     });
     if (source.rotateButton === source.panButton) {
-      if (changedField === 'rotateButton') { source.panButton = source.rotateButton === 0 ? 2 : 0; }
-      else { source.rotateButton = source.panButton === 0 ? 2 : 0; }
+      if (changedField === 'rotateButton') { source.panButton = this.navigationPreferences.rotateButton; }
+      else { source.rotateButton = this.navigationPreferences.panButton; }
     }
     this.navigationPreferences = root.SpjutsimFEA.normalizeViewportNavigationPreferences(source);
     this.saveNavigationPreferences();
@@ -268,11 +271,6 @@
         if (file && self.importHandler) { self.importHandler(file); }
       });
     }
-    if (this.clearFaceSelectionButton) {
-      this.clearFaceSelectionButton.addEventListener('click', function () {
-        if (self.controller.document.assignmentDraft) { self.controller.updateAssignmentDraft({faceIds:[]}); } else { self.controller.clearSelectedFaces(); }
-      });
-    }
     if (this.meshPreset) {
       this.meshPreset.addEventListener('change', function () { self.updateMeshSettingsFromControls(); });
     }
@@ -321,7 +319,7 @@
       this.legendResizeObserver = new root.ResizeObserver(function () { self.renderLegend(self.controller.document); });
       this.legendResizeObserver.observe(this.resultLegend.parentElement);
     }
-    ['show-loads','show-gravity'].forEach(function(id){var control=document.getElementById(id);if(control)control.addEventListener('change',function(){self.controller.replaceViewportPresentation(Object.assign({},self.controller.document.viewportPresentation,id==='show-loads'?{showLoads:control.checked}:{showGravity:control.checked}));});});
+    ['show-loads','show-gravity','show-supports'].forEach(function(id){var control=document.getElementById(id);if(control)control.addEventListener('change',function(){self.controller.replaceViewportPresentation(Object.assign({},self.controller.document.viewportPresentation,id==='show-loads'?{showLoads:control.checked}:id==='show-supports'?{showSupports:control.checked}:{showGravity:control.checked}));});});
     if (this.resultField) { this.resultField.addEventListener('change', function () { self.updateViewportPresentation(); }); }
     if (this.deformationMode) { this.deformationMode.addEventListener('change', function () { self.updateViewportPresentation(); }); }
     if (this.deformationScale) {
@@ -367,6 +365,11 @@
             self.navigationPreferences = self.viewport.getNavigationPreferences();
             self.saveNavigationPreferences(); self.renderProjectionCommands();
           }
+          if (action === 'about') {
+            var dialog = document.getElementById('about-dialog');
+            var opener = self.applicationMenu.querySelector('[data-ui-menu-action="about"]').closest('[data-ui-menu-group]').querySelector('[data-ui-menu-button]');
+            opener.focus(); dialog.showModal();
+          }
           if (action === 'settings') {
             self.openSettings(self.applicationMenu.querySelector('[data-ui-menu-action="settings"]').closest('[data-ui-menu-group]').querySelector('[data-ui-menu-button]'));
           }
@@ -407,7 +410,7 @@
       var target = event.target;
       var tag = String(target && target.tagName || '').toUpperCase();
       var editable = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (target && target.isContentEditable);
-      if (event.defaultPrevented) { return; }
+      if (event.defaultPrevented || document.querySelector('dialog[open]')) { return; }
       if (self.handleHistoryShortcut(event)) { return; }
       if (self.isSettingsShortcut(event) && !editable && !self.settingsOpen) {
         event.preventDefault();
@@ -497,7 +500,6 @@
     }
     if (this.geometryStatus) { this.geometryStatus.textContent = message; }
     if (this.importButton) { this.importButton.disabled = state.status === 'importing' || convergenceRunning; }
-    this.renderFaceSelection(documentState);
     this.renderMesh(documentState);
     this.renderViewportPresentation(documentState);
     this.renderSolve(documentState);
@@ -583,7 +585,7 @@
         stressUnit: this.stressUnit ? this.stressUnit.value : current.stressUnit,
         lengthUnit: this.lengthUnit ? this.lengthUnit.value : current.lengthUnit,
         legendOrientation: this.legendOrientation ? this.legendOrientation.value : current.legendOrientation,
-        colorRange: range, showGravity:current.showGravity, showLoads:current.showLoads,
+        colorRange: range, showGravity:current.showGravity, showLoads:current.showLoads, showSupports:current.showSupports,
         mode: mode, displayStyle: this.displayStyle ? this.displayStyle.value : 'shaded-edges', field: field,
         meshOverlay: Boolean(this.meshOverlay && this.meshOverlay.checked), deformationMode: deformationMode,
         deformationScale: this.resolveDeformationScale(deformationMode),
@@ -598,7 +600,7 @@
   };
   UIController.prototype.renderViewportPresentation = function (documentState) {
     var presentation = documentState.viewportPresentation || { mode: 'model', displayStyle: 'lines' };
-    ['show-loads','show-gravity'].forEach(function(id){var c=document.getElementById(id);if(c){c.checked=presentation[id==='show-loads'?'showLoads':'showGravity']!==false;c.disabled=id==='show-gravity' && !documentState.gravity.enabled;}});
+    ['show-loads','show-gravity','show-supports'].forEach(function(id){var c=document.getElementById(id);if(c){c.checked=presentation[id==='show-loads'?'showLoads':id==='show-supports'?'showSupports':'showGravity']!==false;c.disabled=id==='show-gravity' && !documentState.gravity.enabled;}});
     var meshAvailable = Boolean(documentState.mesh);
     var resultsAvailable = Boolean(documentState.results);
     if (this.viewportMode) {
@@ -1078,19 +1080,6 @@
       (probe.displacementM ? '\nu: '+probe.displacementM.map(function(v){return formatNumber(v*1000,'mm');}).join(', ') : '') +
       (probe.faceId ? '\nFace: '+probe.faceId : '\nInternal recovery sample; shown through the surface.') + '\nClick background or Escape to clear.';
 
-  };
-  UIController.prototype.renderFaceSelection = function (documentState) {
-    var selectedFaceIds = documentState.assignmentDraft ? documentState.assignmentDraft.faceIds : (documentState.selectedFaceIds || []);
-    var message;
-    if (!documentState.geometry) {
-      message = 'Import geometry to select faces.';
-    } else if (selectedFaceIds.length === 0) {
-      message = 'No faces selected. Click a face to select it; Shift-click to add or remove a face.';
-    } else {
-      message = selectedFaceIds.length + (selectedFaceIds.length === 1 ? ' face selected.' : ' faces selected.');
-    }
-    if (this.faceSelectionStatus) { this.faceSelectionStatus.textContent = message; }
-    if (this.clearFaceSelectionButton) { this.clearFaceSelectionButton.disabled = selectedFaceIds.length === 0; }
   };
   root.SpjutsimFEA = root.SpjutsimFEA || {};
   root.SpjutsimFEA.configureOutputTabs = configureOutputTabs;

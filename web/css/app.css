@@ -64,7 +64,7 @@ h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing
 .fea-canvas { position: relative; min-width: 0; min-height: 0; background: var(--canvas-background, #111318); }
 #viewport { width: 100%; height: 100%; display: block; outline: none; }
 #viewport:focus-visible { outline: 2px solid var(--ui-color-accent, #4387f5); outline-offset: -3px; }
-.fea-viewport-actions { position: absolute; top: 12px; right: 12px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; max-width: calc(100% - 24px); }
+.fea-viewport-actions { position: absolute; top: var(--overlay-gap); left: var(--overlay-gap); right: var(--overlay-gap); display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: calc(100% - 24px); }
 .fea-viewport-actions button { background: color-mix(in srgb, var(--ui-color-surface, #202329) 90%, transparent); }
 .fea-viewport-actions label { align-self: center; color: var(--ui-color-canvas-text, #dbeafe); font-size: 12px; }
 .fea-viewport-actions select { max-width: 152px; color: inherit; background: color-mix(in srgb, var(--ui-color-surface, #202329) 90%, transparent); border: 1px solid var(--border, #3a3e46); border-radius: 4px; }
@@ -136,7 +136,7 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 .fea-gizmo-bounds { position: absolute; left: var(--overlay-gap); bottom: var(--help-height); width: var(--gizmo-size); height: var(--gizmo-size); pointer-events: auto; }
 .fea-result-overlays { position: absolute; right: var(--overlay-gap); bottom: var(--help-height); width: min(240px, calc(100% - var(--gizmo-size) - 3 * var(--overlay-gap))); display: grid; gap: 6px; max-height: calc(50% - var(--help-height)); overflow: auto; }
 .fea-result-legend, .fea-probe { position: static; width: auto; max-width: 100%; padding: 7px; overflow-wrap: anywhere; }
-.fea-viewport-actions { top: var(--overlay-gap); right: var(--overlay-gap); max-height: calc(50% - 2 * var(--overlay-gap)); overflow: auto; padding: 2px; }
+.fea-viewport-actions { max-height: calc(50% - 2 * var(--overlay-gap)); overflow: auto; padding: 2px; }
 .fea-viewport-help { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fea-workspace[data-drawer="true"] > .fea-canvas { grid-column: 1; grid-row: 1; }
 .fea-workspace[data-drawer="true"] > .fea-tools, .fea-workspace[data-drawer="true"] > .fea-results { position: absolute; z-index: 5; top: 0; bottom: 0; width: min(340px, calc(100% - 140px)); box-shadow: 0 6px 14px #0006; }
@@ -175,7 +175,9 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 @media (prefers-reduced-motion: reduce) { .fea-chevron { transition: none; } }
 
 /* Contextual presentation controls and a viewport-bounded key. */
-.fea-context-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.fea-viewport-primary-row, .fea-viewport-context-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; width: 100%; }
+.fea-viewport-context-row:not(:has(> :not([hidden]))) { display: none; }
+.fea-context-row { justify-content: center; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
 .fea-display-popover { position: relative; }
 .fea-display-popover > summary { cursor: pointer; padding: 5px; }
 .fea-display-options { position: absolute; z-index: 8; top: 100%; left: 0; width: min(240px, calc(100vw - 42px)); max-height: min(420px, calc(100vh - 180px)); overflow: auto; padding: 12px; display: grid; gap: 6px; background: var(--surface, #202329); border: 1px solid var(--border, #3a3e46); border-radius: 5px; box-shadow: 0 4px 12px #0006; }
@@ -206,9 +208,11 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 }
 .fea-setup-row-button { grid-template-columns: 14px minmax(0, 1fr) minmax(76px, 1fr); }
 .fea-setup-row-button strong { white-space: normal; overflow-wrap: anywhere; }
-[data-setup-kind="model"] .fea-setup-row-button strong { grid-column: 2 / -1; }
-[data-setup-kind="model"] .fea-setup-row-summary { grid-column: 2; grid-row: 2; text-align: left; }
-[data-setup-kind="model"] .fea-setup-row-meta { grid-column: 3; grid-row: 2; }
+[data-item-id="new"] .fea-setup-row-button strong { grid-column: 2 / -1; }
+.fea-setup-row-summary:empty, .fea-setup-row-meta:empty { display: none; }
+:is([data-setup-kind="model"], [data-setup-kind="material"]) .fea-setup-row-button strong { grid-column: 2 / -1; }
+:is([data-setup-kind="model"], [data-setup-kind="material"]) .fea-setup-row-summary { grid-column: 2; grid-row: 2; text-align: left; }
+:is([data-setup-kind="model"], [data-setup-kind="material"]) .fea-setup-row-meta { grid-column: 3; grid-row: 2; }
 
 /* Movable key: the color scale fills the space left by its title and status. */
 .fea-result-overlays { inset: 0; width: auto; max-height: none; display: block; overflow: visible; }
@@ -240,3 +244,7 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 .fea-replacement-views figure { display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
 .fea-replacement-views canvas { height: 100%; min-height: 0; }
 .fea-replacement-header, .fea-replacement-item, .fea-replacement-actions, #replacement-migration-summary { flex-shrink: 0; }
+
+.fea-about-dialog { width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); box-sizing: border-box; overflow: auto; padding: 24px; color: var(--ui-color-text); background: var(--ui-color-surface); border: 1px solid var(--ui-color-border); border-radius: var(--ui-radius-xl); }
+.fea-about-dialog::backdrop { background: #0008; }
+.fea-about-dialog form { text-align: right; }

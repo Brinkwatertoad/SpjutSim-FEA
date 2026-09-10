@@ -674,6 +674,7 @@
       var isTouch = event.pointerType === 'touch';
       var isNavigationButton = isTouch || event.button === self.navigationPreferences.rotateButton || event.button === self.navigationPreferences.panButton;
       if (!isNavigationButton) { return; }
+      if (event.button === 1) { event.preventDefault(); }
       self.cancelViewAnimation();
       self.suppressNextClick = false;
       self.canvas.focus({ preventScroll: true });

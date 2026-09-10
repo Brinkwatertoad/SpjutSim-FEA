@@ -13,6 +13,10 @@
     if (draft.baseAnalysisRevision !== state.analysisRevision || draft.geometryId !== (state.geometry && state.geometry.geometryId)) {
       return {valid:false,message:'The model changed during this preview. Cancel and reopen the editor.'};
     }
+    if (draft.kind === 'gravity') {
+      var gravity = api.validateGravity(draft.definition,state.material);
+      return gravity.valid ? {valid:true,value:gravity.value} : {valid:false,message:api.firstValidationMessage(gravity)};
+    }
     var candidate = Object.assign({}, draft.definition, {id:draft.itemId || 'preview',name:draft.definition.name === undefined ? 'Preview' : draft.definition.name,faceIds:draft.faceIds});
     var validation = (draft.kind === 'support' ? api.validateBoundaryCondition : api.validateLoad)(candidate,state.geometry && state.geometry.faceIds);
     if (!validation.valid) { return {valid:false,message:api.firstValidationMessage(validation)}; }
@@ -32,21 +36,21 @@
     draft.validation = validation;
     return draft;
   };
-  /** Begin one transient transaction. kind is support/load; itemId null adds; definition is SI data. */
+  /** Begin one transient transaction. kind is support/load/gravity; itemId null adds; definition is SI data. */
   prototype.beginAssignmentDraft = function (kind, itemId, definition) {
-    if (['support','load'].indexOf(kind) < 0) { throw new Error('Choose a support or load editor.'); }
+    if (['support','load','gravity'].indexOf(kind) < 0) { throw new Error('Choose a support or load editor.'); }
     if (api.engineeringBusy(this.document)) { throw new Error('Wait for the current operation or cancel it before editing.'); }
     if (!this.document.geometry) { throw new Error('Import geometry before adding assignments.'); }
     if (this.document.assignmentDraft) {
       if (this.document.assignmentDraft.dirty) { throw new Error('Apply or Cancel the current preview before opening another editor.'); }
       this.cancelAssignmentDraft();
     }
-    var item = itemId ? collection(this.document,kind).find(function (value) { return value.id === itemId; }) : null;
+    var item = kind === 'gravity' ? (itemId && this.document.gravity.enabled ? this.document.gravity : null) : itemId ? collection(this.document,kind).find(function (value) { return value.id === itemId; }) : null;
     if (itemId && !item) { throw new Error('This assignment no longer exists.'); }
     this.assignmentDraftReturn = {presentation:copy(this.document.viewportPresentation),selectedFaceIds:this.document.selectedFaceIds.slice()};
-    var initial = copy(item || definition || (kind === 'support' ? {type:'support',componentsM:{x:0,y:0,z:0}} : {type:'pressure',pressurePa:1e6}));
+    var initial = copy(item || definition || (kind === 'gravity' ? Object.assign({},this.document.gravity,{enabled:true}) : kind === 'support' ? {type:'support',componentsM:{x:0,y:0,z:0}} : {type:'pressure',pressurePa:1e6}));
     delete initial.faceIds; delete initial.id;
-    this.document.assignmentDraft = {kind:kind,itemId:itemId || null,faceIds:item ? item.faceIds.slice() : this.document.selectedFaceIds.slice(),definition:initial,
+    this.document.assignmentDraft = {kind:kind,itemId:itemId || null,faceIds:kind === 'gravity' ? [] : item ? item.faceIds.slice() : this.document.selectedFaceIds.slice(),definition:initial,
       baseAnalysisRevision:this.document.analysisRevision,geometryId:this.document.geometry.geometryId};
     this.assignmentDraftInitialSignature = signature(this.document.assignmentDraft);
     if (['stress','deformation'].indexOf(this.document.viewportPresentation.mode) >= 0) {
@@ -74,6 +78,7 @@
   prototype.toggleDraftFace = function (faceId) {
     var draft = requireDraft(this);
     if (!this.document.geometry || this.document.geometry.faceIds.indexOf(faceId) < 0) { throw new Error('Unknown CAD face identifier.'); }
+    if (draft.kind === 'gravity') { return; }
     var faces = draft.faceIds.slice(), index = faces.indexOf(faceId);
     if (index < 0) { faces.push(faceId); } else { faces.splice(index,1); }
     this.updateAssignmentDraft({faceIds:faces});
@@ -82,7 +87,7 @@
   prototype.commitAssignmentDraft = function () {
     var draft = this.refreshAssignmentDraft(), validation = draft.validation;
     if (!validation.valid) { this.notify(); throw new Error(validation.message); }
-    var existing = draft.itemId && collection(this.document,draft.kind).find(function (item) { return item.id === draft.itemId; });
+    var existing = draft.kind === 'gravity' ? this.document.gravity : draft.itemId && collection(this.document,draft.kind).find(function (item) { return item.id === draft.itemId; });
     if (existing && api.sameEngineeringDefinition(existing,validation.value)) {
       var unchangedId = draft.itemId; this.cancelAssignmentDraft(); this.clearSelectedFaces(); return unchangedId;
     }
@@ -93,7 +98,9 @@
     try {
       var id = draft.itemId;
       if (!id && draft.definition.name === undefined) { delete validation.value.name; }
-      if (draft.kind === 'support') {
+      if (draft.kind === 'gravity') {
+        this.replaceGravity(validation.value); id = 'gravity';
+      } else if (draft.kind === 'support') {
         if (id) { this.replaceBoundaryCondition(id, validation.value); } else { id = this.createBoundaryCondition(validation.value); }
       } else {
         if (id) { this.replaceLoad(id, validation.value); } else { id = this.createLoad(validation.value); }

@@ -274,7 +274,8 @@
     if (overlayFrame === null) { overlayFrame = root.requestAnimationFrame(function () { overlayFrame = null; viewport.setAnalysisOverlay(app.document); }); }
     var indicator = document.getElementById('assignment-preview-indicator');
     indicator.hidden = !documentState.assignmentDraft;
-    viewport.assignmentDraftActive = Boolean(documentState.assignmentDraft);
+    viewport.assignmentDraftActive = Boolean(documentState.assignmentDraft && documentState.assignmentDraft.kind !== 'gravity');
+    if (indicator && documentState.assignmentDraft) { indicator.textContent = documentState.assignmentDraft.kind === 'gravity' ? 'Gravity preview · Apply or Cancel in Setup' : 'Preview · click faces to toggle · Apply or Cancel in Setup'; }
   });
   ui.setImportHandler(importCadFile);
   ui.setMeshHandlers(generateMesh, function () { if (activeMesh) { activeMesh.cancel(); } }, function () {

@@ -68,7 +68,7 @@
       legendOrientation: presentation.legendOrientation === 'horizontal' ? 'horizontal' : 'vertical',
       colorRange: root.SpjutsimFEA.validateColorRange(presentation.colorRange, presentation.field || 'vonMises'),
       field: presentation.field || (presentation.mode === 'deformation' ? 'displacementMagnitude' : 'vonMises'),
-      meshOverlay: presentation.meshOverlay === true, showGravity:presentation.showGravity !== false, showLoads:presentation.showLoads !== false,
+      meshOverlay: presentation.meshOverlay === true, showGravity:presentation.showGravity !== false, showLoads:presentation.showLoads !== false, showSupports:presentation.showSupports !== false,
       deformationMode: presentation.deformationMode || 'undeformed',
       deformationScale: Number.isFinite(presentation.deformationScale) ? presentation.deformationScale : 0,
       userDeformationScale: Number.isFinite(presentation.userDeformationScale) ? presentation.userDeformationScale : 1
@@ -87,6 +87,7 @@
 
   AppController.prototype.invalidateResults = function (reason) {
     var hadResults = Boolean(this.document.results);
+    if (hadResults) { this.rememberSolvedPresentation(); }
     this.document.results = null;
     this.document.convergenceStudy = null;
     this.document.analysisRevision = (this.document.analysisRevision || 0) + 1;
@@ -581,16 +582,47 @@
     return this.document.analysisRevision;
   };
 
+  // Keep the chosen view through temporary mesh/model fallbacks during setup edits.
+  AppController.prototype.rememberSolvedPresentation = function () {
+    var presentation = this.assignmentDraftReturn ? this.assignmentDraftReturn.presentation : this.document.viewportPresentation;
+    this.solvedPresentation = {};
+    ['mode','field','deformationMode','userDeformationScale'].forEach(function (key) {
+      this.solvedPresentation[key] = presentation[key];
+    }, this);
+  };
+
+  AppController.prototype.restoreSolvedPresentation = function () {
+    var presentation = Object.assign({}, this.document.viewportPresentation, this.solvedPresentation || {
+      mode:'stress',field:'vonMises',deformationMode:'undeformed',userDeformationScale:1
+    });
+    presentation.colorRange = root.SpjutsimFEA.validateColorRange(null,presentation.field);
+    var scale = 0;
+    if (presentation.mode === 'deformation') {
+      if (presentation.deformationMode === 'true-scale') { scale = 1; }
+      if (presentation.deformationMode === 'user') { scale = presentation.userDeformationScale; }
+      if (presentation.deformationMode === 'auto') {
+        var positions = this.document.results.originalSurface.nodePositionsM;
+        var min = [Infinity,Infinity,Infinity], max = [-Infinity,-Infinity,-Infinity];
+        for (var i = 0; i < positions.length; i += 3) {
+          for (var axis = 0; axis < 3; axis++) { min[axis] = Math.min(min[axis],positions[i+axis]); max[axis] = Math.max(max[axis],positions[i+axis]); }
+        }
+        var displacement = this.document.results.extrema.maxDisplacement.valueM;
+        scale = displacement > 0 ? Math.hypot(max[0]-min[0],max[1]-min[1],max[2]-min[2])*0.1/displacement : 1;
+      }
+    }
+    presentation.deformationScale = scale;
+    this.document.viewportPresentation = presentation;
+  };
+
   AppController.prototype.completeSolve = function (revision, result) {
     if (revision !== this.document.analysisRevision || this.document.solveExecution.status !== 'running') { return false; }
     var validation = root.SpjutsimFEA.validateResultModel(result, revision);
     if (!validation.valid) { throw new Error('Invalid solve result: ' + validation.reason); }
+    if (this.document.results) { this.rememberSolvedPresentation(); }
     this.document.results = root.SpjutsimFEA.decorateResultWithTrust(result, this.document.material);
     this.document.solveExecution = { status: 'succeeded', error: null, progress: null, analysisRevision: revision };
     this.document.resultInvalidation = null;
-    this.document.viewportPresentation = Object.assign({}, this.document.viewportPresentation, {
-      mode: 'stress', field: 'vonMises', colorRange: root.SpjutsimFEA.validateColorRange(this.document.viewportPresentation.colorRange,'vonMises'), deformationMode: 'undeformed', deformationScale: 0
-    });
+    this.restoreSolvedPresentation();
     this.notify();
     return true;
   };
@@ -620,9 +652,9 @@
     study.levels.push(summary);
     study.selectedLevel = summary.level;
     study.selectedResult = result;
+    if (this.document.results) { this.rememberSolvedPresentation(); }
     this.document.results = result;
-    this.document.viewportPresentation = Object.assign({}, this.document.viewportPresentation,
-      { mode: 'stress', field: 'vonMises' });
+    this.restoreSolvedPresentation();
     this.notify(); return true;
   };
 

@@ -42,7 +42,18 @@
       <button type="submit">Add load</button><button id="cancel-load-edit" type="button">Cancel</button><button id="remove-load-item-button" type="button">Remove</button>
     </form><p id="load-status"></p></div>
     <div id="gravity-editor">
-    <form id="gravity-form"><input id="gravity-enabled" type="checkbox"><input id="gravity-x" value="0"><input id="gravity-y" value="0"><input id="gravity-z" value="-9.80665"><button type="submit">Apply gravity</button></form>
+              <form id="gravity-form" class="fea-gravity-form" novalidate>
+                <label for="gravity-direction">Direction</label><select id="gravity-direction"><option value="-z">−Z</option><option value="+z">+Z</option><option value="-y">−Y</option><option value="+y">+Y</option><option value="-x">−X</option><option value="+x">+X</option><option value="custom">Components</option></select>
+                <label class="fea-inline-check"><input id="gravity-visible" type="checkbox" checked><span>Show gravity arrow</span></label>
+                <fieldset><legend>Acceleration (m/s²)</legend>
+                  <label for="gravity-x">X</label><input id="gravity-x" type="number" step="any" value="0">
+                  <label for="gravity-y">Y</label><input id="gravity-y" type="number" step="any" value="0">
+                  <label for="gravity-z">Z</label><input id="gravity-z" type="number" step="any" value="-9.80665">
+                </fieldset>
+                <button id="apply-gravity-button" type="submit">Apply gravity</button>
+                <button id="cancel-gravity-edit" type="button">Cancel edit</button>
+                <button id="remove-gravity-button" type="button" data-action-intent="danger" hidden>Remove gravity</button>
+              </form>
     <p id="gravity-status"></p></div>
     <div id="mesh-editor">
       <select id="mesh-element-type"><option value="tet4" selected>Tet4</option><option value="tet10">Tet10</option></select>

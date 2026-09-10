@@ -19,6 +19,11 @@
     function fill(id,value){var input=doc.getElementById(id);input.value=value;input.dispatchEvent(new win.Event('input',{bubbles:true}));input.dispatchEvent(new win.Event('change',{bubbles:true}));}
     try {
       await waitFor(function(){return doc.getElementById('app-status').textContent==='Local runtime ready';});
+      assert(doc.querySelector('[data-ui-menu-action="settings"]').closest('[data-ui-menu-group]').querySelector('[data-ui-menu-button]').textContent==='File','Settings is not in File');
+      click('[data-ui-menu-action="about"]');assert(doc.getElementById('about-dialog').open,'Help About did not open');
+      assert(api.isViewportEditableOrModalTarget(doc.activeElement,doc),'About leaves viewport keyboard navigation active');
+      click('#about-dialog button');assert(!doc.getElementById('about-dialog').open,'About did not close');
+      assert(!doc.getElementById('face-selection-status') && !doc.getElementById('clear-face-selection-button'),'Removed face-selection controls remain');
       // Observe the real instances through their existing public lifecycle, without app test hooks.
       var notify=api.AppController.prototype.notify,render=api.ViewportController.prototype.render;
       api.AppController.prototype.notify=function(){app=this;return notify.apply(this,arguments);};
@@ -32,7 +37,8 @@
       var geometry=app.document.geometry;
       var negative=geometry.faceIds.find(function(id){return api.analyzeGeometryFaceNormal(geometry,id).normal[0]<-0.99;});
       var positive=geometry.faceIds.find(function(id){return api.analyzeGeometryFaceNormal(geometry,id).normal[0]>0.99;});
-      app.replaceSelectedFaces([negative]);click('#setup-add-support-button');fill('support-name','Fixed end');click('#support-form button[type="submit"]');
+      assert(doc.querySelector('[data-setup-kind="support"] strong').textContent==='Add support…' && doc.querySelector('[data-setup-kind="load"] strong').textContent==='Add load…','Empty assignment rows are missing');
+      app.replaceSelectedFaces([negative]);click('[data-setup-kind="support"][data-item-id="new"] [data-setup-row-trigger]');fill('support-name','Fixed end');click('#support-form button[type="submit"]');
       app.replaceSelectedFaces([positive]);click('#setup-add-load-button');fill('load-type','total-force');
       assert(doc.getElementById('load-force-mode').value==='normal' && doc.getElementById('load-magnitude').value==='1','Default normal force magnitude missing');
       fill('load-force-mode','components');fill('load-name','Axial force');
@@ -62,6 +68,9 @@
         frame.style.width=size[0]+'px';frame.style.height=size[1]+'px';
         await new Promise(function(resolve){setTimeout(resolve,100);});
         var canvas=doc.getElementById('viewport').getBoundingClientRect(),legend=doc.getElementById('result-legend').getBoundingClientRect();
+        var primary=doc.querySelector('.fea-viewport-primary-row').getBoundingClientRect(),context=doc.getElementById('result-context').getBoundingClientRect();
+        assert(Math.abs((primary.left+primary.right)-(canvas.left+canvas.right))<3 && context.top>=primary.bottom,'Viewport controls are not centered in separate rows');
+        assert(doc.getElementById('perspective-toggle').closest('#display-popover'),'Perspective is outside Display');
         assert(doc.documentElement.scrollWidth<=size[0] && doc.documentElement.scrollHeight<=size[1],'Application page overflow');
         assert(legend.left>=canvas.left && legend.right<=canvas.right+1 && legend.top>=canvas.top && legend.bottom<=canvas.bottom+1,'Legend escaped viewport bounds');
         assert(Array.from(doc.querySelectorAll('#legend-ticks span')).every(function(t){return t.getBoundingClientRect().right<=legend.right;}),'Legend tick labels are clipped: '+JSON.stringify(Array.from(doc.querySelectorAll('#legend-ticks span')).map(function(t){return [t.textContent,t.getBoundingClientRect().right,legend.right,getComputedStyle(t.parentElement.parentElement).display];})));
@@ -83,18 +92,41 @@
       doc.body.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));assert(!viewport.selectedResultPoint && doc.getElementById('probe-output').hidden,'Escape did not clear peak');
       click('#locate-peak-button');click('#locate-peak-button');assert(!viewport.peakMarker,'Locate peak cannot toggle off');
       // Normal force and a component force on this planar face must solve identically.
+      fill('result-field','maxPrincipal');fill('color-range-min','0');fill('color-range-max','1000');
+      doc.getElementById('color-range-lock').checked=true;doc.getElementById('color-range-lock').dispatchEvent(new win.Event('change',{bubbles:true}));
+      assert(app.document.viewportPresentation.colorRange.mode==='manual' && app.document.viewportPresentation.colorRange.locked,'Locked range setup failed');
       app.replaceLoad(app.document.loads[0].id,{type:'total-force',direction:'surface-normal',magnitudeN:1000,sense:'pull'});
       click('#solve-button');await waitFor(function(){return Boolean(app.document.results);});
+      assert(app.document.viewportPresentation.mode==='stress' && app.document.viewportPresentation.field==='maxPrincipal' && app.document.viewportPresentation.colorRange.mode==='automatic' && !app.document.viewportPresentation.colorRange.locked,'New solve forgot Stress / Maximum principal selection');
       assert(Math.abs(app.document.results.extrema.rawVonMisesMax.valuePa-result.extrema.rawVonMisesMax.valuePa)<1e-6,'Normal-force solve differs from equivalent vector force');
       app.undoEngineeringEdit();click('#solve-button');await waitFor(function(){return Boolean(app.document.results);});result=app.document.results;
-      app.replaceGravity({enabled:true,accelerationMS2:[0,9.81,0]});
+      click('[data-view-mode="deformation"]');fill('result-field','uy');
+      var oldScale=app.document.viewportPresentation.deformationScale;
+      click('#setup-gravity-button');fill('gravity-direction','+y');
+      assert(app.document.assignmentDraft.validation.valid && !app.document.gravity.enabled && app.document.results===result,'Gravity preview changed committed calculation');
+      click('#apply-gravity-button');
+      assert(app.document.gravity.enabled && app.document.gravity.accelerationMS2[1]>0,'Apply did not enable gravity in chosen direction');
       await new Promise(function(resolve){win.requestAnimationFrame(resolve);});
       assert(doc.querySelector('[data-setup-kind="gravity"]') && viewport.analysisOverlay.children.some(function(g){return g.userData.descriptor.type==='gravity' && g.userData.descriptor.direction[1]===1;}),'Enabled gravity not represented in setup and viewport');
+      click('#solve-button');await waitFor(function(){return Boolean(app.document.results);});result=app.document.results;
+      assert(app.document.viewportPresentation.mode==='deformation' && app.document.viewportPresentation.field==='uy' && app.document.viewportPresentation.deformationMode==='auto','Solve after draft commit forgot deformation settings');
+      assert(app.document.viewportPresentation.deformationScale>0 && app.document.viewportPresentation.deformationScale!==oldScale,'Auto deformation scale did not follow new result');
+      fill('deformation-mode','user');fill('deformation-scale','37');
+      click('[data-setup-kind="gravity"] [data-setup-row-trigger]');
+      assert(doc.getElementById('apply-gravity-button').textContent==='Save changes','Existing gravity does not offer Save changes');
+      fill('gravity-direction','-x');click('#cancel-gravity-edit');
+      assert(app.document.gravity.accelerationMS2[1]>0 && app.document.results===result && app.document.viewportPresentation.mode==='deformation','Cancel gravity changed solved state');
+      click('[data-setup-kind="gravity"] [data-setup-row-trigger]');fill('gravity-direction','+z');click('#apply-gravity-button');
+      assert(app.document.gravity.accelerationMS2[2]>0 && !app.document.results,'Save gravity did not apply new direction');
       app.replaceViewportPresentation(Object.assign({},app.document.viewportPresentation,{showGravity:false}));
       await new Promise(function(resolve){win.requestAnimationFrame(resolve);});
-      assert(!viewport.analysisOverlay.children.some(function(g){return g.userData.descriptor.type==='gravity';}),'Independent gravity arrow toggle failed');
-      app.replaceGravity({enabled:false,accelerationMS2:[0,9.81,0]});
+      click('#show-supports');await new Promise(function(resolve){win.requestAnimationFrame(resolve);});
+      assert(!viewport.analysisOverlay.children.some(function(g){return g.userData.descriptor.type==='gravity' || g.userData.descriptor.type==='support';}) && viewport.analysisOverlay.children.length,'Independent gravity/support visibility failed');
+      app.replaceViewportPresentation(Object.assign({},app.document.viewportPresentation,{showSupports:true}));
+      click('[data-setup-kind="gravity"] [data-setup-row-trigger]');click('#remove-gravity-button');
+      assert(!app.document.gravity.enabled && !doc.querySelector('[data-setup-kind="gravity"]'),'Remove gravity left active body load');
       click('#solve-button');await waitFor(function(){return Boolean(app.document.results);});result=app.document.results;
+      assert(app.document.viewportPresentation.deformationMode==='user' && app.document.viewportPresentation.deformationScale===37,'New solve lost user deformation scale');
       var migration=api.createReplacementMigrationDraft(app.document,app.document.geometry,{sourceName:'cube.step',sourceFormat:'step',sourceBytes:app.geometrySource.sourceBytes});
       var migrationUI=new api.ReplacementMigrationUI();migrationUI.open(migration,function(){},function(){});
       assert(doc.getElementById('replacement-migration-dialog').getBoundingClientRect().width>win.innerWidth*0.9,'Transfer dialog wastes screen width');

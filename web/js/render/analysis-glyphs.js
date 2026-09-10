@@ -101,14 +101,17 @@
   function sampleFaceGlyphPoints(surface, faceId, options, data) {
     data = data || faceTriangles(surface, faceId);
     var spacingM = Number(options && options.spacingM);
-    var minimum = Math.max(1, Number(options && options.minCount) || 1);
-    var maximum = Math.max(minimum, Number(options && options.maxCount) || 12);
+    var minimum = Math.max(1, Number(options && options.minCount) || 6);
+    var maximum = Math.max(minimum, Number(options && options.maxCount) || 128);
     var count;
     var samples = [];
     var index;
     if (!(data.totalAreaM2 > 0)) { return samples; }
     if (!(spacingM > 0)) { throw new Error('Surface glyph spacing must be greater than zero.'); }
-    count = Math.max(minimum, Math.min(maximum, Math.ceil(data.totalAreaM2 / (spacingM * spacingM))));
+    var min = [Infinity,Infinity,Infinity], max = [-Infinity,-Infinity,-Infinity];
+    data.triangles.forEach(function(t){t.points.forEach(function(p){for(var k=0;k<3;k++){min[k]=Math.min(min[k],p[k]);max[k]=Math.max(max[k],p[k]);}});});
+    var span = Math.hypot(max[0]-min[0],max[1]-min[1],max[2]-min[2]);
+    count = Math.max(minimum, Math.min(maximum, Math.max(Math.ceil(span / spacingM),Math.ceil(data.totalAreaM2 / (spacingM * spacingM)))));
     var first=data.triangles[0],normal=first.outwardNormal;
     var planar=data.triangles.every(function(t){return t.outwardNormal.reduce(function(sum,n,k){return sum+n*normal[k];},0)>0.9999;});
     if(planar) {
@@ -116,8 +119,13 @@
       var bounds=[Infinity,Infinity,-Infinity,-Infinity];
       data.triangles.forEach(function(t){t.points.forEach(function(p){axes.forEach(function(a,k){bounds[k]=Math.min(bounds[k],p[a]);bounds[k+2]=Math.max(bounds[k+2],p[a]);});});});
       var rows=Math.max(1,Math.min(count,Math.round(Math.sqrt(count*(bounds[3]-bounds[1])/(bounds[2]-bounds[0])))));
+      rows=Math.max(rows,Math.ceil((bounds[3]-bounds[1])/spacingM));
+      var columns=Math.max(Math.ceil(count/rows),Math.ceil((bounds[2]-bounds[0])/spacingM));
+      if(rows*columns>maximum) {
+        rows=Math.max(1,Math.min(maximum,Math.round(Math.sqrt(maximum*(bounds[3]-bounds[1])/(bounds[2]-bounds[0])))));
+        columns=Math.max(1,Math.floor(maximum/rows));
+      }
       for(var row=0;row<rows;row++) {
-        var columns=Math.floor(count/rows)+(row<count%rows?1:0);
         for(var column=0;column<columns;column++) {
           var x=bounds[0]+(column+0.5)/columns*(bounds[2]-bounds[0]),y=bounds[1]+(row+0.5)/rows*(bounds[3]-bounds[1]);
           for(var ti=0;ti<data.triangles.length;ti++) {
@@ -129,11 +137,11 @@
           }
         }
       }
-      if(samples.length>=count*0.7)return samples;
+      if(samples.length>=Math.max(minimum,rows*columns*0.7))return samples;
       samples=[];
     }
     // Curved/trimmed surfaces: bounded area-stratified candidates with farthest-point spacing.
-    var candidates=[],candidateCount=Math.max(64,count*32);
+    var candidates=[],candidateCount=Math.max(64,maximum*16);
     for(index=0;index<candidateCount;index++) {
       var targetArea=(index+0.5)*data.totalAreaM2/candidateCount,lo=0,hi=data.triangles.length-1;
       while(lo<hi){var mid=(lo+hi)>>1;if(data.triangles[mid].cumulativeAreaM2<targetArea)lo=mid+1;else hi=mid;}
@@ -141,10 +149,11 @@
       candidates.push({positionM:[0,1,2].map(function(axis){return triangle.points.reduce(function(sum,p,k){return sum+p[axis]*weights[k];},0);}),outwardNormal:triangle.outwardNormal.slice(),distance:Infinity});
     }
     var next=0;
-    for(index=0;index<count;index++) {
+    for(index=0;index<maximum;index++) {
       var chosen=candidates[next];samples.push({positionM:chosen.positionM,outwardNormal:chosen.outwardNormal});chosen.distance=-1;
       var best=-1;
       candidates.forEach(function(candidate,k){if(candidate.distance<0)return;var distance=candidate.positionM.reduce(function(sum,v,axis){return sum+Math.pow(v-chosen.positionM[axis],2);},0);candidate.distance=Math.min(candidate.distance,distance);if(candidate.distance>best){best=candidate.distance;next=k;}});
+      if(samples.length>=count && best<=spacingM*spacingM)break;
     }
     return samples;
   }
@@ -158,7 +167,7 @@
         maximum[axis] = Math.max(maximum[axis], surface.positionsM[index + axis]);
       }
     }
-    return Math.max(maximum[0] - minimum[0], maximum[1] - minimum[1], maximum[2] - minimum[2], 1e-6) * 0.3;
+    return Math.max(maximum[0] - minimum[0], maximum[1] - minimum[1], maximum[2] - minimum[2], 1e-6) * 0.25;
   }
 
   function cachedFaceSamples(documentState, faceId) {
@@ -171,13 +180,14 @@
     }
     if (!cache.faces.has(faceId)) {
       var data = faceTriangles(cache.surface,faceId);
-      cache.faces.set(faceId,{areaM2:data.totalAreaM2,samples:sampleFaceGlyphPoints(cache.surface,faceId,{spacingM:cache.spacingM,minCount:1,maxCount:12},data)});
+      cache.faces.set(faceId,{areaM2:data.totalAreaM2,samples:sampleFaceGlyphPoints(cache.surface,faceId,{spacingM:cache.spacingM,minCount:6,maxCount:128},data)});
     }
     return cache.faces.get(faceId);
   }
   function describeAssignmentDraft(state) {
     var draft = state.assignmentDraft;
     if (!draft) { return ''; }
+    if (draft.kind === 'gravity') { return 'Body acceleration applies throughout the model. Preview arrow shows direction.'; }
     var area = draft.faceIds.reduce(function (sum,id) { return sum + cachedFaceSamples(state,id).areaM2; },0);
     var text = 'Area ≈ ' + area.toPrecision(4) + ' m². ';
     if (draft.definition.type === 'total-force' && draft.definition.direction === 'surface-normal') {
@@ -197,9 +207,9 @@
     var descriptors = [];
     if (!surface) { return descriptors; }
     var draft = documentState.assignmentDraft;
-    var supports = documentState.boundaryConditions.filter(function (item) { return !draft || item.id !== draft.itemId; });
+    var supports = documentState.boundaryConditions.filter(function (item) { return (!documentState.viewportPresentation || documentState.viewportPresentation.showSupports !== false) && (!draft || item.id !== draft.itemId); });
     var loads = documentState.loads.filter(function (item) { return (!documentState.viewportPresentation || documentState.viewportPresentation.showLoads !== false) && (!draft || item.id !== draft.itemId); });
-    if (draft && draft.validation.valid) {
+    if (draft && draft.kind !== 'gravity' && draft.validation.valid) {
       var preview = Object.assign({},draft.validation.value,{id:'assignment-preview',preview:true});
       (draft.kind === 'support' ? supports : loads).push(preview);
     }
@@ -221,12 +231,14 @@
         });
       });
     });
-    if (documentState.gravity && documentState.gravity.enabled && (!documentState.viewportPresentation || documentState.viewportPresentation.showGravity !== false) && documentState.geometry) {
+    var gravityPreview = draft && draft.kind === 'gravity';
+    var gravity = gravityPreview ? (draft.validation.valid ? draft.validation.value : null) : documentState.gravity;
+    if (gravity && gravity.enabled && (gravityPreview || !documentState.viewportPresentation || documentState.viewportPresentation.showGravity !== false) && documentState.geometry) {
       var bounds = documentState.geometry.boundingBoxM;
       descriptors.push({
-        type: 'gravity', itemId: 'gravity', faceId: null,
+        type: 'gravity', itemId: 'gravity', preview:Boolean(gravityPreview), faceId: null,
         positionM: [(bounds.minM[0] + bounds.maxM[0]) / 2, (bounds.minM[1] + bounds.maxM[1]) / 2, bounds.maxM[2]],
-        direction: normalized(documentState.gravity.accelerationMS2)
+        direction: normalized(gravity.accelerationMS2)
       });
     }
     return descriptors;
