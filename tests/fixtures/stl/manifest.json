@@ -1,0 +1,164 @@
+[
+  {
+    "file": "cube-ascii.stl",
+    "sha256": "a303a86a7210369f3f184c2bb7c18d912d77e98543e80dab1985fea403314abb",
+    "bytes": 1063,
+    "triangles": 12,
+    "encoding": "ascii",
+    "expected": "valid",
+    "dimensions": [
+      1,
+      1,
+      1
+    ],
+    "volume": 1
+  },
+  {
+    "file": "cube-binary.stl",
+    "sha256": "751c6f675794a5891a9ee5533f820f0923a65e641a9a16f220a3c44634f47dd9",
+    "bytes": 684,
+    "triangles": 12,
+    "encoding": "binary",
+    "expected": "valid",
+    "dimensions": [
+      1,
+      1,
+      1
+    ],
+    "volume": 1
+  },
+  {
+    "file": "thin-plate.stl",
+    "sha256": "77263fd0ddf3b64b2dde6c35b24d42b1c1289f5a828bffef46190cf15bb53966",
+    "bytes": 684,
+    "triangles": 12,
+    "encoding": "binary",
+    "expected": "valid",
+    "dimensions": [
+      1,
+      1,
+      0.02
+    ],
+    "volume": 0.02
+  },
+  {
+    "file": "disconnected.stl",
+    "sha256": "d4155bdf5c6fbdcd21fd03641242cbb143750edef79f6e43c75bdb556591471f",
+    "bytes": 1284,
+    "triangles": 24,
+    "encoding": "binary",
+    "expected": "STL_DISCONNECTED",
+    "dimensions": null,
+    "volume": null
+  },
+  {
+    "file": "open.stl",
+    "sha256": "bfa369fc307b0b20afe13483a7eadf4330e4c1dce14160ac6acff11e2b6abf7c",
+    "bytes": 977,
+    "triangles": 11,
+    "encoding": "ascii",
+    "expected": "STL_OPEN_SURFACE",
+    "dimensions": null,
+    "volume": null
+  },
+  {
+    "file": "nonmanifold.stl",
+    "sha256": "c18dc8d466dd80b8cabb34b39d634f60041dfc6e5aa63974d1bd93c850bf6a6f",
+    "bytes": 734,
+    "triangles": 13,
+    "encoding": "binary",
+    "expected": "STL_NONMANIFOLD",
+    "dimensions": null,
+    "volume": null
+  },
+  {
+    "file": "reversed.stl",
+    "sha256": "9207763e749384f82d6ffe3e87987b8b22b980d6bede31bfc699fcb9163e5941",
+    "bytes": 684,
+    "triangles": 12,
+    "encoding": "binary",
+    "expected": "STL_INWARD_WINDING",
+    "dimensions": null,
+    "volume": null
+  },
+  {
+    "file": "inconsistent.stl",
+    "sha256": "902fcf5a645d8279381957c4b465cc13da2bf9a3680c32453093ef4375017c68",
+    "bytes": 1063,
+    "triangles": 12,
+    "encoding": "ascii",
+    "expected": "STL_INCONSISTENT_WINDING",
+    "dimensions": null,
+    "volume": null
+  },
+  {
+    "file": "degenerate.stl",
+    "sha256": "c7459c99fa1bb9a06e9124733c10e373539a1d4f0c3c82385aebcfafd716d6f5",
+    "bytes": 734,
+    "triangles": 13,
+    "encoding": "binary",
+    "expected": "STL_DEGENERATE_TRIANGLE",
+    "dimensions": null,
+    "volume": null
+  },
+  {
+    "file": "cylinder-16.stl",
+    "sha256": "a2cbf923939840eb7033d065c8b29846f6f73fa9c74726d108687db4608e6230",
+    "bytes": 3284,
+    "triangles": 64,
+    "encoding": "binary",
+    "expected": "valid",
+    "dimensions": [
+      1,
+      1,
+      1
+    ],
+    "volume": 0.7653668647301796
+  },
+  {
+    "file": "cylinder-32.stl",
+    "sha256": "d39fc2667aea622ecccc2bb2bfb4761a9ee71befc3d1750a0ee82a6ce3eb19ed",
+    "bytes": 6484,
+    "triangles": 128,
+    "encoding": "binary",
+    "expected": "valid",
+    "dimensions": [
+      1,
+      1,
+      1
+    ],
+    "volume": 0.780361288064513
+  },
+  {
+    "file": "cylinder-64.stl",
+    "sha256": "dea15d4a93282b5c5cc0377ec75cfc60b45b55177c8c6210f2e4e1465cb8310f",
+    "bytes": 12884,
+    "triangles": 256,
+    "encoding": "binary",
+    "expected": "valid",
+    "dimensions": [
+      1,
+      1,
+      1
+    ],
+    "volume": 0.7841371226364848
+  },
+  {
+    "file": "truncated.stl",
+    "sha256": "4b4131b8859f4741893213a17f12c3cf6a923c338b8985c3686b1a6872c33af5",
+    "bytes": 683,
+    "expected": "STL_MALFORMED"
+  },
+  {
+    "file": "count-overflow.stl",
+    "sha256": "4393c17dc605bcd4116d61163a9bb14b876dea8a424aafaa2b66cfd6f97a893a",
+    "bytes": 84,
+    "expected": "STL_MALFORMED"
+  },
+  {
+    "file": "malformed.stl",
+    "sha256": "0698ac907ce66868d9504e7cce63615e9759ff344ed370431c32a6fe86bdb175",
+    "bytes": 42,
+    "expected": "STL_MALFORMED"
+  }
+]

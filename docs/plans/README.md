@@ -61,7 +61,7 @@ merely mirror implementation or turn each mechanical step into an approval gate.
 25. [x] [Support/load preview authoring](25-support-and-load-preview-authoring.md) — implemented and accepted 2026-09-10
 26. [x] [Setup workflow and solve checks](26-setup-workflow-and-solve-checks.md) — implemented and accepted 2026-09-10
 27. [x] [Engineering edit undo/redo](27-engineering-edit-undo-and-redo.md) — implemented and accepted 2026-09-10
-28. [ ] [STL feasibility and surface patch contract](28-stl-feasibility-and-surface-patch-contract.md)
+28. [ ] [STL feasibility and surface patch contract](28-stl-feasibility-and-surface-patch-contract.md) — experiments and proposed contract ready; [M28 owner decision pending](../reviews/28-stl-contract.md)
 29. [ ] [STL import, meshing, and validation](29-stl-import-meshing-and-validation.md)
 30. [ ] [Integrated usability and pre-release regression](30-integrated-usability-and-pre-release-regression.md)
 

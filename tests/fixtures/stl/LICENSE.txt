@@ -1,0 +1,9 @@
+The generated STL files and manifest in this directory are original
+SpjutSim FEA project fixtures.
+
+To the extent possible under law, the SpjutSim FEA contributors have waived
+all copyright and related or neighboring rights to these fixture files under
+CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/
+
+The generator and browser experiment source remain covered by the repository's
+normal source-code license.

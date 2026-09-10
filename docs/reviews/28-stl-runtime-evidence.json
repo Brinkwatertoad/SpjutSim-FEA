@@ -1,0 +1,2659 @@
+{
+  "recordedAt": "2026-09-10T22:53:41.943340+00:00",
+  "baseCommit": "fed435a",
+  "branch": "feat/28-29-stl-import",
+  "status": "M28 experimental evidence; no production STL or owner acceptance",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "browser": "Chromium 152.0.7977.75",
+  "runtime": {
+    "checksums": {
+      "core": "b9d58d14f9b74c5f87bf09a6c0470ec6c8bfd3247637979a142fda610b626de8",
+      "descriptor": "1ea248880aad854f410756808c83a4ee66fdc1fd35029f712487b5b64d91f6db",
+      "payload": "85cf9d1160de66b60fcd378eb2735644ddf2c0991dd0aaae87cd58e210a80603",
+      "runtime": "d847f49227cf153a228662c56132fc5e1ce6ddd56bf721e059b6d651d5c51924"
+    },
+    "emscriptenVersion": "3.1.74",
+    "gmshCommit": "29726e7237db13ff77ef3f2db2d7fb9499c4e65c",
+    "gmshJs": "v0.3.0",
+    "gmshJsCommit": "3fdabeeb1dac2417446cefb9f75ecb6645315cd6",
+    "networkRequired": false,
+    "occtVersion": "7.8.1",
+    "threaded": false
+  },
+  "sourceHashes": {
+    "tests/browser/stl-experiment.js": "504c35c391aa3c5e1be90596e9f694eb92d1aa81405cd001fc26abf9f61f7596",
+    "tests/browser/stl-feasibility-tests.js": "47f919a2593a007b9aafd69252e8ee3e82e4ab9dbf5e33da75cda8fcae6d68c9",
+    "tests/browser/stl-mesher-experiment.js": "d740b08a3e153b88faac2497992780647e6797516bd688bf9e9a1c1a374ae692",
+    "tests/browser/stl-patch-demo.js": "88ca6fc9c63323049048df4488fb2657f2e36016162d0a23749bd5296bfa2e00",
+    "tests/browser/stl-runtime-tests.js": "0f795bfed40b4c92d06f5cfdfd3bc0e16b36f0ae0ab53f754c1db95c06eaec8e",
+    "tests/browser/stl-feasibility-tests.html": "37e625ada1d2a69e3683ae8d91cc8a905a30447190ff66203925f377d1900464",
+    "tests/browser/stl-patch-demo.html": "a801e03f259848c984c896872313e4c971f9465bed08f56c38105ee05b9e43f0",
+    "tests/browser/stl-runtime-tests.html": "0fbd49f5f77ec87d262ea360e5ddb03f6bd6c52bec3a03d0dad0f6550784b2a8",
+    "tools/cad-fixtures/generate-stl-fixtures.py": "f79a6f37b1706aadd2b903a6c197433a25290ee8a46df7179557c0146c8573e3",
+    "tests/fixtures/stl/manifest.json": "b6cab14b4d7c6a64427653c8237b405022ea8b64e764d0f815dc14bc0e5840ce"
+  },
+  "file": [
+    {
+      "file": "cube-ascii.stl",
+      "order": 1,
+      "sourceBytes": 1063,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 384,
+      "meshBytes": 40184,
+      "patches": 6,
+      "patchIds": [
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:987cc43fedc2e589c04617f80c346e72380813c9a0781593dd7ad40f2ef31d05",
+        "stl:bbf2483cfbad14eb133cf94c6815387f8360ba5d451c9af513be70ba1f921ade",
+        "stl:d7dc56ac806d3b3d391a7f12a1ad2b8647ed444d1106b5ab49e958a4f4bc2a97",
+        "stl:a52c2071a6dec86012d7755b8aab7941e2074546b96d92f139cf7b3d62ceaad6"
+      ],
+      "internalSurfaces": 8,
+      "internalSurfacePatchIds": [
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:987cc43fedc2e589c04617f80c346e72380813c9a0781593dd7ad40f2ef31d05",
+        "stl:bbf2483cfbad14eb133cf94c6815387f8360ba5d451c9af513be70ba1f921ade",
+        "stl:d7dc56ac806d3b3d391a7f12a1ad2b8647ed444d1106b5ab49e958a4f4bc2a97",
+        "stl:a52c2071a6dec86012d7755b8aab7941e2074546b96d92f139cf7b3d62ceaad6"
+      ],
+      "sourceVolume": 0.9999999999999999,
+      "linearCornerVolume": 1.000000000000001,
+      "relativeVolumeError": 1.3322676295501878e-15,
+      "nodes": 349,
+      "elements": 1154,
+      "boundaryType": "tri3",
+      "boundaryElements": 556,
+      "displayTriangles": 556,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.30436335809839354,
+        "p05": 0.5686228658888732,
+        "median": 0.7857725289050937,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.001557706584958755,
+        "maximumEdgeRatio": 2.5149536307461844,
+        "warning": null
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 340
+    },
+    {
+      "file": "cube-ascii.stl",
+      "order": 2,
+      "sourceBytes": 1063,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 384,
+      "meshBytes": 137288,
+      "patches": 6,
+      "patchIds": [
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:987cc43fedc2e589c04617f80c346e72380813c9a0781593dd7ad40f2ef31d05",
+        "stl:bbf2483cfbad14eb133cf94c6815387f8360ba5d451c9af513be70ba1f921ade",
+        "stl:d7dc56ac806d3b3d391a7f12a1ad2b8647ed444d1106b5ab49e958a4f4bc2a97",
+        "stl:a52c2071a6dec86012d7755b8aab7941e2074546b96d92f139cf7b3d62ceaad6"
+      ],
+      "internalSurfaces": 8,
+      "internalSurfacePatchIds": [
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:987cc43fedc2e589c04617f80c346e72380813c9a0781593dd7ad40f2ef31d05",
+        "stl:bbf2483cfbad14eb133cf94c6815387f8360ba5d451c9af513be70ba1f921ade",
+        "stl:d7dc56ac806d3b3d391a7f12a1ad2b8647ed444d1106b5ab49e958a4f4bc2a97",
+        "stl:a52c2071a6dec86012d7755b8aab7941e2074546b96d92f139cf7b3d62ceaad6"
+      ],
+      "sourceVolume": 0.9999999999999999,
+      "linearCornerVolume": 1.000000000000001,
+      "relativeVolumeError": 1.3322676295501878e-15,
+      "nodes": 2129,
+      "elements": 1154,
+      "boundaryType": "tri6",
+      "boundaryElements": 556,
+      "displayTriangles": 2224,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.30436335809839354,
+        "p05": 0.5686228658888732,
+        "median": 0.7857725289050937,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.001557706584958749,
+        "maximumEdgeRatio": 2.5149536307461844,
+        "warning": null
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "order",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 336.40000000596046
+    },
+    {
+      "file": "cube-binary.stl",
+      "order": 1,
+      "sourceBytes": 684,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 384,
+      "meshBytes": 40184,
+      "patches": 6,
+      "patchIds": [
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:22d61f680a83bd48dac9d1671e67202c4a9be121ad39ae74a35dccc8f3481c86",
+        "stl:2509eea2cff986c4a4e5cf9af287b27763da000496e70ccc9f8f201e5f5276d1",
+        "stl:e68c528811a9e9fc8fca8a60a30e95a5e610c94e82f0346812803beb86087a44",
+        "stl:42f7e968aa73eaf1f2559937c4c7c9aa96ff78a5d6647b1064385451dbdf84bc"
+      ],
+      "internalSurfaces": 8,
+      "internalSurfacePatchIds": [
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:22d61f680a83bd48dac9d1671e67202c4a9be121ad39ae74a35dccc8f3481c86",
+        "stl:2509eea2cff986c4a4e5cf9af287b27763da000496e70ccc9f8f201e5f5276d1",
+        "stl:e68c528811a9e9fc8fca8a60a30e95a5e610c94e82f0346812803beb86087a44",
+        "stl:42f7e968aa73eaf1f2559937c4c7c9aa96ff78a5d6647b1064385451dbdf84bc"
+      ],
+      "sourceVolume": 0.9999999999999999,
+      "linearCornerVolume": 1.000000000000001,
+      "relativeVolumeError": 1.3322676295501878e-15,
+      "nodes": 349,
+      "elements": 1154,
+      "boundaryType": "tri3",
+      "boundaryElements": 556,
+      "displayTriangles": 556,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.30436335809839354,
+        "p05": 0.5686228658888732,
+        "median": 0.7857725289050937,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.001557706584958755,
+        "maximumEdgeRatio": 2.5149536307461844,
+        "warning": null
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 326
+    },
+    {
+      "file": "cube-binary.stl",
+      "order": 2,
+      "sourceBytes": 684,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 384,
+      "meshBytes": 137288,
+      "patches": 6,
+      "patchIds": [
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:22d61f680a83bd48dac9d1671e67202c4a9be121ad39ae74a35dccc8f3481c86",
+        "stl:2509eea2cff986c4a4e5cf9af287b27763da000496e70ccc9f8f201e5f5276d1",
+        "stl:e68c528811a9e9fc8fca8a60a30e95a5e610c94e82f0346812803beb86087a44",
+        "stl:42f7e968aa73eaf1f2559937c4c7c9aa96ff78a5d6647b1064385451dbdf84bc"
+      ],
+      "internalSurfaces": 8,
+      "internalSurfacePatchIds": [
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:22d61f680a83bd48dac9d1671e67202c4a9be121ad39ae74a35dccc8f3481c86",
+        "stl:2509eea2cff986c4a4e5cf9af287b27763da000496e70ccc9f8f201e5f5276d1",
+        "stl:e68c528811a9e9fc8fca8a60a30e95a5e610c94e82f0346812803beb86087a44",
+        "stl:42f7e968aa73eaf1f2559937c4c7c9aa96ff78a5d6647b1064385451dbdf84bc"
+      ],
+      "sourceVolume": 0.9999999999999999,
+      "linearCornerVolume": 1.000000000000001,
+      "relativeVolumeError": 1.3322676295501878e-15,
+      "nodes": 2129,
+      "elements": 1154,
+      "boundaryType": "tri6",
+      "boundaryElements": 556,
+      "displayTriangles": 2224,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.30436335809839354,
+        "p05": 0.5686228658888732,
+        "median": 0.7857725289050937,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.001557706584958749,
+        "maximumEdgeRatio": 2.5149536307461844,
+        "warning": null
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "order",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 343.30000000447035
+    },
+    {
+      "file": "cylinder-16.stl",
+      "order": 1,
+      "sourceBytes": 3284,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 1840,
+      "meshBytes": 61776,
+      "patches": 3,
+      "patchIds": [
+        "stl:dec4978d804f9b96a44c1d5d5b7ed036b3aef3ee6408c3d13c7ee490de6516c1",
+        "stl:5b5b4c9e7eb9a3bb91134cb00852cb5112867e0161af469bc3192235eaf7802d",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b"
+      ],
+      "internalSurfaces": 20,
+      "internalSurfacePatchIds": [
+        "stl:dec4978d804f9b96a44c1d5d5b7ed036b3aef3ee6408c3d13c7ee490de6516c1",
+        "stl:5b5b4c9e7eb9a3bb91134cb00852cb5112867e0161af469bc3192235eaf7802d",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:dec4978d804f9b96a44c1d5d5b7ed036b3aef3ee6408c3d13c7ee490de6516c1",
+        "stl:5b5b4c9e7eb9a3bb91134cb00852cb5112867e0161af469bc3192235eaf7802d",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b"
+      ],
+      "sourceVolume": 0.7653668363416358,
+      "linearCornerVolume": 0.7653668363416348,
+      "relativeVolumeError": 1.3322676295501878e-15,
+      "nodes": 540,
+      "elements": 1689,
+      "boundaryType": "tri3",
+      "boundaryElements": 908,
+      "displayTriangles": 908,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.2317698243338645,
+        "p05": 0.4181031824192819,
+        "median": 0.6920052105376696,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.00013578635175640942,
+        "maximumEdgeRatio": 3.62351416169714,
+        "warning": null
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 374.1000000014901
+    },
+    {
+      "file": "cylinder-16.stl",
+      "order": 2,
+      "sourceBytes": 3284,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 1840,
+      "meshBytes": 210264,
+      "patches": 3,
+      "patchIds": [
+        "stl:dec4978d804f9b96a44c1d5d5b7ed036b3aef3ee6408c3d13c7ee490de6516c1",
+        "stl:5b5b4c9e7eb9a3bb91134cb00852cb5112867e0161af469bc3192235eaf7802d",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b"
+      ],
+      "internalSurfaces": 20,
+      "internalSurfacePatchIds": [
+        "stl:dec4978d804f9b96a44c1d5d5b7ed036b3aef3ee6408c3d13c7ee490de6516c1",
+        "stl:5b5b4c9e7eb9a3bb91134cb00852cb5112867e0161af469bc3192235eaf7802d",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:dec4978d804f9b96a44c1d5d5b7ed036b3aef3ee6408c3d13c7ee490de6516c1",
+        "stl:5b5b4c9e7eb9a3bb91134cb00852cb5112867e0161af469bc3192235eaf7802d",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b"
+      ],
+      "sourceVolume": 0.7653668363416358,
+      "linearCornerVolume": 0.7653668363416348,
+      "relativeVolumeError": 1.3322676295501878e-15,
+      "nodes": 3222,
+      "elements": 1689,
+      "boundaryType": "tri6",
+      "boundaryElements": 908,
+      "displayTriangles": 3632,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.2317698243338645,
+        "p05": 0.4181031824192819,
+        "median": 0.6920052105376696,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.00013578635175640885,
+        "maximumEdgeRatio": 3.62351416169714,
+        "warning": null
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "order",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 370.6000000014901
+    },
+    {
+      "file": "cylinder-32.stl",
+      "order": 1,
+      "sourceBytes": 6484,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 3632,
+      "meshBytes": 155000,
+      "patches": 3,
+      "patchIds": [
+        "stl:6789f9879a592ec13a08923c24eac491f7e2ee3a05569cd890ffdfe7ca1d1a0f",
+        "stl:cc04f342397da972bbb53e543913a8e0728ed9de3998ef44e432128202b7b729",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489"
+      ],
+      "internalSurfaces": 36,
+      "internalSurfacePatchIds": [
+        "stl:6789f9879a592ec13a08923c24eac491f7e2ee3a05569cd890ffdfe7ca1d1a0f",
+        "stl:cc04f342397da972bbb53e543913a8e0728ed9de3998ef44e432128202b7b729",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:6789f9879a592ec13a08923c24eac491f7e2ee3a05569cd890ffdfe7ca1d1a0f",
+        "stl:cc04f342397da972bbb53e543913a8e0728ed9de3998ef44e432128202b7b729",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489"
+      ],
+      "sourceVolume": 0.7803612594167173,
+      "linearCornerVolume": 0.780361259416714,
+      "relativeVolumeError": 4.218847493575595e-15,
+      "nodes": 1337,
+      "elements": 4463,
+      "boundaryType": "tri3",
+      "boundaryElements": 2146,
+      "displayTriangles": 2146,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.014959340371252523,
+        "p05": 0.3692375633535905,
+        "median": 0.673806279523249,
+        "poorElementCount": 33,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 1.597243624115227e-05,
+        "maximumEdgeRatio": 6.7162721956105385,
+        "warning": "Some elements have low gamma quality."
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 413
+    },
+    {
+      "file": "cylinder-32.stl",
+      "order": 2,
+      "sourceBytes": 6484,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 3632,
+      "meshBytes": 530048,
+      "patches": 3,
+      "patchIds": [
+        "stl:6789f9879a592ec13a08923c24eac491f7e2ee3a05569cd890ffdfe7ca1d1a0f",
+        "stl:cc04f342397da972bbb53e543913a8e0728ed9de3998ef44e432128202b7b729",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489"
+      ],
+      "internalSurfaces": 36,
+      "internalSurfacePatchIds": [
+        "stl:6789f9879a592ec13a08923c24eac491f7e2ee3a05569cd890ffdfe7ca1d1a0f",
+        "stl:cc04f342397da972bbb53e543913a8e0728ed9de3998ef44e432128202b7b729",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:6789f9879a592ec13a08923c24eac491f7e2ee3a05569cd890ffdfe7ca1d1a0f",
+        "stl:cc04f342397da972bbb53e543913a8e0728ed9de3998ef44e432128202b7b729",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489"
+      ],
+      "sourceVolume": 0.7803612594167173,
+      "linearCornerVolume": 0.780361259416714,
+      "relativeVolumeError": 4.218847493575595e-15,
+      "nodes": 8209,
+      "elements": 4463,
+      "boundaryType": "tri6",
+      "boundaryElements": 2146,
+      "displayTriangles": 8584,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.014959340371252523,
+        "p05": 0.3692375633535905,
+        "median": 0.673806279523249,
+        "poorElementCount": 33,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 1.59724362411521e-05,
+        "maximumEdgeRatio": 6.7162721956105385,
+        "warning": "Some elements have low gamma quality."
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "order",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 483.6000000014901
+    },
+    {
+      "file": "cylinder-64.stl",
+      "order": 1,
+      "sourceBytes": 12884,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 7216,
+      "meshBytes": 227952,
+      "patches": 3,
+      "patchIds": [
+        "stl:1c886b3dfdeb9631283f3f2b918f98b2989a1fb446dc594137ce43e601290e29",
+        "stl:677359486ff6c3fc6fbba2134a87ec6970bffbdc163175b4b02d78085c6d128d",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01"
+      ],
+      "internalSurfaces": 68,
+      "internalSurfacePatchIds": [
+        "stl:1c886b3dfdeb9631283f3f2b918f98b2989a1fb446dc594137ce43e601290e29",
+        "stl:677359486ff6c3fc6fbba2134a87ec6970bffbdc163175b4b02d78085c6d128d",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:1c886b3dfdeb9631283f3f2b918f98b2989a1fb446dc594137ce43e601290e29",
+        "stl:677359486ff6c3fc6fbba2134a87ec6970bffbdc163175b4b02d78085c6d128d",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01"
+      ],
+      "sourceVolume": 0.7841371103709764,
+      "linearCornerVolume": 0.7841371103709772,
+      "relativeVolumeError": 8.881784197001252e-16,
+      "nodes": 1998,
+      "elements": 6207,
+      "boundaryType": "tri3",
+      "boundaryElements": 3362,
+      "displayTriangles": 3362,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.0814148896986258,
+        "p05": 0.17518312232983496,
+        "median": 0.47116288632988923,
+        "poorElementCount": 11,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 4.6823722888542045e-06,
+        "maximumEdgeRatio": 11.812316656256762,
+        "warning": "Some elements have low gamma quality."
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 567.2999999970198
+    },
+    {
+      "file": "cylinder-64.stl",
+      "order": 2,
+      "sourceBytes": 12884,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 7216,
+      "meshBytes": 775536,
+      "patches": 3,
+      "patchIds": [
+        "stl:1c886b3dfdeb9631283f3f2b918f98b2989a1fb446dc594137ce43e601290e29",
+        "stl:677359486ff6c3fc6fbba2134a87ec6970bffbdc163175b4b02d78085c6d128d",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01"
+      ],
+      "internalSurfaces": 68,
+      "internalSurfacePatchIds": [
+        "stl:1c886b3dfdeb9631283f3f2b918f98b2989a1fb446dc594137ce43e601290e29",
+        "stl:677359486ff6c3fc6fbba2134a87ec6970bffbdc163175b4b02d78085c6d128d",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:1c886b3dfdeb9631283f3f2b918f98b2989a1fb446dc594137ce43e601290e29",
+        "stl:677359486ff6c3fc6fbba2134a87ec6970bffbdc163175b4b02d78085c6d128d",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01"
+      ],
+      "sourceVolume": 0.7841371103709764,
+      "linearCornerVolume": 0.7841371103709772,
+      "relativeVolumeError": 8.881784197001252e-16,
+      "nodes": 11883,
+      "elements": 6207,
+      "boundaryType": "tri6",
+      "boundaryElements": 3362,
+      "displayTriangles": 13448,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.0814148896986258,
+        "p05": 0.17518312232983496,
+        "median": 0.47116288632988923,
+        "poorElementCount": 11,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 4.6823722888542045e-06,
+        "maximumEdgeRatio": 11.812316656256762,
+        "warning": "Some elements have low gamma quality."
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "order",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 630.5
+    },
+    {
+      "file": "thin-plate.stl",
+      "order": 1,
+      "sourceBytes": 684,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 384,
+      "meshBytes": 21848,
+      "patches": 6,
+      "patchIds": [
+        "stl:5e9e21f67ca5876eb7177daa82ef0b12f8686ca90ada8e8f9af5df06c2f64d23",
+        "stl:775000dbe575ef1ca3bf9b6ba4f504ca609fceda3db1f6c4d61393ae1dc0a7f7",
+        "stl:4775fb69c7c4018120e91174b3621e64b1c74f5d2d6bb173e9d3a971215b5500",
+        "stl:10f333bef202f8d51f6b18d1146b79390777bec09be39d56bfcf6f3d6da4025d",
+        "stl:4bea0d64a9afd6e1b44645e161451dcb093bf29edb76d36cc81dfd47bbecf8fd",
+        "stl:da6b2ab7c8301aeaf4d26d968c9d03b4639b4cb0a00ffc1a60cadebb6add2b40"
+      ],
+      "internalSurfaces": 8,
+      "internalSurfacePatchIds": [
+        "stl:5e9e21f67ca5876eb7177daa82ef0b12f8686ca90ada8e8f9af5df06c2f64d23",
+        "stl:5e9e21f67ca5876eb7177daa82ef0b12f8686ca90ada8e8f9af5df06c2f64d23",
+        "stl:775000dbe575ef1ca3bf9b6ba4f504ca609fceda3db1f6c4d61393ae1dc0a7f7",
+        "stl:775000dbe575ef1ca3bf9b6ba4f504ca609fceda3db1f6c4d61393ae1dc0a7f7",
+        "stl:4775fb69c7c4018120e91174b3621e64b1c74f5d2d6bb173e9d3a971215b5500",
+        "stl:10f333bef202f8d51f6b18d1146b79390777bec09be39d56bfcf6f3d6da4025d",
+        "stl:4bea0d64a9afd6e1b44645e161451dcb093bf29edb76d36cc81dfd47bbecf8fd",
+        "stl:da6b2ab7c8301aeaf4d26d968c9d03b4639b4cb0a00ffc1a60cadebb6add2b40"
+      ],
+      "sourceVolume": 0.019999999552965164,
+      "linearCornerVolume": 0.019999999552965147,
+      "relativeVolumeError": 8.881784197001252e-16,
+      "nodes": 197,
+      "elements": 485,
+      "boundaryType": "tri3",
+      "boundaryElements": 390,
+      "displayTriangles": 390,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.023054554145045748,
+        "p05": 0.13534296699148882,
+        "median": 0.34123680909269527,
+        "poorElementCount": 4,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 3.5336870133751356e-06,
+        "maximumEdgeRatio": 21.307276224721416,
+        "warning": "Some elements have low gamma quality."
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 313.40000000596046
+    },
+    {
+      "file": "thin-plate.stl",
+      "order": 2,
+      "sourceBytes": 684,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 384,
+      "meshBytes": 73232,
+      "patches": 6,
+      "patchIds": [
+        "stl:5e9e21f67ca5876eb7177daa82ef0b12f8686ca90ada8e8f9af5df06c2f64d23",
+        "stl:775000dbe575ef1ca3bf9b6ba4f504ca609fceda3db1f6c4d61393ae1dc0a7f7",
+        "stl:4775fb69c7c4018120e91174b3621e64b1c74f5d2d6bb173e9d3a971215b5500",
+        "stl:10f333bef202f8d51f6b18d1146b79390777bec09be39d56bfcf6f3d6da4025d",
+        "stl:4bea0d64a9afd6e1b44645e161451dcb093bf29edb76d36cc81dfd47bbecf8fd",
+        "stl:da6b2ab7c8301aeaf4d26d968c9d03b4639b4cb0a00ffc1a60cadebb6add2b40"
+      ],
+      "internalSurfaces": 8,
+      "internalSurfacePatchIds": [
+        "stl:5e9e21f67ca5876eb7177daa82ef0b12f8686ca90ada8e8f9af5df06c2f64d23",
+        "stl:5e9e21f67ca5876eb7177daa82ef0b12f8686ca90ada8e8f9af5df06c2f64d23",
+        "stl:775000dbe575ef1ca3bf9b6ba4f504ca609fceda3db1f6c4d61393ae1dc0a7f7",
+        "stl:775000dbe575ef1ca3bf9b6ba4f504ca609fceda3db1f6c4d61393ae1dc0a7f7",
+        "stl:4775fb69c7c4018120e91174b3621e64b1c74f5d2d6bb173e9d3a971215b5500",
+        "stl:10f333bef202f8d51f6b18d1146b79390777bec09be39d56bfcf6f3d6da4025d",
+        "stl:4bea0d64a9afd6e1b44645e161451dcb093bf29edb76d36cc81dfd47bbecf8fd",
+        "stl:da6b2ab7c8301aeaf4d26d968c9d03b4639b4cb0a00ffc1a60cadebb6add2b40"
+      ],
+      "sourceVolume": 0.019999999552965164,
+      "linearCornerVolume": 0.019999999552965147,
+      "relativeVolumeError": 8.881784197001252e-16,
+      "nodes": 1073,
+      "elements": 485,
+      "boundaryType": "tri6",
+      "boundaryElements": 390,
+      "displayTriangles": 1560,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.023054554145045748,
+        "p05": 0.13534296699148882,
+        "median": 0.34123680909269527,
+        "poorElementCount": 4,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 3.533687013374237e-06,
+        "maximumEdgeRatio": 21.307276224721416,
+        "warning": "Some elements have low gamma quality."
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "order",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 323.30000000447035
+    },
+    {
+      "file": "cube-ascii.stl",
+      "order": 2,
+      "readerCharacterization": true,
+      "sourceBytes": 1063,
+      "serializedBytes": 1063,
+      "importMethod": "merge",
+      "previewBytes": 384,
+      "meshBytes": 135800,
+      "patches": 6,
+      "patchIds": [
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:987cc43fedc2e589c04617f80c346e72380813c9a0781593dd7ad40f2ef31d05",
+        "stl:bbf2483cfbad14eb133cf94c6815387f8360ba5d451c9af513be70ba1f921ade",
+        "stl:d7dc56ac806d3b3d391a7f12a1ad2b8647ed444d1106b5ab49e958a4f4bc2a97",
+        "stl:a52c2071a6dec86012d7755b8aab7941e2074546b96d92f139cf7b3d62ceaad6"
+      ],
+      "internalSurfaces": 8,
+      "internalSurfacePatchIds": [
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:987cc43fedc2e589c04617f80c346e72380813c9a0781593dd7ad40f2ef31d05",
+        "stl:bbf2483cfbad14eb133cf94c6815387f8360ba5d451c9af513be70ba1f921ade",
+        "stl:d7dc56ac806d3b3d391a7f12a1ad2b8647ed444d1106b5ab49e958a4f4bc2a97",
+        "stl:a52c2071a6dec86012d7755b8aab7941e2074546b96d92f139cf7b3d62ceaad6"
+      ],
+      "sourceVolume": 0.9999999999999999,
+      "linearCornerVolume": 1.0000000000000004,
+      "relativeVolumeError": 6.661338147750939e-16,
+      "nodes": 2102,
+      "elements": 1133,
+      "boundaryType": "tri6",
+      "boundaryElements": 556,
+      "displayTriangles": 2224,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.3043633580983936,
+        "p05": 0.559729772821086,
+        "median": 0.7838292502846619,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.001557706584958749,
+        "maximumEdgeRatio": 2.514953630746184,
+        "warning": null
+      },
+      "memorySamples": [
+        {
+          "stage": "merge",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "order",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 346.5
+    },
+    {
+      "file": "cube-binary.stl",
+      "order": 2,
+      "readerCharacterization": true,
+      "sourceBytes": 684,
+      "serializedBytes": 684,
+      "importMethod": "merge",
+      "previewBytes": 384,
+      "meshBytes": 135800,
+      "patches": 6,
+      "patchIds": [
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:22d61f680a83bd48dac9d1671e67202c4a9be121ad39ae74a35dccc8f3481c86",
+        "stl:2509eea2cff986c4a4e5cf9af287b27763da000496e70ccc9f8f201e5f5276d1",
+        "stl:e68c528811a9e9fc8fca8a60a30e95a5e610c94e82f0346812803beb86087a44",
+        "stl:42f7e968aa73eaf1f2559937c4c7c9aa96ff78a5d6647b1064385451dbdf84bc"
+      ],
+      "internalSurfaces": 8,
+      "internalSurfacePatchIds": [
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:22d61f680a83bd48dac9d1671e67202c4a9be121ad39ae74a35dccc8f3481c86",
+        "stl:2509eea2cff986c4a4e5cf9af287b27763da000496e70ccc9f8f201e5f5276d1",
+        "stl:e68c528811a9e9fc8fca8a60a30e95a5e610c94e82f0346812803beb86087a44",
+        "stl:42f7e968aa73eaf1f2559937c4c7c9aa96ff78a5d6647b1064385451dbdf84bc"
+      ],
+      "sourceVolume": 0.9999999999999999,
+      "linearCornerVolume": 1.0000000000000004,
+      "relativeVolumeError": 6.661338147750939e-16,
+      "nodes": 2102,
+      "elements": 1133,
+      "boundaryType": "tri6",
+      "boundaryElements": 556,
+      "displayTriangles": 2224,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.3043633580983936,
+        "p05": 0.559729772821086,
+        "median": 0.7838292502846619,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.001557706584958749,
+        "maximumEdgeRatio": 2.514953630746184,
+        "warning": null
+      },
+      "memorySamples": [
+        {
+          "stage": "merge",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "order",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 337.5
+    },
+    {
+      "cancellation": "passed",
+      "stage": "generate",
+      "disposal": "terminate worker and revoke Blob URL"
+    },
+    {
+      "recovery": "passed",
+      "elements": 1154
+    }
+  ],
+  "http": [
+    {
+      "file": "cube-ascii.stl",
+      "order": 1,
+      "sourceBytes": 1063,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 384,
+      "meshBytes": 40184,
+      "patches": 6,
+      "patchIds": [
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:987cc43fedc2e589c04617f80c346e72380813c9a0781593dd7ad40f2ef31d05",
+        "stl:bbf2483cfbad14eb133cf94c6815387f8360ba5d451c9af513be70ba1f921ade",
+        "stl:d7dc56ac806d3b3d391a7f12a1ad2b8647ed444d1106b5ab49e958a4f4bc2a97",
+        "stl:a52c2071a6dec86012d7755b8aab7941e2074546b96d92f139cf7b3d62ceaad6"
+      ],
+      "internalSurfaces": 8,
+      "internalSurfacePatchIds": [
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:987cc43fedc2e589c04617f80c346e72380813c9a0781593dd7ad40f2ef31d05",
+        "stl:bbf2483cfbad14eb133cf94c6815387f8360ba5d451c9af513be70ba1f921ade",
+        "stl:d7dc56ac806d3b3d391a7f12a1ad2b8647ed444d1106b5ab49e958a4f4bc2a97",
+        "stl:a52c2071a6dec86012d7755b8aab7941e2074546b96d92f139cf7b3d62ceaad6"
+      ],
+      "sourceVolume": 0.9999999999999999,
+      "linearCornerVolume": 1.000000000000001,
+      "relativeVolumeError": 1.3322676295501878e-15,
+      "nodes": 349,
+      "elements": 1154,
+      "boundaryType": "tri3",
+      "boundaryElements": 556,
+      "displayTriangles": 556,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.30436335809839354,
+        "p05": 0.5686228658888732,
+        "median": 0.7857725289050937,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.001557706584958755,
+        "maximumEdgeRatio": 2.5149536307461844,
+        "warning": null
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 327.3699999973178
+    },
+    {
+      "file": "cube-ascii.stl",
+      "order": 2,
+      "sourceBytes": 1063,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 384,
+      "meshBytes": 137288,
+      "patches": 6,
+      "patchIds": [
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:987cc43fedc2e589c04617f80c346e72380813c9a0781593dd7ad40f2ef31d05",
+        "stl:bbf2483cfbad14eb133cf94c6815387f8360ba5d451c9af513be70ba1f921ade",
+        "stl:d7dc56ac806d3b3d391a7f12a1ad2b8647ed444d1106b5ab49e958a4f4bc2a97",
+        "stl:a52c2071a6dec86012d7755b8aab7941e2074546b96d92f139cf7b3d62ceaad6"
+      ],
+      "internalSurfaces": 8,
+      "internalSurfacePatchIds": [
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:987cc43fedc2e589c04617f80c346e72380813c9a0781593dd7ad40f2ef31d05",
+        "stl:bbf2483cfbad14eb133cf94c6815387f8360ba5d451c9af513be70ba1f921ade",
+        "stl:d7dc56ac806d3b3d391a7f12a1ad2b8647ed444d1106b5ab49e958a4f4bc2a97",
+        "stl:a52c2071a6dec86012d7755b8aab7941e2074546b96d92f139cf7b3d62ceaad6"
+      ],
+      "sourceVolume": 0.9999999999999999,
+      "linearCornerVolume": 1.000000000000001,
+      "relativeVolumeError": 1.3322676295501878e-15,
+      "nodes": 2129,
+      "elements": 1154,
+      "boundaryType": "tri6",
+      "boundaryElements": 556,
+      "displayTriangles": 2224,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.30436335809839354,
+        "p05": 0.5686228658888732,
+        "median": 0.7857725289050937,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.001557706584958749,
+        "maximumEdgeRatio": 2.5149536307461844,
+        "warning": null
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "order",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 341.67000000178814
+    },
+    {
+      "file": "cube-binary.stl",
+      "order": 1,
+      "sourceBytes": 684,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 384,
+      "meshBytes": 40184,
+      "patches": 6,
+      "patchIds": [
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:22d61f680a83bd48dac9d1671e67202c4a9be121ad39ae74a35dccc8f3481c86",
+        "stl:2509eea2cff986c4a4e5cf9af287b27763da000496e70ccc9f8f201e5f5276d1",
+        "stl:e68c528811a9e9fc8fca8a60a30e95a5e610c94e82f0346812803beb86087a44",
+        "stl:42f7e968aa73eaf1f2559937c4c7c9aa96ff78a5d6647b1064385451dbdf84bc"
+      ],
+      "internalSurfaces": 8,
+      "internalSurfacePatchIds": [
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:22d61f680a83bd48dac9d1671e67202c4a9be121ad39ae74a35dccc8f3481c86",
+        "stl:2509eea2cff986c4a4e5cf9af287b27763da000496e70ccc9f8f201e5f5276d1",
+        "stl:e68c528811a9e9fc8fca8a60a30e95a5e610c94e82f0346812803beb86087a44",
+        "stl:42f7e968aa73eaf1f2559937c4c7c9aa96ff78a5d6647b1064385451dbdf84bc"
+      ],
+      "sourceVolume": 0.9999999999999999,
+      "linearCornerVolume": 1.000000000000001,
+      "relativeVolumeError": 1.3322676295501878e-15,
+      "nodes": 349,
+      "elements": 1154,
+      "boundaryType": "tri3",
+      "boundaryElements": 556,
+      "displayTriangles": 556,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.30436335809839354,
+        "p05": 0.5686228658888732,
+        "median": 0.7857725289050937,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.001557706584958755,
+        "maximumEdgeRatio": 2.5149536307461844,
+        "warning": null
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 314.6899999976158
+    },
+    {
+      "file": "cube-binary.stl",
+      "order": 2,
+      "sourceBytes": 684,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 384,
+      "meshBytes": 137288,
+      "patches": 6,
+      "patchIds": [
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:22d61f680a83bd48dac9d1671e67202c4a9be121ad39ae74a35dccc8f3481c86",
+        "stl:2509eea2cff986c4a4e5cf9af287b27763da000496e70ccc9f8f201e5f5276d1",
+        "stl:e68c528811a9e9fc8fca8a60a30e95a5e610c94e82f0346812803beb86087a44",
+        "stl:42f7e968aa73eaf1f2559937c4c7c9aa96ff78a5d6647b1064385451dbdf84bc"
+      ],
+      "internalSurfaces": 8,
+      "internalSurfacePatchIds": [
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:22d61f680a83bd48dac9d1671e67202c4a9be121ad39ae74a35dccc8f3481c86",
+        "stl:2509eea2cff986c4a4e5cf9af287b27763da000496e70ccc9f8f201e5f5276d1",
+        "stl:e68c528811a9e9fc8fca8a60a30e95a5e610c94e82f0346812803beb86087a44",
+        "stl:42f7e968aa73eaf1f2559937c4c7c9aa96ff78a5d6647b1064385451dbdf84bc"
+      ],
+      "sourceVolume": 0.9999999999999999,
+      "linearCornerVolume": 1.000000000000001,
+      "relativeVolumeError": 1.3322676295501878e-15,
+      "nodes": 2129,
+      "elements": 1154,
+      "boundaryType": "tri6",
+      "boundaryElements": 556,
+      "displayTriangles": 2224,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.30436335809839354,
+        "p05": 0.5686228658888732,
+        "median": 0.7857725289050937,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.001557706584958749,
+        "maximumEdgeRatio": 2.5149536307461844,
+        "warning": null
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "order",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 330.17499999701977
+    },
+    {
+      "file": "cylinder-16.stl",
+      "order": 1,
+      "sourceBytes": 3284,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 1840,
+      "meshBytes": 61776,
+      "patches": 3,
+      "patchIds": [
+        "stl:dec4978d804f9b96a44c1d5d5b7ed036b3aef3ee6408c3d13c7ee490de6516c1",
+        "stl:5b5b4c9e7eb9a3bb91134cb00852cb5112867e0161af469bc3192235eaf7802d",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b"
+      ],
+      "internalSurfaces": 20,
+      "internalSurfacePatchIds": [
+        "stl:dec4978d804f9b96a44c1d5d5b7ed036b3aef3ee6408c3d13c7ee490de6516c1",
+        "stl:5b5b4c9e7eb9a3bb91134cb00852cb5112867e0161af469bc3192235eaf7802d",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:dec4978d804f9b96a44c1d5d5b7ed036b3aef3ee6408c3d13c7ee490de6516c1",
+        "stl:5b5b4c9e7eb9a3bb91134cb00852cb5112867e0161af469bc3192235eaf7802d",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b"
+      ],
+      "sourceVolume": 0.7653668363416358,
+      "linearCornerVolume": 0.7653668363416348,
+      "relativeVolumeError": 1.3322676295501878e-15,
+      "nodes": 540,
+      "elements": 1689,
+      "boundaryType": "tri3",
+      "boundaryElements": 908,
+      "displayTriangles": 908,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.2317698243338645,
+        "p05": 0.4181031824192819,
+        "median": 0.6920052105376696,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.00013578635175640942,
+        "maximumEdgeRatio": 3.62351416169714,
+        "warning": null
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 354.23499999940395
+    },
+    {
+      "file": "cylinder-16.stl",
+      "order": 2,
+      "sourceBytes": 3284,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 1840,
+      "meshBytes": 210264,
+      "patches": 3,
+      "patchIds": [
+        "stl:dec4978d804f9b96a44c1d5d5b7ed036b3aef3ee6408c3d13c7ee490de6516c1",
+        "stl:5b5b4c9e7eb9a3bb91134cb00852cb5112867e0161af469bc3192235eaf7802d",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b"
+      ],
+      "internalSurfaces": 20,
+      "internalSurfacePatchIds": [
+        "stl:dec4978d804f9b96a44c1d5d5b7ed036b3aef3ee6408c3d13c7ee490de6516c1",
+        "stl:5b5b4c9e7eb9a3bb91134cb00852cb5112867e0161af469bc3192235eaf7802d",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:dec4978d804f9b96a44c1d5d5b7ed036b3aef3ee6408c3d13c7ee490de6516c1",
+        "stl:5b5b4c9e7eb9a3bb91134cb00852cb5112867e0161af469bc3192235eaf7802d",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b",
+        "stl:b790eb29656a449e5d456094a6882f63fe3fdd3518b1e35b11cd23fa5457d53b"
+      ],
+      "sourceVolume": 0.7653668363416358,
+      "linearCornerVolume": 0.7653668363416348,
+      "relativeVolumeError": 1.3322676295501878e-15,
+      "nodes": 3222,
+      "elements": 1689,
+      "boundaryType": "tri6",
+      "boundaryElements": 908,
+      "displayTriangles": 3632,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.2317698243338645,
+        "p05": 0.4181031824192819,
+        "median": 0.6920052105376696,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.00013578635175640885,
+        "maximumEdgeRatio": 3.62351416169714,
+        "warning": null
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "order",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 364.02500000596046
+    },
+    {
+      "file": "cylinder-32.stl",
+      "order": 1,
+      "sourceBytes": 6484,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 3632,
+      "meshBytes": 155000,
+      "patches": 3,
+      "patchIds": [
+        "stl:6789f9879a592ec13a08923c24eac491f7e2ee3a05569cd890ffdfe7ca1d1a0f",
+        "stl:cc04f342397da972bbb53e543913a8e0728ed9de3998ef44e432128202b7b729",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489"
+      ],
+      "internalSurfaces": 36,
+      "internalSurfacePatchIds": [
+        "stl:6789f9879a592ec13a08923c24eac491f7e2ee3a05569cd890ffdfe7ca1d1a0f",
+        "stl:cc04f342397da972bbb53e543913a8e0728ed9de3998ef44e432128202b7b729",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:6789f9879a592ec13a08923c24eac491f7e2ee3a05569cd890ffdfe7ca1d1a0f",
+        "stl:cc04f342397da972bbb53e543913a8e0728ed9de3998ef44e432128202b7b729",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489"
+      ],
+      "sourceVolume": 0.7803612594167173,
+      "linearCornerVolume": 0.780361259416714,
+      "relativeVolumeError": 4.218847493575595e-15,
+      "nodes": 1337,
+      "elements": 4463,
+      "boundaryType": "tri3",
+      "boundaryElements": 2146,
+      "displayTriangles": 2146,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.014959340371252523,
+        "p05": 0.3692375633535905,
+        "median": 0.673806279523249,
+        "poorElementCount": 33,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 1.597243624115227e-05,
+        "maximumEdgeRatio": 6.7162721956105385,
+        "warning": "Some elements have low gamma quality."
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 404.3999999985099
+    },
+    {
+      "file": "cylinder-32.stl",
+      "order": 2,
+      "sourceBytes": 6484,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 3632,
+      "meshBytes": 530048,
+      "patches": 3,
+      "patchIds": [
+        "stl:6789f9879a592ec13a08923c24eac491f7e2ee3a05569cd890ffdfe7ca1d1a0f",
+        "stl:cc04f342397da972bbb53e543913a8e0728ed9de3998ef44e432128202b7b729",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489"
+      ],
+      "internalSurfaces": 36,
+      "internalSurfacePatchIds": [
+        "stl:6789f9879a592ec13a08923c24eac491f7e2ee3a05569cd890ffdfe7ca1d1a0f",
+        "stl:cc04f342397da972bbb53e543913a8e0728ed9de3998ef44e432128202b7b729",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:6789f9879a592ec13a08923c24eac491f7e2ee3a05569cd890ffdfe7ca1d1a0f",
+        "stl:cc04f342397da972bbb53e543913a8e0728ed9de3998ef44e432128202b7b729",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489",
+        "stl:cfc339e8efde1021a600e5e1aaccdd792de650ef794015e92cbdc51a477f2489"
+      ],
+      "sourceVolume": 0.7803612594167173,
+      "linearCornerVolume": 0.780361259416714,
+      "relativeVolumeError": 4.218847493575595e-15,
+      "nodes": 8209,
+      "elements": 4463,
+      "boundaryType": "tri6",
+      "boundaryElements": 2146,
+      "displayTriangles": 8584,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.014959340371252523,
+        "p05": 0.3692375633535905,
+        "median": 0.673806279523249,
+        "poorElementCount": 33,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 1.59724362411521e-05,
+        "maximumEdgeRatio": 6.7162721956105385,
+        "warning": "Some elements have low gamma quality."
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "order",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 455.51499999314547
+    },
+    {
+      "file": "cylinder-64.stl",
+      "order": 1,
+      "sourceBytes": 12884,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 7216,
+      "meshBytes": 227952,
+      "patches": 3,
+      "patchIds": [
+        "stl:1c886b3dfdeb9631283f3f2b918f98b2989a1fb446dc594137ce43e601290e29",
+        "stl:677359486ff6c3fc6fbba2134a87ec6970bffbdc163175b4b02d78085c6d128d",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01"
+      ],
+      "internalSurfaces": 68,
+      "internalSurfacePatchIds": [
+        "stl:1c886b3dfdeb9631283f3f2b918f98b2989a1fb446dc594137ce43e601290e29",
+        "stl:677359486ff6c3fc6fbba2134a87ec6970bffbdc163175b4b02d78085c6d128d",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:1c886b3dfdeb9631283f3f2b918f98b2989a1fb446dc594137ce43e601290e29",
+        "stl:677359486ff6c3fc6fbba2134a87ec6970bffbdc163175b4b02d78085c6d128d",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01"
+      ],
+      "sourceVolume": 0.7841371103709764,
+      "linearCornerVolume": 0.7841371103709772,
+      "relativeVolumeError": 8.881784197001252e-16,
+      "nodes": 1998,
+      "elements": 6207,
+      "boundaryType": "tri3",
+      "boundaryElements": 3362,
+      "displayTriangles": 3362,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.0814148896986258,
+        "p05": 0.17518312232983496,
+        "median": 0.47116288632988923,
+        "poorElementCount": 11,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 4.6823722888542045e-06,
+        "maximumEdgeRatio": 11.812316656256762,
+        "warning": "Some elements have low gamma quality."
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 546.7400000020862
+    },
+    {
+      "file": "cylinder-64.stl",
+      "order": 2,
+      "sourceBytes": 12884,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 7216,
+      "meshBytes": 775536,
+      "patches": 3,
+      "patchIds": [
+        "stl:1c886b3dfdeb9631283f3f2b918f98b2989a1fb446dc594137ce43e601290e29",
+        "stl:677359486ff6c3fc6fbba2134a87ec6970bffbdc163175b4b02d78085c6d128d",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01"
+      ],
+      "internalSurfaces": 68,
+      "internalSurfacePatchIds": [
+        "stl:1c886b3dfdeb9631283f3f2b918f98b2989a1fb446dc594137ce43e601290e29",
+        "stl:677359486ff6c3fc6fbba2134a87ec6970bffbdc163175b4b02d78085c6d128d",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:1c886b3dfdeb9631283f3f2b918f98b2989a1fb446dc594137ce43e601290e29",
+        "stl:677359486ff6c3fc6fbba2134a87ec6970bffbdc163175b4b02d78085c6d128d",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01",
+        "stl:f78726c4f697752247909878f1ee322b1b195a4417c7be8a8343aa23b6180c01"
+      ],
+      "sourceVolume": 0.7841371103709764,
+      "linearCornerVolume": 0.7841371103709772,
+      "relativeVolumeError": 8.881784197001252e-16,
+      "nodes": 11883,
+      "elements": 6207,
+      "boundaryType": "tri6",
+      "boundaryElements": 3362,
+      "displayTriangles": 13448,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.0814148896986258,
+        "p05": 0.17518312232983496,
+        "median": 0.47116288632988923,
+        "poorElementCount": 11,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 4.6823722888542045e-06,
+        "maximumEdgeRatio": 11.812316656256762,
+        "warning": "Some elements have low gamma quality."
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "order",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 610.7950000017881
+    },
+    {
+      "file": "thin-plate.stl",
+      "order": 1,
+      "sourceBytes": 684,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 384,
+      "meshBytes": 21848,
+      "patches": 6,
+      "patchIds": [
+        "stl:5e9e21f67ca5876eb7177daa82ef0b12f8686ca90ada8e8f9af5df06c2f64d23",
+        "stl:775000dbe575ef1ca3bf9b6ba4f504ca609fceda3db1f6c4d61393ae1dc0a7f7",
+        "stl:4775fb69c7c4018120e91174b3621e64b1c74f5d2d6bb173e9d3a971215b5500",
+        "stl:10f333bef202f8d51f6b18d1146b79390777bec09be39d56bfcf6f3d6da4025d",
+        "stl:4bea0d64a9afd6e1b44645e161451dcb093bf29edb76d36cc81dfd47bbecf8fd",
+        "stl:da6b2ab7c8301aeaf4d26d968c9d03b4639b4cb0a00ffc1a60cadebb6add2b40"
+      ],
+      "internalSurfaces": 8,
+      "internalSurfacePatchIds": [
+        "stl:5e9e21f67ca5876eb7177daa82ef0b12f8686ca90ada8e8f9af5df06c2f64d23",
+        "stl:5e9e21f67ca5876eb7177daa82ef0b12f8686ca90ada8e8f9af5df06c2f64d23",
+        "stl:775000dbe575ef1ca3bf9b6ba4f504ca609fceda3db1f6c4d61393ae1dc0a7f7",
+        "stl:775000dbe575ef1ca3bf9b6ba4f504ca609fceda3db1f6c4d61393ae1dc0a7f7",
+        "stl:4775fb69c7c4018120e91174b3621e64b1c74f5d2d6bb173e9d3a971215b5500",
+        "stl:10f333bef202f8d51f6b18d1146b79390777bec09be39d56bfcf6f3d6da4025d",
+        "stl:4bea0d64a9afd6e1b44645e161451dcb093bf29edb76d36cc81dfd47bbecf8fd",
+        "stl:da6b2ab7c8301aeaf4d26d968c9d03b4639b4cb0a00ffc1a60cadebb6add2b40"
+      ],
+      "sourceVolume": 0.019999999552965164,
+      "linearCornerVolume": 0.019999999552965147,
+      "relativeVolumeError": 8.881784197001252e-16,
+      "nodes": 197,
+      "elements": 485,
+      "boundaryType": "tri3",
+      "boundaryElements": 390,
+      "displayTriangles": 390,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.023054554145045748,
+        "p05": 0.13534296699148882,
+        "median": 0.34123680909269527,
+        "poorElementCount": 4,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 3.5336870133751356e-06,
+        "maximumEdgeRatio": 21.307276224721416,
+        "warning": "Some elements have low gamma quality."
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 306.8100000023842
+    },
+    {
+      "file": "thin-plate.stl",
+      "order": 2,
+      "sourceBytes": 684,
+      "serializedBytes": 0,
+      "importMethod": "indexed",
+      "previewBytes": 384,
+      "meshBytes": 73232,
+      "patches": 6,
+      "patchIds": [
+        "stl:5e9e21f67ca5876eb7177daa82ef0b12f8686ca90ada8e8f9af5df06c2f64d23",
+        "stl:775000dbe575ef1ca3bf9b6ba4f504ca609fceda3db1f6c4d61393ae1dc0a7f7",
+        "stl:4775fb69c7c4018120e91174b3621e64b1c74f5d2d6bb173e9d3a971215b5500",
+        "stl:10f333bef202f8d51f6b18d1146b79390777bec09be39d56bfcf6f3d6da4025d",
+        "stl:4bea0d64a9afd6e1b44645e161451dcb093bf29edb76d36cc81dfd47bbecf8fd",
+        "stl:da6b2ab7c8301aeaf4d26d968c9d03b4639b4cb0a00ffc1a60cadebb6add2b40"
+      ],
+      "internalSurfaces": 8,
+      "internalSurfacePatchIds": [
+        "stl:5e9e21f67ca5876eb7177daa82ef0b12f8686ca90ada8e8f9af5df06c2f64d23",
+        "stl:5e9e21f67ca5876eb7177daa82ef0b12f8686ca90ada8e8f9af5df06c2f64d23",
+        "stl:775000dbe575ef1ca3bf9b6ba4f504ca609fceda3db1f6c4d61393ae1dc0a7f7",
+        "stl:775000dbe575ef1ca3bf9b6ba4f504ca609fceda3db1f6c4d61393ae1dc0a7f7",
+        "stl:4775fb69c7c4018120e91174b3621e64b1c74f5d2d6bb173e9d3a971215b5500",
+        "stl:10f333bef202f8d51f6b18d1146b79390777bec09be39d56bfcf6f3d6da4025d",
+        "stl:4bea0d64a9afd6e1b44645e161451dcb093bf29edb76d36cc81dfd47bbecf8fd",
+        "stl:da6b2ab7c8301aeaf4d26d968c9d03b4639b4cb0a00ffc1a60cadebb6add2b40"
+      ],
+      "sourceVolume": 0.019999999552965164,
+      "linearCornerVolume": 0.019999999552965147,
+      "relativeVolumeError": 8.881784197001252e-16,
+      "nodes": 1073,
+      "elements": 485,
+      "boundaryType": "tri6",
+      "boundaryElements": 390,
+      "displayTriangles": 1560,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.023054554145045748,
+        "p05": 0.13534296699148882,
+        "median": 0.34123680909269527,
+        "poorElementCount": 4,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 3.533687013374237e-06,
+        "maximumEdgeRatio": 21.307276224721416,
+        "warning": "Some elements have low gamma quality."
+      },
+      "memorySamples": [
+        {
+          "stage": "indexed-import",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "order",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 317.23499999940395
+    },
+    {
+      "file": "cube-ascii.stl",
+      "order": 2,
+      "readerCharacterization": true,
+      "sourceBytes": 1063,
+      "serializedBytes": 1063,
+      "importMethod": "merge",
+      "previewBytes": 384,
+      "meshBytes": 135800,
+      "patches": 6,
+      "patchIds": [
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:987cc43fedc2e589c04617f80c346e72380813c9a0781593dd7ad40f2ef31d05",
+        "stl:bbf2483cfbad14eb133cf94c6815387f8360ba5d451c9af513be70ba1f921ade",
+        "stl:d7dc56ac806d3b3d391a7f12a1ad2b8647ed444d1106b5ab49e958a4f4bc2a97",
+        "stl:a52c2071a6dec86012d7755b8aab7941e2074546b96d92f139cf7b3d62ceaad6"
+      ],
+      "internalSurfaces": 8,
+      "internalSurfacePatchIds": [
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:4601c6ea1f5378a195e7a29ff40d46607553e513efb2bda0d54c47974c7d43f9",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:69629c68579b6b8e9ca777e5cc7e11360e6a7cd3d36196ee0182199a26391dd8",
+        "stl:987cc43fedc2e589c04617f80c346e72380813c9a0781593dd7ad40f2ef31d05",
+        "stl:bbf2483cfbad14eb133cf94c6815387f8360ba5d451c9af513be70ba1f921ade",
+        "stl:d7dc56ac806d3b3d391a7f12a1ad2b8647ed444d1106b5ab49e958a4f4bc2a97",
+        "stl:a52c2071a6dec86012d7755b8aab7941e2074546b96d92f139cf7b3d62ceaad6"
+      ],
+      "sourceVolume": 0.9999999999999999,
+      "linearCornerVolume": 1.0000000000000004,
+      "relativeVolumeError": 6.661338147750939e-16,
+      "nodes": 2102,
+      "elements": 1133,
+      "boundaryType": "tri6",
+      "boundaryElements": 556,
+      "displayTriangles": 2224,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.3043633580983936,
+        "p05": 0.559729772821086,
+        "median": 0.7838292502846619,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.001557706584958749,
+        "maximumEdgeRatio": 2.514953630746184,
+        "warning": null
+      },
+      "memorySamples": [
+        {
+          "stage": "merge",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "order",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 345.83000000566244
+    },
+    {
+      "file": "cube-binary.stl",
+      "order": 2,
+      "readerCharacterization": true,
+      "sourceBytes": 684,
+      "serializedBytes": 684,
+      "importMethod": "merge",
+      "previewBytes": 384,
+      "meshBytes": 135800,
+      "patches": 6,
+      "patchIds": [
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:22d61f680a83bd48dac9d1671e67202c4a9be121ad39ae74a35dccc8f3481c86",
+        "stl:2509eea2cff986c4a4e5cf9af287b27763da000496e70ccc9f8f201e5f5276d1",
+        "stl:e68c528811a9e9fc8fca8a60a30e95a5e610c94e82f0346812803beb86087a44",
+        "stl:42f7e968aa73eaf1f2559937c4c7c9aa96ff78a5d6647b1064385451dbdf84bc"
+      ],
+      "internalSurfaces": 8,
+      "internalSurfacePatchIds": [
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9",
+        "stl:22d61f680a83bd48dac9d1671e67202c4a9be121ad39ae74a35dccc8f3481c86",
+        "stl:2509eea2cff986c4a4e5cf9af287b27763da000496e70ccc9f8f201e5f5276d1",
+        "stl:e68c528811a9e9fc8fca8a60a30e95a5e610c94e82f0346812803beb86087a44",
+        "stl:42f7e968aa73eaf1f2559937c4c7c9aa96ff78a5d6647b1064385451dbdf84bc"
+      ],
+      "sourceVolume": 0.9999999999999999,
+      "linearCornerVolume": 1.0000000000000004,
+      "relativeVolumeError": 6.661338147750939e-16,
+      "nodes": 2102,
+      "elements": 1133,
+      "boundaryType": "tri6",
+      "boundaryElements": 556,
+      "displayTriangles": 2224,
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.3043633580983936,
+        "p05": 0.559729772821086,
+        "median": 0.7838292502846619,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.001557706584958749,
+        "maximumEdgeRatio": 2.514953630746184,
+        "warning": null
+      },
+      "memorySamples": [
+        {
+          "stage": "merge",
+          "bytes": 67108864
+        },
+        {
+          "stage": "classify",
+          "bytes": 67108864
+        },
+        {
+          "stage": "geometry",
+          "bytes": 67108864
+        },
+        {
+          "stage": "generate",
+          "bytes": 67108864
+        },
+        {
+          "stage": "order",
+          "bytes": 67108864
+        },
+        {
+          "stage": "extract",
+          "bytes": 67108864
+        },
+        {
+          "stage": "complete",
+          "bytes": 67108864
+        }
+      ],
+      "wasmCapacityHighWaterBytes": 67108864,
+      "elapsedMs": 336.6499999985099
+    },
+    {
+      "cancellation": "passed",
+      "stage": "generate",
+      "disposal": "terminate worker and revoke Blob URL"
+    },
+    {
+      "recovery": "passed",
+      "elements": 1154
+    }
+  ],
+  "demo": {
+    "browser": "152.0.7977.75",
+    "dimensions": "Dimensions: 0.00100000 \u00d7 0.00100000 \u00d7 0.00100000 m. 3 patches.",
+    "rejection": "STL_OPEN_SURFACE: The surface has an open edge. Export a closed solid; holes are not filled automatically. Previous preview retained.",
+    "selection": "passed",
+    "regroup": "passed",
+    "errors": []
+  },
+  "offlineApplication": {
+    "browser": "152.0.7977.75",
+    "status": "Local runtime ready",
+    "errors": [],
+    "remote": []
+  }
+}

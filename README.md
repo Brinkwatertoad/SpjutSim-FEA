@@ -11,6 +11,14 @@ and accepted in the [combined owner review](docs/reviews/21-23-review.md) on
 24–27 are implemented and accepted in the [grouped owner review](docs/reviews/24-27-followup.md) on 2026-09-10; 28–30 remain ahead of the final plan 20 candidate audit. No v1 acceptance is
 implied by passing automated checks.
 
+Plan 28 now has a test-only [STL feasibility and contract review](docs/reviews/28-stl-contract.md).
+Open `tests/browser/stl-patch-demo.html` with local-file access enabled, or from
+the optional HTTP server, to review explicit units and selectable patches.
+`stl-feasibility-tests.html` checks the experimental parser/topology screen;
+`stl-runtime-tests.html` probes the pinned runtime through Tet4/Tet10, durable
+patch ownership, cancellation, and fresh-worker recovery. Production STL import
+in plan 29 awaits the M28 contract decision and its full validation/analysis work.
+
 ## Run locally
 
 Open `web/index.html` directly in a current Chromium desktop browser. The startup check renders the repository-local Three.js scene, initializes serial Gmsh/OpenCASCADE in two fresh disposable workers, creates a unit box in each, and starts the solver worker shell. No network requests or local server are required.
