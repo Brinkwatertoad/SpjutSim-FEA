@@ -1129,6 +1129,7 @@
     scale = (Number(this.presentation.deformationScale) || 0) * this.deformationAnimationMultiplier;
     var positionChanged = this.updatedResultModel !== result || this.updatedResultScale !== scale;
     var colorKey = [this.presentation.field,fieldRange.minimum,fieldRange.maximum].join('|');
+    var reverseColors = this.presentation.field === 'factorOfSafety';
     var colorChanged = this.updatedResultModel !== result || this.updatedResultColorKey !== colorKey;
     if (!positionChanged && !colorChanged) { return; }
     this.updatedResultModel = result; this.updatedResultScale = scale; this.updatedResultColorKey = colorKey;
@@ -1139,8 +1140,9 @@
         position.array[node * 3 + 2] = original[node * 3 + 2] + displacement[node * 3 + 2] * scale;
       }
       if (colorChanged) {
-        resultColor(fieldRange.maximum === fieldRange.minimum ? 0.5 :
-          (Number.isFinite(fieldRange.maximum - fieldRange.minimum) ? (field[node] - fieldRange.minimum) / (fieldRange.maximum - fieldRange.minimum) : (field[node] / 2 - fieldRange.minimum / 2) / (fieldRange.maximum / 2 - fieldRange.minimum / 2)), rgb);
+        var normalized = fieldRange.maximum === fieldRange.minimum ? 0.5 :
+          (Number.isFinite(fieldRange.maximum - fieldRange.minimum) ? (field[node] - fieldRange.minimum) / (fieldRange.maximum - fieldRange.minimum) : (field[node] / 2 - fieldRange.minimum / 2) / (fieldRange.maximum / 2 - fieldRange.minimum / 2));
+        resultColor(reverseColors ? 1 - normalized : normalized, rgb);
         colors.array[node * 3] = rgb[0]; colors.array[node * 3 + 1] = rgb[1]; colors.array[node * 3 + 2] = rgb[2];
       }
     }

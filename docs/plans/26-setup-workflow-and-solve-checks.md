@@ -43,10 +43,10 @@
 
 ## Manual review M26 — setup to solve, about 20 minutes
 
-- [ ] Owner begins with an incomplete model, follows a check error back to setup, resolves it, explicitly checks again, reads memory/stability, then solves.
-- [ ] Edit a load after checking; confirm Check required. Change only the camera/legend; confirm readiness remains. Exercise cancellation and retry.
-- [ ] Find an old check report after solving; try a narrow layout and keyboard navigation. Review synthetic high-memory/cap-blocked states without allocating large memory.
-- [ ] Record acceptance before Task 27.
+- [x] Owner begins with an incomplete model, follows a check error back to setup, resolves it, explicitly checks again, reads memory/stability, then solves.
+- [x] Edit a load after checking; confirm Check required. Change only the camera/legend; confirm readiness remains. Exercise cancellation and retry.
+- [x] Find an old check report after solving; try a narrow layout and keyboard navigation. Review synthetic high-memory/cap-blocked states without allocating large memory.
+- [x] Record acceptance before Task 27.
 
 ## Done when
 

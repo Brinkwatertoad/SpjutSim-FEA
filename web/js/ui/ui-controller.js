@@ -1047,6 +1047,7 @@
     this.legendMax.textContent = formatNumber(fieldRange.maximum / definition[2]);
     var orientation = presentation.legendOrientation || 'vertical';
     this.resultLegend.dataset.orientation = orientation;
+    this.resultLegend.dataset.field = presentation.field;
     if (this.legendLayout) { this.legendLayout.apply(); }
     if (this.legendTicks) {
       var height = Math.max(44, Math.min(264, (this.resultLegend.closest('.fea-canvas') || this.resultLegend.parentElement).clientHeight - 240));

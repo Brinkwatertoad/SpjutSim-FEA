@@ -50,7 +50,15 @@
     assert(document.getElementById('trust-headline').textContent.includes('Not studied'), 'Single solve implied convergence');
     ui.renderLegend({results:result,viewportPresentation:{mode:'stress',field:'factorOfSafety'}});
     assert(!document.getElementById('legend-title').textContent.includes('clipped') && document.getElementById('legend-status').textContent.includes('Unclipped'), 'Unclipped FoS was described as clipped');
+    ['vertical','horizontal'].forEach(function (orientation) {
+      ui.renderLegend({results:result,viewportPresentation:{mode:'stress',field:'factorOfSafety',legendOrientation:orientation}});
+      var ramp = getComputedStyle(document.querySelector('.fea-color-ramp')).backgroundImage;
+      assert(ramp.indexOf('214, 48, 38') < ramp.indexOf('31, 74, 166'), 'FoS legend must run from red minimum to blue maximum: ' + ramp);
+      assert(document.getElementById('legend-min').textContent === '2' && document.getElementById('legend-max').textContent === '2.5', 'Reversed FoS colors reordered numerical limits');
+    });
     ui.renderLegend({results:result,viewportPresentation:{mode:'stress',field:'vonMises'}});
+    var stressRamp = getComputedStyle(document.querySelector('.fea-color-ramp')).backgroundImage;
+    assert(stressRamp.indexOf('31, 74, 166') < stressRamp.indexOf('214, 48, 38'), 'Switching from FoS did not restore the stress legend');
     assert(document.getElementById('legend-title').textContent === 'von Mises (MPa)', 'Stress legend is not quiet');
     assert(document.getElementById('legend-min').textContent === '0' && document.getElementById('legend-max').textContent === '0.005', 'Legend does not span zero to model sample peak');
     assert(document.getElementById('legend-status').hidden && document.getElementById('result-legend').title.includes('0.004 MPa'), 'Smoothing detail is not confined to the tooltip');
@@ -85,6 +93,19 @@
     renderer.resultModel.extrema = {rawVonMisesMax:{valuePa:0}};
     renderer.resultModel.surfaceFields.vonMisesPa.fill(0); renderer.updateResultPresentation();
     assert(Array.from(color).every(Number.isFinite), 'Zero stress produced nonfinite colors');
+    renderer.resultModel.surfaceFields.factorOfSafety = new Float32Array([0.5, 5, 10]);
+    renderer.resultModel.ranges = Object.assign({}, result.ranges, {factorOfSafety:{minimum:0.5,maximum:10}});
+    renderer.presentation = {field:'factorOfSafety',deformationScale:0};
+    renderer.updateResultPresentation();
+    assert(color[0] > color[2] && color[8] > color[6], 'FoS contour must show low values red and high values blue');
+    renderer.presentation.colorRange = {mode:'manual',field:'factorOfSafety',minimum:2,maximum:8};
+    renderer.updateResultPresentation();
+    assert(color[0] > color[2] && color[8] > color[6], 'Clipped FoS endpoint colors were reversed');
+    renderer.resultModel.surfaceFields.factorOfSafety.fill(10);
+    renderer.presentation.colorRange = undefined;
+    renderer.resultModel.ranges.factorOfSafety = {minimum:10,maximum:10};
+    renderer.updateResultPresentation();
+    assert(Array.from(color).every(Number.isFinite), 'Uniform capped FoS produced invalid colors');
     renderer.resultDisplay.userData.lines.geometry.dispose(); geometry.dispose();
     var values = document.getElementById('results-values');
     var reaction = Array.from(values.querySelectorAll('dt')).find(function (label) { return label.textContent === 'Reaction'; }).nextElementSibling;

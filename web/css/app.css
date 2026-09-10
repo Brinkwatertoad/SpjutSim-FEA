@@ -191,8 +191,10 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 .fea-display-options { position: fixed; }
 .fea-result-overlays { pointer-events: none; }
 .fea-result-overlays > * { pointer-events: auto; }
-.fea-color-ramp { background: linear-gradient(90deg, rgb(12% 29% 65%), rgb(18% 72% 64%), rgb(94% 83% 23%), rgb(84% 19% 15%)); }
-.fea-result-legend[data-orientation="vertical"] .fea-color-ramp { background: linear-gradient(0deg, rgb(12% 29% 65%), rgb(18% 72% 64%), rgb(94% 83% 23%), rgb(84% 19% 15%)); }
+.fea-result-legend { --result-color-stops: rgb(12% 29% 65%), rgb(18% 72% 64%), rgb(94% 83% 23%), rgb(84% 19% 15%); }
+.fea-result-legend[data-field="factorOfSafety"] { --result-color-stops: rgb(84% 19% 15%), rgb(94% 83% 23%), rgb(18% 72% 64%), rgb(12% 29% 65%); }
+.fea-color-ramp { background: linear-gradient(90deg, var(--result-color-stops)); }
+.fea-result-legend[data-orientation="vertical"] .fea-color-ramp { background: linear-gradient(0deg, var(--result-color-stops)); }
 .fea-draft-indicator { position: absolute; top: 64px; left: 10px; right: 10px; width: fit-content; max-width: calc(100% - 36px); margin: 0; padding: 6px; background: var(--surface, #202329); border: 1px dashed currentColor; pointer-events: none; font-size: 12px; }
 /* Setup values wrap at collapsed widths while preserving distinguishing data. */
 .fea-setup-row-summary, .fea-setup-row-meta, .fea-setup-row-primary { white-space: normal; overflow: visible; overflow-wrap: anywhere; text-overflow: clip; }

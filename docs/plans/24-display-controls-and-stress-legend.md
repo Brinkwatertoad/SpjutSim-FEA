@@ -43,10 +43,10 @@
 
 ## Manual review M24 — choosing and reading a display, about 15 minutes
 
-- [ ] Owner switches among all four views, finds principal stress/displacement/FoS, removes mesh lines, and adjusts deformation without hunting through unrelated controls.
-- [ ] Try vertical/horizontal legends, short-window layouts, range lock across two results, manual clipping, and a constant field.
-- [ ] Compare known contour colors to the key in light/dark themes; confirm field/units and the sample-peak versus surface-key distinction remain clear.
-- [ ] Record acceptance before Task 25.
+- [x] Owner switches among all four views, finds principal stress/displacement/FoS, removes mesh lines, and adjusts deformation without hunting through unrelated controls.
+- [x] Try vertical/horizontal legends, short-window layouts, range lock across two results, manual clipping, and a constant field.
+- [x] Compare known contour colors to the key in light/dark themes; confirm field/units and the sample-peak versus surface-key distinction remain clear.
+- [x] Record acceptance before Task 25.
 
 ## Done when
 

@@ -1420,6 +1420,12 @@ Show:
 - the material strength used;
 - the failure criterion used.
 
+FoS reverses the stress color ramp: the minimum is red and the maximum is blue,
+in both the surface contour and vertical/horizontal legends. Manual or locked
+limits retain this ordering; clipped values use the corresponding endpoint color.
+Uniform fields retain a finite midpoint color. This is a relative display scale,
+not an absolute safety threshold; numerical FoS values and the contour cap stay unchanged.
+
 Values near stress singularities must inherit the singularity/convergence warning.
 
 ---
@@ -2614,10 +2620,10 @@ evidence.
 - [x] Responsive workspace/overlays and owner review M21 are accepted.
 - [x] Boundary-only contour extrema, result explanation, and owner review M22 are accepted.
 - [x] Orthographic/isometric and signed gizmo/menu views and M23 are accepted.
-- [ ] Contextual display controls, independent mesh edges, vertical/horizontal legends, and M24 are accepted.
-- [ ] Transactional load/support previews and M25 are accepted.
-- [ ] Readable setup and the reviewed check-then-solve workflow and M26 are accepted.
-- [ ] Bounded engineering edit undo/redo and M27 are accepted.
+- [x] Contextual display controls, independent mesh edges, vertical/horizontal legends, and M24 are accepted.
+- [x] Transactional load/support previews and M25 are accepted.
+- [x] Readable setup and the reviewed check-then-solve workflow and M26 are accepted.
+- [x] Bounded engineering edit undo/redo and M27 are accepted.
 - [ ] STL feasibility, units/validation/patch contract, and M28 owner scope decision are accepted.
 - [ ] The accepted STL analysis subset passes topology, numerical, corpus, resource, direct-local, and M29 reviews.
 - [ ] Integrated post-change regression and owner usability review M30 are accepted.

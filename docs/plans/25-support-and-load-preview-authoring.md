@@ -44,10 +44,10 @@
 
 ## Manual review M25 — assignment usability, about 20 minutes
 
-- [ ] Owner creates pressure, vector force, fixed support, and component support on a cube and curved part, toggling several faces without Shift.
-- [ ] Change values/direction, remove a selected face, orbit, use the gizmo, clear, cancel, and edit an existing assignment. Confirm previews predict the committed result and Cancel preserves a completed solve.
-- [ ] Attempt empty/invalid input and switch away from a dirty draft; inspect recovery without losing work.
-- [ ] Ask the owner to explain force redistribution when adding faces. Record corrections/acceptance before Task 26.
+- [x] Owner creates pressure, vector force, fixed support, and component support on a cube and curved part, toggling several faces without Shift.
+- [x] Change values/direction, remove a selected face, orbit, use the gizmo, clear, cancel, and edit an existing assignment. Confirm previews predict the committed result and Cancel preserves a completed solve.
+- [x] Attempt empty/invalid input and switch away from a dirty draft; inspect recovery without losing work.
+- [x] Ask the owner to explain force redistribution when adding faces. Record corrections/acceptance before Task 26.
 
 ## Done when
 

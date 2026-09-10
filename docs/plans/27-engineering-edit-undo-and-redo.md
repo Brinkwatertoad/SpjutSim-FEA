@@ -39,9 +39,9 @@
 
 ## Manual review M27 — correcting mistakes, about 10 minutes
 
-- [ ] Owner creates, edits, deletes, renames, undoes, and redoes assignments; tries a material change and model rotation after a solve.
-- [ ] Confirm names/face assignments return correctly, stale results never reappear, and typing Undo in a field edits text rather than the model.
-- [ ] Confirm import/history-reset and disabled/busy states are understandable. Record acceptance before Task 28.
+- [x] Owner creates, edits, deletes, renames, undoes, and redoes assignments; tries a material change and model rotation after a solve.
+- [x] Confirm names/face assignments return correctly, stale results never reappear, and typing Undo in a field edits text rather than the model.
+- [x] Confirm import/history-reset and disabled/busy states are understandable. Record acceptance before Task 28.
 
 ## Done when
 
