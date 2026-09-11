@@ -9,7 +9,7 @@
 
   function testResponseValidation() {
     var wrongType = api.validateWorkerResponse({
-      protocol: 2,
+      protocol: 3,
       requestId: 'diagnostics-1',
       type: 'box-smoke-result',
       result: {}
@@ -17,7 +17,7 @@
     assert(!wrongType.valid && wrongType.reason === 'unexpected-response-type', 'wrong response type was accepted');
 
     var wrongProtocol = api.validateWorkerResponse({
-      protocol: 3,
+      protocol: 4,
       requestId: 'diagnostics-1',
       type: 'diagnostics-result',
       result: {}
@@ -25,7 +25,7 @@
     assert(!wrongProtocol.valid && wrongProtocol.reason === 'invalid-envelope', 'version-mismatched response was accepted');
 
     var malformedError = api.validateWorkerResponse({
-      protocol: 2,
+      protocol: 3,
       requestId: 'diagnostics-1',
       type: 'error',
       error: { code: 'BROKEN' }
@@ -41,7 +41,7 @@
       worker = this;
       this.terminated = false;
       root.setTimeout(function () {
-        worker.onmessage({ data: { protocol: 2, type: 'ready', worker: 'solver' } });
+        worker.onmessage({ data: { protocol: 3, type: 'ready', worker: 'solver' } });
       }, 0);
     }
     SilentWorker.prototype.postMessage = function () {};
@@ -401,19 +401,24 @@
         posted = message;
         root.setTimeout(function () {
           worker.onmessage({ data: {
-            protocol: 2, requestId: message.requestId, type: 'import-result', result: validGeometry()
+            protocol: 3, requestId: message.requestId, type: 'import-result', result: validGeometry()
           } });
         }, 0);
       },
       terminate: function () {}
     };
     api.startLocalWorker = function () { return Promise.resolve(worker); };
-    return new api.MesherClient().importGeometry({
+    var client = new api.MesherClient();
+    return client.importGeometry({
       geometryId: 'geometry-test', sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: original
     }).then(function () {
       assert(posted.sourceBytes !== original, 'canonical CAD bytes were transferred directly');
       assert(posted.sourceFormat === 'step', 'source format was not sent to the mesher');
       assert(original.byteLength === 3, 'canonical CAD bytes were detached');
+      worker.onmessage = worker.onerror = worker.onmessageerror = function () {};
+      client.dispose();
+      assert(client.worker === null && worker.onmessage === null && worker.onerror === null && worker.onmessageerror === null,
+        'Mesher disposal retained worker event handlers');
     }).finally(function () { api.startLocalWorker = originalStartWorker; });
   }
 
@@ -426,7 +431,7 @@
       postMessage: function (message) {
         posted = message;
         root.setTimeout(function () {
-          worker.onmessage({ data: { protocol: 2, requestId: message.requestId, type: 'mesh-result', result: validVolumeMesh() } });
+          worker.onmessage({ data: { protocol: 3, requestId: message.requestId, type: 'mesh-result', result: validVolumeMesh() } });
         }, 0);
       },
       terminate: function () {}

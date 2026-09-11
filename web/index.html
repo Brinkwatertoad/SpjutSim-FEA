@@ -77,9 +77,10 @@
           <div class="fea-setup-group"><h2>Mesh</h2><ul id="setup-inspector-mesh-list" class="fea-setup-list"></ul></div>
           <div id="setup-inspector-form-stash" hidden>
             <div id="model-editor">
-              <button id="import-step-button" type="button">Import or replace CAD…</button>
-              <input id="import-step-input" type="file" accept=".step,.stp,.iges,.igs,.brep" hidden>
-              <p id="geometry-status">Choose a STEP, IGES, or BREP solid to begin.</p>
+              <button id="import-step-button" type="button">Import or replace model…</button>
+              <input id="import-step-input" type="file" accept=".step,.stp,.iges,.igs,.brep,.stl" hidden>
+              <button id="regroup-stl-button" type="button" hidden>Review STL units and patches…</button>
+              <p id="geometry-status">Choose a STEP, IGES, BREP, or STL solid to begin.</p>
               <fieldset class="fea-orientation-controls"><legend>Model orientation</legend>
                 <div class="fea-orientation-fields">
                   <label for="model-rotation-axis">Global axis</label><select id="model-rotation-axis"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select>
@@ -328,6 +329,21 @@
       </div>
     </section>
   </div>
+  <dialog id="stl-import-dialog" class="fea-stl-dialog" aria-labelledby="stl-import-title">
+    <h2 id="stl-import-title">Review STL import</h2>
+    <p>STL contains facets without length units. Choose the source units and confirm the dimensions before importing.</p>
+    <div class="fea-stl-options">
+      <label>Length units <select id="stl-length-unit"><option value="">Choose units…</option><option value="m">Meters</option><option value="mm">Millimeters</option><option value="cm">Centimeters</option><option value="in">Inches</option><option value="ft">Feet</option></select></label>
+      <label>Patch grouping angle (degrees) <input id="stl-patch-angle" type="number" min="1" max="179" value="40"></label>
+      <button id="stl-review-button" type="button">Review patches</button>
+    </div>
+    <p id="stl-import-status" role="status" aria-live="polite"></p><p id="stl-dimensions"></p>
+    <p id="stl-remap-consequence">Changing units or grouping requires mapping or dropping existing supports and loads in the next step. Cancel preserves the current model and setup.</p>
+    <canvas id="stl-review-viewport" aria-label="STL patch review viewport"></canvas>
+    <div id="stl-patch-list" class="fea-stl-patches" aria-label="Selectable surface patches"></div>
+    <p>Curved patches group planar facets; meshing preserves those facets. Invalid solids are rejected without automatic repair.</p>
+    <footer><button id="stl-cancel-button" type="button">Cancel</button><button id="stl-accept-button" type="button" class="ui-button-primary" disabled>Use reviewed model</button></footer>
+  </dialog>
   <div class="ui-modal-backdrop" id="replacement-migration-backdrop" hidden>
     <section class="fea-replacement-dialog" id="replacement-migration-dialog" role="dialog" aria-modal="true" aria-labelledby="replacement-migration-title" tabindex="-1">
       <header class="fea-replacement-header"><div><h2 id="replacement-migration-title">Transfer setup to replacement model</h2><p id="replacement-migration-progress"></p></div><button id="replacement-migration-cancel" type="button">Cancel</button></header>
@@ -391,6 +407,7 @@
   <script src="generated/local-runtime/gmsh-runtime-source-part-007.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source-part-008.js"></script>
   <script src="js/ui/replacement-migration-ui.js"></script>
+  <script src="js/ui/stl-import-ui.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source.js"></script>
   <script src="generated/local-runtime/fem-runtime-source.js"></script>
   <script src="generated/local-runtime/mesher-worker-source.js"></script>

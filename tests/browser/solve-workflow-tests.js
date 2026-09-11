@@ -30,7 +30,7 @@
       var fakeRoot = {requestAnimationFrame:requestAnimationFrame.bind(window),navigator:{},addEventListener:noop,confirm:function () { confirmations++; return confirmResult; },SpjutsimFEA:{
         FEAColorSchemes:inert,createAnalysisDocument:noop,AppController:function () { return app; },
         UIController:function () { return new Proxy({setSolveHandlers:function (preflight,solve,cancel) { handlers = {preflight:preflight,solve:solve,cancel:cancel}; }}, {get:function (target,key) { return target[key] || noop; }}); },
-        ViewportController:inert,ReplacementMigrationUI:inert,prepareSolverInput:function () { return {}; },
+        ViewportController:inert,ReplacementMigrationUI:inert,StlImportUI:inert,prepareSolverInput:function () { return {}; },
         SolverClient:function () {
           var work = deferred(); var done = deferred(); var client = this;
           this.preflight = function () { return work.promise; };
@@ -41,7 +41,7 @@
         exerciseMesherRuntime:function () { return Promise.resolve({diagnostics:{},smoke:{}}); },
         exerciseWorker:function () { return Promise.resolve({result:{}}); }
       }};
-      new Function('globalThis','document',source)(fakeRoot,{documentElement:{},getElementById:function () { return {}; }});
+      new Function('globalThis','document',source)(fakeRoot,{documentElement:{},getElementById:function () { return {addEventListener:noop}; }});
       return {handlers:handlers,state:state,clients:clients,solves:function () { return solves; },confirmations:function () { return confirmations; },
         deny:function () { confirmResult = false; }, edit:function () { state.analysisRevision++; state.solvePreflight = {status:'idle'}; subscriber(state); }};
     }

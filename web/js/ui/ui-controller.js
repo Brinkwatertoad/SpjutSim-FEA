@@ -493,7 +493,7 @@
     this.renderActivity(documentState);
     var state = documentState.geometryImport || { status: 'idle' };
     var convergenceRunning = Boolean(documentState.convergenceStudy && documentState.convergenceStudy.status === 'running');
-    var message = 'Choose a STEP, IGES, or BREP solid to begin.';
+    var message = 'Choose a STEP, IGES, BREP, or STL solid to begin.';
     if (state.status === 'importing') {
       message = (state.progress && state.progress.userMessage) || 'Importing CAD geometry…';
     } else if (state.status === 'succeeded' && documentState.geometry) {

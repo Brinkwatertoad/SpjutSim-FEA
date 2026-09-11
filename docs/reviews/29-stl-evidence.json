@@ -1,0 +1,416 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-11",
+  "branch": "feat/28-29-stl-import",
+  "m28Commit": "68e20b0",
+  "status": "M29 automated checks passed; owner review pending",
+  "browser": "Chromium 152.0.7977.75",
+  "platform": "Linux x86_64",
+  "workerProtocol": 3,
+  "sourceSha256": {
+    "tests/browser/cad-corpus-tests.js": "edaa4252f9bc9034ca65b70e6165f49d8d7780645455ea0baaca9341836326b4",
+    "tests/browser/solve-workflow-tests.js": "bb6875fb6770388b053af99a404d19befb4d2984985a81a22b81904657f22b0f",
+    "tests/browser/stl-feasibility-tests.js": "e61cf7be34ae2ecdcc49fa45ac3f18678c0b4d75189e72fbb547ee942e572f24",
+    "tests/browser/worker-runtime-tests.js": "78acd3a59c550e93c6d9ba1560f32388d115f84c0a6b55f8d6ddb9d3268ab3cb",
+    "tests/test_cad_corpus.py": "93c676821cb6e1dcc3b384398d72d5bdcc272f1eaed2240519872397b7cbbc43",
+    "tests/test_framework.py": "dc6043af9aea13540a0a84a865ffc962b2a5e4d3f2e2b2f40863fadd3bcff871",
+    "tools/build-local-runtime.py": "0375bde2251735b0fbdab36a9d535191c6ecf54cfcadc6be551ac81aa087ca30",
+    "tools/cad-fixtures/generate-stl-fixtures.py": "f0e402645682facfa78ddede58c27307314b116e90e0022b79613d2674cae6e4",
+    "tools/cad_corpus.py": "0d1b9ca56791d71e5b43180f7d9335194f7178667d012368c370688395a38364",
+    "tools/validate-cad-corpus.py": "9bdc8e95242656a7ccafe6711c7a85b66ca915cbb135679b6992ae766ab7496d",
+    "web/css/app.css": "d7bd906b12cb18f353ac6300b6a264be77169c120b9818ebf962d44fa5b991c6",
+    "web/generated/local-runtime/mesher-worker-source.js": "308ab25945b7ac0e5cf1980ad473a48ccf105239d7e5f65d6d8a24748bf073b6",
+    "web/generated/local-runtime/solver-worker-source.js": "b6ad185eb77fed55540a557a2b6b8d3d4a3e08fc56202b3224c0ff0a0d64617b",
+    "web/index.html": "3e2c6dfb86a59221c1dc1f8e2656c668469e4c1bfa08c1f4de09f3a3dd8bacfb",
+    "web/js/analysis/app-controller.js": "7d515bbebf9d235eca192675ee467c3b79c2873551e60e12c1c45ad68ffc190e",
+    "web/js/app.js": "cb4aaf184fb198d2de32f38fec6a7f34be1ed2af10147a32acb578ce3dc7330a",
+    "web/js/geometry/geometry-model.js": "a078feb0524f6478e07bd0a3709575f1ba9f621c081fe220cdeff4324b54254d",
+    "web/js/ui/setup-inspector-summary.js": "ea80e4843375c9194970d0e4fd2a576c8ccedc04231772489099b88cb3113e6f",
+    "web/js/ui/ui-controller.js": "bd6a0bdd63dc579a0b78dd5fb8620277cbe1b27c52a11bbbcd8984e6c6358c14",
+    "web/js/workers/mesher-client.js": "9e9d40f1b1e9c8c4cfb74f80a3cbd6da68c937836aa9aa84c951a785b510e9d3",
+    "web/js/workers/worker-protocol.js": "f35312bf74029e30d86784e6bc59756c0a7d36713d1a50817f1fcd6f6226bbf3",
+    "workers/mesher-worker.js": "37f2499cf9ffd8b0ad54ffa1ab9b435718824b08b4dad0143acefc1e62f5fd0d",
+    "workers/solver-worker.js": "3c5a4affa40b63359c3347a955df6b1b51a7b0a507fe206a7a03ebd6a71c9af0",
+    "tests/browser/stl-convergence-tests.html": "11aa02a64478567468f438d5c8629ea0065c9ec6da13c075a85c52583ab0788e",
+    "tests/browser/stl-convergence-tests.js": "623f95bfeda4e1a4829adce0fcc2aee8084b853dd4dc76ca1d4f775aeaf60790",
+    "tests/browser/stl-import-tests.html": "d78d5e177f07a356f572cf9228e11f0da6d0c1d57db8cccbb95d32777dd28614",
+    "tests/browser/stl-import-tests.js": "307c20f686547d3ed7d0540c5340e84005f5e3854cbbcebb72d9f56aa1cd9430",
+    "tests/browser/stl-mesh-solve-tests.html": "c8da98649c6ca4c5db1ad770cd1a08774189d546eb6395d8d8bdd46ffa588de3",
+    "tests/browser/stl-mesh-solve-tests.js": "eb0484e085b141359d397f9f936b70c240a2940dda6749e4f4e40f7994dd787a",
+    "tests/browser/stl-resource-tests.html": "023a7864a2dde1aa185a130c49bccccb664ce62c1122d14ffd502b43bd478273",
+    "tests/browser/stl-resource-tests.js": "6bbd236fd83a387d5865e136306a061a286da52ccb2c8731c21ba522b1c5926e",
+    "tests/browser/stl-workflow-tests.html": "0c528a2d2bf08bbd3a39b7ff379e99ecdcd8c9ee9a1ce0ae9ad12b8d1c810ed0",
+    "tests/browser/stl-workflow-tests.js": "b94a0d52c957dd95aa8acc8a50f443e58b2027f34ba36f47fb46c4a7644b4b2a",
+    "web/js/ui/stl-import-ui.js": "c09c0731b656077fb408a0fe7607ed397ad95998fba2b73b247c68568f5e90ac",
+    "workers/stl-import.js": "eaa112b475ca84f41ac02f54b732b71c5e1db732490f5ed3650b64104a6b6b43"
+  },
+  "checks": {
+    "python": {
+      "count": 79,
+      "passed": true
+    },
+    "native": {
+      "count": 8,
+      "passed": true
+    },
+    "fileBrowser": [
+      {
+        "name": "worker-runtime",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "step-import",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "tet4-mesh",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "tet10-mesh",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "preview-selection",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "workspace-layout",
+        "status": "Passed: initialized resize sequence, independent pane sizing, compact drawers, keyboard/focus and storage fallback",
+        "errors": []
+      },
+      {
+        "name": "result-range",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "result-formatting",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "result-presentation",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "viewport-navigation",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "solve-workflow",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "analysis-authoring",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "wasm-solve-result",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "cube-wasm-vertical-slice",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "factor-of-safety",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "convergence",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "convergence-runner",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "assignment-draft",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "solve-checks-ui",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "engineering-history",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "review-contract",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "cube-convergence",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "grouped-authoring",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "validation-benchmark",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "stl-feasibility",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "stl-runtime",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "stl-import",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "stl-mesh-solve",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "stl-convergence",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "stl-workflow",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "stl-resource",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "resource-benchmark?profile=smoke",
+        "status": "Passed: 1 records",
+        "errors": []
+      },
+      {
+        "name": "cad-corpus",
+        "status": "Passed: 68/68",
+        "errors": []
+      }
+    ],
+    "httpBrowser": [
+      {
+        "name": "stl-workflow",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "stl-mesh-solve",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "stl-convergence",
+        "status": "Passed",
+        "errors": []
+      },
+      {
+        "name": "resource-benchmark?profile=smoke",
+        "status": "Passed: 1 records",
+        "errors": []
+      }
+    ],
+    "validationRecords": 5,
+    "historicalResourceRecordsAudited": 36,
+    "fixturesAndWrappersReproduce": true,
+    "distributionAudit": "passed"
+  },
+  "numerical": {
+    "cube": {
+      "displacementM": 1.0000000022916516e-06,
+      "stressPa": 1000.000008735195,
+      "equilibrium": 2.0994427285373224e-10
+    },
+    "curved": [
+      {
+        "segments": 16,
+        "facetedArea": 0.7653668363416362,
+        "displacementM": 1.3065630159612912e-06,
+        "expectedM": 1.3065630133386532e-06,
+        "sourceAreaDeficit": 0.025504677740983417,
+        "equilibrium": 2.8736199412909315e-10
+      },
+      {
+        "segments": 32,
+        "facetedArea": 0.7803612594167166,
+        "displacementM": 1.2814577729676103e-06,
+        "expectedM": 1.2814577709142726e-06,
+        "sourceAreaDeficit": 0.00641318533130153,
+        "equilibrium": 2.7618087187540376e-10
+      },
+      {
+        "segments": 64,
+        "facetedArea": 0.7841371103709776,
+        "displacementM": 1.2752871787658492e-06,
+        "expectedM": 1.275287174620389e-06,
+        "sourceAreaDeficit": 0.001605622581310473,
+        "equilibrium": 2.1784846145100362e-10
+      }
+    ]
+  },
+  "convergence": {
+    "levels": [
+      {
+        "level": 1,
+        "targetSizeM": 0.2,
+        "nodeCount": 2129,
+        "elementCount": 1154,
+        "degreeOfFreedomCount": 6387,
+        "maximumDisplacementM": 1.0606601777692992e-06,
+        "strainEnergyJ": 0.0004999999999988568,
+        "rawVonMisesMaxPa": 1000.0000110475728,
+        "minimumFactorOfSafety": 249999.99723810682,
+        "iterations": 272,
+        "solveDurationMs": 50.9,
+        "estimatedPeakBytes": 110518806,
+        "peakLocationM": [
+          0.824849948550614,
+          0.7073007682969804,
+          0.9719854631324685
+        ],
+        "peakFaceId": "stl:2fbae0d8826871518441aadc96e8ace1921d7053b19877e188f0c141ad8f56b9"
+      },
+      {
+        "level": 2,
+        "targetSizeM": 0.13999999999999999,
+        "nodeCount": 4162,
+        "elementCount": 2390,
+        "degreeOfFreedomCount": 12486,
+        "maximumDisplacementM": 1.0606601749597504e-06,
+        "strainEnergyJ": 0.000499999999999483,
+        "rawVonMisesMaxPa": 1000.0000081902496,
+        "minimumFactorOfSafety": 249999.99795243764,
+        "iterations": 348,
+        "solveDurationMs": 131.2,
+        "estimatedPeakBytes": 120609234,
+        "peakLocationM": [
+          0.012645866682104809,
+          0.9015319920576692,
+          0.012645866682104757
+        ],
+        "peakFaceId": "stl:9247260aaca6d9dd83e459a326e1b11d3f3e3e3828c253e269155791f06c40c1"
+      }
+    ],
+    "classification": {
+      "status": "converged",
+      "globalConverged": true,
+      "stressStable": true,
+      "likelyStressSingularity": false,
+      "warning": null,
+      "changes": {
+        "maximumDisplacement": 2.6488679794567205e-09,
+        "strainEnergy": 1.2522535092236206e-12,
+        "rawVonMisesMax": 2.8573232068922893e-09
+      },
+      "stopReason": "criteria-met"
+    }
+  },
+  "resources": [
+    {
+      "bytes": 16777217,
+      "rejection": "STL_INPUT_LIMIT"
+    },
+    {
+      "bytes": 2500134,
+      "rejection": "STL_INPUT_LIMIT"
+    },
+    {
+      "bytes": 102484,
+      "rejection": "STL_PATCH_LIMIT"
+    },
+    {
+      "bytes": 409684,
+      "rejection": "STL_VALIDATION_LIMIT"
+    },
+    {
+      "internalSurfaceCount": 512,
+      "importMs": 2687.8999999910593
+    },
+    {
+      "sourceBytes": 16777216,
+      "patches": 6
+    },
+    {
+      "triangles": 50000,
+      "sourceBytes": 2500084,
+      "importMs": 6939.20000000298,
+      "mesherWasmBytes": 67108864,
+      "metadata": {
+        "version": 1,
+        "sha256": "cda76cc3b1a380df0d5884520f29b8781281cc0cad757e3e29a64fba0690bb16",
+        "triangleCount": 50000,
+        "internalSurfaceCount": 10,
+        "validation": {
+          "status": "valid",
+          "version": 1,
+          "intersectionCandidates": 432507,
+          "triangleCount": 50000
+        }
+      },
+      "previewBytes": 6606192
+    },
+    {
+      "denseMeshMs": 6966.70000000298,
+      "nodes": 6333,
+      "elements": 3756,
+      "minimumJacobian": 0.0003519390090760015,
+      "meshBytes": 395832
+    },
+    {
+      "cancellationMs": 0.10000000894069672,
+      "code": "IMPORT_CANCELLED"
+    },
+    {
+      "timeoutCode": "MESHER_TIMEOUT",
+      "simulatedDeadlineMs": 100,
+      "productionDeadlineMs": 120000
+    }
+  ],
+  "offlinePreview": {
+    "browser": "152.0.7977.75",
+    "offline": true,
+    "errors": [],
+    "remote": [],
+    "fit": {
+      "width": 722,
+      "height": 658,
+      "viewportWidth": 760,
+      "viewportHeight": 700,
+      "overflow": false
+    }
+  },
+  "corpusReport": "benchmarks/cad-corpus/chromium-152-stl.json",
+  "scope": "Development evidence accumulated during implementation; affected checks rerun after fixes. Resource matrix uses smoke profile; historical full resource records are audited, not newly calibrated. M29 owner review and v1 release audit remain pending."
+}

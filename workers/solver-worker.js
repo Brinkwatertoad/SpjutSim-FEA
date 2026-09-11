@@ -1,5 +1,5 @@
 'use strict';
-var WORKER_PROTOCOL_VERSION = 2;
+var WORKER_PROTOCOL_VERSION = 3;
 var WASM_HEAP_CAP_BYTES = 3758096384;
 // Calibrated by the 36-record supported-browser matrix in benchmarks/resource/.
 var MEMORY_SAFETY_MULTIPLIER = 1.5;

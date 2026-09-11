@@ -48,6 +48,10 @@ def encode(triangles, binary=False):
 
 def generate():
     cube = box()
+    crossed = [[(0.5, 0.5, -0.5) if p == (0, 0, 1) else p for p in t] for t in cube]
+    pinched = cube + [[tuple(v + 1 for v in p) for p in t] for t in cube]
+    nonfinite = [[tuple(p) for p in t] for t in cube]
+    nonfinite[0][0] = (float('nan'), 0, 0)
     cases = [
         ('cube-ascii.stl', cube, False, 'valid', [1,1,1], 1),
         ('cube-binary.stl', cube, True, 'valid', [1,1,1], 1),
@@ -58,6 +62,9 @@ def generate():
         ('reversed.stl', [list(reversed(t)) for t in cube], True, 'STL_INWARD_WINDING', None, None),
         ('inconsistent.stl', [list(reversed(cube[0]))] + cube[1:], False, 'STL_INCONSISTENT_WINDING', None, None),
         ('degenerate.stl', cube + [[(0,0,0)]*3], True, 'STL_DEGENERATE_TRIANGLE', None, None),
+        ('self-intersecting.stl', crossed, True, 'STL_SELF_INTERSECTION', None, None),
+        ('pinched-vertex.stl', pinched, True, 'STL_NONMANIFOLD', None, None),
+        ('nonfinite.stl', nonfinite, True, 'STL_NONFINITE', None, None),
     ]
     for segments in (16, 32, 64):
         cases.append((f'cylinder-{segments}.stl', cylinder(segments), True, 'valid', [1,1,1],

@@ -6,7 +6,9 @@
     assert(root.StlExperiment, 'Experimental STL adapter is unavailable');
     var manifest = await (await fetch('../fixtures/stl/manifest.json')).json();
     var records = [];
-    for (var fixture of manifest) {
+    // M28 deliberately excludes the full-validation cases added by M29.
+    // Those cases run against the production adapter in stl-import-tests.
+    for (var fixture of manifest.filter(function (entry) { return !['self-intersecting.stl','pinched-vertex.stl'].includes(entry.file); })) {
       var bytes = await (await fetch('../fixtures/stl/' + fixture.file)).arrayBuffer();
       var result;
       try { result = root.StlExperiment.parse(bytes, { unit: 'm', angleDegrees: 40 }); }

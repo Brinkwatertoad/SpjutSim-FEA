@@ -1,6 +1,6 @@
 # SpjutSim FEA
 
-SpjutSim FEA is a local-first browser application for simple static finite element analysis of a single STEP, IGES, or OpenCASCADE BREP solid. The browser application has no runtime network or server dependency; geometry and analysis execute on the user's machine.
+SpjutSim FEA is a local-first browser application for simple static finite element analysis of a single STEP, IGES, OpenCASCADE BREP, or validated STL solid. The browser application has no runtime network or server dependency; geometry and analysis execute on the user's machine.
 
 ## Development status
 
@@ -8,16 +8,12 @@ v1 is unreleased. The approved interface, result-clarity, and bounded STL work
 is tracked in [plans 21–30](docs/plans/README.md). Plans 21–23 are implemented
 and accepted in the [combined owner review](docs/reviews/21-23-review.md) on
 2026-09-08; plans
-24–27 are implemented and accepted in the [grouped owner review](docs/reviews/24-27-followup.md) on 2026-09-10; 28–30 remain ahead of the final plan 20 candidate audit. No v1 acceptance is
+24–27 are implemented and accepted in the [grouped owner review](docs/reviews/24-27-followup.md) on 2026-09-10; M28 is accepted on 2026-09-11; M29 is implemented pending owner review. Plan 30 remains ahead of the final plan 20 candidate audit. No v1 acceptance is
 implied by passing automated checks.
 
-Plan 28 now has a test-only [STL feasibility and contract review](docs/reviews/28-stl-contract.md).
-Open `tests/browser/stl-patch-demo.html` with local-file access enabled, or from
-the optional HTTP server, to review explicit units and selectable patches.
-`stl-feasibility-tests.html` checks the experimental parser/topology screen;
-`stl-runtime-tests.html` probes the pinned runtime through Tet4/Tet10, durable
-patch ownership, cancellation, and fresh-worker recovery. Production STL import
-in plan 29 awaits the M28 contract decision and its full validation/analysis work.
+The [accepted STL contract](docs/designs/stl-import-contract.md) and
+[M29 review packet](docs/reviews/29-stl-workflow.md) describe the supported subset
+and end-to-end evidence.
 
 ## Run locally
 
@@ -120,11 +116,20 @@ and is documented in `benchmarks/resource/README.md`.
 
 Run `python3 tools/validate-cad-corpus.py`, then open
 `tests/browser/cad-corpus-tests.html` from the optional HTTP server (or with the
-documented local-file browser access) to audit the 50-entry STEP/IGES/BREP
-release corpus. The runner continues through deliberate failures and exports a
-compact JSON report.
+documented local-file browser access) to audit the 68-entry corpus: the original 50 STEP/IGES/BREP cases
+plus 18 STL cases. The runner continues through deliberate failures and exports a
+compact JSON report. It automatically reloads between 24-case batches to release
+terminated worker objects without a browser garbage-collection flag.
 
-After changing either file in `workers/`, regenerate the checked-in local-file worker wrappers:
+Open `tests/browser/stl-import-tests.html`, `stl-workflow-tests.html`,
+`stl-mesh-solve-tests.html`, `stl-convergence-tests.html`, and
+`stl-resource-tests.html` with local-file access enabled or from the HTTP server.
+They cover full solid validation, transactional units/patch review, analytical
+Tet10 solves, remeshing/replacement, convergence, limits, and cancellation.
+Regenerate the CC0 STL fixtures with
+`python3 tools/cad-fixtures/generate-stl-fixtures.py`.
+
+After changing files in `workers/`, regenerate the checked-in local-file worker wrappers:
 
 ```sh
 python3 tools/build-local-runtime.py
@@ -199,7 +204,7 @@ source obligations, and final artifact approval.
 ## Current boundary
 
 The current vertical slice provides app/controller-owned analysis state, local
-STEP/IGES/BREP import and Tet4/Tet10 meshing in disposable Gmsh workers, SI-backed analysis
+STEP/IGES/BREP and bounded STL import and Tet4/Tet10 meshing in disposable Gmsh workers, SI-backed analysis
 authoring, exact-topology memory preflight, and the first-party FEM core compiled
 as a pinned single-threaded embedded WASM worker runtime. Solves return validated
 transferable result models with raw and smoothed stress fields, reactions,
@@ -237,10 +242,20 @@ an adjustable angle (90 degrees by default), reset the imported orientation, or
 align one selected CAD face normal to a signed global axis. Geometry orientation
 invalidates the mesh and results. Component forces, gravity, and support
 components stay in global axes; pressure and normal force follow their assigned
-surfaces. Material and CAD `FaceId` references are retained. STL is not
-implemented yet; plans 28–29 schedule explicit units, durable
-surface-patch identity, solid validation, and the accepted analysis path before
-v1. OBJ remains deferred.
+surfaces. Material and opaque surface IDs are retained.
+
+Binary and ASCII STL require explicit m/mm/cm/in/ft units and a dimensions/patch
+review before installation. Import supports one closed, connected, consistently
+outward-wound, non-self-intersecting manifold solid. It rejects defects without
+welding, hole filling, or winding reversal. Connected angle-based patches default
+to 40° (adjustable 1–179°); curved patches retain their planar source facets.
+Regroup STL in the Model editor uses explicit assignment transfer, with Cancel
+preserving the installed model. Source bytes and options reproduce patch IDs in
+fresh workers and after rigid orientation. Limits are 16 MiB, 50,000 triangles,
+512 internal geometric surfaces, 2 million intersection candidates, and 120
+seconds per STL worker operation. A file below the storage limits can still
+exceed the geometric/work limits. Existing solver memory preflight still applies.
+General STL repair, shells, multiple solids, and OBJ remain deferred.
 
 The left pane is one compact Setup sequence: Model, Material, Supports, Loads,
 and Mesh. Solve runs checks before execution; the Checks tab precedes Results. Model owns CAD import/replacement and collapses to a

@@ -26,7 +26,7 @@ class CadCorpusTests(unittest.TestCase):
 
     def test_committed_browser_report_agrees_with_manifest(self):
         manifest = self.module.read_manifest(ROOT / "tests/fixtures/corpus-v1.json")
-        report = self.module.read_manifest(ROOT / "benchmarks/cad-corpus/chromium-152.json")
+        report = self.module.read_manifest(ROOT / "benchmarks/cad-corpus/chromium-152-stl.json")
         self.assertEqual([], self.module.validate_report(report, manifest))
 
     def test_release_mix_has_required_coverage(self):
@@ -43,13 +43,31 @@ class CadCorpusTests(unittest.TestCase):
         categories = {entry["category"] for entry in valid}
         self.assertTrue({"tiny", "thin", "hole", "fillet", "curved", "mixed-scale"} <= categories)
 
+    def test_original_cad_expectations_still_match_historical_report(self):
+        manifest = self.module.read_manifest(ROOT / "tests/fixtures/corpus-v1.json")
+        manifest["entries"] = [entry for entry in manifest["entries"] if entry["format"] != "stl"]
+        self.assertEqual(50, len(manifest["entries"]))
+        report = self.module.read_manifest(ROOT / "benchmarks/cad-corpus/chromium-152.json")
+        self.assertEqual([], self.module.validate_report(report, manifest))
+
+    def test_stl_manifest_requires_valid_explicit_options(self):
+        manifest = self.module.read_manifest(ROOT / "tests/fixtures/corpus-v1.json")
+        entry = next(entry for entry in manifest["entries"] if entry["format"] == "stl")
+        options = entry["importOptions"]
+        for invalid in (None, {}, dict(options, lengthUnit="auto"), dict(options, version=True),
+                        dict(options, patchAngleDegrees=True), dict(options, patchAngleDegrees=180)):
+            with self.subTest(options=invalid):
+                entry["importOptions"] = invalid
+                errors = self.module.validate_manifest(manifest, ROOT)
+                self.assertTrue(any("importOptions is invalid" in error for error in errors))
+
     def test_manifest_cli_passes(self):
         result = subprocess.run(
             ["python3", "tools/validate-cad-corpus.py"], cwd=ROOT,
             text=True, capture_output=True,
         )
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-        self.assertIn("50 CAD corpus entries", result.stdout)
+        self.assertIn("68 CAD corpus entries", result.stdout)
 
     def test_browser_runner_is_wired_to_manifest(self):
         html = (ROOT / "tests/browser/cad-corpus-tests.html").read_text()

@@ -9,9 +9,12 @@ import pathlib
 from typing import Any
 
 
-FORMATS = {"step", "iges", "brep"}
+FORMATS = {"step", "iges", "brep", "stl"}
 CLASSIFICATIONS = {"accepted", "rejected"}
 ERROR_CODES = {
+    "STL_MALFORMED", "STL_INPUT_LIMIT", "STL_NONFINITE", "STL_DEGENERATE_TRIANGLE",
+    "STL_NONMANIFOLD", "STL_OPEN_SURFACE", "STL_INCONSISTENT_WINDING", "STL_DISCONNECTED",
+    "STL_INWARD_WINDING", "STL_ZERO_VOLUME", "STL_SELF_INTERSECTION", "STL_PATCH_LIMIT",
     "INVALID_IMPORT_REQUEST", "GEOMETRY_IMPORT_FAILED", "GEOMETRY_NO_SOLID",
     "MULTIPLE_SOLIDS_UNSUPPORTED", "GEOMETRY_NOT_CLOSED", "IGES_UNITS_UNSUPPORTED",
 }
@@ -79,8 +82,15 @@ def validate_manifest(manifest: Any, root: pathlib.Path) -> list[str]:
             errors.append(f"{prefix}.license is required")
         if not isinstance(entry.get("provenance"), str) or not entry.get("provenance"):
             errors.append(f"{prefix}.provenance is required")
-        if entry.get("sourceUnits") not in {"m", "mm"}:
+        if entry.get("sourceUnits") not in {"m", "mm", "cm", "in", "ft"}:
             errors.append(f"{prefix}.sourceUnits is unknown")
+        if fmt == "stl":
+            options = entry.get("importOptions", {})
+            if (not isinstance(options, dict) or type(options.get("version")) is not int or options.get("version") != 1 or options.get("normalization") != "none" or
+                    options.get("lengthUnit") != entry.get("sourceUnits") or
+                    type(options.get("patchAngleDegrees")) not in (int, float) or
+                    not 1 <= options.get("patchAngleDegrees", 0) <= 179):
+                errors.append(f"{prefix}.importOptions is invalid")
         expected = entry.get("expected")
         classification = expected.get("classification") if isinstance(expected, dict) else None
         if classification not in CLASSIFICATIONS:

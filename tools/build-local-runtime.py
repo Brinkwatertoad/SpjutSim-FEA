@@ -13,7 +13,7 @@ from typing import Optional
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED_PROTOCOL_VERSION = 2
+EXPECTED_PROTOCOL_VERSION = 3
 WORKERS = {
     'mesher': 'mesher-worker.js',
     'solver': 'solver-worker.js',
@@ -38,6 +38,11 @@ def read_worker_source(source_root: Path, kind: str, filename: str) -> tuple[str
         raise ValueError(
             f'{kind} worker protocol is {match.group(1)}, expected {EXPECTED_PROTOCOL_VERSION}'
         )
+    if kind == 'mesher':
+        helper = source_root / 'stl-import.js'
+        if not helper.is_file():
+            raise ValueError(f'STL worker helper is unavailable: {helper}')
+        source = helper.read_text(encoding='utf-8') + '\n' + source
     return source, hashlib.sha256(source.encode('utf-8')).hexdigest()
 
 

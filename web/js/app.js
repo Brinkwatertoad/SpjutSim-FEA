@@ -7,10 +7,14 @@
   var ui = new api.UIController(app);
   var viewport = new api.ViewportController(document.getElementById('viewport'));
   var replacementMigrationUI = new api.ReplacementMigrationUI();
+  var stlImportUI = new api.StlImportUI(app, {
+    review: reviewStl, change: invalidateStlReview, cancel: cancelStlReview, accept: acceptStlReview
+  });
   ui.setViewportController(viewport);
   viewport.probePositionHandler=function(point){ui.positionProbe(point);};
   var wasmBytes = new Uint8Array([0,97,115,109,1,0,0,0]);
   var activeImport = null;
+  var importGeneration = 0;
   var activeMesh = null;
   var activeSolver = null;
   var activeSolverRevision = null;
@@ -37,6 +41,8 @@
     var geometryId;
     var replacing = Boolean(app.document.geometry);
     var sourceFormat = api.sourceFormatForFilename(file.name);
+    var generation = ++importGeneration;
+    if (stlImportUI.dialog.open) { cancelStlReview(); }
     cancelConvergence();
     if (replacementMigrationUI.draft) { replacementMigrationUI.cancel(); }
     if (activeImport) { activeImport.cancel(); }
@@ -47,10 +53,18 @@
     }
     if (!sourceFormat) {
       app.beginGeometryImport(file.name);
-      app.failGeometryImport(importFailure('INVALID_CAD_EXTENSION', 'Choose a STEP, IGES, or OpenCASCADE BREP file.'));
+      app.failGeometryImport(importFailure('INVALID_CAD_EXTENSION', 'Choose a STEP, IGES, BREP, or STL file.'));
       return;
     }
     app.beginGeometryImport(file.name);
+    if (sourceFormat === 'stl') {
+      if (!file.size || file.size > 16 * 1024 * 1024) { app.failGeometryImport(importFailure('STL_INPUT_LIMIT', 'Choose a nonempty STL file no larger than 16 MiB.')); return; }
+      file.arrayBuffer().then(function (bytes) {
+        if (generation !== importGeneration) { return; }
+        openStlReview({ sourceName: file.name, sourceFormat: 'stl', sourceBytes: bytes });
+      }).catch(function (error) { if (generation === importGeneration) { app.failGeometryImport(error); } });
+      return;
+    }
     geometryId = api.createGeometryId();
     client = new api.MesherClient({
       onProgress: function (progress) { app.reportGeometryImportProgress(progress); },
@@ -64,18 +78,9 @@
         sourceFormat: sourceFormat,
         sourceBytes: sourceBytes
       }).then(function (geometry) {
+        if (activeImport !== client || generation !== importGeneration) { return; }
         var source = { sourceName: file.name, sourceFormat: sourceFormat, sourceBytes: sourceBytes };
-        if (app.document.geometry) {
-          var draft = api.createReplacementMigrationDraft(app.document, geometry, source);
-          app.restoreGeometryImportStatus();
-          replacementMigrationUI.open(draft, function (replacementGeometry, replacementSource, transfer) {
-            if (activeMesh) { activeMesh.cancel(); activeMesh = null; }
-            disposeSolver();
-            app.replaceGeometryWithSetup(replacementGeometry, replacementSource, transfer);
-          });
-        } else {
-          app.replaceGeometry(geometry, source);
-        }
+        installImportedGeometry(geometry, source);
       });
     }).catch(function (error) {
       if (activeImport === client) { app.failGeometryImport(error); }
@@ -83,6 +88,53 @@
       client.dispose();
       if (activeImport === client) { activeImport = null; }
     });
+  }
+
+  function installImportedGeometry(geometry, source) {
+    if (app.document.geometry) {
+      var draft = api.createReplacementMigrationDraft(app.document, geometry, source);
+      app.restoreGeometryImportStatus();
+      replacementMigrationUI.open(draft, function (replacementGeometry, replacementSource, transfer) {
+        if (activeMesh) { activeMesh.cancel(); activeMesh = null; }
+        disposeSolver();
+        app.replaceGeometryWithSetup(replacementGeometry, replacementSource, transfer);
+      });
+    } else { app.replaceGeometry(geometry, source); }
+  }
+  function openStlReview(source, options) {
+    cancelConvergence();
+    if (activeImport) { activeImport.cancel(); activeImport = null; }
+    app.beginGeometryReview(source);
+    stlImportUI.open(options);
+  }
+  function invalidateStlReview() {
+    if (activeImport) { activeImport.cancel(); activeImport = null; }
+    app.invalidateGeometryReview();
+  }
+  function reviewStl(options) {
+    var review = app.geometryReview, generation;
+    if (!review) { return; }
+    if (activeImport) { activeImport.cancel(); activeImport = null; }
+    try { generation = app.setGeometryReviewOptions(options); }
+    catch (error) { stlImportUI.report(error.message); return; }
+    var client = new api.MesherClient({ onProgress: function (progress) {
+      if (activeImport === client) { stlImportUI.report(progress.userMessage); app.reportGeometryImportProgress(progress); }
+    } });
+    activeImport = client;
+    client.importGeometry(Object.assign({}, review.source, { geometryId: api.createGeometryId(), importOptions: options })).then(function (geometry) {
+      if (activeImport === client) { app.completeGeometryReview(review, generation, geometry); }
+    }).catch(function (error) {
+      if (activeImport === client && app.geometryReview === review) { stlImportUI.report((error.diagnostic ? error.diagnostic.code + ': ' : '') + error.message); }
+    }).finally(function () { client.dispose(); if (activeImport === client) { activeImport = null; } });
+  }
+  function cancelStlReview() {
+    if (activeImport) { activeImport.cancel(); activeImport = null; }
+    app.cancelGeometryReview(); stlImportUI.close();
+  }
+  function acceptStlReview() {
+    var reviewed = app.acceptGeometryReview();
+    stlImportUI.close();
+    installImportedGeometry(reviewed.geometry, reviewed.source);
   }
 
   function generateMesh() {
@@ -235,7 +287,7 @@
 
   function setText(id, value) { document.getElementById(id).textContent = value; }
   setText('launch-mode', location.protocol === 'file:' ? 'Direct local file' : (root.crossOriginIsolated ? 'HTTP, isolated' : 'HTTP, portable'));
-  root.addEventListener('pagehide', function () { if (activeMesh) { activeMesh.cancel(); } if (activeConvergence) { activeConvergence.cancel(); } disposeSolver(); replacementMigrationUI.dispose(); ui.dispose(); viewport.dispose(); }, { once: true });
+  root.addEventListener('pagehide', function () { if (activeImport) { activeImport.cancel(); } if (activeMesh) { activeMesh.cancel(); } if (activeConvergence) { activeConvergence.cancel(); } disposeSolver(); stlImportUI.close(); replacementMigrationUI.dispose(); ui.dispose(); viewport.dispose(); }, { once: true });
   viewport.setFacePickHandler(function (faceId, additive) {
     if (app.document.assignmentDraft) {
       if (faceId) { app.toggleDraftFace(faceId); }
@@ -278,6 +330,9 @@
     if (indicator && documentState.assignmentDraft) { indicator.textContent = documentState.assignmentDraft.kind === 'gravity' ? 'Gravity preview · Apply or Cancel in Setup' : 'Preview · click faces to toggle · Apply or Cancel in Setup'; }
   });
   ui.setImportHandler(importCadFile);
+  document.getElementById('regroup-stl-button').addEventListener('click', function () {
+    if (app.geometrySource && app.geometrySource.sourceFormat === 'stl') { openStlReview(app.geometrySource, app.document.geometry.importOptions); }
+  });
   ui.setMeshHandlers(generateMesh, function () { if (activeMesh) { activeMesh.cancel(); } }, function () {
     disposeSolver();
     app.clearMesh();

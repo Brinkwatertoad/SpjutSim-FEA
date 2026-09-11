@@ -1,6 +1,6 @@
 # M28: STL feasibility and contract decision
 
-- Status: **Pending owner review and contract decision**.
+- Status: **Accepted by owner on 2026-09-11**.
 - Branch: `feat/28-29-stl-import`, based on `fed435a`.
 - Implementation: the branch's `tests/browser/stl-*` experiments, generated
   `tests/fixtures/stl` corpus, fixture generator, and proposed design. Production
@@ -13,7 +13,7 @@
 
 ## Decision
 
-Accept or revise this contract before production implementation in plan 29:
+The owner accepted this contract on 2026-09-11:
 
 1. Binary/ASCII STL for one closed, connected, outward-oriented manifold solid;
    full validation rejects self-intersections and ambiguous geometry. No hidden
@@ -33,7 +33,7 @@ Accept or revise this contract before production implementation in plan 29:
    establish capacity at those ceilings.
 
 This is a supported-subset/design decision, not M29 numerical or usability
-acceptance. Plans 28 and 29 remain unchecked until their respective owner gates.
+acceptance. Plan 28 is accepted; plan 29 retains its separate owner gate.
 
 ## Walkthrough (about 20 minutes)
 
@@ -101,5 +101,5 @@ scope; numerical uncertainty must produce a visible rejection.
 
 ## Owner response
 
-Not yet received. Record the actual response and date here; do not infer
-acceptance from automated checks or the request to implement both plans.
+2026-09-11: the owner replied “yes, accept.” to the proposed M28 contract.
+Proceed with plan 29 on the same branch. M29 acceptance remains pending.

@@ -109,7 +109,7 @@
         },
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "8c4ede9b01b3f98c2ae7301955ac80fbeec0cf1b4223a98ef89e3774243ebf4e"
+          "sha256": "0375bde2251735b0fbdab36a9d535191c6ecf54cfcadc6be551ac81aa087ca30"
         }
       ],
       "build_recipe": {
@@ -142,25 +142,29 @@
     },
     "workers": {
       "project": "workers",
-      "version": "protocol 2; candidate source hashes",
+      "version": "protocol 3; candidate source hashes",
       "license": "GPL-2.0-or-later",
       "source": {
         "url": "https://github.com/Brinkwatertoad/SpjutSim-FEA",
-        "revision": "protocol 2; candidate source hashes"
+        "revision": "protocol 3; candidate source hashes"
       },
       "source_files": [
         {
           "path": "workers/mesher-worker.js",
-          "sha256": "7668cb2fed2d37df0209a0f7cc456174b4879a7716330385985311d5c8fc2748"
+          "sha256": "37f2499cf9ffd8b0ad54ffa1ab9b435718824b08b4dad0143acefc1e62f5fd0d"
         },
         {
           "path": "workers/solver-worker.js",
-          "sha256": "a020496be4065ef2afc8d58e8f732290834241c1621634e16573695a759f9abc"
+          "sha256": "3c5a4affa40b63359c3347a955df6b1b51a7b0a507fe206a7a03ebd6a71c9af0"
+        },
+        {
+          "path": "workers/stl-import.js",
+          "sha256": "eaa112b475ca84f41ac02f54b732b71c5e1db732490f5ed3650b64104a6b6b43"
         }
       ],
       "build_recipe": {
         "path": "tools/build-local-runtime.py",
-        "sha256": "8c4ede9b01b3f98c2ae7301955ac80fbeec0cf1b4223a98ef89e3774243ebf4e"
+        "sha256": "0375bde2251735b0fbdab36a9d535191c6ecf54cfcadc6be551ac81aa087ca30"
       },
       "modifications": "First-party workers packaged as classic JavaScript source strings.",
       "notices": [
@@ -337,7 +341,7 @@
       "source_files": [
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "8c4ede9b01b3f98c2ae7301955ac80fbeec0cf1b4223a98ef89e3774243ebf4e"
+          "sha256": "0375bde2251735b0fbdab36a9d535191c6ecf54cfcadc6be551ac81aa087ca30"
         }
       ],
       "build_recipe": {
@@ -822,14 +826,14 @@
     },
     {
       "path": "web/generated/local-runtime/mesher-worker-source.js",
-      "sha256": "6e3b34bab321a7b1e8cd7304a1565218196a2daafc1f08d390619701e787bc78",
+      "sha256": "308ab25945b7ac0e5cf1980ad473a48ccf105239d7e5f65d6d8a24748bf073b6",
       "components": [
         "workers"
       ]
     },
     {
       "path": "web/generated/local-runtime/solver-worker-source.js",
-      "sha256": "fcda22fa44469850bc722c764b5639af7a283a0ecfa150876e4332b678638ce2",
+      "sha256": "b6ad185eb77fed55540a557a2b6b8d3d4a3e08fc56202b3224c0ff0a0d64617b",
       "components": [
         "workers"
       ]

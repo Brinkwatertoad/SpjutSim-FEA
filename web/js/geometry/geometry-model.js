@@ -35,7 +35,7 @@
    * @typedef {Object} GeometryModel
    * @property {string} geometryId
    * @property {string} sourceName
-   * @property {'step'|'iges'|'brep'} sourceFormat
+   * @property {'step'|'iges'|'brep'|'stl'} sourceFormat
    * @property {{rotation: number[], operations: string[]}} orientation
    * @property {FaceId[]} faceIds
    * @property {BoundingBoxM} boundingBoxM
@@ -54,8 +54,20 @@
   var SUPPORTED_CAD_FORMATS = Object.freeze({
     step: Object.freeze({ format: 'step', extensions: Object.freeze(['step', 'stp']), label: 'STEP' }),
     iges: Object.freeze({ format: 'iges', extensions: Object.freeze(['iges', 'igs']), label: 'IGES' }),
-    brep: Object.freeze({ format: 'brep', extensions: Object.freeze(['brep']), label: 'OpenCASCADE BREP' })
+    brep: Object.freeze({ format: 'brep', extensions: Object.freeze(['brep']), label: 'OpenCASCADE BREP' }),
+    stl: Object.freeze({ format: 'stl', extensions: Object.freeze(['stl']), label: 'STL' })
   });
+
+  function validateStlOptions(options) {
+    return Boolean(options && options.version === 1 && options.normalization === 'none' &&
+      ['m','mm','cm','in','ft'].includes(options.lengthUnit) && Number.isFinite(options.patchAngleDegrees) &&
+      options.patchAngleDegrees >= 1 && options.patchAngleDegrees <= 179);
+  }
+
+  function sameStlOptions(left, right) {
+    return validateStlOptions(left) && validateStlOptions(right) &&
+      left.lengthUnit === right.lengthUnit && left.patchAngleDegrees === right.patchAngleDegrees;
+  }
 
   function sourceFormatForFilename(name) {
     var match;
@@ -83,6 +95,9 @@
     }
     if (!(request.sourceBytes instanceof ArrayBuffer) || request.sourceBytes.byteLength === 0) {
       return validation(false, 'invalid-source-bytes');
+    }
+    if (request.sourceFormat === 'stl' && !validateStlOptions(request.importOptions)) {
+      return validation(false, 'invalid-stl-options');
     }
     if (request.geometryId !== undefined && (typeof request.geometryId !== 'string' || request.geometryId.length === 0)) {
       return validation(false, 'invalid-geometry-id');
@@ -172,6 +187,17 @@
         new Set(model.faceIds).size !== model.faceIds.length) {
       return validation(false, 'invalid-geometry-model');
     }
+    if (model.sourceFormat === 'stl' && (!validateStlOptions(model.importOptions) || model.surfaceKind !== 'stl-patch' ||
+        !model.sourceMetadata || model.sourceMetadata.version !== 1 || !/^[a-f0-9]{64}$/.test(model.sourceMetadata.sha256) ||
+        !Number.isInteger(model.sourceMetadata.triangleCount) || model.sourceMetadata.triangleCount < 1 || model.sourceMetadata.triangleCount > 50000 ||
+        !Number.isInteger(model.sourceMetadata.internalSurfaceCount) || model.sourceMetadata.internalSurfaceCount < 1 || model.sourceMetadata.internalSurfaceCount > 512 ||
+        !model.sourceMetadata.validation || model.sourceMetadata.validation.status !== 'valid' || model.sourceMetadata.validation.version !== 1 ||
+        model.sourceMetadata.validation.triangleCount !== model.sourceMetadata.triangleCount ||
+        !Number.isInteger(model.sourceMetadata.validation.intersectionCandidates) || model.sourceMetadata.validation.intersectionCandidates < 0 ||
+        model.sourceMetadata.validation.intersectionCandidates > 2000000 || model.faceIds.some(function(id){return !/^stl:[a-f0-9]{64}$/.test(id);}) ||
+        !model.preview || !(model.preview.indices instanceof Uint32Array) || model.preview.indices.length !== model.sourceMetadata.triangleCount * 3)) {
+      return validation(false, 'invalid-stl-source-contract');
+    }
     orientation = root.SpjutsimFEA.validateRigidOrientation(model.orientation);
     if (!orientation.valid) { return orientation; }
     boundingBox = validateBoundingBoxM(model.boundingBoxM);
@@ -191,6 +217,8 @@
   root.SpjutsimFEA.SUPPORTED_CAD_FORMATS = SUPPORTED_CAD_FORMATS;
   root.SpjutsimFEA.sourceFormatForFilename = sourceFormatForFilename;
   root.SpjutsimFEA.validateImportRequest = validateImportRequest;
+  root.SpjutsimFEA.validateStlOptions = validateStlOptions;
+  root.SpjutsimFEA.sameStlOptions = sameStlOptions;
   root.SpjutsimFEA.validateBoundingBoxM = validateBoundingBoxM;
   root.SpjutsimFEA.validatePreview = validatePreview;
   root.SpjutsimFEA.validateGeometryModel = validateGeometryModel;

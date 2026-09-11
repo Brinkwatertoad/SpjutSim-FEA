@@ -59,8 +59,8 @@ The product should favor **useful, defensible engineering feedback over solver f
 - Gmsh + OpenCASCADE geometry import and volume meshing.
 - Tet4 support for early development and verification.
 - Tet10 support required for v1.0 release.
-- Planned binary/ASCII STL import for one validated closed solid, with explicit
-  units and durable selectable patches; Tasks 28–29 and owner review are required
+- Binary/ASCII STL import for one validated closed solid, with explicit
+  units and durable selectable patches; M28 is accepted and M29 owner review is required
   before claiming support.
 - Static loads and prescribed supports/displacements.
 - Sparse linear solve in WebAssembly.
@@ -88,7 +88,7 @@ The product should favor **useful, defensible engineering feedback over solver f
 - GPU/WebGPU sparse solver.
 - Parasolid import.
 - OBJ and other tessellated formats beyond the bounded STL subset. Binary/ASCII
-  STL for one validated closed solid is now planned before v1 under Tasks 28–29;
+  STL for one validated closed solid is implemented under Tasks 28–29;
   general mesh repair remains deferred. Geometry consumers stay format-neutral.
 - Mobile-device support.
 
@@ -703,15 +703,46 @@ Use Gmsh's OpenCASCADE geometry kernel for import.
 
 The implementation should set OpenCASCADE's target unit so the imported model is normalized to meters before meshing. Do not infer units from filename or UI assumptions.
 
-Tasks 28–29 add a bounded binary/ASCII STL adapter behind the same geometry
-contract. This is approved scope, not currently implemented support. Downstream
-consumers must treat `sourceFormat` as metadata rather than branching on STEP
-behavior. Task 28 must prove the pinned-runtime path and obtain owner acceptance
-of explicit units, closed-solid validation, deterministic surface-patch identity,
-and grouping/remapping interactions before Task 29 enables production analysis.
-Raw STL triangles do not provide CAD faces suitable for durable load/support
-attachment. Preserve source bytes plus import options so fresh workers reconstruct
-the same patches. General repair and OBJ remain deferred. See Section 15.11.
+Binary/ASCII `.stl` uses the accepted M28 discrete-surface adapter in the pinned
+runtime, with no OCC reconstruction or native-solver format dependency. Require
+explicit `m`, `mm`, `cm`, `in`, or `ft` units; the review displays dimensions in
+chosen units and meters. Accept only one connected, closed, consistently outward
+manifold boundary with positive usable volume and no self-intersections. Exact
+coordinate indexing is allowed; tolerance welding, repair, and automatic winding
+reversal are forbidden. Stored normals are advisory.
+
+`workers/stl-import.js` owns strict parsing, edge and vertex-link topology,
+compensated signed volume, BVH candidate search, and filtered orientation tests
+with exact binary64 integer fallback for intersection/contact predicates. Reject
+contacts beyond shared edges/vertices. Bounds are 16 MiB, 50,000 triangles,
+512 internal geometric surfaces, 2,000,000 candidate pairs, and 120 seconds per
+STL operation (terminate the disposable worker on timeout/cancellation). SI
+bounds diagonal must be 1e-9 through 1e6 m; triangle cross-product norm and volume
+must exceed 1e-14 times diagonal squared and cubed, respectively. Stable errors
+and numerical criteria are specified in `docs/designs/stl-import-contract.md`.
+
+Coarse worker protocol **3** adds version-1 `importOptions` containing explicit
+`lengthUnit`, `patchAngleDegrees` (1–179, UI default 40), and
+`normalization: 'none'`. Geometry retains these options, source SHA-256, triangle
+and internal-surface counts, validation version/report, and `surfaceKind:
+'stl-patch'`. Original bytes remain controller-owned; work copies transfer to
+fresh workers. Reconstruction verifies source digest and patch membership.
+
+Selectable patches are connected components of the neighbor-dihedral rule.
+Opaque `stl:` IDs hash versioned source bytes/options and sorted canonical
+triangle membership; orientation and mesh settings do not change them. Geometry
+classification uses 1e-8 radians, maps every source triangle exactly once before
+remeshing, and keeps internal subdivisions separate from user patches. Straight
+Tet10 midpoints preserve the faceted boundary; no smooth CAD curvature is inferred.
+Each patch owns contiguous Tri6 integration and separate display ranges.
+
+Installation requires dimensions/patch acceptance. Failed, cancelled, or stale
+review preserves the installed model/setup/results. Later units/grouping changes
+and CAD↔STL replacement explicitly map/drop each assignment using the existing
+transfer workflow. Downstream analysis/rendering consume opaque IDs. Full parsing,
+hashing, classification, meshing, and recovery stay in workers. The build script
+bundles the helper before the mesher shell for file and HTTP modes. General repair,
+shells, multibody analysis, and OBJ remain deferred. See Section 15.11.
 
 ### 6.2 Geometry validation
 
@@ -948,7 +979,7 @@ Use uniform pressure ±magnitude/selected area, positive for Push and negative f
 Pull. Opposing local normals may cancel. In the solver worker, Tri3 uses triangle
 area and Tri6 uses the same three-point surface quadrature as native `tri6_area`.
 This normalization then calls the unchanged native pressure integration. The
-protocol-2 surface-load record adds optional normal magnitude/sense; normal loads
+surface-load record (introduced in protocol 2, retained in protocol 3) adds optional normal magnitude/sense; normal loads
 omit the preview-only equivalent nodal force array (`null`). No native API or
 WASM binary change is needed. Malformed magnitudes and degenerate areas fail
 with actionable errors.
@@ -1923,7 +1954,7 @@ The UI must clearly mark results stale and require a new solve.
 ### 15.11 Approved pre-v1 usability and STL improvement sequence
 
 Approved on 2026-09-07. **Tasks 21–23 implemented and accepted 2026-09-08;
-Tasks 24–27 implemented pending grouped owner review; Tasks 28–30 planned.** Tasks 21–30 in
+Tasks 24–27 accepted; M28 accepted 2026-09-11; M29 implemented pending owner review; Task 30 planned.** Tasks 21–30 in
 `docs/plans/README.md` schedule independent delivery and mandatory owner reviews.
 These requirements refine the earlier UI descriptions where behavior changes.
 They preserve the numerical, worker, dependency, and direct-local requirements.
@@ -2300,6 +2331,7 @@ A suggested layout:
   fem_c_api.cpp
 
 /workers
+  stl-import.js              # parsing, full solid validation, units, patch identity
   mesher-worker.js
   solver-worker.js
 
@@ -2624,7 +2656,7 @@ evidence.
 - [x] Transactional load/support previews and M25 are accepted.
 - [x] Readable setup and the reviewed check-then-solve workflow and M26 are accepted.
 - [x] Bounded engineering edit undo/redo and M27 are accepted.
-- [ ] STL feasibility, units/validation/patch contract, and M28 owner scope decision are accepted.
+- [x] STL feasibility, units/validation/patch contract, and M28 owner scope decision are accepted (2026-09-11).
 - [ ] The accepted STL analysis subset passes topology, numerical, corpus, resource, direct-local, and M29 reviews.
 - [ ] Integrated post-change regression and owner usability review M30 are accepted.
 - [ ] Task 20 binds all required evidence to the exact final candidate after Tasks 21–30; release authorization is recorded.
@@ -2663,9 +2695,9 @@ Reference documentation consulted while preparing this specification:
 | Area | Decision |
 |---|---|
 | Product model | Local-first browser FEA |
-| CAD format | STEP, IGES, and OpenCASCADE BREP; bounded binary/ASCII STL planned before v1 via Tasks 28–29; OBJ deferred |
+| CAD format | STEP, IGES, and OpenCASCADE BREP; bounded binary/ASCII STL implemented, M29 owner review pending; OBJ deferred |
 | Geometry | One closed solid body |
-| Geometry kernel | OpenCASCADE through Gmsh for CAD; discrete-surface STL path subject to accepted Task 28 evidence |
+| Geometry kernel | OpenCASCADE through Gmsh for CAD; validated indexed discrete-surface STL path per accepted M28 contract |
 | Mesher | Gmsh, isolated behind replaceable interface |
 | Prototype element | Tet4 |
 | v1 production element | Tet10 |
@@ -2830,4 +2862,4 @@ The Setup toggle replaces the panel's duplicate title. Add material has no
 Undo/Redo descriptions.
 
 The owner approved M24–M27 with these adjustments. Acceptance covers this grouped
-workflow; plans 28–30 and the final release audit remain separate gates.
+workflow; M28 is accepted; M29 review, plan 30, and the final release audit remain separate gates.

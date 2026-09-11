@@ -102,6 +102,36 @@
     "volume": null
   },
   {
+    "file": "self-intersecting.stl",
+    "sha256": "3878a29e38e410c272fedb969a480f1ad84ef27a4cd299eec4f807c03c488dfd",
+    "bytes": 684,
+    "triangles": 12,
+    "encoding": "binary",
+    "expected": "STL_SELF_INTERSECTION",
+    "dimensions": null,
+    "volume": null
+  },
+  {
+    "file": "pinched-vertex.stl",
+    "sha256": "dd897bf78ab61fe7a86d691af42d75c4ccc714e9710c7a30395e6a7d30856ec9",
+    "bytes": 1284,
+    "triangles": 24,
+    "encoding": "binary",
+    "expected": "STL_NONMANIFOLD",
+    "dimensions": null,
+    "volume": null
+  },
+  {
+    "file": "nonfinite.stl",
+    "sha256": "8fff58c6a943af6541c731dc006714348c7446e5ced9943432cce13c09d7f5ee",
+    "bytes": 684,
+    "triangles": 12,
+    "encoding": "binary",
+    "expected": "STL_NONFINITE",
+    "dimensions": null,
+    "volume": null
+  },
+  {
     "file": "cylinder-16.stl",
     "sha256": "a2cbf923939840eb7033d065c8b29846f6f73fa9c74726d108687db4608e6230",
     "bytes": 3284,

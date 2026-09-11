@@ -51,7 +51,7 @@
   async function runEntry(entry) {
     var started = performance.now(); var sourceBytes = await readBytes('../../' + entry.path); var client = new api.MesherClient();
     try {
-      var geometry = await client.importGeometry({ geometryId: 'corpus-' + entry.id, sourceName: entry.path.split('/').pop(), sourceFormat: entry.format, sourceBytes: sourceBytes });
+      var geometry = await client.importGeometry({ geometryId: 'corpus-' + entry.id, sourceName: entry.path.split('/').pop(), sourceFormat: entry.format, importOptions: entry.importOptions, sourceBytes: sourceBytes });
       if (entry.expected.classification === 'rejected') { throw new Error(entry.id + ' was accepted unexpectedly'); }
       assert(inRange(1, entry.expected.solidCount), entry.id + ' solid count outside range');
       assert(inRange(geometry.faceIds.length, entry.expected.faceCount), entry.id + ' face count outside range');
@@ -86,14 +86,33 @@
   }
   async function runAll() {
     var manifest = await readJson('../fixtures/corpus-v1.json'); var runtime = await diagnostics(); var rows = []; var index;
-    for (index = 0; index < manifest.entries.length; index += 1) {
+    // Chromium can defer collection of terminated Worker objects until its
+    // per-document worker limit is reached. Separate document batches retain
+    // fresh workers for every fixture without requiring a browser GC test flag.
+    var query = new URLSearchParams(location.search), token = query.get('run') || String(Date.now());
+    var checkpointKey = 'cad-corpus-run-' + token;
+    var checkpoint = query.has('run') && sessionStorage.getItem(checkpointKey);
+    if (checkpoint) {
+      var saved = JSON.parse(checkpoint);
+      assert(saved.manifest === JSON.stringify(manifest), 'Corpus changed during this run; restart the harness');
+      rows = saved.rows; rows.forEach(addRow);
+    }
+    var batchEnd = Math.min(rows.length + 24, manifest.entries.length);
+    for (index = rows.length; index < batchEnd; index += 1) {
       status.textContent = 'Running ' + (index + 1) + '/' + manifest.entries.length + ': ' + manifest.entries[index].id;
       var row = await runEntry(manifest.entries[index]); rows.push(row); addRow(row);
     }
+    if (rows.length < manifest.entries.length) {
+      sessionStorage.setItem(checkpointKey, JSON.stringify({ manifest: JSON.stringify(manifest), rows: rows }));
+      location.replace(location.pathname + '?run=' + encodeURIComponent(token));
+      return;
+    }
+    sessionStorage.removeItem(checkpointKey);
     var peakMesherWasmBytes = Math.max.apply(null, rows.map(function (row) { return row.mesherWasmBytes || 0; }));
     var report = { schemaVersion: 1, corpusId: manifest.corpusId, browser: navigator.userAgent, runtime: runtime,
       peakMesherWasmBytes: peakMesherWasmBytes,
-      qualityWarningThresholdGamma: 0.1, entryCount: rows.length, agreementCount: rows.length, entries: rows };
+      qualityWarningThresholdGamma: 0.1, executionMode: 'fresh-workers-document-batches', batchSize: 24,
+      entryCount: rows.length, agreementCount: rows.length, entries: rows };
     root.__spjutsimCadCorpusReport = report; reportNode.textContent = JSON.stringify(report, null, 2);
     status.textContent = 'Passed: ' + rows.length + '/' + rows.length; status.dataset.result = 'passed'; document.title = 'CAD corpus tests: Passed';
   }

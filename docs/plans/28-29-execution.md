@@ -21,3 +21,8 @@ Baseline: 77 Python tests passed. Initial browser probe on the pinned artifact
 successfully imported/classified an ASCII cube and generated Gmsh type 11 Tet10.
 Reparametrization produced eight Gmsh surfaces for six physical cube faces: user
 patch identity must be independent of those internal subdivisions.
+
+M28 accepted by the owner on 2026-09-11. Plan 29 execution: full parser/BVH
+validation and stable IDs; worker/source contracts and patch-owned meshing;
+transactional units/patch UI plus regroup/replacement; end-to-end solve/corpus
+checks; packaging, complete suites and M29 review.

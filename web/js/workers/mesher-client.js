@@ -46,19 +46,30 @@
 
   MesherClient.prototype.importGeometry = function (request) {
     var self = this;
+    if (request && request.sourceFormat === 'stl') {
+      if (!root.SpjutsimFEA.validateStlOptions(request.importOptions)) { return Promise.reject(clientFailure('STL_INVALID_OPTIONS', 'Choose explicit STL units and a grouping angle from 1 to 179 degrees.')); }
+      if (!(request.sourceBytes instanceof ArrayBuffer) || !request.sourceBytes.byteLength || request.sourceBytes.byteLength > 16 * 1024 * 1024) {
+        return Promise.reject(clientFailure('STL_INPUT_LIMIT', 'Choose a nonempty STL file no larger than 16 MiB.'));
+      }
+    }
     var validation = root.SpjutsimFEA.validateImportRequest(request);
     if (!validation.valid) {
-      return Promise.reject(clientFailure('INVALID_IMPORT_REQUEST', 'Choose a non-empty STEP, IGES, or BREP file.', validation.reason));
+      return Promise.reject(clientFailure('INVALID_IMPORT_REQUEST', 'Choose a non-empty STEP, IGES, BREP, or STL file.', validation.reason));
     }
     return this.ensureWorker().then(function (worker) {
       return new Promise(function (resolve, reject) {
         var requestId = self.requestId();
         var settled = false;
         var transferBytes = request.sourceBytes.slice(0);
+        var timeout = request.sourceFormat === 'stl' ? root.setTimeout(function () {
+          finish(clientFailure('MESHER_TIMEOUT', 'The geometry operation exceeded 120 seconds. Try a simpler tessellation or coarser mesh.'));
+        }, 120000) : null;
 
         function finish(error, result) {
           if (settled) { return; }
           settled = true;
+          root.clearTimeout(timeout);
+          if (error) { worker.terminate(); if (self.worker === worker) { self.worker = null; } }
           self.cancelPending = null;
           worker.onmessage = null;
           worker.onerror = null;
@@ -111,6 +122,7 @@
             geometryId: request.geometryId || root.SpjutsimFEA.createGeometryId(),
             sourceName: request.sourceName,
             sourceFormat: request.sourceFormat,
+            importOptions: request.importOptions,
             sourceBytes: transferBytes
           }, [transferBytes]);
         } catch (error) {
@@ -133,6 +145,9 @@
     if (!geometryValidation.valid || !(request.sourceBytes instanceof ArrayBuffer) || request.sourceBytes.byteLength === 0) {
       return Promise.reject(clientFailure('INVALID_MESH_REQUEST', 'The geometry must be re-imported before meshing.', geometryValidation.reason || 'missing-source-bytes', 'mesh'));
     }
+    if (request.geometry.sourceFormat === 'stl' && request.sourceBytes.byteLength > 16 * 1024 * 1024) {
+      return Promise.reject(clientFailure('STL_INPUT_LIMIT', 'Choose an STL file no larger than 16 MiB.', null, 'mesh'));
+    }
     settingsValidation = root.SpjutsimFEA.validateMeshSettings(request.settings, request.geometry.boundingBoxM);
     if (!settingsValidation.valid) {
       return Promise.reject(clientFailure('INVALID_MESH_SETTINGS', 'Choose valid tetrahedral mesh settings.', settingsValidation.reason, 'mesh'));
@@ -143,10 +158,15 @@
         var requestId = self.requestId();
         var settled = false;
         var transferBytes = request.sourceBytes.slice(0);
+        var timeout = request.geometry.sourceFormat === 'stl' ? root.setTimeout(function () {
+          finish(clientFailure('MESHER_TIMEOUT', 'The geometry operation exceeded 120 seconds. Try a simpler tessellation or coarser mesh.', null, 'mesh'));
+        }, 120000) : null;
 
         function finish(error, result) {
           if (settled) { return; }
           settled = true;
+          root.clearTimeout(timeout);
+          if (error) { worker.terminate(); if (self.worker === worker) { self.worker = null; } }
           self.cancelPending = null;
           worker.onmessage = null;
           worker.onerror = null;
@@ -193,6 +213,7 @@
             protocol: root.SpjutsimFEA.WORKER_PROTOCOL_VERSION,
             type: 'mesh', requestId: requestId, geometryId: request.geometry.geometryId,
             sourceName: request.geometry.sourceName, sourceFormat: request.geometry.sourceFormat,
+            importOptions: request.geometry.importOptions, sourceHash: request.geometry.sourceMetadata && request.geometry.sourceMetadata.sha256,
             faceIds: request.geometry.faceIds.slice(), settings: resolvedSettings,
             orientation: { rotation: request.geometry.orientation.rotation.slice(), operations: request.geometry.orientation.operations.slice() },
             sourceBytes: transferBytes
@@ -212,6 +233,9 @@
     this.disposed = true;
     if (this.cancelPending) { this.cancelPending(); }
     if (this.worker) {
+      this.worker.onmessage = null;
+      this.worker.onerror = null;
+      this.worker.onmessageerror = null;
       this.worker.terminate();
       this.worker = null;
     }

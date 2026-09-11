@@ -1,8 +1,7 @@
-# Proposed STL import contract — M28
+# Accepted STL import contract — M28
 
-Status: **Proposed; awaiting owner decision.** Production STL support is not
-enabled. The implementation request covers plans 28–29; the supported subset
-and interaction below remain the material M28 decision required by plan 28.
+Status: **Accepted by the owner on 2026-09-11 (“yes, accept.”).**
+Production implementation and M29 verification follow this contract.
 
 ## Decision presented to the owner
 
@@ -236,5 +235,5 @@ acceptance criteria remain in force. M29 extends evidence rather than relaxing i
 
 ## Owner decision record
 
-Owner response: not yet recorded. See `docs/reviews/28-stl-contract.md` for the
+Owner response: accepted on 2026-09-11 (“yes, accept.”). See `docs/reviews/28-stl-contract.md` for the
 walkthrough. No task or v1 acceptance is implied by this feasibility report.

@@ -2182,6 +2182,636 @@
         "stage": "import",
         "code": "INVALID_IMPORT_REQUEST"
       }
+    },
+    {
+      "id": "stl-cube-ascii",
+      "path": "tests/fixtures/stl/cube-ascii.stl",
+      "sha256": "a303a86a7210369f3f184c2bb7c18d912d77e98543e80dab1985fea403314abb",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "basic",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          6,
+          6
+        ],
+        "volumeM3": [
+          0.999999,
+          1.000001
+        ],
+        "boundsDiagonalM": [
+          1.7320490755180695,
+          1.7320525396196846
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet10",
+        "minSizeM": 0.075,
+        "maxSizeM": 0.3,
+        "nodeCount": [
+          1809,
+          2449
+        ],
+        "elementCount": [
+          980,
+          1328
+        ],
+        "gammaMinimum": [
+          0.15218167904919677,
+          0.4565450371475903
+        ],
+        "gammaP05": [
+          0.39803600612221124,
+          0.7392097256555352
+        ],
+        "maximumEdgeRatio": [
+          1.8862152230596383,
+          3.1436920384327305
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "stl-cube-binary",
+      "path": "tests/fixtures/stl/cube-binary.stl",
+      "sha256": "751c6f675794a5891a9ee5533f820f0923a65e641a9a16f220a3c44634f47dd9",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "basic",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          6,
+          6
+        ],
+        "volumeM3": [
+          0.999999,
+          1.000001
+        ],
+        "boundsDiagonalM": [
+          1.7320490755180695,
+          1.7320525396196846
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet10",
+        "minSizeM": 0.075,
+        "maxSizeM": 0.3,
+        "nodeCount": [
+          1809,
+          2449
+        ],
+        "elementCount": [
+          980,
+          1328
+        ],
+        "gammaMinimum": [
+          0.15218167904919677,
+          0.4565450371475903
+        ],
+        "gammaP05": [
+          0.39803600612221124,
+          0.7392097256555352
+        ],
+        "maximumEdgeRatio": [
+          1.8862152230596383,
+          3.1436920384327305
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "stl-thin-plate",
+      "path": "tests/fixtures/stl/thin-plate.stl",
+      "sha256": "77263fd0ddf3b64b2dde6c35b24d42b1c1289f5a828bffef46190cf15bb53966",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "thin",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          6,
+          6
+        ],
+        "volumeM3": [
+          0.01999998,
+          0.02000002
+        ],
+        "boundsDiagonalM": [
+          1.4143535622976735,
+          1.4143563910076267
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet10",
+        "minSizeM": 0.075,
+        "maxSizeM": 0.3,
+        "nodeCount": [
+          912,
+          1234
+        ],
+        "elementCount": [
+          412,
+          558
+        ],
+        "gammaMinimum": [
+          0.011527277072522874,
+          0.03458183121756862
+        ],
+        "gammaP05": [
+          0.09474007689404217,
+          0.17594585708893548
+        ],
+        "maximumEdgeRatio": [
+          15.980457168541061,
+          26.63409528090177
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "stl-disconnected",
+      "path": "tests/fixtures/stl/disconnected.stl",
+      "sha256": "d4155bdf5c6fbdcd21fd03641242cbb143750edef79f6e43c75bdb556591471f",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "basic",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "STL_DISCONNECTED"
+      }
+    },
+    {
+      "id": "stl-open",
+      "path": "tests/fixtures/stl/open.stl",
+      "sha256": "bfa369fc307b0b20afe13483a7eadf4330e4c1dce14160ac6acff11e2b6abf7c",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "basic",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "STL_OPEN_SURFACE"
+      }
+    },
+    {
+      "id": "stl-nonmanifold",
+      "path": "tests/fixtures/stl/nonmanifold.stl",
+      "sha256": "c18dc8d466dd80b8cabb34b39d634f60041dfc6e5aa63974d1bd93c850bf6a6f",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "basic",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "STL_NONMANIFOLD"
+      }
+    },
+    {
+      "id": "stl-reversed",
+      "path": "tests/fixtures/stl/reversed.stl",
+      "sha256": "9207763e749384f82d6ffe3e87987b8b22b980d6bede31bfc699fcb9163e5941",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "basic",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "STL_INWARD_WINDING"
+      }
+    },
+    {
+      "id": "stl-inconsistent",
+      "path": "tests/fixtures/stl/inconsistent.stl",
+      "sha256": "902fcf5a645d8279381957c4b465cc13da2bf9a3680c32453093ef4375017c68",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "basic",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "STL_INCONSISTENT_WINDING"
+      }
+    },
+    {
+      "id": "stl-degenerate",
+      "path": "tests/fixtures/stl/degenerate.stl",
+      "sha256": "c7459c99fa1bb9a06e9124733c10e373539a1d4f0c3c82385aebcfafd716d6f5",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "basic",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "STL_DEGENERATE_TRIANGLE"
+      }
+    },
+    {
+      "id": "stl-self-intersecting",
+      "path": "tests/fixtures/stl/self-intersecting.stl",
+      "sha256": "3878a29e38e410c272fedb969a480f1ad84ef27a4cd299eec4f807c03c488dfd",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "basic",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "STL_SELF_INTERSECTION"
+      }
+    },
+    {
+      "id": "stl-pinched-vertex",
+      "path": "tests/fixtures/stl/pinched-vertex.stl",
+      "sha256": "dd897bf78ab61fe7a86d691af42d75c4ccc714e9710c7a30395e6a7d30856ec9",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "basic",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "STL_NONMANIFOLD"
+      }
+    },
+    {
+      "id": "stl-nonfinite",
+      "path": "tests/fixtures/stl/nonfinite.stl",
+      "sha256": "8fff58c6a943af6541c731dc006714348c7446e5ced9943432cce13c09d7f5ee",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "basic",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "STL_NONFINITE"
+      }
+    },
+    {
+      "id": "stl-cylinder-16",
+      "path": "tests/fixtures/stl/cylinder-16.stl",
+      "sha256": "a2cbf923939840eb7033d065c8b29846f6f73fa9c74726d108687db4608e6230",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "curved",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          3,
+          3
+        ],
+        "volumeM3": [
+          0.7653660993633148,
+          0.7653676300970442
+        ],
+        "boundsDiagonalM": [
+          1.7320490755180695,
+          1.7320525396196846
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet10",
+        "minSizeM": 0.075,
+        "maxSizeM": 0.3,
+        "nodeCount": [
+          2738,
+          3706
+        ],
+        "elementCount": [
+          1435,
+          1943
+        ],
+        "gammaMinimum": [
+          0.11588491216693225,
+          0.34765473650079676
+        ],
+        "gammaP05": [
+          0.2926722276934973,
+          0.5435341371450665
+        ],
+        "maximumEdgeRatio": [
+          2.717635621272855,
+          4.529392702121425
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "stl-cylinder-32",
+      "path": "tests/fixtures/stl/cylinder-32.stl",
+      "sha256": "d39fc2667aea622ecccc2bb2bfb4761a9ee71befc3d1750a0ee82a6ce3eb19ed",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "curved",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          3,
+          3
+        ],
+        "volumeM3": [
+          0.780360507703225,
+          0.780362068425801
+        ],
+        "boundsDiagonalM": [
+          1.7320490755180695,
+          1.7320525396196846
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet10",
+        "minSizeM": 0.075,
+        "maxSizeM": 0.3,
+        "nodeCount": [
+          6977,
+          9441
+        ],
+        "elementCount": [
+          3793,
+          5133
+        ],
+        "gammaMinimum": [
+          0.007479670185626262,
+          0.022439010556878785
+        ],
+        "gammaP05": [
+          0.25846629434751334,
+          0.4800088323596676
+        ],
+        "maximumEdgeRatio": [
+          5.037204146707904,
+          8.395340244513173
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "stl-cylinder-64",
+      "path": "tests/fixtures/stl/cylinder-64.stl",
+      "sha256": "dea15d4a93282b5c5cc0377ec75cfc60b45b55177c8c6210f2e4e1465cb8310f",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "curved",
+      "expected": {
+        "classification": "accepted",
+        "stage": "mesh",
+        "solidCount": [
+          1,
+          1
+        ],
+        "faceCount": [
+          3,
+          3
+        ],
+        "volumeM3": [
+          0.7841363384993622,
+          0.7841379067736074
+        ],
+        "boundsDiagonalM": [
+          1.7320490755180695,
+          1.7320525396196846
+        ]
+      },
+      "mesh": {
+        "preset": "custom",
+        "elementType": "tet10",
+        "minSizeM": 0.075,
+        "maxSizeM": 0.3,
+        "nodeCount": [
+          10100,
+          13666
+        ],
+        "elementCount": [
+          5275,
+          7139
+        ],
+        "gammaMinimum": [
+          0.0407074448493129,
+          0.1221223345479387
+        ],
+        "gammaP05": [
+          0.12262818563088447,
+          0.22773805902878547
+        ],
+        "maximumEdgeRatio": [
+          8.859237492192571,
+          14.765395820320952
+        ]
+      },
+      "remeshFaceIds": true
+    },
+    {
+      "id": "stl-truncated",
+      "path": "tests/fixtures/stl/truncated.stl",
+      "sha256": "4b4131b8859f4741893213a17f12c3cf6a923c338b8985c3686b1a6872c33af5",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "basic",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "STL_MALFORMED"
+      }
+    },
+    {
+      "id": "stl-count-overflow",
+      "path": "tests/fixtures/stl/count-overflow.stl",
+      "sha256": "4393c17dc605bcd4116d61163a9bb14b876dea8a424aafaa2b66cfd6f97a893a",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "basic",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "STL_MALFORMED"
+      }
+    },
+    {
+      "id": "stl-malformed",
+      "path": "tests/fixtures/stl/malformed.stl",
+      "sha256": "0698ac907ce66868d9504e7cce63615e9759ff344ed370431c32a6fe86bdb175",
+      "format": "stl",
+      "license": "CC0-1.0",
+      "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
+      "sourceUnits": "m",
+      "importOptions": {
+        "version": 1,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40,
+        "normalization": "none"
+      },
+      "category": "basic",
+      "expected": {
+        "classification": "rejected",
+        "stage": "import",
+        "code": "STL_MALFORMED"
+      }
     }
   ]
 }

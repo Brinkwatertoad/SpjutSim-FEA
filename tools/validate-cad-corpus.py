@@ -16,7 +16,7 @@ def main() -> int:
     path = ROOT / "tests/fixtures/corpus-v1.json"
     manifest = read_manifest(path)
     errors = validate_manifest(manifest, ROOT)
-    report_path = ROOT / "benchmarks/cad-corpus/chromium-152.json"
+    report_path = ROOT / "benchmarks/cad-corpus/chromium-152-stl.json"
     if report_path.is_file():
         errors.extend(validate_report(read_manifest(report_path), manifest))
     if errors:
