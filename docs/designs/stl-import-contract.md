@@ -1,7 +1,10 @@
 # Accepted STL import contract — M28
 
 Status: **Accepted by the owner on 2026-09-11 (“yes, accept.”).**
-Production implementation and M29 verification follow this contract.
+Production implementation and initial M29 verification follow this contract.
+The owner-authorized [simulation-surface extension](stl-simulation-surfaces.md)
+adds explicit original-surface and bounded reconstruction modes; version-1
+behavior below is retained as the initial contract.
 
 ## Decision presented to the owner
 

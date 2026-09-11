@@ -62,7 +62,7 @@ merely mirror implementation or turn each mechanical step into an approval gate.
 26. [x] [Setup workflow and solve checks](26-setup-workflow-and-solve-checks.md) — implemented and accepted 2026-09-10
 27. [x] [Engineering edit undo/redo](27-engineering-edit-undo-and-redo.md) — implemented and accepted 2026-09-10
 28. [x] [STL feasibility and surface patch contract](28-stl-feasibility-and-surface-patch-contract.md) — implemented; [M28 accepted 2026-09-11](../reviews/28-stl-contract.md)
-29. [ ] [STL import, meshing, and validation](29-stl-import-meshing-and-validation.md) — implemented; [M29 owner review pending](../reviews/29-stl-workflow.md)
+29. [ ] [STL import, meshing, and validation](29-stl-import-meshing-and-validation.md) — implemented with [simulation-surface follow-up](../reviews/29-stl-simulation-surfaces.md); [M29 owner review pending](../reviews/29-stl-workflow.md)
 30. [ ] [Integrated usability and pre-release regression](30-integrated-usability-and-pre-release-regression.md)
 
 The execution order is **21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29 → 30 → 20**.

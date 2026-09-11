@@ -11,12 +11,18 @@
     try {
       await wait(function(){return doc.getElementById('app-status').textContent==='Local runtime ready';});
       assert(doc.getElementById('stl-import-dialog'),'STL review dialog is missing');
+      assert(doc.getElementById('stl-surface-mode')&&doc.getElementById('stl-reconstruction-tolerance'),'STL simulation surface controls are missing');
       var notify=api.AppController.prototype.notify;api.AppController.prototype.notify=function(){app=this;return notify.apply(this,arguments);};
       await importFile('cube-binary.stl');
       assert(!app.document.geometry && doc.getElementById('stl-length-unit').value==='','Import inferred units or installed before review');
       fill('stl-length-unit','m');click('stl-review-button');
       await wait(function(){return app.geometryReview&&app.geometryReview.geometry;});
       assert(app.geometryReview.geometry.faceIds.length===6,'Cube patch grouping incorrect');
+      assert(app.geometryReview.geometry.originalPreview,'Reconstruction did not retain a comparison surface');
+      fill('stl-preview-surface','original');assert(!doc.getElementById('stl-accept-button').disabled,'Comparing the original invalidated the reviewed candidate');
+      fill('stl-preview-surface','simulation');
+      fill('stl-reconstruction-tolerance','0.02');assert(doc.getElementById('stl-accept-button').disabled,'Tolerance edit retained stale acceptance');click('stl-review-button');
+      await wait(function(){return app.geometryReview&&app.geometryReview.geometry;});
       assert(doc.getElementById('stl-dimensions').textContent.includes('1.00000'),'Dimensions missing');
       doc.querySelector('#stl-patch-list button').click();assert(doc.querySelector('#stl-patch-list [aria-pressed=true]'),'Patch button did not select');
       click('stl-accept-button');await wait(function(){return app.document.geometry;});
@@ -26,7 +32,7 @@
       assert(app.document.geometry===original&&app.document.analysisRevision===revision,'Rejected import changed the model');
       click('stl-cancel-button');assert(app.document.geometry===original&&!doc.getElementById('stl-import-dialog').open,'Cancel did not preserve the prior model');
       click('regroup-stl-button');await wait(function(){return app.geometryReview&&app.geometryReview.geometry;});
-      fill('stl-patch-angle','100');assert(doc.getElementById('stl-accept-button').disabled,'Changed grouping retained stale acceptance');click('stl-review-button');
+      fill('stl-surface-mode','original');fill('stl-patch-angle','100');assert(doc.getElementById('stl-accept-button').disabled,'Changed grouping retained stale acceptance');click('stl-review-button');
       await wait(function(){return app.geometryReview&&app.geometryReview.geometry&&app.geometryReview.geometry.faceIds.length===1;});
       click('stl-cancel-button');assert(app.document.geometry===original,'Cancelled regroup changed assignment identity');
       status.textContent='Passed';status.dataset.result='passed';

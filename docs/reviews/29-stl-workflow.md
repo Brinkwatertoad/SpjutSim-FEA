@@ -4,6 +4,10 @@ Status: **Implemented; owner review pending.** M28 was accepted on 2026-09-11
 (“yes, accept.”). This packet covers plan 29 on `feat/28-29-stl-import`.
 Plan 30 and release acceptance have not started.
 
+The owner-authorized [simulation-surface follow-up](29-stl-simulation-surfaces.md)
+adds original-triangle meshing and bounded primitive recovery. The initial M29
+measurements below remain historical evidence for the version-1 path.
+
 ## Delivered behavior
 
 Import binary or ASCII STL, choose explicit length units, review dimensions and

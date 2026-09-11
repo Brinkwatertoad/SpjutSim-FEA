@@ -2,6 +2,8 @@
   'use strict';
   var api = root.SpjutsimFEA;
   var status = document.getElementById('test-status');
+  var mode=new URLSearchParams(location.search).get('surfaceMode');
+  var importOptions=mode?{version:2,lengthUnit:'m',patchAngleDegrees:40,normalization:'none',surfaceMode:mode,reconstructionToleranceM:mode==='reconstruct'?.02:null}:{version:1,lengthUnit:'m',patchAngleDegrees:40,normalization:'none'};
   var controller = new api.AppController({ document: api.createAnalysisDocument() });
   var mesher = new api.MesherClient();
   var solver;
@@ -54,7 +56,7 @@
   fetch('../fixtures/stl/cube-binary.stl').then(function (response) { return response.arrayBuffer(); }).then(function (bytes) {
     sourceBytes = bytes;
     controller.beginGeometryImport('stl/cube-binary.stl');
-    return mesher.importGeometry({ geometryId: 'cube-wasm-slice', sourceName: 'cube-binary.stl', sourceFormat: 'stl', importOptions:{version:1,lengthUnit:'m',patchAngleDegrees:40,normalization:'none'}, sourceBytes: bytes });
+    return mesher.importGeometry({ geometryId: 'cube-wasm-slice', sourceName: 'cube-binary.stl', sourceFormat: 'stl', importOptions:importOptions, sourceBytes: bytes });
   }).then(async function (geometry) {
     var altered=sourceBytes.slice(0);new Uint8Array(altered)[0]^=1;
     var mismatch=new api.MesherClient(), diagnostic;
@@ -127,7 +129,8 @@
     assert(controller.document.results===trustedResult, 'Cancelling an STL assignment preview discarded results');
     var originalGeometry=controller.document.geometry, originalSource=controller.geometrySource;
     var review=controller.beginGeometryReview(originalSource);
-    var reviewedOptions={normalization:'none',patchAngleDegrees:40,lengthUnit:'m',version:1};
+    var reviewedOptions={normalization:'none',patchAngleDegrees:40,lengthUnit:'m',version:importOptions.version};
+    if(mode){reviewedOptions.surfaceMode=mode;reviewedOptions.reconstructionToleranceM=importOptions.reconstructionToleranceM;}
     var reviewGeneration=controller.setGeometryReviewOptions(reviewedOptions);
     assert(controller.completeGeometryReview(review,reviewGeneration,originalGeometry),'Equivalent options with a different property order were rejected');
     controller.invalidateGeometryReview();
@@ -156,10 +159,13 @@
     assert(controller.document.geometry.sourceFormat==='stl' && controller.geometrySource.importOptions.lengthUnit==='m','CAD to STL transfer lost source options');
     assert(!controller.historyState().canUndo,'Replacement retained engineering history');
     root.__stlSolveEvidence={cube:{displacementM:maximumLoadedUx,stressPa:result.extrema.rawVonMisesMax.valuePa,equilibrium:result.equilibrium.relativeResidual},curved:[]};
-    for(var segments of [16,32,64]) {
+    var cases=[{segments:16,preset:'coarse'},{segments:32,preset:'coarse'},{segments:64,preset:'coarse'}];
+    if(mode==='reconstruct')cases.push({segments:32,preset:'fine'});
+    for(var caseDefinition of cases) {
+      var segments=caseDefinition.segments;
       var name='cylinder-'+segments+'.stl',bytes=await(await fetch('../fixtures/stl/'+name)).arrayBuffer(),client=new api.MesherClient();
       var geometry=await client.importGeometry({sourceName:name,sourceFormat:'stl',sourceBytes:bytes,importOptions:originalGeometry.importOptions});client.dispose();
-      client=new api.MesherClient();var curvedMesh=await client.generateMesh({geometry:geometry,sourceBytes:bytes,settings:{preset:'coarse',elementType:'tet10'}});client.dispose();
+      client=new api.MesherClient();var curvedMesh=await client.generateMesh({geometry:geometry,sourceBytes:bytes,settings:{preset:caseDefinition.preset,elementType:'tet10'}});client.dispose();
       var analysis=new api.AppController({document:api.createAnalysisDocument()});
       analysis.replaceGeometry(geometry,{sourceName:name,sourceFormat:'stl',sourceBytes:bytes,importOptions:geometry.importOptions});
       analysis.replaceMaterial({name:'Axial nu=0',youngsModulusPa:1e9,poissonsRatio:0,densityKgM3:1000,tensileYieldPa:250e6});
@@ -172,11 +178,14 @@
         var solved=await curvedSolver.solve(rev,analysis.document.solveSettings,false),maximum=0;
         for(var node=0;node<solved.displacementM.length/3;node++)maximum=Math.max(maximum,solved.displacementM[node*3+2]);
         var area=geometry.volumeM3,expected=1000/(1e9*area);
-        assert(near(maximum,expected,2e-5,1e-11)&&near(solved.extrema.rawVonMisesMax.valuePa,1000/area,2e-4,1e-3),'Faceted cylinder axial solution differs from its analytical geometry');
-        assert(solved.equilibrium.relativeResidual<1e-6 && near(solved.equilibrium.totalReactionN[2],-1000,1e-6,1e-5),'Curved STL force integration/equilibrium failed');
-        root.__stlSolveEvidence.curved.push({segments:segments,facetedArea:area,displacementM:maximum,expectedM:expected,sourceAreaDeficit:1-area/(Math.PI/4),equilibrium:solved.equilibrium.relativeResidual});
+        // Section 16.2: curved isoparametric geometry uses 1% axial accuracy.
+        // Affine/faceted meshes retain their stronger constant-strain checks.
+        assert(near(maximum,expected,mode==='reconstruct'?.01:2e-5,1e-11)&&near(solved.extrema.rawVonMisesMax.valuePa,1000/area,mode==='reconstruct'?.01:2e-4,1e-3),'Cylinder axial solution differs from its analytical geometry: '+JSON.stringify({segments:segments,displacement:maximum,expected:expected,stress:solved.extrema.rawVonMisesMax.valuePa,expectedStress:1000/area}));
+        assert(solved.equilibrium.relativeResidual<1e-6 && near(solved.equilibrium.totalReactionN[2],-1000,mode==='reconstruct'?.001:1e-6,1e-5),'Curved STL force integration/equilibrium failed');
+        root.__stlSolveEvidence.curved.push({segments:segments,preset:caseDefinition.preset,surfaceMode:mode||'legacy',elementCount:curvedMesh.statistics.elementCount,displacementRelativeError:Math.abs(maximum/expected-1),stressRelativeError:Math.abs(solved.extrema.rawVonMisesMax.valuePa/(1000/area)-1),facetedArea:area,displacementM:maximum,expectedM:expected,sourceAreaDeficit:1-area/(Math.PI/4),equilibrium:solved.equilibrium.relativeResidual});
       } finally {curvedSolver.dispose();}
     }
+    if(mode==='reconstruct'){var coarse=root.__stlSolveEvidence.curved[1],fine=root.__stlSolveEvidence.curved[3];assert(fine.elementCount>coarse.elementCount&&fine.displacementRelativeError<coarse.displacementRelativeError&&fine.stressRelativeError<coarse.stressRelativeError,'Recovered cylinder refinement did not reduce analytical error');}
     status.textContent = 'Passed'; status.dataset.result = 'passed'; document.title = 'Cube WASM vertical slice: Passed';
   }).catch(function (error) {
     status.textContent = (error.diagnostic && error.diagnostic.userMessage) || error.message;

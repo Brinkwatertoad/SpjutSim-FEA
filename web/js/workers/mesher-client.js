@@ -47,7 +47,7 @@
   MesherClient.prototype.importGeometry = function (request) {
     var self = this;
     if (request && request.sourceFormat === 'stl') {
-      if (!root.SpjutsimFEA.validateStlOptions(request.importOptions)) { return Promise.reject(clientFailure('STL_INVALID_OPTIONS', 'Choose explicit STL units and a grouping angle from 1 to 179 degrees.')); }
+      if (!root.SpjutsimFEA.validateStlOptions(request.importOptions)) { return Promise.reject(clientFailure('STL_INVALID_OPTIONS', 'Choose explicit STL units, a grouping angle from 1 to 179 degrees, and a positive deviation when reconstructing.')); }
       if (!(request.sourceBytes instanceof ArrayBuffer) || !request.sourceBytes.byteLength || request.sourceBytes.byteLength > 16 * 1024 * 1024) {
         return Promise.reject(clientFailure('STL_INPUT_LIMIT', 'Choose a nonempty STL file no larger than 16 MiB.'));
       }

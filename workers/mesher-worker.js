@@ -18,7 +18,9 @@ function validCadSource(message) {
 }
 
 function validStlOptions(options) {
-  return options && options.version === 1 && options.normalization === 'none' &&
+  return options && (options.version === 1 || options.version === 2 &&
+      (options.surfaceMode === 'original' && options.reconstructionToleranceM === null ||
+       options.surfaceMode === 'reconstruct' && Number.isFinite(options.reconstructionToleranceM) && options.reconstructionToleranceM > 0)) && options.normalization === 'none' &&
     ['m','mm','cm','in','ft'].includes(options.lengthUnit) && Number.isFinite(options.patchAngleDegrees) &&
     options.patchAngleDegrees >= 1 && options.patchAngleDegrees <= 179;
 }
@@ -395,7 +397,41 @@ function extractPreview(gmsh, surfaceTags, geometryId, modelScaleM) {
   };
 }
 
+function restoreOriginalStlGeometry(gmsh, message, parsed) {
+  if (parsed.patches.length > 512) {
+    throw knownImportError('STL_PATCH_LIMIT', 'The STL has more than 512 selectable patches. Increase the grouping angle and review again.');
+  }
+  gmsh.clear(); gmsh.option.restoreDefaults(); gmsh.model.add(message.geometryId);
+  var tags = parsed.patches.map(function () { return gmsh.model.addDiscreteEntity(2); });
+  var nodeTags = new Uint32Array(parsed.positions.length / 3);
+  for (var index = 0; index < nodeTags.length; index += 1) { nodeTags[index] = index + 1; }
+  gmsh.model.mesh.addNodes(2, tags[0], nodeTags, parsed.positions);
+  var blocks = parsed.patches.map(function (patch) { return new Uint32Array(patch.triangleCount * 3); });
+  var offsets = new Uint32Array(tags.length);
+  for (index = 0; index < parsed.triangles.length; index += 3) {
+    var patch = parsed.patchByTriangle[index / 3], block = blocks[patch], offset = offsets[patch];
+    block[offset] = parsed.triangles[index] + 1;
+    block[offset + 1] = parsed.triangles[index + 1] + 1;
+    block[offset + 2] = parsed.triangles[index + 2] + 1;
+    offsets[patch] += 3;
+  }
+  tags.forEach(function (tag, index) { gmsh.model.mesh.addElementsByType(tag, 2, [], blocks[index]); });
+  var loop = gmsh.model.geo.addSurfaceLoop(tags), solid = gmsh.model.geo.addVolume([loop]);
+  gmsh.model.geo.synchronize();
+  // The validated source triangulation is the boundary discretization. Only
+  // the empty volume is meshed; this mode cannot simplify surface slivers.
+  gmsh.option.setNumber('Mesh.MeshOnlyEmpty', 1);
+  return { solidTag: solid, surfaceTags: tags.map(function (tag) { return [tag]; }), internalSurfaceCount: tags.length };
+}
+
 function restoreStlGeometry(gmsh, message, parsed) {
+  if (message.importOptions.version === 2) {
+    if (message.importOptions.surfaceMode === 'original') { return restoreOriginalStlGeometry(gmsh, message, parsed); }
+    progress(message.requestId, 'stl-reconstruct', 'Recovering simulation surfaces within the selected deviation…');
+    gmsh.clear(); gmsh.option.restoreDefaults(); gmsh.model.add(message.geometryId);
+    try { return StlReconstruction.build(gmsh, parsed, message.importOptions.reconstructionToleranceM); }
+    catch(error) { if(error && error.code)throw error; throw knownImportError('STL_RECONSTRUCTION_FAILED', 'The fitted surfaces could not form a usable solid. Use the original STL surface or review different grouping/deviation.', String(error)); }
+  }
   // Cap planar components before Gmsh allocates discrete parametrizations.
   var visited = new Uint8Array(parsed.triangles.length / 3), queue = new Uint32Array(visited.length), regions = 0;
   for (var triangle = 0; triangle < visited.length; triangle += 1) {
@@ -475,13 +511,30 @@ async function importStlGeometry(gmsh, message) {
         if (neighbor > triangle && parsed.patchByTriangle[neighbor] !== patch) { edgeIndices.push(source, parsed.triangles[triangle * 3 + (vertex + 1) % 3]); }
       }
     }
-    return { geometryId: message.geometryId, sourceName: message.sourceName, sourceFormat: 'stl', surfaceKind: 'stl-patch',
+    var geometry = { geometryId: message.geometryId, sourceName: message.sourceName, sourceFormat: 'stl', surfaceKind: 'stl-patch',
       importOptions: Object.assign({}, message.importOptions),
       sourceMetadata: { version: 1, sha256: parsed.sourceHash, triangleCount: parsed.triangles.length / 3, internalSurfaceCount: restored.internalSurfaceCount, validation: parsed.validation },
       orientation: { rotation: [1,0,0,0,1,0,0,0,1], operations: [] }, faceIds: parsed.patchIds,
       boundingBoxM: { minM: parsed.minimum, maxM: parsed.maximum }, volumeM3: parsed.volume,
       preview: { positionsM: positions, normals: normals, indices: indices, faceRanges: ranges,
         featureEdges: { positionsM: parsed.positions, indices: new Uint32Array(edgeIndices) } } };
+    if (message.importOptions.version === 2) {
+      geometry.sourceMetadata.version = 2;
+      geometry.sourceMetadata.surfaceMode = message.importOptions.surfaceMode;
+      geometry.sourceMetadata.reconstruction = restored.reconstruction || null;
+      if (restored.analytic) {
+        geometry.originalPreview = geometry.preview;
+        geometry.boundingBoxM = boundingBoxM(gmsh, restored.solidTag);
+        geometry.volumeM3 = gmsh.model.occ.getMass(3, restored.solidTag).mass;
+        if (!Number.isFinite(geometry.volumeM3) || geometry.volumeM3 <= 0) { throw knownImportError('STL_RECONSTRUCTION_UNSUPPORTED', 'Recovered surfaces do not enclose a positive volume. Use the original STL surface.'); }
+        var scale = configurePreviewTessellation(gmsh, geometry.boundingBoxM);
+        gmsh.model.mesh.setOutwardOrientation(restored.solidTag); gmsh.model.mesh.generate(2);
+        var candidate = extractPreview(gmsh, restored.surfaceTags.map(function(tags){return tags[0];}), message.geometryId, scale).preview;
+        candidate.faceRanges.forEach(function(range,index){range.faceId=parsed.patchIds[index];});
+        geometry.preview = candidate;
+      }
+    }
+    return geometry;
   } finally { gmsh.clear(); }
 }
 
@@ -732,7 +785,6 @@ function meshStatistics(positions, connectivity, gammaQualities, diagonalM, desc
   var inverted = 0;
   var nearZero = 0;
   var index;
-  var nearZeroSixVolume = MESH_NEAR_ZERO_JACOBIAN_RELATIVE * diagonalM * diagonalM * diagonalM * 6;
   var edgePairs = [[0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3]];
   for (index = 0; index < connectivity.length; index += descriptor.volumeNodes) {
     var ids = [connectivity[index], connectivity[index + 1], connectivity[index + 2], connectivity[index + 3]];
@@ -756,7 +808,6 @@ function meshStatistics(positions, connectivity, gammaQualities, diagonalM, desc
     }
     minimumJacobian = Math.min(minimumJacobian, elementMinimumJacobian);
     if (elementMinimumJacobian <= 0) { inverted += 1; }
-    if (Math.abs(elementMinimumJacobian) <= nearZeroSixVolume) { nearZero += 1; }
     var elementMinEdge = Infinity;
     var elementMaxEdge = 0;
     for (edgeIndex = 0; edgeIndex < edgePairs.length; edgeIndex += 1) {
@@ -771,6 +822,8 @@ function meshStatistics(positions, connectivity, gammaQualities, diagonalM, desc
       elementMinEdge = Math.min(elementMinEdge, length);
       elementMaxEdge = Math.max(elementMaxEdge, length);
     }
+    // Match the native Tet4/Tet10 gate: local corner-edge scale, not model size.
+    if (Math.abs(elementMinimumJacobian) <= MESH_NEAR_ZERO_JACOBIAN_RELATIVE * elementMaxEdge * elementMaxEdge * elementMaxEdge) { nearZero += 1; }
     maximumEdgeRatio = Math.max(maximumEdgeRatio, elementMaxEdge / elementMinEdge);
   }
   gammaQualities.sort(function (left, right) { return left - right; });
@@ -826,14 +879,14 @@ async function generateMesh(gmsh, message) {
     gmsh.option.setNumber('Mesh.MeshSizeMax', message.settings.maxSizeM);
     gmsh.option.setNumber('Mesh.MeshSizeFromCurvature', 1);
     gmsh.option.setNumber('Mesh.MeshSizeExtendFromBoundary', 1);
-    if (message.sourceFormat === 'stl') { gmsh.option.setNumber('Mesh.SecondOrderLinear', 1); }
+    if (message.sourceFormat === 'stl' && !restored.analytic) { gmsh.option.setNumber('Mesh.SecondOrderLinear', 1); }
     else { gmsh.model.mesh.setOutwardOrientation(restored.solidTag); }
     progress(message.requestId, 'mesh-generate', 'Generating first-order tetrahedral volume mesh…');
     gmsh.model.mesh.generate(3);
     if (descriptor.elementType === 'tet10') {
       progress(message.requestId, 'mesh-upgrade', 'Converting the volume mesh to Tet10…');
       gmsh.model.mesh.setOrder(2);
-      if (message.sourceFormat !== 'stl') {
+      if (message.sourceFormat !== 'stl' || restored.analytic) {
         progress(message.requestId, 'mesh-optimize', 'Optimizing the quadratic mesh…');
         gmsh.model.mesh.optimize('HighOrder');
       }
@@ -956,15 +1009,15 @@ async function handleRequest(message) {
   try {
     if (message.type === 'import') {
       result = await importGeometry(gmsh, message);
+      var previews = result.originalPreview ? [result.preview, result.originalPreview] : [result.preview];
+      var transfers = [];
+      previews.forEach(function(preview){transfers.push(preview.positionsM.buffer, preview.normals.buffer, preview.indices.buffer, preview.featureEdges.positionsM.buffer, preview.featureEdges.indices.buffer);});
       self.postMessage({
         protocol: WORKER_PROTOCOL_VERSION,
         requestId: message.requestId,
         type: 'import-result',
         result: result
-      }, [
-        result.preview.positionsM.buffer, result.preview.normals.buffer, result.preview.indices.buffer,
-        result.preview.featureEdges.positionsM.buffer, result.preview.featureEdges.indices.buffer
-      ]);
+      }, Array.from(new Set(transfers)));
       return;
     }
     if (message.type === 'mesh') {

@@ -126,6 +126,11 @@ Open `tests/browser/stl-import-tests.html`, `stl-workflow-tests.html`,
 `stl-resource-tests.html` with local-file access enabled or from the HTTP server.
 They cover full solid validation, transactional units/patch review, analytical
 Tet10 solves, remeshing/replacement, convergence, limits, and cancellation.
+`stl-reconstruction-tests.html`, `stl-surface-modes-tests.html`, and
+`mesh-quality-tests.html` cover primitive recovery, original-surface meshing,
+source/candidate contracts, holes, cancellation and local-scale quality checks.
+Run `stl-mesh-solve-tests.html?surfaceMode=reconstruct` and
+`stl-mesh-solve-tests.html?surfaceMode=original` for both new numerical paths.
 Regenerate the CC0 STL fixtures with
 `python3 tools/cad-fixtures/generate-stl-fixtures.py`.
 
@@ -248,7 +253,14 @@ Binary and ASCII STL require explicit m/mm/cm/in/ft units and a dimensions/patch
 review before installation. Import supports one closed, connected, consistently
 outward-wound, non-self-intersecting manifold solid. It rejects defects without
 welding, hole filling, or winding reversal. Connected angle-based patches default
-to 40° (adjustable 1–179°); curved patches retain their planar source facets.
+to 40° (adjustable 1–179°). Choose **Try surface reconstruction** and a maximum
+deviation, or **Use original STL surface**. Reconstruction currently merges
+coplanar faces (including holes) and recovers full cylinders/conical frusta with
+perpendicular flat ends. Compare the original and candidate before applying.
+More complicated fitted-surface intersections and freeform regions are reported
+as unsupported; selecting the original surface preserves every triangle and can
+retain very small or low-quality elements. See the
+[simulation-surface design](docs/designs/stl-simulation-surfaces.md).
 Regroup STL in the Model editor uses explicit assignment transfer, with Cancel
 preserving the installed model. Source bytes and options reproduce patch IDs in
 fresh workers and after rigid orientation. Limits are 16 MiB, 50,000 triangles,

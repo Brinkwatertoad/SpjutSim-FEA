@@ -5,9 +5,11 @@
     var scales = { m: 1, mm: 0.001, cm: 0.01, in: 0.0254, ft: 0.3048 };
     function fail(code, message) { var error = new Error(message); error.code = code; throw error; }
     function parse(bytes, options) {
-      if (!options || options.version !== 1 || options.normalization !== 'none' || !Object.prototype.hasOwnProperty.call(scales, options.lengthUnit) ||
+      if (!options || !(options.version === 1 || options.version === 2 &&
+          (options.surfaceMode === 'original' && options.reconstructionToleranceM === null ||
+           options.surfaceMode === 'reconstruct' && Number.isFinite(options.reconstructionToleranceM) && options.reconstructionToleranceM > 0)) || options.normalization !== 'none' || !Object.prototype.hasOwnProperty.call(scales, options.lengthUnit) ||
           !Number.isFinite(options.patchAngleDegrees) || options.patchAngleDegrees < 1 || options.patchAngleDegrees > 179) {
-        fail('STL_INVALID_OPTIONS', 'Choose length units and a grouping angle from 1 through 179 degrees.');
+        fail('STL_INVALID_OPTIONS', 'Choose length units, a grouping angle from 1 through 179 degrees, and a positive deviation when reconstructing.');
       }
       if (!(bytes instanceof ArrayBuffer) || !bytes.byteLength || bytes.byteLength > 16 * 1024 * 1024) {
         fail('STL_INPUT_LIMIT', 'Choose a nonempty STL file no larger than 16 MiB.');
@@ -156,7 +158,7 @@
       }
       return { positions: positions, triangles: triangles, normals: normals, patchByTriangle: patchByTriangle,
         neighbors: neighbors, patches: patches, minimum: minimum, maximum: maximum, diagonal: diagonal, volume: volume,
-        validation: validationReport, unit: options.lengthUnit, angleDegrees: options.patchAngleDegrees };
+        validation: validationReport, unit: options.lengthUnit, angleDegrees: options.patchAngleDegrees, options: Object.assign({}, options) };
     }
     function validateVertexLinks(triangles, neighbors, vertexCount) {
       var heads = new Int32Array(vertexCount); heads.fill(-1);
@@ -327,6 +329,7 @@
         members[parsed.patchByTriangle[i/3]].push(vertices.sort().join(';'));
       }
       var prefix = 'stl-patch-v1|' + sourceHash + '|' + parsed.unit + '|' + parsed.angleDegrees + '|';
+      if (parsed.options.version === 2) { prefix += 'surface-v2|' + parsed.options.surfaceMode + '|' + parsed.options.reconstructionToleranceM + '|'; }
       parsed.patchIds = await Promise.all(members.map(async function (triangles) {
         return 'stl:' + await digest(new TextEncoder().encode(prefix + triangles.sort().join('\n')));
       }));

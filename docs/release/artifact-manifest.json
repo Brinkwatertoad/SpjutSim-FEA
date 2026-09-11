@@ -109,7 +109,7 @@
         },
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "0375bde2251735b0fbdab36a9d535191c6ecf54cfcadc6be551ac81aa087ca30"
+          "sha256": "b471bebad2534fe6c444fd3a944c83525eedd2971fbaf1bb010ea52217da3785"
         }
       ],
       "build_recipe": {
@@ -151,7 +151,7 @@
       "source_files": [
         {
           "path": "workers/mesher-worker.js",
-          "sha256": "37f2499cf9ffd8b0ad54ffa1ab9b435718824b08b4dad0143acefc1e62f5fd0d"
+          "sha256": "9e8d0bdfe39ffc30e9f416e30573094c0e50f88269c20840af24511cb45a22bf"
         },
         {
           "path": "workers/solver-worker.js",
@@ -159,12 +159,16 @@
         },
         {
           "path": "workers/stl-import.js",
-          "sha256": "eaa112b475ca84f41ac02f54b732b71c5e1db732490f5ed3650b64104a6b6b43"
+          "sha256": "48af941ad64e60a36e056f47b3925400a8497704b00e6c16175cf6741162e43f"
+        },
+        {
+          "path": "workers/stl-reconstruction.js",
+          "sha256": "abfb4956e0b9136b199a4e02220444008230abd78f9f59797455cafbdf51e4a6"
         }
       ],
       "build_recipe": {
         "path": "tools/build-local-runtime.py",
-        "sha256": "0375bde2251735b0fbdab36a9d535191c6ecf54cfcadc6be551ac81aa087ca30"
+        "sha256": "b471bebad2534fe6c444fd3a944c83525eedd2971fbaf1bb010ea52217da3785"
       },
       "modifications": "First-party workers packaged as classic JavaScript source strings.",
       "notices": [
@@ -341,7 +345,7 @@
       "source_files": [
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "0375bde2251735b0fbdab36a9d535191c6ecf54cfcadc6be551ac81aa087ca30"
+          "sha256": "b471bebad2534fe6c444fd3a944c83525eedd2971fbaf1bb010ea52217da3785"
         }
       ],
       "build_recipe": {
@@ -826,7 +830,7 @@
     },
     {
       "path": "web/generated/local-runtime/mesher-worker-source.js",
-      "sha256": "308ab25945b7ac0e5cf1980ad473a48ccf105239d7e5f65d6d8a24748bf073b6",
+      "sha256": "540b4b28589ba47d5f3cb0df0f126aeacf98ff6b3d087507e688e8051046d7b5",
       "components": [
         "workers"
       ]

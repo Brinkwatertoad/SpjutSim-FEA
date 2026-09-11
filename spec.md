@@ -703,8 +703,10 @@ Use Gmsh's OpenCASCADE geometry kernel for import.
 
 The implementation should set OpenCASCADE's target unit so the imported model is normalized to meters before meshing. Do not infer units from filename or UI assumptions.
 
-Binary/ASCII `.stl` uses the accepted M28 discrete-surface adapter in the pinned
-runtime, with no OCC reconstruction or native-solver format dependency. Require
+Binary/ASCII `.stl` uses the accepted M28 adapter plus the owner-authorized
+simulation-surface extension in `docs/designs/stl-simulation-surfaces.md`. The
+pinned runtime provides indexed original surfaces and bounded OCC primitive
+reconstruction; the native solver has no source-format dependency. Require
 explicit `m`, `mm`, `cm`, `in`, or `ft` units; the review displays dimensions in
 chosen units and meters. Accept only one connected, closed, consistently outward
 manifold boundary with positive usable volume and no self-intersections. Exact
@@ -721,7 +723,7 @@ bounds diagonal must be 1e-9 through 1e6 m; triangle cross-product norm and volu
 must exceed 1e-14 times diagonal squared and cubed, respectively. Stable errors
 and numerical criteria are specified in `docs/designs/stl-import-contract.md`.
 
-Coarse worker protocol **3** adds version-1 `importOptions` containing explicit
+Coarse worker protocol **3** supports version-1 `importOptions` containing explicit
 `lengthUnit`, `patchAngleDegrees` (1–179, UI default 40), and
 `normalization: 'none'`. Geometry retains these options, source SHA-256, triangle
 and internal-surface counts, validation version/report, and `surfaceKind:
@@ -741,8 +743,29 @@ review preserves the installed model/setup/results. Later units/grouping changes
 and CAD↔STL replacement explicitly map/drop each assignment using the existing
 transfer workflow. Downstream analysis/rendering consume opaque IDs. Full parsing,
 hashing, classification, meshing, and recovery stay in workers. The build script
-bundles the helper before the mesher shell for file and HTTP modes. General repair,
+bundles parsing and reconstruction helpers before the mesher shell for file and HTTP modes. General repair,
 shells, multibody analysis, and OBJ remain deferred. See Section 15.11.
+
+The new UI uses version-2 STL options with `surfaceMode` (`original` or
+`reconstruct`) and `reconstructionToleranceM` (null for original, positive finite
+SI distance for reconstruction). The initial selection tries reconstruction.
+Original mode retains every source triangle using one indexed discrete surface
+per selectable patch, avoiding the legacy near-planar subdivision limit.
+Reconstruction initially supports coplanar polyhedra (including holes) and full
+cylinders/conical frusta with perpendicular flat ends. Arbitrary fitted-surface
+intersections and freeform reconstruction remain unsupported and produce explicit
+errors. Never silently fall back after a failed reconstruction.
+
+Reconstruction has a user-selected deviation bound and original/candidate preview
+comparison. Version-2 source metadata carries the mode and reconstruction report;
+`originalPreview` is retained beside the recovered `preview`. Version, mode and
+tolerance enter patch identity. Fresh workers reproduce and verify the source,
+options, fit, closed shell and ownership. Recovered surfaces use curved Tet10
+geometry; the original path retains straight facets. Display tessellation and
+finite-element approximation error are separate from the reconstruction bound.
+Changing mode/deviation requires review and explicit assignment transfer just as
+changing units/grouping does. See the extension design for geometric bounds,
+implemented limitations, errors and acceptance tests.
 
 ### 6.2 Geometry validation
 
@@ -877,7 +900,8 @@ At minimum compute/report:
 - node count;
 - minimum and distribution of a normalized tetrahedral quality metric;
 - inverted/negative-Jacobian count;
-- near-zero Jacobian count;
+- near-zero Jacobian count, using `abs(det J) <= 1e-12 * longestCornerEdge³`
+  to match native Tet4/Tet10 validation (four quadrature samples for Tet10);
 - extreme edge-length ratio/aspect indicators;
 - minimum and maximum characteristic element size.
 
@@ -2697,7 +2721,7 @@ Reference documentation consulted while preparing this specification:
 | Product model | Local-first browser FEA |
 | CAD format | STEP, IGES, and OpenCASCADE BREP; bounded binary/ASCII STL implemented, M29 owner review pending; OBJ deferred |
 | Geometry | One closed solid body |
-| Geometry kernel | OpenCASCADE through Gmsh for CAD; validated indexed discrete-surface STL path per accepted M28 contract |
+| Geometry kernel | OpenCASCADE through Gmsh for CAD; validated STL original-surface and bounded primitive-reconstruction paths |
 | Mesher | Gmsh, isolated behind replaceable interface |
 | Prototype element | Tet4 |
 | v1 production element | Tet10 |

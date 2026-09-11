@@ -1,0 +1,626 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-11",
+  "branch": "feat/28-29-stl-import",
+  "browser": "152.0.7977.75",
+  "pythonTestsPassed": 79,
+  "nativeTestsPassed": 8,
+  "fileBrowserChecks": [
+    {
+      "name": "worker-runtime",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "step-import",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "tet4-mesh",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "tet10-mesh",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "preview-selection",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "workspace-layout",
+      "status": "Passed: initialized resize sequence, independent pane sizing, compact drawers, keyboard/focus and storage fallback",
+      "errors": []
+    },
+    {
+      "name": "result-range",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "result-formatting",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "result-presentation",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "viewport-navigation",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "solve-workflow",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "analysis-authoring",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "wasm-solve-result",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "cube-wasm-vertical-slice",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "factor-of-safety",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "convergence",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "convergence-runner",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "assignment-draft",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "solve-checks-ui",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "engineering-history",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "review-contract",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "cube-convergence",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "grouped-authoring",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "validation-benchmark",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "stl-feasibility",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "stl-runtime",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "stl-import",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "stl-mesh-solve",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "stl-convergence",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "stl-workflow",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "stl-resource",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "cad-corpus",
+      "status": "Passed: 68/68",
+      "errors": []
+    },
+    {
+      "name": "resource-benchmark?profile=smoke",
+      "status": "Passed: 1 records",
+      "errors": []
+    },
+    {
+      "name": "stl-surface-modes",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "stl-reconstruction",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "mesh-quality",
+      "status": "Passed",
+      "errors": []
+    }
+  ],
+  "httpBrowserChecks": [
+    {
+      "name": "stl-surface-modes",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "stl-workflow",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "stl-mesh-solve?surfaceMode=reconstruct",
+      "status": "Passed",
+      "errors": []
+    },
+    {
+      "name": "stl-mesh-solve?surfaceMode=original",
+      "status": "Passed",
+      "errors": []
+    }
+  ],
+  "surfaceCases": {
+    "cases": [
+      {
+        "name": "cube-binary.stl",
+        "mode": "reconstruct",
+        "sourceTriangles": 12,
+        "surfaces": 6,
+        "volumeM3": 0.9999999999999997,
+        "maximumDeviationM": 1.732051917791902e-10,
+        "statistics": {
+          "nodeCount": 5883,
+          "elementCount": 3509,
+          "boundaryTriangleCount": 4728,
+          "boundaryElementCount": 1182,
+          "minCharacteristicSizeM": 0.08169117814047422,
+          "maxCharacteristicSizeM": 0.22950417883794036,
+          "boundingBoxDiagonalM": 1.732051407568877
+        },
+        "quality": {
+          "metric": "gamma",
+          "minimum": 0.30466799712421544,
+          "p05": 0.5482965682108898,
+          "median": 0.8054895396638238,
+          "poorElementCount": 0,
+          "invertedElementCount": 0,
+          "nearZeroJacobianCount": 0,
+          "minimumJacobian": 0.0005467781696281511,
+          "maximumEdgeRatio": 2.491024471826591,
+          "warning": null
+        }
+      },
+      {
+        "name": "subdivided-cube.stl",
+        "mode": "reconstruct",
+        "sourceTriangles": 3072,
+        "surfaces": 6,
+        "volumeM3": 0.9999999999999997,
+        "maximumDeviationM": 1.7320508075688773e-10,
+        "statistics": {
+          "nodeCount": 5901,
+          "elementCount": 3530,
+          "boundaryTriangleCount": 4720,
+          "boundaryElementCount": 1180,
+          "minCharacteristicSizeM": 0.0816911781404744,
+          "maxCharacteristicSizeM": 0.2351861933392036,
+          "boundingBoxDiagonalM": 1.732051407568877
+        },
+        "quality": {
+          "metric": "gamma",
+          "minimum": 0.2711495770823884,
+          "p05": 0.5153327400204297,
+          "median": 0.8013212424989964,
+          "poorElementCount": 0,
+          "invertedElementCount": 0,
+          "nearZeroJacobianCount": 0,
+          "minimumJacobian": 0.00047279511329354997,
+          "maximumEdgeRatio": 2.4945247224571845,
+          "warning": null
+        }
+      },
+      {
+        "name": "cylinder-32.stl",
+        "mode": "reconstruct",
+        "sourceTriangles": 128,
+        "surfaces": 3,
+        "volumeM3": 0.7853981345647432,
+        "maximumDeviationM": 0.002407642049854813,
+        "statistics": {
+          "nodeCount": 4721,
+          "elementCount": 2834,
+          "boundaryTriangleCount": 3712,
+          "boundaryElementCount": 928,
+          "minCharacteristicSizeM": 0.07380133920883485,
+          "maxCharacteristicSizeM": 0.2255363508126936,
+          "boundingBoxDiagonalM": 1.7320511327839674
+        },
+        "quality": {
+          "metric": "gamma",
+          "minimum": 0.3016537608110351,
+          "p05": 0.5125249487189005,
+          "median": 0.8031449188224754,
+          "poorElementCount": 0,
+          "invertedElementCount": 0,
+          "nearZeroJacobianCount": 0,
+          "minimumJacobian": 0.0005081291369320119,
+          "maximumEdgeRatio": 2.6854071969230606,
+          "warning": null
+        }
+      },
+      {
+        "name": "rotated-cone.stl",
+        "mode": "reconstruct",
+        "sourceTriangles": 128,
+        "surfaces": 3,
+        "volumeM3": 1.8325957145940428,
+        "maximumDeviationM": 0.004815273957155287,
+        "statistics": {
+          "nodeCount": 2094,
+          "elementCount": 1144,
+          "boundaryTriangleCount": 2168,
+          "boundaryElementCount": 542,
+          "minCharacteristicSizeM": 0.1289159811435769,
+          "maxCharacteristicSizeM": 0.4358753532802125,
+          "boundingBoxDiagonalM": 3.1505349698824214
+        },
+        "quality": {
+          "metric": "gamma",
+          "minimum": 0.3017122364954854,
+          "p05": 0.4718530868438282,
+          "median": 0.7839667016445945,
+          "poorElementCount": 0,
+          "invertedElementCount": 0,
+          "nearZeroJacobianCount": 0,
+          "minimumJacobian": 0.0017063775400440588,
+          "maximumEdgeRatio": 2.9368762066824594,
+          "warning": null
+        }
+      },
+      {
+        "name": "square-tube.stl",
+        "mode": "reconstruct",
+        "sourceTriangles": 32,
+        "surfaces": 10,
+        "volumeM3": 3,
+        "maximumDeviationM": 3.0000011102230246e-10,
+        "statistics": {
+          "nodeCount": 4116,
+          "elementCount": 2109,
+          "boundaryTriangleCount": 4616,
+          "boundaryElementCount": 1154,
+          "minCharacteristicSizeM": 0.13904866286996698,
+          "maxCharacteristicSizeM": 0.3996359926418616,
+          "boundingBoxDiagonalM": 3.000001000000013
+        },
+        "quality": {
+          "metric": "gamma",
+          "minimum": 0.301651283566242,
+          "p05": 0.5782784909201097,
+          "median": 0.7902215636665776,
+          "poorElementCount": 0,
+          "invertedElementCount": 0,
+          "nearZeroJacobianCount": 0,
+          "minimumJacobian": 0.0027195695436842866,
+          "maximumEdgeRatio": 2.4812102884641125,
+          "warning": null
+        }
+      },
+      {
+        "name": "dense-cylinder.stl",
+        "mode": "reconstruct",
+        "sourceTriangles": 4096,
+        "surfaces": 3,
+        "volumeM3": 0.7853981633974627,
+        "maximumDeviationM": 2.3534416355551337e-06,
+        "statistics": {
+          "nodeCount": 4626,
+          "elementCount": 2761,
+          "boundaryTriangleCount": 3696,
+          "boundaryElementCount": 924,
+          "minCharacteristicSizeM": 0.07646328043467299,
+          "maxCharacteristicSizeM": 0.23059860444545816,
+          "boundingBoxDiagonalM": 1.7320511539790493
+        },
+        "quality": {
+          "metric": "gamma",
+          "minimum": 0.300138861236874,
+          "p05": 0.5317209535862037,
+          "median": 0.8017379783792704,
+          "poorElementCount": 0,
+          "invertedElementCount": 0,
+          "nearZeroJacobianCount": 0,
+          "minimumJacobian": 0.0004128902015544582,
+          "maximumEdgeRatio": 2.576789248040247,
+          "warning": null
+        }
+      },
+      {
+        "name": "cylinder-32.stl",
+        "mode": "original",
+        "sourceTriangles": 128,
+        "surfaces": 3,
+        "volumeM3": 0.7803612594167166,
+        "maximumDeviationM": null,
+        "statistics": {
+          "nodeCount": 320,
+          "elementCount": 119,
+          "boundaryTriangleCount": 512,
+          "boundaryElementCount": 128,
+          "minCharacteristicSizeM": 0.09801712959064231,
+          "maxCharacteristicSizeM": 1.118033988749895,
+          "boundingBoxDiagonalM": 1.7320508075688772
+        },
+        "quality": {
+          "metric": "gamma",
+          "minimum": 0.1156782632023228,
+          "p05": 0.12103905344563864,
+          "median": 0.22576019493817762,
+          "poorElementCount": 0,
+          "invertedElementCount": 0,
+          "nearZeroJacobianCount": 0,
+          "minimumJacobian": 0.016257524868826125,
+          "maximumEdgeRatio": 11.4065163073516,
+          "warning": null
+        }
+      }
+    ],
+    "cancellationVerified": true,
+    "staleIdentityRejected": true
+  },
+  "numericalModes": [
+    {
+      "name": "stl-mesh-solve?surfaceMode=reconstruct",
+      "evidence": {
+        "cube": {
+          "displacementM": 1.0000000014062847e-06,
+          "stressPa": 1000.0000074721569,
+          "equilibrium": 5.044258558908777e-10
+        },
+        "curved": [
+          {
+            "segments": 16,
+            "preset": "coarse",
+            "surfaceMode": "reconstruct",
+            "elementCount": 2715,
+            "displacementRelativeError": 9.895564441886329e-05,
+            "stressRelativeError": 0.0028224270378878202,
+            "facetedArea": 0.7853981342659155,
+            "displacementM": 1.2733655862057488e-06,
+            "expectedM": 1.2732395919614265e-06,
+            "sourceAreaDeficit": 3.709141949137518e-08,
+            "equilibrium": 2.3482620036000656e-10
+          },
+          {
+            "segments": 32,
+            "preset": "coarse",
+            "surfaceMode": "reconstruct",
+            "elementCount": 2834,
+            "displacementRelativeError": 9.431881058707958e-05,
+            "stressRelativeError": 0.00252760627719395,
+            "facetedArea": 0.7853981345647432,
+            "displacementM": 1.273359681920846e-06,
+            "expectedM": 1.2732395914769855e-06,
+            "sourceAreaDeficit": 3.671094028767641e-08,
+            "equilibrium": 5.172244282842865e-10
+          },
+          {
+            "segments": 64,
+            "preset": "coarse",
+            "surfaceMode": "reconstruct",
+            "elementCount": 2837,
+            "displacementRelativeError": 4.922386528649625e-05,
+            "stressRelativeError": 0.0010294772990182555,
+            "facetedArea": 0.7853981511122168,
+            "displacementM": 1.273302238424038e-06,
+            "expectedM": 1.2732395646512302e-06,
+            "sourceAreaDeficit": 1.5642042550112478e-08,
+            "equilibrium": 2.0208377246876208e-10
+          },
+          {
+            "segments": 32,
+            "preset": "fine",
+            "surfaceMode": "reconstruct",
+            "elementCount": 148422,
+            "displacementRelativeError": 5.649345655944771e-06,
+            "stressRelativeError": 0.00032367399833899135,
+            "facetedArea": 0.7853981345647432,
+            "displacementM": 1.2732467844475407e-06,
+            "expectedM": 1.2732395914769855e-06,
+            "sourceAreaDeficit": 3.671094028767641e-08,
+            "equilibrium": 3.677800319164776e-10
+          }
+        ]
+      }
+    },
+    {
+      "name": "stl-mesh-solve?surfaceMode=original",
+      "evidence": {
+        "cube": {
+          "displacementM": 1.0000000012516834e-06,
+          "stressPa": 1000.0000026285716,
+          "equilibrium": 3.2420788695681206e-10
+        },
+        "curved": [
+          {
+            "segments": 16,
+            "preset": "coarse",
+            "surfaceMode": "original",
+            "elementCount": 57,
+            "displacementRelativeError": 9.675125145491847e-10,
+            "stressRelativeError": 2.1532435834359376e-09,
+            "facetedArea": 0.7653668363416362,
+            "displacementM": 1.3065630146027694e-06,
+            "expectedM": 1.3065630133386532e-06,
+            "sourceAreaDeficit": 0.025504677740983417,
+            "equilibrium": 1.2481756900204006e-10
+          },
+          {
+            "segments": 32,
+            "preset": "coarse",
+            "surfaceMode": "original",
+            "elementCount": 119,
+            "displacementRelativeError": 1.1478835659772813e-09,
+            "stressRelativeError": 3.965654249427075e-09,
+            "facetedArea": 0.7803612594167166,
+            "displacementM": 1.281457772385237e-06,
+            "expectedM": 1.2814577709142726e-06,
+            "sourceAreaDeficit": 0.00641318533130153,
+            "equilibrium": 1.4866065532670843e-10
+          },
+          {
+            "segments": 64,
+            "preset": "coarse",
+            "surfaceMode": "original",
+            "elementCount": 239,
+            "displacementRelativeError": 7.866303164405508e-10,
+            "stressRelativeError": 2.6950226494903973e-09,
+            "facetedArea": 0.7841371103709776,
+            "displacementM": 1.2752871756235683e-06,
+            "expectedM": 1.275287174620389e-06,
+            "sourceAreaDeficit": 0.001605622581310473,
+            "equilibrium": 8.681150569946613e-11
+          }
+        ]
+      }
+    }
+  ],
+  "offlineReview": {
+    "browser": "152.0.7977.75",
+    "offline": true,
+    "errors": [],
+    "remote": [],
+    "fit": {
+      "width": 722,
+      "height": 658,
+      "viewportWidth": 760,
+      "viewportHeight": 700,
+      "overflow": false
+    }
+  },
+  "funnel": {
+    "fixtureRedistributed": false,
+    "assumedLengthUnit": "mm",
+    "patchAngleDegrees": 40,
+    "meshPreset": "coarse",
+    "elementType": "tet10",
+    "freshMeshingWorker": true,
+    "originalSurface": {
+      "name": "Better Vented Parametric Funnel.stl",
+      "importMs": 1398.0999999940395,
+      "totalMs": 21671.29999999702,
+      "patches": 17,
+      "metadata": {
+        "version": 2,
+        "sha256": "80ebe627b1483cf5832bb78566654db0885133ef96d2f821d009435413ed8c68",
+        "triangleCount": 31426,
+        "internalSurfaceCount": 17,
+        "validation": {
+          "status": "valid",
+          "version": 1,
+          "intersectionCandidates": 308946,
+          "triangleCount": 31426
+        },
+        "surfaceMode": "original",
+        "reconstruction": null
+      },
+      "statistics": {
+        "nodeCount": 99232,
+        "elementCount": 50964,
+        "boundaryTriangleCount": 125704,
+        "boundaryElementCount": 31426,
+        "minCharacteristicSizeM": 4.000000000062981e-08,
+        "maxCharacteristicSizeM": 0.05483562844799082,
+        "boundingBoxDiagonalM": 0.13381106954942107
+      },
+      "quality": {
+        "metric": "gamma",
+        "minimum": 1.520778263874873e-09,
+        "p05": 0.000805041873754326,
+        "median": 0.2049060547821117,
+        "poorElementCount": 14738,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 3.9267999989114025e-19,
+        "maximumEdgeRatio": 65268.634380639895,
+        "warning": "Some elements have low gamma quality."
+      }
+    },
+    "reconstructionToleranceM": 1e-05,
+    "reconstruction": {
+      "name": "Better Vented Parametric Funnel.stl",
+      "ms": 1595,
+      "error": {
+        "code": "STL_RECONSTRUCTION_UNSUPPORTED",
+        "stage": "import",
+        "userMessage": "4 of 17 patches cannot be recovered as planes, cylinders or cones within this deviation. Choose \u201cUse original STL surface\u201d to retain the source, or adjust grouping/deviation and review again.",
+        "developerMessage": "4 of 17 patches cannot be recovered as planes, cylinders or cones within this deviation. Choose \u201cUse original STL surface\u201d to retain the source, or adjust grouping/deviation and review again.",
+        "recoverable": true
+      }
+    },
+    "structuralSolvePerformed": false
+  },
+  "artifactChecks": {
+    "cadCorpusEntries": 68,
+    "validationRecords": 5,
+    "historicalResourceRecords": 36,
+    "resourceProfile": "smoke",
+    "distributionAudit": "passed"
+  },
+  "sourceHashes": {
+    "workers/stl-import.js": "48af941ad64e60a36e056f47b3925400a8497704b00e6c16175cf6741162e43f",
+    "workers/stl-reconstruction.js": "abfb4956e0b9136b199a4e02220444008230abd78f9f59797455cafbdf51e4a6",
+    "workers/mesher-worker.js": "9e8d0bdfe39ffc30e9f416e30573094c0e50f88269c20840af24511cb45a22bf",
+    "web/generated/local-runtime/mesher-worker-source.js": "540b4b28589ba47d5f3cb0df0f126aeacf98ff6b3d087507e688e8051046d7b5"
+  }
+}

@@ -42,7 +42,10 @@ def read_worker_source(source_root: Path, kind: str, filename: str) -> tuple[str
         helper = source_root / 'stl-import.js'
         if not helper.is_file():
             raise ValueError(f'STL worker helper is unavailable: {helper}')
-        source = helper.read_text(encoding='utf-8') + '\n' + source
+        reconstruction = source_root / 'stl-reconstruction.js'
+        if not reconstruction.is_file():
+            raise ValueError(f'STL reconstruction helper is unavailable: {reconstruction}')
+        source = helper.read_text(encoding='utf-8') + '\n' + reconstruction.read_text(encoding='utf-8') + '\n' + source
     return source, hashlib.sha256(source.encode('utf-8')).hexdigest()
 
 
