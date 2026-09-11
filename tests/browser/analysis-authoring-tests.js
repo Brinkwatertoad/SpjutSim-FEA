@@ -375,7 +375,7 @@
     controller.document.loads = [{ id: 'load-a', name: 'Load A', type: 'total-force', faceIds: [oldGeometry.faceIds[1]], forceN: [10, 20, 30] }];
     controller.document.gravity = { enabled: true, accelerationMS2: [0, 0, -9.81] };
     controller.document.meshSettings = { preset: 'coarse', elementType: 'tet4' };
-    controller.document.solveSettings = { relativeTolerance: 1e-7, equilibriumTolerance: 2e-6, maxIterations: 50 };
+    controller.document.solveSettings = { relativeTolerance: 1e-7, equilibriumTolerance: 2e-6, maxIterations: 50, maxDurationMs: 1800000 };
     draft = api.createReplacementMigrationDraft(controller.document, replacement, newSource);
     assert(draft.items.map(function (item) { return item.kind + ':' + item.id; }).join('|') === 'support:support-a|load:load-a',
       'replacement items were not ordered supports before loads in document order');
@@ -389,7 +389,7 @@
     assert(transfer.boundaryConditions.length === 1 && transfer.boundaryConditions[0].faceIds.join('|') === replacement.faceIds[2] + '|' + replacement.faceIds[3] &&
       transfer.loads.length === 0 && transfer.droppedItems.length === 1,
     'replacement mapping did not retain the mapped support and explicit load drop');
-    assert(transfer.material.name === 'Transfer steel' && transfer.gravity.enabled && transfer.meshSettings.preset === 'coarse' && transfer.solveSettings.maxIterations === 50,
+    assert(transfer.material.name === 'Transfer steel' && transfer.gravity.enabled && transfer.meshSettings.preset === 'coarse' && transfer.solveSettings.maxIterations === 50 && transfer.solveSettings.maxDurationMs === 1800000,
       'replacement transfer lost automatically retained analysis settings');
     var originalGeometry = controller.document.geometry;
     var originalRevision = controller.document.analysisRevision;

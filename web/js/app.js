@@ -256,7 +256,7 @@
             sourceBytes: app.geometrySource.sourceBytes });
           mesher.dispose();
           solver = new api.SolverClient({ onProgress: function (progress) {
-            app.reportConvergenceProgress(revision, { level: index + 1, stage: progress.stage, targetSizeM: targetSizeM });
+            app.reportConvergenceProgress(revision, { level: index + 1, stage: progress.stage, userMessage: progress.userMessage, targetSizeM: targetSizeM });
           } });
           control.cancelCurrent = function () { solver.cancel(); };
           var input = api.prepareSolverInput(Object.assign({}, app.document, { mesh: mesh,
@@ -299,7 +299,8 @@
       app.replaceSelectedFaces([faceId]);
     }
   });
-  app.subscribe(function (documentState) {
+  app.subscribe(function (documentState, change) {
+    if (change === 'solve-progress' || change === 'convergence-progress') { return; }
     if (activeSolver && activeSolverRevision !== documentState.analysisRevision) { disposeSolver(); }
     if (activeConvergence && (!documentState.convergenceStudy ||
         documentState.convergenceStudy.analysisRevision !== documentState.analysisRevision)) {

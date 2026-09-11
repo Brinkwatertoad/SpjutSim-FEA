@@ -11,6 +11,8 @@ extern "C" {
 
 typedef struct FemContext FemContext;
 typedef void (*FemPhaseCallback)(uint32_t phase, void *user_data);
+typedef void (*FemIterationCallback)(uint32_t iteration, double relative_residual,
+                                     double elapsed_ms, void *user_data);
 
 typedef struct FemSolveSettings {
   uint32_t api_version;
@@ -95,6 +97,9 @@ int fem_set_gravity(FemContext *context, int enabled,
                     const double acceleration_m_s2[3]);
 int fem_set_phase_callback(FemContext *context, FemPhaseCallback callback,
                            void *user_data);
+int fem_set_iteration_callback(FemContext *context, FemIterationCallback callback,
+                               void *user_data);
+int fem_set_time_limit(FemContext *context, double max_duration_ms);
 int fem_estimate_memory(FemContext *context, double device_memory_gib_hint,
                         uint64_t wasm_heap_cap_bytes, double safety_multiplier,
                         FemMemoryEstimate *out);

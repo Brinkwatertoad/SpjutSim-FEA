@@ -12,7 +12,8 @@
     ranges.forEach(function (range) { map[range.faceId] = Object.assign({}, range); });
     return {
       elementType: 'tet4',
-      nodePositionsM: new Float64Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]),
+      // Incline the fixed face so the free-node displacement components couple.
+      nodePositionsM: new Float64Array([0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0, 0, 1]),
       elementConnectivity: new Uint32Array([0, 1, 2, 3]),
       boundaryFaces: { solverElementType: 'tri3', solverConnectivity: new Uint32Array([0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3]),
         solverFaceRanges: ranges.map(function (range) { return Object.assign({}, range); }),
@@ -47,9 +48,14 @@
     'solver input omitted mesh-exact rigid-body stability metadata');
   var sourceByteLength = documentState.mesh.nodePositionsM.byteLength;
   var progressStages = [];
-  var client = new api.SolverClient({ onProgress: function (item) { progressStages.push(item.stage); } });
+  var iterationProgress = [];
+  var client = new api.SolverClient({ onProgress: function (item) {
+    progressStages.push(item.stage);
+    if (item.stage === 'solve' && /iteration /i.test(item.userMessage)) { iterationProgress.push(item.userMessage); }
+  } });
   var revision = controller.beginSolvePreflight();
   client.preflight(input, revision, 8).then(function (preflight) {
+    assert(progressStages.indexOf('preflight') >= 0, 'Preflight progress was not reported');
     assert(documentState.mesh.nodePositionsM.byteLength === sourceByteLength, 'preflight detached the controller-owned mesh');
     assert(preflight.exactNnz > 0 && preflight.degreeOfFreedomCount === 12, 'native preflight counts were invalid');
     assert(preflight.wasmHeapCapBytes === 3758096384, 'configured WASM cap was not surfaced');
@@ -57,7 +63,15 @@
       'solve preflight omitted mesh-exact rigid-body stability metadata');
     assert(controller.completeSolvePreflight(revision, preflight), 'current preflight was discarded');
     controller.beginSolve();
-    return client.solve(revision, documentState.solveSettings, false);
+    return client.solve(revision, { relativeTolerance: 1e-14, equilibriumTolerance: 1e-6, maxIterations: 1 }, false)
+      .then(function () { throw new Error('One-iteration solve accepted an unconverged result'); }, function (error) {
+        assert(error.diagnostic && error.diagnostic.code === 'SOLVER_NOT_CONVERGED' &&
+          error.diagnostic.diagnostics.iterations === 1, 'Budget failure omitted native solver diagnostics');
+        assert(progressStages.indexOf('recovery') < 0, 'Failed solve announced result recovery');
+        assert(iterationProgress.length >= 2, 'Budget failure omitted its final progress');
+        progressStages = []; iterationProgress = [];
+        return client.solve(revision, documentState.solveSettings, false);
+      });
   }).then(function (result) {
     assert(api.validateResultModel(result, revision).valid, 'WASM result model failed runtime validation');
     assert(result.rangeMetadataVersion === 1 && result.extrema.rawVonMisesMax.locationOwner === 'solver-sample' &&
@@ -77,6 +91,11 @@
     rejects({ extrema: Object.assign({}, result.extrema, { displayedVonMisesMax: Object.assign({}, result.extrema.displayedVonMisesMax,
       { locationOwner: 'solver-sample' }) }) }, 'surface node was accepted as solver sample');
     assert(result.solverStatistics.finalRelativeResidual < 1e-8, 'Tet4 solve did not converge to tolerance');
+    assert(iterationProgress.length >= 2 && /residual/i.test(iterationProgress[0]),
+      'native solve omitted live iteration/residual progress');
+    assert(progressStages.indexOf('assembly') < progressStages.indexOf('solve') &&
+      progressStages.lastIndexOf('solve') < progressStages.indexOf('recovery'),
+      'native solver phase progress was out of order');
     var memoryPhases = result.solverStatistics.wasmMemoryByPhaseBytes;
     assert(memoryPhases && ['inputLoaded', 'graphPreflight', 'assembly', 'solve', 'postprocess'].every(function (phase) {
       return Number.isFinite(memoryPhases[phase]) && memoryPhases[phase] > 0;
@@ -100,7 +119,7 @@
     assert(documentState.results === trustedResult, 'presentation-only mode switch changed solved data');
     controller.replaceMaterial({ youngsModulusPa: 200e9, poissonsRatio: 0.3, densityKgM3: 7850 });
     assert(documentState.results === null && documentState.resultInvalidation.stale, 'engineering edit did not mark results stale');
-    assert(progressStages.indexOf('preflight') >= 0 && progressStages.indexOf('solve') >= 0 && progressStages.indexOf('visualization') >= 0,
+    assert(progressStages.indexOf('assembly') >= 0 && progressStages.indexOf('solve') >= 0 && progressStages.indexOf('visualization') >= 0,
       'coarse solver progress stages were not reported');
     status.textContent = 'Passed'; status.dataset.result = 'passed';
   }).catch(function (error) {

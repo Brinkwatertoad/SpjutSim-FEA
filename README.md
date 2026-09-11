@@ -93,6 +93,20 @@ equilibrium, staleness, and default-result-view checks. Open
 enabled (or from the optional HTTP server) for the full STEP cube import,
 face-authored support/load, mesh, analytical axial solve, and four-view check.
 
+For the optional supplied-funnel diagnostic, place `Better Vented Parametric Funnel.stl`
+in `tests/fixtures/stl/` and open `tests/browser/funnel-solve-tests.html` from the
+local server (or Chromium with local-file access enabled). It uses millimeters,
+original triangles, coarse Tet10, ABS, a fixed bottommost patch and 1 MPa pressure
+on the topmost patch, with an explicit two-minute trial limit. Allow about three
+minutes. `Passed` means the ill-conditioned solve reports live progress and stops
+at that budget with no accepted
+results; it does not mean the funnel has a valid solution. The user-supplied STL
+is not part of the redistributed fixture corpus.
+
+Normal analyses default to a ten-minute sparse-solve limit. Change **Solve time
+limit (minutes)** in the Checks panel for a shorter trial or a longer converging
+solve. Assembly and stress recovery are separate from this limit.
+
 Open `tests/browser/factor-of-safety-tests.html`,
 `tests/browser/convergence-tests.html`, and
 `tests/browser/convergence-runner-tests.html` directly for the pure trust and

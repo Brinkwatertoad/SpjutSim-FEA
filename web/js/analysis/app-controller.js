@@ -80,9 +80,9 @@
     listener(this.document);
   };
 
-  AppController.prototype.notify = function () {
+  AppController.prototype.notify = function (change) {
     var documentState = this.document;
-    this.listeners.forEach(function (listener) { listener(documentState); });
+    this.listeners.forEach(function (listener) { listener(documentState, change); });
   };
 
   AppController.prototype.invalidateResults = function (reason) {
@@ -258,7 +258,9 @@
     if (!meshValidation.valid) { throw new Error('Invalid transferred mesh settings: ' + meshValidation.reason); }
     if (!transfer.solveSettings || !Number.isFinite(transfer.solveSettings.relativeTolerance) || transfer.solveSettings.relativeTolerance <= 0 ||
         !Number.isFinite(transfer.solveSettings.equilibriumTolerance) || transfer.solveSettings.equilibriumTolerance <= 0 ||
-        !Number.isFinite(transfer.solveSettings.maxIterations) || transfer.solveSettings.maxIterations < 0) {
+        !Number.isFinite(transfer.solveSettings.maxIterations) || transfer.solveSettings.maxIterations < 0 ||
+        (transfer.solveSettings.maxDurationMs !== undefined && (!Number.isFinite(transfer.solveSettings.maxDurationMs) ||
+          transfer.solveSettings.maxDurationMs < 1000 || transfer.solveSettings.maxDurationMs > 3600000))) {
       throw new Error('Invalid transferred solve settings.');
     }
     viewportPreferences = transfer.viewportPreferences || {};
@@ -601,11 +603,23 @@
     return this.document.analysisRevision;
   };
 
+  AppController.prototype.replaceSolveTimeLimit = function (milliseconds) {
+    if (root.SpjutsimFEA.engineeringBusy(this.document) || this.document.assignmentDraft) {
+      throw new Error('Finish or cancel the current operation before changing the solve time limit.');
+    }
+    if (!Number.isFinite(milliseconds) || milliseconds < 1000 || milliseconds > 3600000) {
+      throw new Error('Choose a solve time limit between one second and 60 minutes.');
+    }
+    // A runtime budget does not change the physical model or accepted results.
+    this.document.solveSettings = Object.assign({}, this.document.solveSettings, { maxDurationMs: milliseconds });
+    this.notify();
+  };
+
   AppController.prototype.reportSolveProgress = function (progress) {
     var target = this.document.solveExecution.status === 'running' ? this.document.solveExecution : this.document.solvePreflight;
     if (target.status !== 'running') { return; }
     target.progress = progress;
-    this.notify();
+    this.notify('solve-progress');
   };
 
   AppController.prototype.completeSolvePreflight = function (revision, result) {
@@ -698,7 +712,7 @@
   AppController.prototype.reportConvergenceProgress = function (revision, progress) {
     var study = this.document.convergenceStudy;
     if (!study || study.status !== 'running' || revision !== this.document.analysisRevision) { return false; }
-    study.progress = progress; this.notify(); return true;
+    study.progress = progress; this.notify('convergence-progress'); return true;
   };
 
   AppController.prototype.completeConvergenceLevel = function (revision, summary, result) {

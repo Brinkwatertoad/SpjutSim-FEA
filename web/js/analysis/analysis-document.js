@@ -21,7 +21,7 @@
         mode: 'model', displayStyle: 'shaded-edges', legendOrientation: 'vertical', colorRange: {mode: 'automatic', field: 'vonMises', locked: false}, field: 'vonMises', meshOverlay: false,
         deformationMode: 'undeformed', deformationScale: 0, userDeformationScale: 100
       },
-      solveSettings: { relativeTolerance: 1e-8, equilibriumTolerance: 1e-6, maxIterations: 0 },
+      solveSettings: { relativeTolerance: 1e-8, equilibriumTolerance: 1e-6, maxIterations: 0, maxDurationMs: 600000 },
       solvePreflight: { status: 'idle', result: null, error: null, progress: null, analysisRevision: null },
       solveExecution: { status: 'idle', error: null, progress: null, analysisRevision: null },
       results: null,

@@ -3,6 +3,7 @@
 #include "spjutsim/fem_context.hpp"
 
 #include <exception>
+#include <cmath>
 #include <limits>
 #include <new>
 
@@ -12,6 +13,9 @@ struct FemContext {
   spjutsim::fem::Diagnostic bridge_error;
   FemPhaseCallback phase_callback = nullptr;
   void *phase_user_data = nullptr;
+  FemIterationCallback iteration_callback = nullptr;
+  void *iteration_user_data = nullptr;
+  double max_duration_ms = spjutsim::fem::SolveSettings{}.max_duration_ms;
 };
 
 namespace {
@@ -183,6 +187,18 @@ int fem_set_phase_callback(FemContext *c, FemPhaseCallback callback,
   c->phase_user_data = user_data;
   return 0;
 }
+int fem_set_iteration_callback(FemContext *c, FemIterationCallback callback,
+                               void *user_data) {
+  if (!c) return -1;
+  c->iteration_callback = callback;
+  c->iteration_user_data = user_data;
+  return 0;
+}
+int fem_set_time_limit(FemContext *c, double max_duration_ms) {
+  if (!c || !std::isfinite(max_duration_ms) || !(max_duration_ms > 0)) return -1;
+  c->max_duration_ms = max_duration_ms;
+  return 0;
+}
 int fem_estimate_memory(FemContext *c, double device, uint64_t cap,
                         double multiplier, FemMemoryEstimate *out) {
   if (!c || !out ||
@@ -230,10 +246,15 @@ int fem_solve(FemContext *c, const FemSolveSettings *settings) {
     s.relative_tolerance = settings->relative_tolerance;
     s.equilibrium_tolerance = settings->equilibrium_tolerance;
     s.max_iterations = settings->max_iterations;
+    s.max_duration_ms = c->max_duration_ms;
     s.cancellation_check_interval = settings->cancellation_check_interval;
     if (c->phase_callback)
       s.on_phase = [c](SolvePhase phase) {
         c->phase_callback(static_cast<uint32_t>(phase), c->phase_user_data);
+      };
+    if (c->iteration_callback)
+      s.on_iteration = [c](uint32_t iteration, double residual, double elapsed_ms) {
+        c->iteration_callback(iteration, residual, elapsed_ms, c->iteration_user_data);
       };
     return status(c->implementation.solve(s));
   });

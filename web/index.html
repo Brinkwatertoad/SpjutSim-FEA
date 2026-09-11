@@ -268,6 +268,8 @@
         </section>
         <section id="checks-panel" role="tabpanel" aria-labelledby="checks-tab" data-output-panel="checks" hidden>
           <h2>Model checks</h2><p>These checks run before solving. Fix any issues below, then select Solve again.</p><button id="preflight-button" type="button">Run checks only</button><p id="solve-status" role="status" aria-live="polite"></p>
+          <label>Solve time limit (minutes) <input id="solve-time-limit" type="number" min="1" max="60" step="1" value="10" required aria-describedby="solve-time-limit-help"></label>
+          <p id="solve-time-limit-help">Limits sparse solving, excluding assembly and stress recovery. Increase it for a slow solve that is making progress; unconverged results are never accepted.</p>
           <p id="checks-revision"></p><ul id="checks-findings"></ul><dl id="checks-summary" class="fea-output-list"></dl>
           <details><summary><span class="fea-chevron" aria-hidden="true">▶</span> Mesh, system and runtime details</summary><dl id="preflight-summary" class="fea-compact-diagnostics" hidden></dl></details>
         </section>
@@ -335,7 +337,7 @@
     <div class="fea-stl-options">
       <label>Length units <select id="stl-length-unit"><option value="">Choose units…</option><option value="m">Meters</option><option value="mm">Millimeters</option><option value="cm">Centimeters</option><option value="in">Inches</option><option value="ft">Feet</option></select></label>
       <label>Patch grouping angle (degrees) <input id="stl-patch-angle" type="number" min="1" max="179" value="40"></label>
-      <label>Simulation surface <select id="stl-surface-mode"><option value="reconstruct">Try surface reconstruction</option><option value="original">Use original STL surface</option></select></label>
+      <label>Simulation surface <select id="stl-surface-mode"><option value="reconstruct">Try surface reconstruction</option><option value="original">Keep STL triangles (no simplification)</option></select></label>
       <label>Maximum deviation (source units) <input id="stl-reconstruction-tolerance" type="number" min="0" step="any" value="0.01"></label>
       <button id="stl-review-button" type="button">Review surface</button>
     </div>
@@ -344,7 +346,7 @@
     <label id="stl-preview-surface-label" hidden>Compare surface <select id="stl-preview-surface"><option value="simulation">Reconstructed simulation surface</option><option value="original">Original STL surface</option></select></label>
     <canvas id="stl-review-viewport" aria-label="STL patch review viewport"></canvas>
     <div id="stl-patch-list" class="fea-stl-patches" aria-label="Selectable surface patches"></div>
-    <p>Reconstruction currently merges coplanar faces and recovers full cylinders and conical frusta with flat ends. Unsupported surface intersections are reported. Original-surface meshing keeps every STL triangle and may retain very small or poor-quality elements. Source bytes are preserved; invalid solids are rejected without automatic repair.</p>
+    <p>Selectable patches group triangles for applying supports and loads; grouping does not simplify the geometry. Reconstruction creates replacement surfaces for supported solids: coplanar faces, full cylinders and conical frusta with flat ends. It reports unsupported regions and does not mix reconstructed surfaces with retained triangles. Keeping STL triangles preserves every source facet, including small or poor-quality facets that can prevent solver convergence. Source bytes are preserved; invalid solids are rejected without automatic repair.</p>
     <footer><button id="stl-cancel-button" type="button">Cancel</button><button id="stl-accept-button" type="button" class="ui-button-primary" disabled>Use reviewed model</button></footer>
   </dialog>
   <div class="ui-modal-backdrop" id="replacement-migration-backdrop" hidden>

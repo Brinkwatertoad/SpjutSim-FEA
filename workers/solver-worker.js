@@ -500,6 +500,11 @@ function handlePreflight(Module, message) {
 
 function handleSolve(Module, message) {
   var result;
+  var timeLimitMs = message.solveSettings && message.solveSettings.maxDurationMs;
+  if (timeLimitMs === undefined) { timeLimitMs = 600000; }
+  if (!Number.isFinite(timeLimitMs) || timeLimitMs < 1000 || timeLimitMs > 3600000) {
+    throw diagnostic('INVALID_SOLVE_SETTINGS', 'solve', 'Choose a solve time limit between one second and 60 minutes.');
+  }
   if (!activeAnalysis || activeAnalysis.revision !== message.analysisRevision) {
     throw diagnostic('STALE_SOLVE_REQUEST', 'solve', 'The analysis changed after preflight. Run preflight again.');
   }
@@ -510,15 +515,31 @@ function handleSolve(Module, message) {
     throw diagnostic('HIGH_MEMORY_CONFIRMATION_REQUIRED', 'preflight', 'Confirm the high-memory warning before solving.');
   }
   progress(message.requestId, 'assembly', 'Assembling stiffness and load vectors…');
-  progress(message.requestId, 'constraints', 'Applying constraints…');
-  progress(message.requestId, 'solve', 'Solving the sparse system…');
-  checkNative(Module, activeAnalysis.context, Module._fem_wasm_solve(activeAnalysis.context,
-    Number(message.solveSettings && message.solveSettings.relativeTolerance) || 1e-8,
-    Number(message.solveSettings && message.solveSettings.equilibriumTolerance) || 1e-6,
-    Number(message.solveSettings && message.solveSettings.maxIterations) || 0), 'solve');
+  if (Module._fem_set_time_limit(activeAnalysis.context, timeLimitMs) !== 0) {
+    throw diagnostic('INVALID_SOLVE_SETTINGS', 'solve', 'The solver rejected the time limit.');
+  }
+  Module.onFemPhase = function (phase) {
+    // Native phase callbacks report completion, before the next phase begins.
+    if (phase === 0) { progress(message.requestId, 'solve', 'Solving the sparse system…'); }
+    if (phase === 1) { progress(message.requestId, 'recovery', 'Recovering stresses and reactions…'); }
+  };
+  Module.onFemIteration = function (iteration, residual, elapsedMs) {
+    progress(message.requestId, 'solve', 'Solving: iteration ' + iteration +
+      ', relative residual ' + residual.toExponential(2) +
+      ' (target ' + (Number(message.solveSettings && message.solveSettings.relativeTolerance) || 1e-8).toExponential(0) +
+      '), ' + (elapsedMs / 1000).toFixed(1) + ' s / ' + (timeLimitMs / 1000) + ' s limit…');
+  };
+  try {
+    checkNative(Module, activeAnalysis.context, Module._fem_wasm_solve(activeAnalysis.context,
+      Number(message.solveSettings && message.solveSettings.relativeTolerance) || 1e-8,
+      Number(message.solveSettings && message.solveSettings.equilibriumTolerance) || 1e-6,
+      Number(message.solveSettings && message.solveSettings.maxIterations) || 0), 'solve');
+  } finally {
+    delete Module.onFemPhase;
+    delete Module.onFemIteration;
+  }
   activeAnalysis.memory.assembly = Math.max(activeAnalysis.memory.graphPreflight, Module._fem_wasm_phase_memory_value(0));
   activeAnalysis.memory.solve = Math.max(activeAnalysis.memory.assembly, Module._fem_wasm_phase_memory_value(1));
-  progress(message.requestId, 'recovery', 'Recovering stresses and reactions…');
   checkNative(Module, activeAnalysis.context, Module._fem_wasm_read_results(activeAnalysis.context), 'postprocess');
   activeAnalysis.memory.postprocess = Math.max(activeAnalysis.memory.solve, Module._fem_wasm_phase_memory_value(2), Module.HEAPU8.buffer.byteLength);
   progress(message.requestId, 'visualization', 'Preparing visualization buffers…');

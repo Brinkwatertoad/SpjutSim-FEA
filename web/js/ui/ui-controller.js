@@ -26,6 +26,7 @@
     this.preflightButton = document.getElementById('preflight-button');
     this.solveButton = document.getElementById('solve-button');
     this.cancelSolveButton = document.getElementById('cancel-solve-button');
+    this.solveTimeLimit = document.getElementById('solve-time-limit');
     this.solveReadinessStatus = document.getElementById('solve-readiness');
     this.checksRevision = document.getElementById('checks-revision');
     this.checksFindings = document.getElementById('checks-findings');
@@ -331,6 +332,10 @@
     if (this.deformationAnimationToggle) { this.deformationAnimationToggle.addEventListener('click', function () { self.toggleDeformationAnimation(); }); }
     if (this.meshOverlay) { this.meshOverlay.addEventListener('change', function () { self.updateViewportPresentation(); }); }
     if (this.preflightButton) { this.preflightButton.addEventListener('click', function () { if (self.preflightHandler) { self.showOutputPanel("checks"); self.preflightHandler(); } }); }
+    if (this.solveTimeLimit) { this.solveTimeLimit.addEventListener('change', function () {
+      if (!self.solveTimeLimit.reportValidity()) { return; }
+      self.controller.replaceSolveTimeLimit(Number(self.solveTimeLimit.value) * 60000);
+    }); }
     Array.from(document.querySelectorAll('[data-history-action]:not([data-ui-menu-action])')).forEach(function (button) {
       button.addEventListener('click',function () { self.runHistoryAction(button.dataset.historyAction); });
     });
@@ -425,7 +430,15 @@
       event.preventDefault();
     });
     this.renderNavigationPreferences();
-    this.controller.subscribe(function (documentState) { self.render(documentState); });
+    this.controller.subscribe(function (documentState, change) {
+      if (change === 'solve-progress') {
+        var operation = documentState.solveExecution.status === 'running' ? documentState.solveExecution : documentState.solvePreflight;
+        if (self.solveStatus) { self.solveStatus.textContent = operation.progress.userMessage; }
+        if (self.solveOutputStatus) { self.solveOutputStatus.textContent = operation.progress.userMessage; }
+      } else if (change === 'convergence-progress') {
+        if (self.convergenceStatus) { self.convergenceStatus.textContent = convergenceStatusMessage(documentState.convergenceStudy); }
+      } else { self.render(documentState); }
+    });
   };
   UIController.prototype.renderHistory = function () {
     if (!this.controller.historyState) { return; }
@@ -807,7 +820,7 @@
     if (!study) { return 'Not studied.'; }
     if (study.status === 'running') {
       return 'Level ' + ((study.progress && study.progress.level) || levels.length + 1) + ': ' +
-        ((study.progress && study.progress.stage) || 'preparing') + '…';
+        ((study.progress && (study.progress.userMessage || study.progress.stage)) || 'preparing') + '…';
     }
     if (study.status === 'cancelled') { return 'Cancelled — completed levels remain available in the table.'; }
     message = statusLabels[classification && classification.status] || study.status;
@@ -836,6 +849,13 @@
   }
 
   UIController.prototype.renderSolve = function (documentState) {
+    if (this.solveTimeLimit) {
+      this.solveTimeLimit.disabled = root.SpjutsimFEA.engineeringBusy(documentState) || Boolean(documentState.assignmentDraft);
+      if (document.activeElement !== this.solveTimeLimit) {
+        var limit = documentState.solveSettings && documentState.solveSettings.maxDurationMs;
+        this.solveTimeLimit.value = (limit === undefined ? 600000 : limit) / 60000;
+      }
+    }
     var preflight = documentState.solvePreflight || { status: 'idle' };
     var execution = documentState.solveExecution || { status: 'idle' };
     var running = preflight.status === 'running' || execution.status === 'running';

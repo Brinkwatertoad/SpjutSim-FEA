@@ -90,10 +90,14 @@ fresh worker for meshing after import.
 Import a familiar part with explicit units. Try reconstruction, inspect the
 reported deviation, compare source/candidate and select faces. Change the
 threshold and confirm that a new review is required. On the supplied funnel,
-select **Use original STL surface**, review its dimensions and generate a mesh;
+select **Keep STL triangles (no simplification)**, review its dimensions and generate a mesh;
 inspect the quality warning before proceeding with an analysis. Cancel a repeat
 review to check that the installed setup is retained.
 
 General freeform reconstruction and intersections between multiple curved
 primitives remain future work. Input validation/storage/work limits and the
 solver's existing memory preflight continue to apply.
+
+The [subsequent funnel solve investigation](29-funnel-solve.md) records the
+nonconvergence, corrected progress and finite solve budgets. Import/mesh success
+does not establish that this funnel can currently produce a valid FEA result.

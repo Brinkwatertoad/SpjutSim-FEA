@@ -17,7 +17,7 @@
         },
         {
           "path": "native/fem/include/spjutsim/fem_c_api.h",
-          "sha256": "98ccc4529c70359592f27ade60d1d55b9c5f6f8bedf0c04baf7251177e0a6a09"
+          "sha256": "a333b5d0ab388893a923b3acaee578ace15587c07428816cd9cfcb32d13008db"
         },
         {
           "path": "native/fem/include/spjutsim/fem_context.hpp",
@@ -25,7 +25,7 @@
         },
         {
           "path": "native/fem/include/spjutsim/fem_types.hpp",
-          "sha256": "84d374b0200d87380d721e318994205bf9930707f221b8a9311440bb2e968688"
+          "sha256": "b43e67a8ec77baaaf236ac727eabb1db273df9e0b22799d129f756024385c8fc"
         },
         {
           "path": "native/fem/include/spjutsim/pcg.hpp",
@@ -45,15 +45,15 @@
         },
         {
           "path": "native/fem/src/fem_c_api.cpp",
-          "sha256": "713adc1f9b04b0ace0f017116ef0caf89d2d73ce3cc22a9e3215701dc67fd39f"
+          "sha256": "26542ca0d8582f1441c8308ab61434aaa2a9a3425f799c061c193a1faf2bcb3c"
         },
         {
           "path": "native/fem/src/fem_context.cpp",
-          "sha256": "466be758ccb35d2fe3714f0a36007ad3b42e605d3c1b667327aed1f088117f6c"
+          "sha256": "19a2fbee278a2c91c429e2bdbe27c062f7c73f3e9354ce91000ebc2c2c745b2a"
         },
         {
           "path": "native/fem/src/pcg.cpp",
-          "sha256": "3dde8f5c3f005afac1650760cb8f914532739be41063e39a808389bedb4f7b6a"
+          "sha256": "62c0ac7d71b3d3c5997645ca7aaea3639c099f396842da91871fcd2cd44d1486"
         },
         {
           "path": "native/fem/src/sparse.cpp",
@@ -69,7 +69,7 @@
         },
         {
           "path": "native/fem/tests/c_api_test.cpp",
-          "sha256": "bee1f335f8d42b96a25b0582d117573b8f5369238e2d2651f96a0a1d34e0c963"
+          "sha256": "5b4433e1134f0a4ccc5373485550a67bd9295c801f3a2d1583c675697ba0a2cc"
         },
         {
           "path": "native/fem/tests/framework_test.cpp",
@@ -81,7 +81,7 @@
         },
         {
           "path": "native/fem/tests/solver_failure_test.cpp",
-          "sha256": "1a26bea0c98325c4f2156ff0f33edf9c632c47f3e6239a30150ca7116698a885"
+          "sha256": "61d01f5ae17b0297cfe27be4b6a3b7243575b1e36f1a3d0a05ec43e3e7f2f286"
         },
         {
           "path": "native/fem/tests/sparse_preflight_test.cpp",
@@ -105,7 +105,7 @@
         },
         {
           "path": "native/wasm/fem_c_api.cpp",
-          "sha256": "352ff49fd4f9f7681703e0a6edfdb1d9a575e66da61cec833b43c56da1817b91"
+          "sha256": "637e04e6592cab84154aaf1354867960fac043c9a53fc2d4999cc91e2d3b9d43"
         },
         {
           "path": "tools/build-local-runtime.py",
@@ -114,7 +114,7 @@
       ],
       "build_recipe": {
         "path": "tools/build-wasm.sh",
-        "sha256": "046fa1cfdb07b5f096aed3fc0758ef764f8e9d86f97e51c45d0c9cdae4efe2a1"
+        "sha256": "5338a13605032ef9b4df0c136962b208126c8ca367cab5686eacc7086cdf7a47"
       },
       "modifications": "First-party FEM core, WASM C bridge, serial embedded runtime and classic source-string wrapper.",
       "notices": [
@@ -155,7 +155,7 @@
         },
         {
           "path": "workers/solver-worker.js",
-          "sha256": "3c5a4affa40b63359c3347a955df6b1b51a7b0a507fe206a7a03ebd6a71c9af0"
+          "sha256": "b81719e279c95abdbaf9f54b223c6006a2103ce86d2d0b6443d2f7b010fb674f"
         },
         {
           "path": "workers/stl-import.js",
@@ -574,7 +574,7 @@
       "source_files": [],
       "build_recipe": {
         "path": "tools/build-wasm.sh",
-        "sha256": "046fa1cfdb07b5f096aed3fc0758ef764f8e9d86f97e51c45d0c9cdae4efe2a1"
+        "sha256": "5338a13605032ef9b4df0c136962b208126c8ca367cab5686eacc7086cdf7a47"
       },
       "modifications": "No upstream source modifications. Build recipes specify embedded serial runtimes and emmalloc; libc, C++ and compiler runtime notices are preserved.",
       "notices": [
@@ -667,7 +667,7 @@
     },
     {
       "path": "web/wasm/fem/fem.js",
-      "sha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625",
+      "sha256": "99e80904d087866d47e5f1c7d61d16199e89d1a6a22c1a7e54b31166cfcaba88",
       "components": [
         "fem",
         "emscripten"
@@ -732,7 +732,7 @@
     },
     {
       "path": "web/generated/local-runtime/fem-runtime-source.js",
-      "sha256": "243fec59431d7afe7b6341b9dc4800955481c3b1dd98465c0a97f4b9777ea5da",
+      "sha256": "3f6da0781664bcad99a5bce15f12fa8160b0fbced6cdecbc26d590727c67b6c2",
       "components": [
         "fem",
         "emscripten"
@@ -837,7 +837,7 @@
     },
     {
       "path": "web/generated/local-runtime/solver-worker-source.js",
-      "sha256": "b6ad185eb77fed55540a557a2b6b8d3d4a3e08fc56202b3224c0ff0a0d64617b",
+      "sha256": "27d6bf2eb35bef2df05d71bdb6f23f67776f6bb57736c7614e43ff3392ac644d",
       "components": [
         "workers"
       ]

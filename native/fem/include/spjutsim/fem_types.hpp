@@ -94,8 +94,10 @@ struct SolveSettings {
   double equilibrium_tolerance = kDefaultEquilibriumTolerance;
   std::uint32_t max_iterations = 0;
   std::uint32_t cancellation_check_interval = 8;
+  double max_duration_ms = 600000;
   std::function<bool()> is_cancelled;
   std::function<void(SolvePhase)> on_phase;
+  std::function<void(std::uint32_t, double, double)> on_iteration;
 };
 
 enum class TerminationReason {
@@ -104,7 +106,8 @@ enum class TerminationReason {
   non_finite,
   non_spd,
   stagnated,
-  iteration_limit
+  iteration_limit,
+  time_limit
 };
 const char *termination_reason_name(TerminationReason reason) noexcept;
 

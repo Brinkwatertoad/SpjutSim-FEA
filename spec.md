@@ -1120,6 +1120,34 @@ Solver convergence must consider a relative residual norm, for example:
 
 Initial default tolerance should be on the order of `1e-8` for well-scaled linear systems, with a maximum iteration count tied to problem size and benchmark results.
 
+The automatic iteration limit remains `max(1000, 10 * DOF)` (saturated to the
+32-bit index limit). Every solve also has a default ten-minute PCG elapsed-time
+budget, checked between iterations (assembly and recovery are separate).
+The browser's optional `solveSettings.maxDurationMs` accepts finite values from
+1,000 to 3,600,000 ms; missing values use 600,000 ms for older documents. The
+Checks panel lets the user choose 1–60 minutes. This runtime preference survives
+setup transfer, does not invalidate accepted physical results, and cannot change
+during a worker operation or assignment draft. Native C++ callers can set a
+positive finite `max_duration_ms`; the additive C API `fem_set_time_limit`
+configures the same budget without changing version-2 structure layouts.
+Exhausting either budget returns `SOLVER_NOT_CONVERGED` and publishes no results.
+`TIME_LIMIT` is appended to the termination-reason enum without renumbering existing
+values. These bounds prevent an ill-conditioned STL mesh from running millions of
+iterations; they do not establish that such a mesh is solvable.
+
+Optional native iteration callbacks report iteration count, relative residual and
+elapsed milliseconds initially, no more than once per 250 ms during iteration, and on
+convergence or budget exhaustion. A converged report uses the freshly recomputed
+residual. The additive `fem_set_iteration_callback` C API leaves version-2 structure
+layouts unchanged. WASM callbacks post existing versioned worker progress messages;
+the message text includes count, residual, target and elapsed time. Assembly and
+recovery status must follow actual native phase transitions, and cancellation by
+worker termination remains available throughout.
+The controller marks progress-only notifications as `solve-progress` or
+`convergence-progress`; the UI
+updates status text while the viewport skips geometry, selection and overlay
+rebuilds. Engineering state changes still trigger normal rendering.
+
 Record:
 
 - iteration count;
@@ -2587,8 +2615,8 @@ These do not block implementation and should be decided using benchmark data:
 1. Exact Gmsh 3D meshing algorithm/options for the default preset.
 2. Exact tetrahedral quality metric and warning threshold.
 3. Whether to optimize the validated scalar CSR implementation into 3x3 block-CSR before or after v1.0.
-4. **Resolved for v1:** retain Jacobi; all resource and numerical cases converge without a fallback, so IC(0) is deferred.
-5. **Resolved for v1:** relative tolerance `1e-8` and automatic maximum `max(1000, 10 * DOF)`.
+4. **Reopened by the funnel STL:** retain Jacobi in production. Prior resource and numerical cases converge, but the original funnel's sliver-rich mesh does not. Experimental shifted IC(0), with and without reordering, did not establish convergence; stronger preconditioning or bounded surface remeshing needs further numerical evidence.
+5. **Resolved for v1:** relative tolerance `1e-8`, automatic maximum `max(1000, 10 * DOF)`, and a configurable ten-minute PCG budget with live progress and explicit nonconvergence. A universal two-minute/10,000-iteration cap is unsuitable: the accepted 150k-node resource case takes about eight minutes and 17,188 iterations.
 6. **Resolved for v1:** retain the 3.5 GiB single-threaded WASM heap cap; the measured matrix does not justify raising it.
 7. **Resolved for v1:** retain the calibrated 1.5 memory multiplier; measured WASM/model maximum is 0.991525.
 8. **Partially resolved:** current Chromium desktop is primary; current Firefox direct-local is the secondary resource-compatibility target. Broader support remains open.

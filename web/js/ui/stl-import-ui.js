@@ -59,7 +59,7 @@
     this.dimensions.textContent=dimensions.map(function(value){return (value/scale).toPrecision(6);}).join(' × ')+' '+geometry.importOptions.lengthUnit+
       ' ('+dimensions.map(function(value){return value.toPrecision(6);}).join(' × ')+' m)';
     this.status.textContent=geometry.sourceMetadata.triangleCount+' source triangles; '+geometry.faceIds.length+' selectable patches. '+
-      (geometry.sourceMetadata.reconstruction?'Recovered '+geometry.sourceMetadata.internalSurfaceCount+' surfaces. Maximum deviation bound: '+(geometry.sourceMetadata.reconstruction.maximumDeviationM/scale).toPrecision(4)+' '+geometry.importOptions.lengthUnit+'. Compare the surfaces before applying.':'The simulation will retain the original STL triangles. Surface refinement cannot remove their small or poor-quality facets.');
+      (geometry.sourceMetadata.reconstruction?'Recovered '+geometry.sourceMetadata.internalSurfaceCount+' surfaces. Maximum deviation bound: '+(geometry.sourceMetadata.reconstruction.maximumDeviationM/scale).toPrecision(4)+' '+geometry.importOptions.lengthUnit+'. Compare the surfaces before applying.':'No geometry simplification: patches only group triangles for selection. The simulation retains every original STL triangle, including small or poor-quality facets that can prevent solver convergence.');
   };
   StlImportUI.prototype.showSurface=function(){if(!this.geometry||!this.viewport)return;var geometry=this.geometry;if(this.comparison.value==='original'&&geometry.originalPreview)geometry=Object.assign({},geometry,{preview:geometry.originalPreview});this.viewport.setGeometryPreview(geometry);this.viewport.setSelectedFaceIds(Array.from(this.selected));};
   StlImportUI.prototype.report=function(message){this.status.textContent=message;};

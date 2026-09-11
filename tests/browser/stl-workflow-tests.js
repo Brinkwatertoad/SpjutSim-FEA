@@ -13,6 +13,10 @@
       assert(doc.getElementById('stl-import-dialog'),'STL review dialog is missing');
       assert(doc.getElementById('stl-surface-mode')&&doc.getElementById('stl-reconstruction-tolerance'),'STL simulation surface controls are missing');
       var notify=api.AppController.prototype.notify;api.AppController.prototype.notify=function(){app=this;return notify.apply(this,arguments);};
+      fill('solve-time-limit','2');
+      assert(app.document.solveSettings.maxDurationMs===120000,'Solve time control did not update the active analysis');
+      fill('solve-time-limit','30');
+      assert(app.document.solveSettings.maxDurationMs===1800000,'Solve time control did not allow a longer trial');
       await importFile('cube-binary.stl');
       assert(!app.document.geometry && doc.getElementById('stl-length-unit').value==='','Import inferred units or installed before review');
       fill('stl-length-unit','m');click('stl-review-button');
@@ -26,6 +30,27 @@
       assert(doc.getElementById('stl-dimensions').textContent.includes('1.00000'),'Dimensions missing');
       doc.querySelector('#stl-patch-list button').click();assert(doc.querySelector('#stl-patch-list [aria-pressed=true]'),'Patch button did not select');
       click('stl-accept-button');await wait(function(){return app.document.geometry;});
+      assert(app.document.solveSettings.maxDurationMs===1800000,'STL import dropped the chosen solve time limit');
+      app.document.solveExecution.status='running';app.notify();
+      await new Promise(function(resolve){win.requestAnimationFrame(function(){win.requestAnimationFrame(resolve);});});
+      var overlayRebuilds=0,rebuild=api.ViewportController.prototype.rebuildAnalysisOverlay;
+      api.ViewportController.prototype.rebuildAnalysisOverlay=function(){overlayRebuilds++;return rebuild.apply(this,arguments);};
+      app.reportSolveProgress({stage:'solve',userMessage:'Solving: iteration 100, residual 0.1'});
+      await new Promise(function(resolve){win.requestAnimationFrame(function(){win.requestAnimationFrame(resolve);});});
+      assert(overlayRebuilds===0 && doc.getElementById('solve-output-status').textContent.includes('iteration 100'),
+        'Iteration progress rebuilt the mesh overlay or failed to update status');
+      api.ViewportController.prototype.rebuildAnalysisOverlay=rebuild;
+      app.cancelSolve();
+      app.document.convergenceStudy={status:'running',levels:[]};app.notify();
+      await new Promise(function(resolve){win.requestAnimationFrame(function(){win.requestAnimationFrame(resolve);});});
+      overlayRebuilds=0;
+      api.ViewportController.prototype.rebuildAnalysisOverlay=function(){overlayRebuilds++;return rebuild.apply(this,arguments);};
+      app.reportConvergenceProgress(app.document.analysisRevision,{level:1,stage:'solve',userMessage:'iteration 200'});
+      await new Promise(function(resolve){win.requestAnimationFrame(function(){win.requestAnimationFrame(resolve);});});
+      assert(overlayRebuilds===0 && doc.getElementById('convergence-status').textContent.includes('iteration 200'),
+        'Convergence progress rebuilt the mesh overlay or lost live solver progress');
+      api.ViewportController.prototype.rebuildAnalysisOverlay=rebuild;
+      app.document.convergenceStudy=null;app.notify();
       var original=app.document.geometry,revision=app.document.analysisRevision;
       await importFile('open.stl');fill('stl-length-unit','m');click('stl-review-button');
       await wait(function(){return doc.getElementById('stl-import-status').textContent.includes('STL_OPEN_SURFACE');});

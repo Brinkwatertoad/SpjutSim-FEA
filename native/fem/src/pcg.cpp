@@ -77,9 +77,24 @@ static SolverDiagnostics solve_pcg_impl(const CsrMatrix &a,
                                         const SolveSettings &settings,
                                         Diagnostic &diagnostic) {
   SolverDiagnostics stats;
+  const auto started = std::chrono::steady_clock::now();
+  auto elapsed_ms = [&]() {
+    return std::chrono::duration<double, std::milli>(
+               std::chrono::steady_clock::now() - started).count();
+  };
+  double last_report_ms = -250;
+  auto report = [&](bool force = false) {
+    if (!settings.on_iteration) return;
+    const double elapsed = elapsed_ms();
+    if (force || elapsed - last_report_ms >= 250) {
+      settings.on_iteration(stats.iterations, stats.final_relative_residual, elapsed);
+      last_report_ms = elapsed;
+    }
+  };
   const auto n = a.graph.degree_of_freedom_count;
   if (n == 0 || b.size() != n || !(settings.relative_tolerance > 0) ||
-      !std::isfinite(settings.relative_tolerance)) {
+      !std::isfinite(settings.relative_tolerance) ||
+      !(settings.max_duration_ms > 0) || !std::isfinite(settings.max_duration_ms)) {
     diagnostic = {ErrorCode::invalid_argument,
                   "PCG settings or system dimensions are invalid.",
                   {},
@@ -126,8 +141,10 @@ static SolverDiagnostics solve_pcg_impl(const CsrMatrix &a,
     stats.converged = true;
     stats.termination = TerminationReason::converged;
     diagnostic = {};
+    report(true);
     return stats;
   }
+  report(true);
   const std::uint32_t max_iter =
       settings.max_iterations
           ? settings.max_iterations
@@ -137,7 +154,17 @@ static SolverDiagnostics solve_pcg_impl(const CsrMatrix &a,
                           : 10 * n);
   const auto check =
       std::max<std::uint32_t>(1, settings.cancellation_check_interval);
-  for (std::uint32_t iter = 1; iter <= max_iter; ++iter) {
+  for (std::uint32_t iter = 1; iter != 0 && iter <= max_iter; ++iter) {
+    if (elapsed_ms() >= settings.max_duration_ms) {
+      stats.termination = TerminationReason::time_limit;
+      diagnostic = {ErrorCode::solver_not_converged,
+                    "The solver reached its time limit before convergence. "
+                    "No results were accepted. Increase the time limit if the "
+                    "residual is decreasing; otherwise check supports and mesh quality.",
+                    "The PCG elapsed-time budget was exhausted.", true};
+      report(true);
+      return stats;
+    }
     if (iter % check == 0 && settings.is_cancelled && settings.is_cancelled()) {
       stats.iterations = iter - 1;
       stats.termination = TerminationReason::cancelled;
@@ -197,6 +224,7 @@ static SolverDiagnostics solve_pcg_impl(const CsrMatrix &a,
         stats.converged = true;
         stats.termination = TerminationReason::converged;
         diagnostic = {};
+        report(true);
         return stats;
       }
       for (std::uint32_t i = 0; i < n; ++i) {
@@ -204,8 +232,10 @@ static SolverDiagnostics solve_pcg_impl(const CsrMatrix &a,
         p[i] = z[i];
       }
       rz = dot(r, z);
+      report();
       continue;
     }
+    report();
     for (std::uint32_t i = 0; i < n; ++i)
       z[i] = r[i] / diag[i];
     const double next_rz = dot(r, z);
@@ -224,9 +254,12 @@ static SolverDiagnostics solve_pcg_impl(const CsrMatrix &a,
   }
   stats.termination = TerminationReason::iteration_limit;
   diagnostic = {ErrorCode::solver_not_converged,
-                "The solver reached its iteration limit before convergence.",
+                "The solver reached its iteration limit before convergence. "
+                "No results were accepted. Check supports and mesh quality; "
+                "for STL, try surface reconstruction or a cleaner source mesh.",
                 {},
                 true};
+  report(true);
   return stats;
 }
 

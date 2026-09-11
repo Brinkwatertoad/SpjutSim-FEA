@@ -4,7 +4,15 @@
 #include <cmath>
 #include <cstdint>
 #include <emscripten/heap.h>
+#include <emscripten.h>
 #include <array>
+
+EM_JS(void, report_phase, (uint32_t phase), {
+  if (Module['onFemPhase']) Module['onFemPhase'](phase);
+});
+EM_JS(void, report_iteration, (uint32_t iteration, double residual, double elapsed_ms), {
+  if (Module['onFemIteration']) Module['onFemIteration'](iteration, residual, elapsed_ms);
+});
 
 namespace {
 FemMemoryEstimate memory_estimate{};
@@ -15,6 +23,11 @@ std::array<std::uint64_t, 3> phase_memory_bytes{};
 void sample_phase(uint32_t phase, void *) {
   if (phase < phase_memory_bytes.size())
     phase_memory_bytes[phase] = emscripten_get_heap_size();
+  report_phase(phase);
+}
+
+void sample_iteration(uint32_t iteration, double residual, double elapsed_ms, void *) {
+  report_iteration(iteration, residual, elapsed_ms);
 }
 
 template <typename T> void initialize(T &value) {
@@ -77,6 +90,7 @@ int fem_wasm_solve(FemContext *context, double relative_tolerance,
   settings.cancellation_check_interval = 8;
   phase_memory_bytes = {};
   fem_set_phase_callback(context, sample_phase, nullptr);
+  fem_set_iteration_callback(context, sample_iteration, nullptr);
   return fem_solve(context, &settings);
 }
 

@@ -269,6 +269,8 @@ const char *termination_reason_name(TerminationReason r) noexcept {
     return "STAGNATED";
   case TerminationReason::iteration_limit:
     return "ITERATION_LIMIT";
+  case TerminationReason::time_limit:
+    return "TIME_LIMIT";
   }
   return "UNKNOWN";
 }
