@@ -337,8 +337,9 @@
     <div class="fea-stl-options">
       <label>Length units <select id="stl-length-unit"><option value="">Choose units…</option><option value="m">Meters</option><option value="mm">Millimeters</option><option value="cm">Centimeters</option><option value="in">Inches</option><option value="ft">Feet</option></select></label>
       <label>Patch grouping angle (degrees) <input id="stl-patch-angle" type="number" min="1" max="179" value="40"></label>
-      <label>Simulation surface <select id="stl-surface-mode"><option value="reconstruct">Try surface reconstruction</option><option value="original">Keep STL triangles (no simplification)</option></select></label>
-      <label>Maximum deviation (source units) <input id="stl-reconstruction-tolerance" type="number" min="0" step="any" value="0.01"></label>
+      <label>Simulation surface <select id="stl-surface-mode"><option value="reconstruct">Try surface reconstruction</option><option value="original">Keep STL triangles (no simplification)</option><option value="remesh">Remesh STL surfaces (experimental)</option></select></label>
+      <label id="stl-reconstruction-tolerance-label">Maximum deviation (source units) <input id="stl-reconstruction-tolerance" type="number" min="0" step="any" value="0.01"></label>
+      <label id="stl-remesh-angle-label" hidden>Remesh feature angle (degrees) <input id="stl-remesh-angle" type="number" min="1" max="40" step="any" value="5" aria-describedby="stl-remesh-angle-help"><span id="stl-remesh-angle-help">Lower values preserve more creases. Higher values can help complex surfaces mesh, but require closer checks of the mesh and refinement.</span></label>
       <button id="stl-review-button" type="button">Review surface</button>
     </div>
     <p id="stl-import-status" role="status" aria-live="polite"></p><p id="stl-dimensions"></p>

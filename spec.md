@@ -767,6 +767,38 @@ Changing mode/deviation requires review and explicit assignment transfer just as
 changing units/grouping does. See the extension design for geometric bounds,
 implemented limitations, errors and acceptance tests.
 
+An additional opt-in, experimental `surfaceMode: 'remesh'` keeps both established
+paths intact. It requires `reconstructionToleranceM: null` and a finite
+`remeshFeatureAngleDegrees` in [1, 40] (UI default 5). It creates parametrized
+discrete surfaces from the validated STL, subdividing each selection group as
+needed; it does not fit smooth CAD geometry or claim a reconstruction deviation
+bound. The effective feature angle is the smaller of this setting and the
+selection grouping angle. Feature angle enters identity and review invalidation.
+The version-2 metadata has `reconstruction: null` and a `remeshing` report with
+version 1, method `stl-parametrization`, effective `featureAngleDegrees`, and
+`surfaceCountsByPatch`; counts must be positive, cover all groups, and sum to
+`internalSurfaceCount`. No alternate-geometry preview is advertised: the reference
+geometry is still the source STL. Source element ownership is checked exactly
+once before parametrization in each fresh worker, and the 512-chart/120-second
+limits remain. Parametrization failures use `STL_REMESH_FAILED`; neither failed
+parametrization nor failed meshing silently switches modes or feature angles.
+
+Experimental remeshing regenerates both surface and volume elements. It uses
+the selected mesh sizes, Gmsh surface algorithm 6, no point/curvature-derived size
+field, and straight Tet10 midpoints. Existing Jacobian, ownership, preflight,
+convergence and equilibrium gates apply. Finite-element boundaries approximate
+the source surface: coarse elements can bridge facets and distort stresses, and
+finer feature angles can make difficult inputs unmeshable. The UI states these
+limitations. Mesh quality includes optional `stlBoundaryAreas` with version 1 and
+positive finite `sourceM2`/`meshM2` arrays in boundary-patch order. Straight Tri3/
+Tri6 corner areas are exact for this mode. Any patch area change exceeding 1%
+adds an explicit pressure-force fidelity warning to the existing mesh/checks
+warnings. Area agreement is a diagnostic, not a geometric error certificate.
+The numerical cylinder checks use 5 degrees to retain their creases;
+the optional funnel trial uses 40 degrees and records volume/refinement evidence
+separately from solver convergence. Automatic freeform CAD fitting remains future
+work; successful remeshing is not reported as successful CAD reconstruction.
+
 ### 6.2 Geometry validation
 
 After import:

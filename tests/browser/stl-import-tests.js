@@ -27,6 +27,10 @@
       }
     }
     var cube = await (await fetch('../fixtures/stl/cube-binary.stl')).arrayBuffer();
+    var legacy = await StlImport.identify(StlImport.parse(cube, options), cube);
+    var extraFields = await StlImport.identify(StlImport.parse(cube, Object.assign({}, options,
+      { surfaceMode: 'remesh', remeshFeatureAngleDegrees: 40 })), cube);
+    assert(legacy.patchIds.join() === extraFields.patchIds.join(), 'Ignored version-2 fields changed legacy patch identity');
     var ascii = await (await fetch('../fixtures/stl/cube-ascii.stl')).text();
     reject(new TextEncoder().encode(ascii.replace(/facet normal [^\r\n]+/, 'facet normal bad normal tokens')).buffer, 'STL_MALFORMED');
     assert(StlImport.parse(new TextEncoder().encode(ascii.replace(/facet normal [^\r\n]+/, 'facet normal NaN Infinity -Infinity')).buffer, options).volume === 1,

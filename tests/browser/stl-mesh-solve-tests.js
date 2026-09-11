@@ -4,6 +4,7 @@
   var status = document.getElementById('test-status');
   var mode=new URLSearchParams(location.search).get('surfaceMode');
   var importOptions=mode?{version:2,lengthUnit:'m',patchAngleDegrees:40,normalization:'none',surfaceMode:mode,reconstructionToleranceM:mode==='reconstruct'?.02:null}:{version:1,lengthUnit:'m',patchAngleDegrees:40,normalization:'none'};
+  if(mode==='remesh')importOptions.remeshFeatureAngleDegrees=5;
   var controller = new api.AppController({ document: api.createAnalysisDocument() });
   var mesher = new api.MesherClient();
   var solver;
@@ -131,6 +132,7 @@
     var review=controller.beginGeometryReview(originalSource);
     var reviewedOptions={normalization:'none',patchAngleDegrees:40,lengthUnit:'m',version:importOptions.version};
     if(mode){reviewedOptions.surfaceMode=mode;reviewedOptions.reconstructionToleranceM=importOptions.reconstructionToleranceM;}
+    if(mode==='remesh')reviewedOptions.remeshFeatureAngleDegrees=importOptions.remeshFeatureAngleDegrees;
     var reviewGeneration=controller.setGeometryReviewOptions(reviewedOptions);
     assert(controller.completeGeometryReview(review,reviewGeneration,originalGeometry),'Equivalent options with a different property order were rejected');
     controller.invalidateGeometryReview();

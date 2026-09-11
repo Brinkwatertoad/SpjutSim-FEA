@@ -145,6 +145,13 @@ Tet10 solves, remeshing/replacement, convergence, limits, and cancellation.
 source/candidate contracts, holes, cancellation and local-scale quality checks.
 Run `stl-mesh-solve-tests.html?surfaceMode=reconstruct` and
 `stl-mesh-solve-tests.html?surfaceMode=original` for both new numerical paths.
+`stl-remesh-tests.html` and `stl-mesh-solve-tests.html?surfaceMode=remesh`
+check experimental parametrization, multiple surfaces per selection group,
+feature-angle identity, cancellation and numerical behavior. With the local
+funnel fixture present, `funnel-solve-tests.html?surfaceMode=remesh` runs the
+40° feature-angle/coarse-mesh trial; append `&preset=normal` or `&preset=fine`
+to compare refinement. It reports meshing/solving time, volume change, quality,
+stress and displacement; convergence alone does not establish accuracy.
 Regenerate the CC0 STL fixtures with
 `python3 tools/cad-fixtures/generate-stl-fixtures.py`.
 
@@ -268,13 +275,23 @@ review before installation. Import supports one closed, connected, consistently
 outward-wound, non-self-intersecting manifold solid. It rejects defects without
 welding, hole filling, or winding reversal. Connected angle-based patches default
 to 40° (adjustable 1–179°). Choose **Try surface reconstruction** and a maximum
-deviation, or **Use original STL surface**. Reconstruction currently merges
+deviation, or **Keep STL triangles (no simplification)**. Reconstruction currently merges
 coplanar faces (including holes) and recovers full cylinders/conical frusta with
 perpendicular flat ends. Compare the original and candidate before applying.
 More complicated fitted-surface intersections and freeform regions are reported
 as unsupported; selecting the original surface preserves every triangle and can
 retain very small or low-quality elements. See the
 [simulation-surface design](docs/designs/stl-simulation-surfaces.md).
+**Remesh STL surfaces (experimental)** is a separate option that creates
+parametrized surfaces and regenerates both the surface and volume mesh. It
+retains selection groups, allowing each group to own several surfaces. It does
+not recover smooth CAD curves. The remesh feature angle defaults to 5° to retain
+more creases; the supplied funnel trial uses 40°. Changing it requires a new
+review. Coarse meshes can approximate away details, so inspect the mesh and
+compare refinement before relying on stresses. Meshing failure does not silently
+change modes or settings. Mesh/checks diagnostics warn when a patch area changes
+by more than 1%, since that can alter pressure forces. See the
+[funnel experiment](docs/reviews/29-funnel-remeshing.md) for measured limitations.
 Regroup STL in the Model editor uses explicit assignment transfer, with Cancel
 preserving the installed model. Source bytes and options reproduce patch IDs in
 fresh workers and after rigid orientation. Limits are 16 MiB, 50,000 triangles,

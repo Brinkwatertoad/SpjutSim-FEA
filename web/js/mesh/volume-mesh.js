@@ -151,6 +151,14 @@
     if (Object.keys(result.geometryFaceMap).length !== ranges.length) {
       return validation(false, 'incomplete-boundary-mapping');
     }
+    var areas = result.quality.stlBoundaryAreas;
+    if (areas !== undefined && (!areas || areas.version !== 1 || !Array.isArray(areas.sourceM2) || !Array.isArray(areas.meshM2) ||
+        areas.sourceM2.length !== ranges.length || areas.meshM2.length !== ranges.length ||
+        areas.sourceM2.includes(undefined) || areas.meshM2.includes(undefined) ||
+        areas.sourceM2.some(function (area) { return !Number.isFinite(area) || area <= 0; }) ||
+        areas.meshM2.some(function (area) { return !Number.isFinite(area) || area <= 0; }))) {
+      return validation(false, 'invalid-stl-boundary-areas');
+    }
     if (result.statistics.nodeCount !== nodeCount || result.statistics.elementCount !== result.elementConnectivity.length / descriptor.volumeNodes ||
         result.statistics.boundaryTriangleCount !== boundary.length / 3 ||
         result.statistics.boundaryElementCount !== solverBoundary.length / descriptor.solverFaceNodes ||

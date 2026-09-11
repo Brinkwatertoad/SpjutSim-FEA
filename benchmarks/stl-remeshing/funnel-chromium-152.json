@@ -1,0 +1,310 @@
+{
+  "experiment": "Source-parametrized STL remeshing; no smooth CAD reconstruction or accuracy acceptance implied",
+  "browser": "Chromium 152",
+  "launchMode": "direct local file",
+  "gmshVersion": "5.0.0",
+  "fixture": {
+    "name": "Better Vented Parametric Funnel.stl",
+    "distribution": "Owner-supplied local fixture; not included",
+    "sha256": "80ebe627b1483cf5832bb78566654db0885133ef96d2f821d009435413ed8c68",
+    "sourceTriangleCount": 31426,
+    "selectionGroups": 17,
+    "parametrizedSurfaces": 30
+  },
+  "material": {
+    "name": "ABS",
+    "youngsModulusPa": 2400000000.0,
+    "poissonsRatio": 0.37
+  },
+  "supports": "All displacement components fixed on lowest-z source patch",
+  "load": {
+    "type": "pressure",
+    "pressurePa": 1000000.0,
+    "face": "Highest-z source patch",
+    "sourceAreaM2": 1.7782428895943002e-05
+  },
+  "cases": [
+    {
+      "preset": "coarse",
+      "importOptions": {
+        "version": 2,
+        "lengthUnit": "mm",
+        "patchAngleDegrees": 40,
+        "normalization": "none",
+        "surfaceMode": "remesh",
+        "reconstructionToleranceM": null,
+        "remeshFeatureAngleDegrees": 40
+      },
+      "meshDurationMs": 25388.5,
+      "statistics": {
+        "nodeCount": 5911,
+        "elementCount": 2878,
+        "boundaryTriangleCount": 8064,
+        "boundaryElementCount": 2016,
+        "minCharacteristicSizeM": 9.617485082480026e-06,
+        "maxCharacteristicSizeM": 0.015360459288319004,
+        "boundingBoxDiagonalM": 0.13381106954942107
+      },
+      "quality": {
+        "metric": "gamma",
+        "minimum": 5.559168997892852e-05,
+        "p05": 0.029335037831426186,
+        "median": 0.29747280356343364,
+        "poorElementCount": 339,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 1.3534301402167103e-15,
+        "maximumEdgeRatio": 780.9619136042476,
+        "warning": "Some elements have low gamma quality."
+      },
+      "sourceVolumeM3": 1.5245840949395217e-05,
+      "meshVolumeM3": 1.5459740826594137e-05,
+      "relativeVolumeError": 0.014030047795258183,
+      "solverStatistics": {
+        "iterations": 4880,
+        "terminationReason": "converged",
+        "finalRelativeResidual": 9.960806903343306e-09,
+        "solveDurationMs": 2757.9,
+        "strainEnergyJ": 8.447791851615373e-05,
+        "wasmMemoryBytes": 20185088,
+        "wasmMemoryHighWaterBytes": 20185088,
+        "wasmMemoryByPhaseBytes": {
+          "initial": 16777216,
+          "inputLoaded": 16777216,
+          "graphPreflight": 16777216,
+          "assembly": 16777216,
+          "solve": 16777216,
+          "postprocess": 20185088
+        }
+      },
+      "equilibrium": {
+        "totalReactionN": [
+          1.877993127674671e-08,
+          -6.670572594291713e-09,
+          19.376471426800098
+        ],
+        "totalAppliedForceN": [
+          5.203502849961069e-15,
+          1.4206084473367668e-14,
+          -19.376471435765804
+        ],
+        "relativeResidual": 2.2466122012828463e-10
+      },
+      "extrema": {
+        "maxDisplacement": {
+          "valueM": 1.1031360923439542e-05,
+          "nodeIndex": 210,
+          "locationOwner": "volume-node",
+          "locationM": [
+            -0.0033634080731323227,
+            -0.003226892346669945,
+            0.0815
+          ]
+        },
+        "rawVonMisesMax": {
+          "valuePa": 996719.3514960397,
+          "elementIndex": 539,
+          "sampleIndex": 2159,
+          "locationM": [
+            -0.002470536912442319,
+            -0.0018095885330952517,
+            0.0814309016994375
+          ],
+          "locationOwner": "solver-sample",
+          "isInterior": true,
+          "nearbyBoundaryFaceId": "stl:861d1af7845947ef5f86a9c7083d69b6c6de9e67cd48c36e66289ff31b8c3cc9",
+          "faceId": "stl:861d1af7845947ef5f86a9c7083d69b6c6de9e67cd48c36e66289ff31b8c3cc9"
+        }
+      },
+      "pressureResultantRelativeError": 0.089641440387622
+    },
+    {
+      "preset": "normal",
+      "importOptions": {
+        "version": 2,
+        "lengthUnit": "mm",
+        "patchAngleDegrees": 40,
+        "normalization": "none",
+        "surfaceMode": "remesh",
+        "reconstructionToleranceM": null,
+        "remeshFeatureAngleDegrees": 40
+      },
+      "meshDurationMs": 87664.90000000596,
+      "statistics": {
+        "nodeCount": 13095,
+        "elementCount": 6525,
+        "boundaryTriangleCount": 17448,
+        "boundaryElementCount": 4362,
+        "minCharacteristicSizeM": 9.617485082480026e-06,
+        "maxCharacteristicSizeM": 0.010034956218542071,
+        "boundingBoxDiagonalM": 0.13381106954942107
+      },
+      "quality": {
+        "metric": "gamma",
+        "minimum": 5.559169007348378e-05,
+        "p05": 0.11362093847204034,
+        "median": 0.574600968145822,
+        "poorElementCount": 272,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 1.0569182096705296e-14,
+        "maximumEdgeRatio": 387.12474890389365,
+        "warning": "Some elements have low gamma quality."
+      },
+      "sourceVolumeM3": 1.5245840949395217e-05,
+      "meshVolumeM3": 1.5148934277653971e-05,
+      "relativeVolumeError": 0.00635626936309408,
+      "solverStatistics": {
+        "iterations": 5139,
+        "terminationReason": "converged",
+        "finalRelativeResidual": 9.606485895810239e-09,
+        "solveDurationMs": 9714.6,
+        "strainEnergyJ": 7.583028964228192e-05,
+        "wasmMemoryBytes": 43909120,
+        "wasmMemoryHighWaterBytes": 43909120,
+        "wasmMemoryByPhaseBytes": {
+          "initial": 16777216,
+          "inputLoaded": 16777216,
+          "graphPreflight": 16777216,
+          "assembly": 36569088,
+          "solve": 36569088,
+          "postprocess": 43909120
+        }
+      },
+      "equilibrium": {
+        "totalReactionN": [
+          -5.6347918553356635e-09,
+          -1.45727023989628e-08,
+          18.076638773517317
+        ],
+        "totalAppliedForceN": [
+          4.233678449390659e-15,
+          2.303508024059812e-14,
+          -18.076638780844398
+        ],
+        "relativeResidual": 1.83255514948647e-10
+      },
+      "extrema": {
+        "maxDisplacement": {
+          "valueM": 9.961464796497999e-06,
+          "nodeIndex": 8284,
+          "locationOwner": "volume-node",
+          "locationM": [
+            -0.003094592434417646,
+            -0.0033364814907043804,
+            0.0815
+          ]
+        },
+        "rawVonMisesMax": {
+          "valuePa": 830876.7803593648,
+          "elementIndex": 4457,
+          "sampleIndex": 17828,
+          "locationM": [
+            -0.002001256455648676,
+            0.0014144958406555358,
+            0.08143090169943751
+          ],
+          "locationOwner": "solver-sample",
+          "isInterior": true,
+          "nearbyBoundaryFaceId": "stl:861d1af7845947ef5f86a9c7083d69b6c6de9e67cd48c36e66289ff31b8c3cc9",
+          "faceId": "stl:861d1af7845947ef5f86a9c7083d69b6c6de9e67cd48c36e66289ff31b8c3cc9"
+        }
+      },
+      "pressureResultantRelativeError": 0.016544977439415964
+    },
+    {
+      "preset": "fine",
+      "importOptions": {
+        "version": 2,
+        "lengthUnit": "mm",
+        "patchAngleDegrees": 40,
+        "normalization": "none",
+        "surfaceMode": "remesh",
+        "reconstructionToleranceM": null,
+        "remeshFeatureAngleDegrees": 40
+      },
+      "meshDurationMs": 118874.09999999404,
+      "statistics": {
+        "nodeCount": 39610,
+        "elementCount": 19960,
+        "boundaryTriangleCount": 52312,
+        "boundaryElementCount": 13078,
+        "minCharacteristicSizeM": 9.617485082480026e-06,
+        "maxCharacteristicSizeM": 0.00823628721931234,
+        "boundingBoxDiagonalM": 0.13381106954942107
+      },
+      "quality": {
+        "metric": "gamma",
+        "minimum": 5.75452567479501e-05,
+        "p05": 0.33285830423929297,
+        "median": 0.8129493781710095,
+        "poorElementCount": 198,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 4.6387127146908126e-14,
+        "maximumEdgeRatio": 193.8972043228386,
+        "warning": "Some elements have low gamma quality."
+      },
+      "sourceVolumeM3": 1.5245840949395217e-05,
+      "meshVolumeM3": 1.5227177864451518e-05,
+      "relativeVolumeError": 0.0012241427026326024,
+      "solverStatistics": {
+        "iterations": 6760,
+        "terminationReason": "converged",
+        "finalRelativeResidual": 9.785859880763196e-09,
+        "solveDurationMs": 42410.3,
+        "strainEnergyJ": 7.40253633889668e-05,
+        "wasmMemoryBytes": 133431296,
+        "wasmMemoryHighWaterBytes": 133431296,
+        "wasmMemoryByPhaseBytes": {
+          "initial": 16777216,
+          "inputLoaded": 45285376,
+          "graphPreflight": 45285376,
+          "assembly": 111149056,
+          "solve": 111149056,
+          "postprocess": 133431296
+        }
+      },
+      "equilibrium": {
+        "totalReactionN": [
+          2.7769024413260013e-08,
+          5.088075368149536e-09,
+          17.831338211900768
+        ],
+        "totalAppliedForceN": [
+          -1.9273955588612197e-14,
+          -1.2038226037593914e-15,
+          -17.83133819482152
+        ],
+        "relativeResidual": 3.522568184033433e-10
+      },
+      "extrema": {
+        "maxDisplacement": {
+          "valueM": 9.69477273335402e-06,
+          "nodeIndex": 25402,
+          "locationOwner": "volume-node",
+          "locationM": [
+            -0.0030690558206442646,
+            0.0033313340956798946,
+            0.0815
+          ]
+        },
+        "rawVonMisesMax": {
+          "valuePa": 888905.2667472733,
+          "elementIndex": 17075,
+          "sampleIndex": 68303,
+          "locationM": [
+            0.004397889848641273,
+            -0.0018476835707845396,
+            0.08143090169943751
+          ],
+          "locationOwner": "solver-sample",
+          "isInterior": true,
+          "nearbyBoundaryFaceId": "stl:861d1af7845947ef5f86a9c7083d69b6c6de9e67cd48c36e66289ff31b8c3cc9",
+          "faceId": "stl:861d1af7845947ef5f86a9c7083d69b6c6de9e67cd48c36e66289ff31b8c3cc9"
+        }
+      },
+      "pressureResultantRelativeError": 0.0027504284799741985
+    }
+  ]
+}

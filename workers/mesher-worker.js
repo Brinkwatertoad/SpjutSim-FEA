@@ -20,6 +20,7 @@ function validCadSource(message) {
 function validStlOptions(options) {
   return options && (options.version === 1 || options.version === 2 &&
       (options.surfaceMode === 'original' && options.reconstructionToleranceM === null ||
+       options.surfaceMode === 'remesh' && options.reconstructionToleranceM === null && Number.isFinite(options.remeshFeatureAngleDegrees) && options.remeshFeatureAngleDegrees >= 1 && options.remeshFeatureAngleDegrees <= 40 ||
        options.surfaceMode === 'reconstruct' && Number.isFinite(options.reconstructionToleranceM) && options.reconstructionToleranceM > 0)) && options.normalization === 'none' &&
     ['m','mm','cm','in','ft'].includes(options.lengthUnit) && Number.isFinite(options.patchAngleDegrees) &&
     options.patchAngleDegrees >= 1 && options.patchAngleDegrees <= 179;
@@ -89,7 +90,7 @@ function validateRequest(message) {
   }
   if ((message.type === 'import' || message.type === 'mesh') && message.sourceFormat === 'stl') {
     if (message.sourceFormat === 'stl' && !validStlOptions(message.importOptions)) {
-      return workerError('STL_INVALID_OPTIONS', message.type, 'Choose explicit STL units and a grouping angle from 1 to 179 degrees.');
+      return workerError('STL_INVALID_OPTIONS', message.type, 'Choose explicit STL units and a grouping angle from 1 to 179 degrees. Reconstruction needs a positive deviation; experimental remeshing needs a feature angle from 1 to 40 degrees.');
     }
     if (message.sourceFormat === 'stl' && (!(message.sourceBytes instanceof ArrayBuffer) || !message.sourceBytes.byteLength || message.sourceBytes.byteLength > 16 * 1024 * 1024)) {
       return workerError('STL_INPUT_LIMIT', message.type, 'Choose a nonempty STL file no larger than 16 MiB.');
@@ -427,6 +428,15 @@ function restoreOriginalStlGeometry(gmsh, message, parsed) {
 function restoreStlGeometry(gmsh, message, parsed) {
   if (message.importOptions.version === 2) {
     if (message.importOptions.surfaceMode === 'original') { return restoreOriginalStlGeometry(gmsh, message, parsed); }
+    if (message.importOptions.surfaceMode === 'remesh') {
+      progress(message.requestId, 'stl-remesh', 'Creating parametrized STL surfaces for a fresh mesh…');
+      gmsh.clear(); gmsh.option.restoreDefaults(); gmsh.model.add(message.geometryId);
+      try { return StlRemesh.build(gmsh, parsed); }
+      catch (error) {
+        if (error && error.code) { throw error; }
+        throw knownImportError('STL_REMESH_FAILED', 'The STL could not be parametrized for remeshing. Keep the original triangles or review different grouping.', String(error));
+      }
+    }
     progress(message.requestId, 'stl-reconstruct', 'Recovering simulation surfaces within the selected deviation…');
     gmsh.clear(); gmsh.option.restoreDefaults(); gmsh.model.add(message.geometryId);
     try { return StlReconstruction.build(gmsh, parsed, message.importOptions.reconstructionToleranceM); }
@@ -522,6 +532,7 @@ async function importStlGeometry(gmsh, message) {
       geometry.sourceMetadata.version = 2;
       geometry.sourceMetadata.surfaceMode = message.importOptions.surfaceMode;
       geometry.sourceMetadata.reconstruction = restored.reconstruction || null;
+      if (restored.remeshing) { geometry.sourceMetadata.remeshing = restored.remeshing; }
       if (restored.analytic) {
         geometry.originalPreview = geometry.preview;
         geometry.boundingBoxM = boundingBoxM(gmsh, restored.solidTag);
@@ -879,9 +890,16 @@ async function generateMesh(gmsh, message) {
     gmsh.option.setNumber('Mesh.MeshSizeMax', message.settings.maxSizeM);
     gmsh.option.setNumber('Mesh.MeshSizeFromCurvature', 1);
     gmsh.option.setNumber('Mesh.MeshSizeExtendFromBoundary', 1);
+    if (restored.remeshing) {
+      // Curvature/point sizing on noisy discrete input can impose extreme local
+      // refinement. Use the requested size field and retain feature boundaries.
+      gmsh.option.setNumber('Mesh.MeshSizeFromCurvature', 0);
+      gmsh.option.setNumber('Mesh.MeshSizeFromPoints', 0);
+      gmsh.option.setNumber('Mesh.Algorithm', 6);
+    }
     if (message.sourceFormat === 'stl' && !restored.analytic) { gmsh.option.setNumber('Mesh.SecondOrderLinear', 1); }
     else { gmsh.model.mesh.setOutwardOrientation(restored.solidTag); }
-    progress(message.requestId, 'mesh-generate', 'Generating first-order tetrahedral volume mesh…');
+    progress(message.requestId, 'mesh-generate', restored.remeshing ? 'Remeshing STL surfaces and generating tetrahedra…' : 'Generating first-order tetrahedral volume mesh…');
     gmsh.model.mesh.generate(3);
     if (descriptor.elementType === 'tet10') {
       progress(message.requestId, 'mesh-upgrade', 'Converting the volume mesh to Tet10…');
@@ -903,6 +921,14 @@ async function generateMesh(gmsh, message) {
       throw knownMeshError('MESH_QUALITY_FAILED', 'The generated mesh quality could not be evaluated.', 'Gmsh gamma quality output did not match tetrahedron count.');
     }
     summary = meshStatistics(nodes.positions, tetrahedra.connectivity, gammaQualities, diagonalM, descriptor);
+    if (restored.remeshing) {
+      var boundaryCheck = StlRemesh.boundaryDiagnostics(restored.referenceAreasM2, nodes.positions, boundary, descriptor.solverFaceNodes);
+      summary.quality.stlBoundaryAreas = boundaryCheck.areas;
+      if (boundaryCheck.warning) {
+        summary.quality.warning = (summary.quality.warning ? summary.quality.warning + ' ' : '') +
+          boundaryCheck.warning;
+      }
+    }
     if (summary.invertedElementCount > 0) {
       throw knownMeshError('INVERTED_ELEMENTS', 'The generated mesh contains inverted elements.', 'Found ' + summary.invertedElementCount + ' non-positive ' + descriptor.elementType + ' Jacobians.');
     }
@@ -924,12 +950,15 @@ async function generateMesh(gmsh, message) {
         boundaryConnectivityEntries: boundary.solverConnectivity.length }
     };
   } catch (error) {
+    if (restored && restored.remeshing && error && error.spjutsimError && error.spjutsimError.code === 'MESH_EXTRACTION_FAILED') {
+      throw knownMeshError('STL_REMESH_FAILED', 'The experimental surface mesh could not form a usable volume. Try a different remesh feature angle or a finer mesh, or keep the original STL triangles.', error.spjutsimError.developerMessage);
+    }
     if (error && error.spjutsimError) { throw error; }
     if (error && error.code && error.code.indexOf('STL_') === 0) { throw knownMeshError(error.code, error.message); }
     throw knownMeshError('MESH_GENERATION_FAILED', 'The volume mesh could not be generated.', error && error.message);
   } finally {
     try { gmsh.FS.unlink(temporaryPath); } catch (ignore) {}
-    try { gmsh.clear(); } catch (ignoreClear) {}
+    try { gmsh.clear(); if (restored && restored.remeshing) { gmsh.option.restoreDefaults(); } } catch (ignoreClear) {}
   }
 }
 

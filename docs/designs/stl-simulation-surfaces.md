@@ -13,7 +13,7 @@ Choose explicit source units, a grouping angle, and one simulation surface:
   Specify a positive maximum deviation in source units. Review the candidate,
   reported deviation bound, dimensions and selectable surfaces. Switch the
   preview between original and reconstructed surfaces before applying.
-- **Use original STL surface**: retain every source triangle and its coordinates.
+- **Keep STL triangles (no simplification)**: retain every source triangle and its coordinates.
   Each selectable patch becomes one indexed discrete surface. Existing boundary
   triangles remain fixed during volume meshing (`Mesh.MeshOnlyEmpty=1`), and
   quadratic boundary edges remain straight. Refinement cannot remove the input's
@@ -114,3 +114,53 @@ meshes, and requires finer-cylinder meshing to reduce displacement/stress error.
 The solver's equilibrium residual must still be below `1e-6`. Flat/faceted cases,
 including `?surfaceMode=original`, retain the tighter existing constant-strain
 checks. No native integration rule was changed.
+
+## Experimental remeshing extension
+
+The owner requested a separate experiment for larger STLs while retaining the
+existing methods. The first working alternative is **Remesh STL surfaces
+(experimental)**. It makes selection groups own one or more parametrized discrete
+surfaces, then discards the input boundary discretization during meshing. This is
+not a smooth/freeform CAD fit, and the original reconstruction implementation and
+its deviation guarantees are unchanged. General shared-trim spline recovery is
+still unimplemented.
+
+`workers/stl-remesh.js` owns this route. Explicit source element tags preserve
+triangle ownership across Gmsh classification. Every triangle must appear exactly
+once; empty charts, mixed ownership, missing groups and more than 512 charts fail
+before parametrization. `createGeometry` supplies single-map surface charts and
+the validated closed shell becomes a GEO volume. Classification uses the smaller
+of the selection angle and the separate remeshing feature angle. The latter is
+explicit because preserving extra creases can make tiny charts unmeshable, while
+coarse classification can allow the mesh to cut across facets.
+
+Version-2 options add `surfaceMode: 'remesh'`, require a null reconstruction
+tolerance and a finite `remeshFeatureAngleDegrees` in [1, 40]. The UI defaults to
+5 degrees. Its value enters source identity and equivalence, so changing it
+invalidates review and requires assignment transfer. Metadata keeps
+`reconstruction: null` and adds a version-1 `remeshing` report with method
+`stl-parametrization`, effective feature angle and positive surface counts in
+source-group order. The reference preview and source volume are unchanged; they
+are not presented as a preview of the future finite-element discretization.
+
+The surface/volume mesh is regenerated using the requested min/max sizes,
+Gmsh algorithm 6, disabled point/curvature-derived sizing, and normal boundary
+size extension. These sizing controls avoid extreme curvature estimates on
+noisy discrete input. Tet10 edges remain straight. Moving quadratic nodes to
+the parametrized funnel produced inverted elements in a probe; adding high-order
+optimization exceeded the existing 120-second operation limit. Neither variant
+is installed. Existing mesh Jacobian and solver convergence checks remain intact.
+
+Mesh quality includes a version-1 `stlBoundaryAreas` report with positive finite
+`sourceM2` and `meshM2` arrays in boundary-patch order. The worker sums source
+facet areas and remeshed corner-triangle areas (exact for this mode's straight
+Tri3/Tri6 geometry). A patch area difference above 1% adds a warning to the
+existing mesh/checks diagnostics because pressure resultants can change. This
+does not certify pointwise shape fidelity or numerical accuracy when areas agree.
+
+The tests cover dense planar merging, holes, multiple internal surfaces per
+selectable group, deterministic identity, corrupted ownership metadata,
+cancellation, UI review invalidation and the existing numerical cube/cylinder
+acceptance checks at a 5-degree feature angle. The optional supplied-funnel
+diagnostic uses 40 degrees and records geometry/refinement evidence separately
+from convergence. No automatic fallback changes the chosen angle or mode.

@@ -61,6 +61,7 @@
   function validateStlOptions(options) {
     return Boolean(options && (options.version === 1 || options.version === 2 &&
       (options.surfaceMode === 'original' && options.reconstructionToleranceM === null ||
+       options.surfaceMode === 'remesh' && options.reconstructionToleranceM === null && Number.isFinite(options.remeshFeatureAngleDegrees) && options.remeshFeatureAngleDegrees >= 1 && options.remeshFeatureAngleDegrees <= 40 ||
        options.surfaceMode === 'reconstruct' && Number.isFinite(options.reconstructionToleranceM) && options.reconstructionToleranceM > 0)) && options.normalization === 'none' &&
       ['m','mm','cm','in','ft'].includes(options.lengthUnit) && Number.isFinite(options.patchAngleDegrees) &&
       options.patchAngleDegrees >= 1 && options.patchAngleDegrees <= 179);
@@ -69,7 +70,8 @@
   function sameStlOptions(left, right) {
     return validateStlOptions(left) && validateStlOptions(right) &&
       left.version === right.version && left.lengthUnit === right.lengthUnit && left.patchAngleDegrees === right.patchAngleDegrees &&
-      (left.version === 1 || left.surfaceMode === right.surfaceMode && left.reconstructionToleranceM === right.reconstructionToleranceM);
+      (left.version === 1 || left.surfaceMode === right.surfaceMode && left.reconstructionToleranceM === right.reconstructionToleranceM &&
+        (left.surfaceMode !== 'remesh' || left.remeshFeatureAngleDegrees === right.remeshFeatureAngleDegrees));
   }
 
   function sourceFormatForFilename(name) {
@@ -181,9 +183,20 @@
   function validateStlSurfaceMetadata(model) {
     var metadata=model.sourceMetadata,options=model.importOptions,original=model.originalPreview||model.preview;
     if (!original || !(original.indices instanceof Uint32Array) || original.indices.length !== metadata.triangleCount*3) { return false; }
-    if (options.version===1) { return !model.originalPreview; }
+    if (options.version===1) { return !model.originalPreview && !metadata.remeshing; }
     if (metadata.surfaceMode!==options.surfaceMode) { return false; }
+    if (options.surfaceMode!=='remesh' && metadata.remeshing) { return false; }
     if (options.surfaceMode==='original') { return metadata.reconstruction===null && !model.originalPreview; }
+    if (options.surfaceMode==='remesh') {
+      var remeshing=metadata.remeshing;
+      return Boolean(metadata.reconstruction===null && !model.originalPreview && remeshing && remeshing.version===1 &&
+        remeshing.method==='stl-parametrization' && remeshing.featureAngleDegrees===Math.min(options.remeshFeatureAngleDegrees,options.patchAngleDegrees) &&
+        Array.isArray(remeshing.surfaceCountsByPatch) &&
+        remeshing.surfaceCountsByPatch.length===model.faceIds.length &&
+        !remeshing.surfaceCountsByPatch.includes(undefined) &&
+        remeshing.surfaceCountsByPatch.every(function(count){return Number.isInteger(count) && count>0 && count<=512;}) &&
+        remeshing.surfaceCountsByPatch.reduce(function(sum,count){return sum+count;},0)===metadata.internalSurfaceCount);
+    }
     var reconstruction=metadata.reconstruction;
     return Boolean(model.originalPreview && validatePreview(original,model.faceIds).valid && reconstruction && reconstruction.version===1 &&
       reconstruction.toleranceM===options.reconstructionToleranceM && Number.isFinite(reconstruction.maximumDeviationM) && reconstruction.maximumDeviationM>=0 &&

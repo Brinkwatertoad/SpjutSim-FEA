@@ -60,6 +60,20 @@
       fill('stl-surface-mode','original');fill('stl-patch-angle','100');assert(doc.getElementById('stl-accept-button').disabled,'Changed grouping retained stale acceptance');click('stl-review-button');
       await wait(function(){return app.geometryReview&&app.geometryReview.geometry&&app.geometryReview.geometry.faceIds.length===1;});
       click('stl-cancel-button');assert(app.document.geometry===original,'Cancelled regroup changed assignment identity');
+      click('regroup-stl-button');await wait(function(){return app.geometryReview&&app.geometryReview.geometry;});
+      fill('stl-surface-mode','remesh');
+      assert(doc.getElementById('stl-reconstruction-tolerance').disabled&&doc.getElementById('stl-accept-button').disabled,
+        'Experimental remeshing retained a CAD deviation or stale acceptance');
+      assert(doc.getElementById('stl-reconstruction-tolerance-label').hidden,'Experimental remeshing displayed an inapplicable CAD deviation');
+      click('stl-review-button');await wait(function(){return app.geometryReview&&app.geometryReview.geometry;});
+      assert(app.geometryReview.geometry.sourceMetadata.remeshing&&doc.getElementById('stl-import-status').textContent.includes('does not recover smooth CAD'),
+        'Experimental remeshing was not explained in the review');
+      assert(doc.getElementById('stl-preview-surface-label').hidden,'Unchanged reference geometry advertised a reconstructed preview');
+      fill('stl-remesh-angle','40');assert(doc.getElementById('stl-accept-button').disabled,'Feature angle edit retained stale acceptance');
+      click('stl-review-button');await wait(function(){return app.geometryReview&&app.geometryReview.geometry;});
+      assert(app.geometryReview.geometry.importOptions.remeshFeatureAngleDegrees===40,'Feature angle did not reach the worker');
+      assert(app.geometryReview.geometry.faceIds.join()!==original.faceIds.join(),'Changing meshing mode retained stale assignment identity');
+      click('stl-cancel-button');assert(app.document.geometry===original,'Cancelled experimental review changed the installed analysis');
       status.textContent='Passed';status.dataset.result='passed';
     }catch(error){status.textContent=error.message;status.dataset.result='failed';}
   });
