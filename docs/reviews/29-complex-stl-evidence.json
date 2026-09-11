@@ -1,0 +1,430 @@
+{
+  "date": "2026-09-11",
+  "implementationBase": "811b668",
+  "status": "diagnostic experiments; production unchanged",
+  "source": {
+    "path": "tests/fixtures/stl/Better Vented Parametric Funnel.stl",
+    "sha256": "80ebe627b1483cf5832bb78566654db0885133ef96d2f821d009435413ed8c68",
+    "bytes": 6024763,
+    "triangleCount": 31426,
+    "vertexCount": 15711,
+    "userPatchCount": 17,
+    "nearPlanarRegions": 29623,
+    "probeLengthUnit": "mm"
+  },
+  "browser": "Chromium 152.0.7977.75",
+  "directSurfaceProductionGate": [
+    {
+      "name": "cube-binary.stl",
+      "importMs": 684.2000000029802,
+      "totalMs": 710.7000000029802,
+      "patches": 6,
+      "metadata": {
+        "version": 1,
+        "sha256": "751c6f675794a5891a9ee5533f820f0923a65e641a9a16f220a3c44634f47dd9",
+        "triangleCount": 12,
+        "internalSurfaceCount": 6,
+        "validation": {
+          "status": "valid",
+          "version": 1,
+          "intersectionCandidates": 54,
+          "triangleCount": 12
+        }
+      },
+      "statistics": {
+        "nodeCount": 35,
+        "elementCount": 12,
+        "boundaryTriangleCount": 48,
+        "boundaryElementCount": 12,
+        "minCharacteristicSizeM": 0.6871842709362768,
+        "maxCharacteristicSizeM": 1.4142135623730951,
+        "boundingBoxDiagonalM": 1.7320508075688772
+      },
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.3944349017016737,
+        "p05": 0.3944349017016738,
+        "median": 0.6855493984385791,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.3333333333333331,
+        "maximumEdgeRatio": 2.0579830217101063,
+        "warning": null
+      }
+    },
+    {
+      "name": "Better Vented Parametric Funnel.stl",
+      "ms": 21226.5,
+      "error": {
+        "code": "DEGENERATE_ELEMENTS",
+        "stage": "mesh",
+        "userMessage": "The generated mesh contains degenerate elements.",
+        "developerMessage": "Found 161 near-zero tet10 Jacobians.",
+        "recoverable": true
+      }
+    }
+  ],
+  "directSurfaceDiagnosticPreflight": [
+    {
+      "name": "cube-binary.stl",
+      "memory": {
+        "gmshVersion": "5.0.0",
+        "runtimeMode": "serial-local-embedded",
+        "capabilities": {
+          "openCascade": true,
+          "step": true,
+          "threads": false,
+          "sharedArrayBuffer": false,
+          "runtimeNetwork": false
+        },
+        "wasmMemoryBytes": 67108864
+      },
+      "preflight": {
+        "modelVersion": 1,
+        "classification": "likely-safe",
+        "nodeCount": 35,
+        "elementCount": 12,
+        "degreeOfFreedomCount": 105,
+        "adjacencyEdgeCount": 294,
+        "exactNnz": 5607,
+        "modeledPeakBytes": 67189572,
+        "estimatedPeakBytes": 100784358,
+        "wasmHeapCapBytes": 3758096384,
+        "safetyMultiplier": 1.5,
+        "deviceMemoryGiBHint": 8,
+        "exceedsWasmCap": false,
+        "requiresEightGiBConfirmation": false,
+        "allocations": {
+          "meshBytes": 1320,
+          "graphBytes": 4740,
+          "matrixValuesBytes": 44856,
+          "matrixIndexBytes": 22428,
+          "rowPointerBytes": 424,
+          "assemblyWorkBytes": 8880,
+          "solverWorkBytes": 6720,
+          "resultBytes": 9160,
+          "runtimeOverheadBytes": 67108864
+        },
+        "elementType": "tet10",
+        "quality": {
+          "metric": "gamma",
+          "minimum": 0.3944349017016737,
+          "p05": 0.3944349017016738,
+          "median": 0.6855493984385791,
+          "poorElementCount": 0,
+          "invertedElementCount": 0,
+          "nearZeroJacobianCount": 0,
+          "minimumJacobian": 0.3333333333333331,
+          "maximumEdgeRatio": 2.0579830217101063,
+          "warning": null,
+          "minimumLocalRelativeJacobian": 0.11785113019775781,
+          "localDegenerateCount": 0,
+          "productionGlobalDegenerateCount": 0
+        },
+        "constraintCount": 27,
+        "supportCount": 1,
+        "loadCount": 1,
+        "constraintStability": {
+          "status": "fully-constrained",
+          "rank": 6,
+          "constrainedModeCount": 6,
+          "freeModeCount": 0,
+          "coupledFreedomCount": 0,
+          "modes": [
+            {
+              "id": "Tx",
+              "status": "constrained"
+            },
+            {
+              "id": "Ty",
+              "status": "constrained"
+            },
+            {
+              "id": "Tz",
+              "status": "constrained"
+            },
+            {
+              "id": "Rx",
+              "status": "constrained"
+            },
+            {
+              "id": "Ry",
+              "status": "constrained"
+            },
+            {
+              "id": "Rz",
+              "status": "constrained"
+            }
+          ],
+          "tolerance": 1e-10,
+          "basis": "mesh",
+          "provisional": false,
+          "observationCount": 27,
+          "constrainedPointCount": 9
+        },
+        "warnings": []
+      },
+      "importMs": 707.6000000089407,
+      "totalMs": 747.6000000089407,
+      "patches": 6,
+      "metadata": {
+        "version": 1,
+        "sha256": "751c6f675794a5891a9ee5533f820f0923a65e641a9a16f220a3c44634f47dd9",
+        "triangleCount": 12,
+        "internalSurfaceCount": 6,
+        "validation": {
+          "status": "valid",
+          "version": 1,
+          "intersectionCandidates": 54,
+          "triangleCount": 12
+        }
+      },
+      "statistics": {
+        "nodeCount": 35,
+        "elementCount": 12,
+        "boundaryTriangleCount": 48,
+        "boundaryElementCount": 12,
+        "minCharacteristicSizeM": 0.6871842709362768,
+        "maxCharacteristicSizeM": 1.4142135623730951,
+        "boundingBoxDiagonalM": 1.7320508075688772
+      },
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.3944349017016737,
+        "p05": 0.3944349017016738,
+        "median": 0.6855493984385791,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.3333333333333331,
+        "maximumEdgeRatio": 2.0579830217101063,
+        "warning": null,
+        "minimumLocalRelativeJacobian": 0.11785113019775781,
+        "localDegenerateCount": 0,
+        "productionGlobalDegenerateCount": 0
+      }
+    },
+    {
+      "name": "Better Vented Parametric Funnel.stl",
+      "memory": {
+        "gmshVersion": "5.0.0",
+        "runtimeMode": "serial-local-embedded",
+        "capabilities": {
+          "openCascade": true,
+          "step": true,
+          "threads": false,
+          "sharedArrayBuffer": false,
+          "runtimeNetwork": false
+        },
+        "wasmMemoryBytes": 67108864
+      },
+      "preflight": {
+        "modelVersion": 1,
+        "classification": "likely-safe",
+        "nodeCount": 99232,
+        "elementCount": 50964,
+        "degreeOfFreedomCount": 297696,
+        "adjacencyEdgeCount": 1107603,
+        "exactNnz": 20829942,
+        "modeledPeakBytes": 365959180,
+        "estimatedPeakBytes": 548938770,
+        "wasmHeapCapBytes": 3758096384,
+        "safetyMultiplier": 1.5,
+        "deviceMemoryGiBHint": 8,
+        "exceedsWasmCap": false,
+        "requiresEightGiBConfirmation": false,
+        "allocations": {
+          "meshBytes": 4420128,
+          "graphBytes": 19537824,
+          "matrixValuesBytes": 166639536,
+          "matrixIndexBytes": 83319768,
+          "rowPointerBytes": 1190788,
+          "assemblyWorkBytes": 8880,
+          "solverWorkBytes": 19052544,
+          "resultBytes": 36135392,
+          "runtimeOverheadBytes": 67108864
+        },
+        "elementType": "tet10",
+        "quality": {
+          "metric": "gamma",
+          "minimum": 1.520778263874873e-09,
+          "p05": 0.000805041873754326,
+          "median": 0.2049060547821117,
+          "poorElementCount": 14738,
+          "invertedElementCount": 0,
+          "nearZeroJacobianCount": 0,
+          "minimumJacobian": 3.9267999989114025e-19,
+          "maximumEdgeRatio": 65268.634380639895,
+          "warning": "Some elements have low gamma quality.",
+          "minimumLocalRelativeJacobian": 4.549085140226395e-10,
+          "localDegenerateCount": 0,
+          "productionGlobalDegenerateCount": 161
+        },
+        "constraintCount": 5364,
+        "supportCount": 1,
+        "loadCount": 1,
+        "constraintStability": {
+          "status": "fully-constrained",
+          "rank": 6,
+          "constrainedModeCount": 6,
+          "freeModeCount": 0,
+          "coupledFreedomCount": 0,
+          "modes": [
+            {
+              "id": "Tx",
+              "status": "constrained"
+            },
+            {
+              "id": "Ty",
+              "status": "constrained"
+            },
+            {
+              "id": "Tz",
+              "status": "constrained"
+            },
+            {
+              "id": "Rx",
+              "status": "constrained"
+            },
+            {
+              "id": "Ry",
+              "status": "constrained"
+            },
+            {
+              "id": "Rz",
+              "status": "constrained"
+            }
+          ],
+          "tolerance": 1e-10,
+          "basis": "mesh",
+          "provisional": false,
+          "observationCount": 5364,
+          "constrainedPointCount": 1788
+        },
+        "warnings": [
+          "Some elements have low gamma quality."
+        ]
+      },
+      "importMs": 1444.2000000029802,
+      "totalMs": 21578.59999999404,
+      "patches": 17,
+      "metadata": {
+        "version": 1,
+        "sha256": "80ebe627b1483cf5832bb78566654db0885133ef96d2f821d009435413ed8c68",
+        "triangleCount": 31426,
+        "internalSurfaceCount": 17,
+        "validation": {
+          "status": "valid",
+          "version": 1,
+          "intersectionCandidates": 308946,
+          "triangleCount": 31426
+        }
+      },
+      "statistics": {
+        "nodeCount": 99232,
+        "elementCount": 50964,
+        "boundaryTriangleCount": 125704,
+        "boundaryElementCount": 31426,
+        "minCharacteristicSizeM": 4.000000000062981e-08,
+        "maxCharacteristicSizeM": 0.05483562844799082,
+        "boundingBoxDiagonalM": 0.13381106954942107
+      },
+      "quality": {
+        "metric": "gamma",
+        "minimum": 1.520778263874873e-09,
+        "p05": 0.000805041873754326,
+        "median": 0.2049060547821117,
+        "poorElementCount": 14738,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 3.9267999989114025e-19,
+        "maximumEdgeRatio": 65268.634380639895,
+        "warning": "Some elements have low gamma quality.",
+        "minimumLocalRelativeJacobian": 4.549085140226395e-10,
+        "localDegenerateCount": 0,
+        "productionGlobalDegenerateCount": 161
+      }
+    }
+  ],
+  "relaxedFiveDegreeRemeshing": [
+    {
+      "name": "cube-binary.stl",
+      "memory": {
+        "gmshVersion": "5.0.0",
+        "runtimeMode": "serial-local-embedded",
+        "capabilities": {
+          "openCascade": true,
+          "step": true,
+          "threads": false,
+          "sharedArrayBuffer": false,
+          "runtimeNetwork": false
+        },
+        "wasmMemoryBytes": 67108864
+      },
+      "volume": 1.0000000000000004,
+      "relativeVolumeChange": 4.440892098500626e-16,
+      "importMs": 728,
+      "totalMs": 874.4000000059605,
+      "patches": 6,
+      "metadata": {
+        "version": 1,
+        "sha256": "751c6f675794a5891a9ee5533f820f0923a65e641a9a16f220a3c44634f47dd9",
+        "triangleCount": 12,
+        "internalSurfaceCount": 8,
+        "validation": {
+          "status": "valid",
+          "version": 1,
+          "intersectionCandidates": 54,
+          "triangleCount": 12
+        }
+      },
+      "statistics": {
+        "nodeCount": 5725,
+        "elementCount": 3384,
+        "boundaryTriangleCount": 4720,
+        "boundaryElementCount": 1180,
+        "minCharacteristicSizeM": 0.07312658448170672,
+        "maxCharacteristicSizeM": 0.228190313784677,
+        "boundingBoxDiagonalM": 1.7320508075688772
+      },
+      "quality": {
+        "metric": "gamma",
+        "minimum": 0.3010853229346064,
+        "p05": 0.544486207596362,
+        "median": 0.802351215464158,
+        "poorElementCount": 0,
+        "invertedElementCount": 0,
+        "nearZeroJacobianCount": 0,
+        "minimumJacobian": 0.0004885658648603993,
+        "maximumEdgeRatio": 2.4256827606465636,
+        "warning": null
+      }
+    },
+    {
+      "name": "Better Vented Parametric Funnel.stl",
+      "ms": 37425.20000000298,
+      "error": {
+        "code": "MESH_EXTRACTION_FAILED",
+        "stage": "mesh",
+        "userMessage": "The generated mesh contains no required elements.",
+        "developerMessage": "No Gmsh type 11 elements were extracted.",
+        "recoverable": true
+      }
+    }
+  ],
+  "limitations": [
+    "Diagnostic retention temporarily bypassed the browser whole-model degeneracy rejection; not a production fix.",
+    "Native element-local criterion independently measured; native memory/topology preflight is not a solved or converged analysis.",
+    "Mesher WASM capacity excludes browser/JS memory.",
+    "Surface-remeshing experiment did not generate a volume mesh for the funnel."
+  ],
+  "scriptSha256": {
+    "probe-funnel.cjs": "b11a5500561a9cb7304847ad3bdc73e8a091e30fd71da4991b7d47001c4eb9b4",
+    "inspect-funnel.cjs": "46aace812b393d957f14e63dac1e42c5cd63d736b30927c4e9d204a5eaa306f0",
+    "preflight-funnel.cjs": "a66837135b966e26d7c5a32c7a658bcf78548b0a2933ed8b3d1267208d099570",
+    "funnel-angles.cjs": "18b959c845981cf706d5a522a190f9f8ff6217cd29c583205ee4b709b7cb3484",
+    "remesh-funnel.cjs": "73da128239310141ae4dd8f41eb4bc5d1c01465eeef7b020e4bb15f1a30b010e",
+    "inspect-funnel-mesh.cjs": "e44a11047656c8af8fc240fa96de89042f628ab40b18ba9e9bb3d8143d87df0d"
+  }
+}
