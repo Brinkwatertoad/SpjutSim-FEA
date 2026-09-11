@@ -1,0 +1,621 @@
+{
+  "recordedAtUtc": "2026-09-11T20:30:45.547337+00:00",
+  "scope": "Explicit local STL repair; measurements are procedural test cases, not estimates for arbitrary STL geometry.",
+  "pythonTestsPassed": 79,
+  "nativeTestsPassed": 8,
+  "runs": {
+    "file": {
+      "browser": "152.0.7977.75",
+      "configurationsPassed": 49,
+      "checks": [
+        {
+          "name": "stl-repair",
+          "status": "Passed",
+          "errors": [],
+          "evidence": null
+        },
+        {
+          "name": "stl-repair?fixture=gargoyle",
+          "status": "Passed",
+          "errors": [],
+          "evidence": null
+        },
+        {
+          "name": "stl-repair-workflow",
+          "status": "Passed",
+          "errors": [],
+          "evidence": {
+            "repair": {
+              "version": 1,
+              "method": "local-stl-repair",
+              "lengthUnit": "m",
+              "maxHoleDiameterRatio": 0.01,
+              "originalBoundingBoxM": {
+                "minM": [
+                  0,
+                  0,
+                  0
+                ],
+                "maxM": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "sourceDiagonalM": 1.7320508075688772,
+              "originalTriangleCount": 12,
+              "repairedTriangleCount": 12,
+              "removedDuplicateTriangles": 0,
+              "removedZeroAreaTriangles": 0,
+              "removedLooseTriangles": 0,
+              "flippedTriangles": 1,
+              "filledHoles": 0,
+              "addedTriangles": 0,
+              "maximumFilledHoleDiameterM": 0,
+              "before": {
+                "openEdges": 0,
+                "nonManifoldEdges": 0
+              },
+              "holeLimitDiagonalM": 1.7320508075688772,
+              "validation": {
+                "status": "valid",
+                "version": 1,
+                "intersectionCandidates": 54,
+                "triangleCount": 12
+              },
+              "repairedBoundingBoxM": {
+                "minM": [
+                  0,
+                  0,
+                  0
+                ],
+                "maxM": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "originalSha256": "902fcf5a645d8279381957c4b465cc13da2bf9a3680c32453093ef4375017c68",
+              "repairedSha256": "e9a5ff7d6af14b822fa0d63e34ff97c05effc593f0b7da1571f6941de8a65d3c"
+            },
+            "mesh": {
+              "nodeCount": 35,
+              "elementCount": 12,
+              "boundaryTriangleCount": 48,
+              "boundaryElementCount": 12,
+              "minCharacteristicSizeM": 0.6871842709362768,
+              "maxCharacteristicSizeM": 1.4142135623730951,
+              "boundingBoxDiagonalM": 1.7320508075688772
+            },
+            "minimumJacobian": 0.3333333333333333,
+            "cancellation": true,
+            "timeout": true,
+            "staleRepairRejected": true,
+            "gargoyleChecked": false
+          }
+        },
+        {
+          "name": "stl-repair-workflow?fixture=gargoyle",
+          "status": "Passed",
+          "errors": [],
+          "evidence": {
+            "repair": {
+              "version": 1,
+              "method": "local-stl-repair",
+              "lengthUnit": "m",
+              "maxHoleDiameterRatio": 0.01,
+              "originalBoundingBoxM": {
+                "minM": [
+                  0,
+                  0,
+                  0
+                ],
+                "maxM": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "sourceDiagonalM": 1.7320508075688772,
+              "originalTriangleCount": 12,
+              "repairedTriangleCount": 12,
+              "removedDuplicateTriangles": 0,
+              "removedZeroAreaTriangles": 0,
+              "removedLooseTriangles": 0,
+              "flippedTriangles": 1,
+              "filledHoles": 0,
+              "addedTriangles": 0,
+              "maximumFilledHoleDiameterM": 0,
+              "before": {
+                "openEdges": 0,
+                "nonManifoldEdges": 0
+              },
+              "holeLimitDiagonalM": 1.7320508075688772,
+              "validation": {
+                "status": "valid",
+                "version": 1,
+                "intersectionCandidates": 54,
+                "triangleCount": 12
+              },
+              "repairedBoundingBoxM": {
+                "minM": [
+                  0,
+                  0,
+                  0
+                ],
+                "maxM": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "originalSha256": "902fcf5a645d8279381957c4b465cc13da2bf9a3680c32453093ef4375017c68",
+              "repairedSha256": "e9a5ff7d6af14b822fa0d63e34ff97c05effc593f0b7da1571f6941de8a65d3c"
+            },
+            "mesh": {
+              "nodeCount": 35,
+              "elementCount": 12,
+              "boundaryTriangleCount": 48,
+              "boundaryElementCount": 12,
+              "minCharacteristicSizeM": 0.6871842709362768,
+              "maxCharacteristicSizeM": 1.4142135623730951,
+              "boundingBoxDiagonalM": 1.7320508075688772
+            },
+            "minimumJacobian": 0.3333333333333333,
+            "cancellation": true,
+            "timeout": true,
+            "staleRepairRejected": true,
+            "gargoyleChecked": true
+          }
+        },
+        {
+          "name": "stl-mesh-solve?surfaceMode=original&repair=1",
+          "status": "Passed",
+          "errors": [],
+          "evidence": {
+            "cube": {
+              "displacementM": 1.0000000012516834e-06,
+              "stressPa": 1000.0000026285716,
+              "equilibrium": 3.2420788695681206e-10
+            },
+            "curved": [
+              {
+                "segments": 16,
+                "preset": "coarse",
+                "surfaceMode": "original",
+                "elementCount": 57,
+                "displacementRelativeError": 9.675125145491847e-10,
+                "stressRelativeError": 2.1532435834359376e-09,
+                "facetedArea": 0.7653668363416362,
+                "displacementM": 1.3065630146027694e-06,
+                "expectedM": 1.3065630133386532e-06,
+                "sourceAreaDeficit": 0.025504677740983417,
+                "equilibrium": 1.2481756900204006e-10
+              },
+              {
+                "segments": 32,
+                "preset": "coarse",
+                "surfaceMode": "original",
+                "elementCount": 119,
+                "displacementRelativeError": 1.1478835659772813e-09,
+                "stressRelativeError": 3.965654249427075e-09,
+                "facetedArea": 0.7803612594167166,
+                "displacementM": 1.281457772385237e-06,
+                "expectedM": 1.2814577709142726e-06,
+                "sourceAreaDeficit": 0.00641318533130153,
+                "equilibrium": 1.4866065532670843e-10
+              },
+              {
+                "segments": 64,
+                "preset": "coarse",
+                "surfaceMode": "original",
+                "elementCount": 239,
+                "displacementRelativeError": 7.866303164405508e-10,
+                "stressRelativeError": 2.6950226494903973e-09,
+                "facetedArea": 0.7841371103709776,
+                "displacementM": 1.2752871756235683e-06,
+                "expectedM": 1.275287174620389e-06,
+                "sourceAreaDeficit": 0.001605622581310473,
+                "equilibrium": 8.681150569946613e-11
+              }
+            ]
+          }
+        },
+        {
+          "name": "stl-large?repair=1",
+          "status": "Passed",
+          "errors": [],
+          "evidence": [
+            {
+              "operation": "repair",
+              "repairMs": 20980.5,
+              "report": {
+                "version": 1,
+                "method": "local-stl-repair",
+                "lengthUnit": "m",
+                "maxHoleDiameterRatio": 0.01,
+                "originalBoundingBoxM": {
+                  "minM": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "maxM": [
+                    1,
+                    1,
+                    1
+                  ]
+                },
+                "sourceDiagonalM": 1.7320508075688772,
+                "originalTriangleCount": 200000,
+                "repairedTriangleCount": 200000,
+                "removedDuplicateTriangles": 0,
+                "removedZeroAreaTriangles": 0,
+                "removedLooseTriangles": 0,
+                "flippedTriangles": 1,
+                "filledHoles": 0,
+                "addedTriangles": 0,
+                "maximumFilledHoleDiameterM": 0,
+                "before": {
+                  "openEdges": 0,
+                  "nonManifoldEdges": 0
+                },
+                "holeLimitDiagonalM": 1.7320508075688772,
+                "validation": {
+                  "status": "valid",
+                  "version": 1,
+                  "intersectionCandidates": 1731851,
+                  "triangleCount": 200000
+                },
+                "repairedBoundingBoxM": {
+                  "minM": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "maxM": [
+                    1,
+                    1,
+                    1
+                  ]
+                },
+                "originalSha256": "7d60e201b17f2d3b5abe2e3d3c26bb8aa3b2db29946e6f8e8ba25ea55e64b52c",
+                "repairedSha256": "37361330275f5c66770b98ca9441d6e106eb068dde2b666d1a96439644095651"
+              }
+            },
+            {
+              "mode": "original",
+              "triangles": 200000,
+              "importMs": 19804,
+              "previewBytes": 26412336,
+              "mesherWasmBytes": 67108864
+            },
+            {
+              "mode": "reconstruct",
+              "triangles": 200000,
+              "importMs": 20424.90000000596,
+              "previewBytes": 26663364,
+              "mesherWasmBytes": 67108864
+            },
+            {
+              "meshMs": 20914.89999999106,
+              "nodes": 5901,
+              "elements": 3530,
+              "minimumJacobian": 0.00047279511329354997
+            }
+          ]
+        }
+      ]
+    },
+    "http": {
+      "browser": "152.0.7977.75",
+      "configurationsPassed": 7,
+      "checks": [
+        {
+          "name": "stl-repair-workflow",
+          "status": "Passed",
+          "errors": [],
+          "evidence": {
+            "repair": {
+              "version": 1,
+              "method": "local-stl-repair",
+              "lengthUnit": "m",
+              "maxHoleDiameterRatio": 0.01,
+              "originalBoundingBoxM": {
+                "minM": [
+                  0,
+                  0,
+                  0
+                ],
+                "maxM": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "sourceDiagonalM": 1.7320508075688772,
+              "originalTriangleCount": 12,
+              "repairedTriangleCount": 12,
+              "removedDuplicateTriangles": 0,
+              "removedZeroAreaTriangles": 0,
+              "removedLooseTriangles": 0,
+              "flippedTriangles": 1,
+              "filledHoles": 0,
+              "addedTriangles": 0,
+              "maximumFilledHoleDiameterM": 0,
+              "before": {
+                "openEdges": 0,
+                "nonManifoldEdges": 0
+              },
+              "holeLimitDiagonalM": 1.7320508075688772,
+              "validation": {
+                "status": "valid",
+                "version": 1,
+                "intersectionCandidates": 54,
+                "triangleCount": 12
+              },
+              "repairedBoundingBoxM": {
+                "minM": [
+                  0,
+                  0,
+                  0
+                ],
+                "maxM": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "originalSha256": "902fcf5a645d8279381957c4b465cc13da2bf9a3680c32453093ef4375017c68",
+              "repairedSha256": "e9a5ff7d6af14b822fa0d63e34ff97c05effc593f0b7da1571f6941de8a65d3c"
+            },
+            "mesh": {
+              "nodeCount": 35,
+              "elementCount": 12,
+              "boundaryTriangleCount": 48,
+              "boundaryElementCount": 12,
+              "minCharacteristicSizeM": 0.6871842709362768,
+              "maxCharacteristicSizeM": 1.4142135623730951,
+              "boundingBoxDiagonalM": 1.7320508075688772
+            },
+            "minimumJacobian": 0.3333333333333333,
+            "cancellation": true,
+            "timeout": true,
+            "staleRepairRejected": true,
+            "gargoyleChecked": false
+          }
+        },
+        {
+          "name": "stl-repair-workflow?fixture=gargoyle",
+          "status": "Passed",
+          "errors": [],
+          "evidence": {
+            "repair": {
+              "version": 1,
+              "method": "local-stl-repair",
+              "lengthUnit": "m",
+              "maxHoleDiameterRatio": 0.01,
+              "originalBoundingBoxM": {
+                "minM": [
+                  0,
+                  0,
+                  0
+                ],
+                "maxM": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "sourceDiagonalM": 1.7320508075688772,
+              "originalTriangleCount": 12,
+              "repairedTriangleCount": 12,
+              "removedDuplicateTriangles": 0,
+              "removedZeroAreaTriangles": 0,
+              "removedLooseTriangles": 0,
+              "flippedTriangles": 1,
+              "filledHoles": 0,
+              "addedTriangles": 0,
+              "maximumFilledHoleDiameterM": 0,
+              "before": {
+                "openEdges": 0,
+                "nonManifoldEdges": 0
+              },
+              "holeLimitDiagonalM": 1.7320508075688772,
+              "validation": {
+                "status": "valid",
+                "version": 1,
+                "intersectionCandidates": 54,
+                "triangleCount": 12
+              },
+              "repairedBoundingBoxM": {
+                "minM": [
+                  0,
+                  0,
+                  0
+                ],
+                "maxM": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "originalSha256": "902fcf5a645d8279381957c4b465cc13da2bf9a3680c32453093ef4375017c68",
+              "repairedSha256": "e9a5ff7d6af14b822fa0d63e34ff97c05effc593f0b7da1571f6941de8a65d3c"
+            },
+            "mesh": {
+              "nodeCount": 35,
+              "elementCount": 12,
+              "boundaryTriangleCount": 48,
+              "boundaryElementCount": 12,
+              "minCharacteristicSizeM": 0.6871842709362768,
+              "maxCharacteristicSizeM": 1.4142135623730951,
+              "boundingBoxDiagonalM": 1.7320508075688772
+            },
+            "minimumJacobian": 0.3333333333333333,
+            "cancellation": true,
+            "timeout": true,
+            "staleRepairRejected": true,
+            "gargoyleChecked": true
+          }
+        },
+        {
+          "name": "stl-mesh-solve?surfaceMode=original&repair=1",
+          "status": "Passed",
+          "errors": [],
+          "evidence": {
+            "cube": {
+              "displacementM": 1.0000000012516834e-06,
+              "stressPa": 1000.0000026285716,
+              "equilibrium": 3.2420788695681206e-10
+            },
+            "curved": [
+              {
+                "segments": 16,
+                "preset": "coarse",
+                "surfaceMode": "original",
+                "elementCount": 57,
+                "displacementRelativeError": 9.675125145491847e-10,
+                "stressRelativeError": 2.1532435834359376e-09,
+                "facetedArea": 0.7653668363416362,
+                "displacementM": 1.3065630146027694e-06,
+                "expectedM": 1.3065630133386532e-06,
+                "sourceAreaDeficit": 0.025504677740983417,
+                "equilibrium": 1.2481756900204006e-10
+              },
+              {
+                "segments": 32,
+                "preset": "coarse",
+                "surfaceMode": "original",
+                "elementCount": 119,
+                "displacementRelativeError": 1.1478835659772813e-09,
+                "stressRelativeError": 3.965654249427075e-09,
+                "facetedArea": 0.7803612594167166,
+                "displacementM": 1.281457772385237e-06,
+                "expectedM": 1.2814577709142726e-06,
+                "sourceAreaDeficit": 0.00641318533130153,
+                "equilibrium": 1.4866065532670843e-10
+              },
+              {
+                "segments": 64,
+                "preset": "coarse",
+                "surfaceMode": "original",
+                "elementCount": 239,
+                "displacementRelativeError": 7.866303164405508e-10,
+                "stressRelativeError": 2.6950226494903973e-09,
+                "facetedArea": 0.7841371103709776,
+                "displacementM": 1.2752871756235683e-06,
+                "expectedM": 1.275287174620389e-06,
+                "sourceAreaDeficit": 0.001605622581310473,
+                "equilibrium": 8.681150569946613e-11
+              }
+            ]
+          }
+        },
+        {
+          "name": "stl-large?repair=1",
+          "status": "Passed",
+          "errors": [],
+          "evidence": [
+            {
+              "operation": "repair",
+              "repairMs": 20759.734999999404,
+              "report": {
+                "version": 1,
+                "method": "local-stl-repair",
+                "lengthUnit": "m",
+                "maxHoleDiameterRatio": 0.01,
+                "originalBoundingBoxM": {
+                  "minM": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "maxM": [
+                    1,
+                    1,
+                    1
+                  ]
+                },
+                "sourceDiagonalM": 1.7320508075688772,
+                "originalTriangleCount": 200000,
+                "repairedTriangleCount": 200000,
+                "removedDuplicateTriangles": 0,
+                "removedZeroAreaTriangles": 0,
+                "removedLooseTriangles": 0,
+                "flippedTriangles": 1,
+                "filledHoles": 0,
+                "addedTriangles": 0,
+                "maximumFilledHoleDiameterM": 0,
+                "before": {
+                  "openEdges": 0,
+                  "nonManifoldEdges": 0
+                },
+                "holeLimitDiagonalM": 1.7320508075688772,
+                "validation": {
+                  "status": "valid",
+                  "version": 1,
+                  "intersectionCandidates": 1731851,
+                  "triangleCount": 200000
+                },
+                "repairedBoundingBoxM": {
+                  "minM": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "maxM": [
+                    1,
+                    1,
+                    1
+                  ]
+                },
+                "originalSha256": "7d60e201b17f2d3b5abe2e3d3c26bb8aa3b2db29946e6f8e8ba25ea55e64b52c",
+                "repairedSha256": "37361330275f5c66770b98ca9441d6e106eb068dde2b666d1a96439644095651"
+              }
+            },
+            {
+              "mode": "original",
+              "triangles": 200000,
+              "importMs": 20390.280000001192,
+              "previewBytes": 26412336,
+              "mesherWasmBytes": 67108864
+            },
+            {
+              "mode": "reconstruct",
+              "triangles": 200000,
+              "importMs": 21000.420000001788,
+              "previewBytes": 26663364,
+              "mesherWasmBytes": 67108864
+            },
+            {
+              "meshMs": 20912.490000009537,
+              "nodes": 5901,
+              "elements": 3530,
+              "minimumJacobian": 0.00047279511329354997
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "originalDownload": {
+    "filename": "inconsistent.stl",
+    "bytes": 1063,
+    "sha256": "902fcf5a645d8279381957c4b465cc13da2bf9a3680c32453093ef4375017c68",
+    "byteForByteMatch": true
+  },
+  "suppliedGargoyle": {
+    "bytes": 3308784,
+    "triangles": 66174,
+    "result": "STL_REPAIR_UNSUPPORTED",
+    "remainingEdgeConnectedComponents": [
+      41062,
+      13936,
+      11174
+    ],
+    "installed": false,
+    "sourceModified": false,
+    "redistributed": false
+  }
+}

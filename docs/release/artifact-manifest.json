@@ -109,7 +109,7 @@
         },
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "6d201b8d99b31c29bd97858602a01f3c034cde3effafe5b625bfef8757003e41"
+          "sha256": "e63a4414bb1c31c554cad1e721c1839ab907369361dbb41957ddef4ca5640723"
         }
       ],
       "build_recipe": {
@@ -151,7 +151,7 @@
       "source_files": [
         {
           "path": "workers/mesher-worker.js",
-          "sha256": "0ca49aaec872131d9ca29767fe8e4070f049aaff7e10b5b9f37fad6bbaa07c9d"
+          "sha256": "65e37ace4f0c0da2c6bbf00c3cadb9a1fee0be2fbf452891db3873569a98f891"
         },
         {
           "path": "workers/solver-worker.js",
@@ -159,7 +159,7 @@
         },
         {
           "path": "workers/stl-import.js",
-          "sha256": "332de9a423908507e5a9f813205d62208a86bdd72ee7e2015b51f0df9ee95ede"
+          "sha256": "55af32c0906c5bc9169c906d0c29c70c8025ff36a4e73698bf3ec25ebd6b08d7"
         },
         {
           "path": "workers/stl-reconstruction.js",
@@ -168,11 +168,15 @@
         {
           "path": "workers/stl-remesh.js",
           "sha256": "c44baaf2c25c80ee35a3c1598f57d62b8b1f498c941502931365f27b1aa86362"
+        },
+        {
+          "path": "workers/stl-repair.js",
+          "sha256": "ab6de0beadaea550a224321e7241edf0554dbaf7f9cd844b1deab9e32dfa357b"
         }
       ],
       "build_recipe": {
         "path": "tools/build-local-runtime.py",
-        "sha256": "6d201b8d99b31c29bd97858602a01f3c034cde3effafe5b625bfef8757003e41"
+        "sha256": "e63a4414bb1c31c554cad1e721c1839ab907369361dbb41957ddef4ca5640723"
       },
       "modifications": "First-party workers packaged as classic JavaScript source strings.",
       "notices": [
@@ -349,7 +353,7 @@
       "source_files": [
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "6d201b8d99b31c29bd97858602a01f3c034cde3effafe5b625bfef8757003e41"
+          "sha256": "e63a4414bb1c31c554cad1e721c1839ab907369361dbb41957ddef4ca5640723"
         }
       ],
       "build_recipe": {
@@ -834,7 +838,7 @@
     },
     {
       "path": "web/generated/local-runtime/mesher-worker-source.js",
-      "sha256": "3a8ad0bcbb3517f46d99654c517154be14cfa6f203f1d98363d6cd24bc1ea7e9",
+      "sha256": "5f9d9149256bc72db680e2e4adf4d65ccf2d49480dda7cf277f08b4d19a75950",
       "components": [
         "workers"
       ]

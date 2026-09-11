@@ -96,7 +96,9 @@ The capacity follow-up raises the triangle cap to 200,000. The 16 MiB,
 remain. See [measured capacity](../reviews/29-stl-import-usability.md). Original-surface mode counts selectable
 patches against the surface bound instead of requiring one geometric surface per
 near-planar facet group. Input solid/topology/intersection validation is unchanged.
-No welding, hole filling, winding reversal or general mesh repair is performed.
+These simulation-surface modes perform no repairs. A separate, explicit
+[local repair workflow](stl-surface-repair.md) can prepare a validated candidate
+source before these modes run.
 
 Browser mesh degeneracy now matches the existing native Tet4/Tet10 criterion:
 `abs(det J) <= 1e-12 * longestCornerEdge³`. Tet10 uses the same four quadrature

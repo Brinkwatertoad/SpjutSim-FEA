@@ -272,9 +272,11 @@ surfaces. Material and opaque surface IDs are retained.
 
 Binary and ASCII STL require explicit m/mm/cm/in/ft units and a dimensions/patch
 review before installation. Import supports one closed, connected, consistently
-outward-wound, non-self-intersecting manifold solid. It rejects defects without
-welding, hole filling, or winding reversal. Connected angle-based patches default
-to 40° (adjustable 1–179°). Choosing units automatically previews the original
+outward-wound, non-self-intersecting manifold solid. Normal import rejects defects
+without changing the file. For local topology or winding errors it offers **Try
+surface repair**, followed by a repaired-model preview and a change report. Review
+that candidate before importing it. Connected angle-based patches default to 40°
+(adjustable 1–179°). Choosing units automatically previews the original
 triangles; confirm the dimensions, then select **Import model**. Open **Advanced**
 to change grouping or choose **Reconstruct simple surfaces** with a maximum
 deviation. Reconstruction currently merges
@@ -304,7 +306,23 @@ Detailed models (25,000+ triangles) show meshing-time advice during review and
 beside the mesh controls. This is qualitative guidance, not an estimated finish
 time: shape, mesh settings and hardware matter. Begin with Coarse and compare
 refinement; keeping original triangles can still produce a dense mesh.
-General STL repair, shells, multiple solids, and OBJ remain deferred.
+Repair can remove duplicate, zero-area or isolated stray triangles, correct
+winding and fill small flat convex holes within the selected limit (default 1%
+of the remaining part diagonal; 0 disables filling). It never moves vertices or
+joins/discards components. The repaired source must pass every solid check.
+**Discard repair** returns to the original pending source; **Download original
+STL** preserves access to the original bytes after installation via import
+settings. General shape rebuilding, intersecting/disconnected-surface repair,
+shells, multiple solids, and OBJ remain deferred.
+
+Open `tests/browser/stl-repair-tests.html` for local repair, numerical and refusal
+checks, and `stl-repair-workflow-tests.html` for the real worker/UI flow,
+source preservation, cancellation, deadlines and fresh-worker meshing. Append
+`?fixture=gargoyle` to either for the supplied file's remaining-component refusal.
+`stl-mesh-solve-tests.html?surfaceMode=original&repair=1` checks an analytical solve
+after winding repair; `stl-large-tests.html?repair=1` exercises repair at 200,000
+triangles. See the [repair design](docs/designs/stl-surface-repair.md) and
+[repair evidence](docs/reviews/29-stl-surface-repair.md).
 
 Open `tests/browser/stl-large-tests.html` to check a procedural 200,000-triangle
 cube in original/reconstruction modes and mesh the recovered surfaces in a fresh

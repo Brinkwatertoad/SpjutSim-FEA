@@ -8,7 +8,8 @@
   var viewport = new api.ViewportController(document.getElementById('viewport'));
   var replacementMigrationUI = new api.ReplacementMigrationUI();
   var stlImportUI = new api.StlImportUI(app, {
-    review: reviewStl, change: invalidateStlReview, cancel: cancelStlReview, accept: acceptStlReview
+    review: reviewStl, change: invalidateStlReview, cancel: cancelStlReview, accept: acceptStlReview,
+    repair: repairStl, discardRepair: discardStlRepair
   });
   ui.setViewportController(viewport);
   viewport.probePositionHandler=function(point){ui.positionProbe(point);};
@@ -126,6 +127,24 @@
     }).catch(function (error) {
       if (activeImport === client && app.geometryReview === review) { stlImportUI.reportFailure(error); }
     }).finally(function () { client.dispose(); if (activeImport === client) { activeImport = null; } });
+  }
+  function repairStl(options,ratio) {
+    var review=app.geometryReview;if(!review||review.source.repair)return;
+    if(activeImport){activeImport.cancel();activeImport=null;}
+    var generation;
+    try{generation=app.setGeometryReviewOptions(options);}catch(error){stlImportUI.reportFailure(error);return;}
+    var client=new api.MesherClient({onProgress:function(progress){if(activeImport===client)stlImportUI.report(progress.userMessage);}});
+    activeImport=client;
+    client.repairStl(Object.assign({},review.source,{importOptions:options,repairOptions:{version:1,maxHoleDiameterRatio:ratio}})).then(function(result){
+      if(activeImport===client&&app.completeGeometryRepair(review,generation,result)){
+        activeImport=null;client.dispose();stlImportUI.review();
+      }
+    }).catch(function(error){if(activeImport===client&&app.geometryReview===review)stlImportUI.reportFailure(error);})
+      .finally(function(){client.dispose();if(activeImport===client)activeImport=null;});
+  }
+  function discardStlRepair() {
+    if(activeImport){activeImport.cancel();activeImport=null;}
+    if(app.discardGeometryRepair())stlImportUI.review();
   }
   function cancelStlReview() {
     if (activeImport) { activeImport.cancel(); activeImport = null; }

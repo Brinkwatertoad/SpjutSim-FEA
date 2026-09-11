@@ -353,6 +353,15 @@
     </details>
     <p id="stl-meshing-advice" class="fea-stl-advice" hidden></p>
     <p id="stl-import-status" role="status" aria-live="polite"></p>
+    <section id="stl-repair-panel" hidden aria-labelledby="stl-repair-title">
+      <h3 id="stl-repair-title">Try local surface repair</h3>
+      <p>Remove duplicate, zero-area or isolated stray triangles and correct face directions. Small flat convex holes can also be filled. The original file is preserved, and you review the repaired model before importing.</p>
+      <label>Maximum hole width (% of part diagonal) <input id="stl-repair-hole-limit" type="number" min="0" max="5" step="0.1" value="1" aria-describedby="stl-repair-hole-help"></label>
+      <p id="stl-repair-hole-help">The size limit uses the remaining part after cleanup. Use 0 to leave holes open. Larger or curved holes, intersecting surfaces and disconnected parts need repair in the source application.</p>
+      <button id="stl-repair-button" type="button">Try surface repair</button>
+    </section>
+    <p id="stl-repair-summary" class="fea-stl-advice" hidden></p>
+    <div class="fea-stl-options"><button id="stl-discard-repair-button" type="button" hidden>Discard repair</button><button id="stl-download-original-button" type="button" hidden>Download original STL</button></div>
     <button id="stl-use-original-button" type="button" hidden>Use original triangles instead</button>
     <details id="stl-error-details" hidden><summary>Technical details</summary><code id="stl-error-code"></code></details>
     <p id="stl-remap-consequence">Changing units, grouping or surfaces requires reviewing existing supports and loads in the next step. Cancel preserves the current model and setup.</p>

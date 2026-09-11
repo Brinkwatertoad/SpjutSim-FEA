@@ -33,6 +33,14 @@
     }
     var source=denseCube(),options={version:2,lengthUnit:'m',patchAngleDegrees:40,normalization:'none',surfaceMode:'original',reconstructionToleranceM:null};
     var evidence=[];
+    if(new URLSearchParams(location.search).get('repair')==='1'){
+      var view=new DataView(source);for(var axis=0;axis<3;axis++){var value=view.getFloat32(108+axis*4,true);view.setFloat32(108+axis*4,view.getFloat32(120+axis*4,true),true);view.setFloat32(120+axis*4,value,true);}
+      client=new api.MesherClient();var repairStarted=performance.now();
+      var repaired=await client.repairStl({sourceName:'dense.stl',sourceFormat:'stl',sourceBytes:source,importOptions:options,repairOptions:{version:1,maxHoleDiameterRatio:.01}});
+      assert(repaired.report.flippedTriangles===1&&repaired.report.repairedTriangleCount===200000,'Large-source repair changed triangle count or lost its winding correction');
+      evidence.push({operation:'repair',repairMs:performance.now()-repairStarted,report:repaired.report});source=repaired.sourceBytes;client.dispose();
+    }
+
     for(var mode of ['original','reconstruct']){
       options.surfaceMode=mode;options.reconstructionToleranceM=mode==='reconstruct'?.001:null;
       client=new api.MesherClient();var started=performance.now();

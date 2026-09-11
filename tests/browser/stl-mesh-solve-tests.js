@@ -54,7 +54,13 @@
     return location;
   }
 
-  fetch('../fixtures/stl/cube-binary.stl').then(function (response) { return response.arrayBuffer(); }).then(function (bytes) {
+  fetch('../fixtures/stl/cube-binary.stl').then(function (response) { return response.arrayBuffer(); }).then(async function (bytes) {
+    if(new URLSearchParams(location.search).get('repair')==='1'){
+      var view=new DataView(bytes);
+      for(var axis=0;axis<3;axis++){var value=view.getFloat32(108+axis*4,true);view.setFloat32(108+axis*4,view.getFloat32(120+axis*4,true),true);view.setFloat32(120+axis*4,value,true);}
+      var repaired=await mesher.repairStl({sourceName:'cube-binary.stl',sourceFormat:'stl',sourceBytes:bytes,importOptions:importOptions,repairOptions:{version:1,maxHoleDiameterRatio:.01}});
+      assert(repaired.report.flippedTriangles===1,'Analytical cube repair did not correct the inverted face');bytes=repaired.sourceBytes;
+    }
     sourceBytes = bytes;
     controller.beginGeometryImport('stl/cube-binary.stl');
     return mesher.importGeometry({ geometryId: 'cube-wasm-slice', sourceName: 'cube-binary.stl', sourceFormat: 'stl', importOptions:importOptions, sourceBytes: bytes });

@@ -48,7 +48,10 @@ def read_worker_source(source_root: Path, kind: str, filename: str) -> tuple[str
         remesh = source_root / 'stl-remesh.js'
         if not remesh.is_file():
             raise ValueError(f'STL remeshing helper is unavailable: {remesh}')
-        source = '\n'.join(path.read_text(encoding='utf-8') for path in (helper, reconstruction, remesh)) + '\n' + source
+        repair = source_root / 'stl-repair.js'
+        if not repair.is_file():
+            raise ValueError(f'STL repair helper is unavailable: {repair}')
+        source = '\n'.join(path.read_text(encoding='utf-8') for path in (helper, reconstruction, remesh, repair)) + '\n' + source
     return source, hashlib.sha256(source.encode('utf-8')).hexdigest()
 
 

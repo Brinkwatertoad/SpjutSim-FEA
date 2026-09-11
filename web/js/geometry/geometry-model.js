@@ -44,7 +44,7 @@
    */
 
   function validFiniteVector(value) {
-    return Array.isArray(value) && value.length === 3 && value.every(Number.isFinite);
+    return Array.isArray(value) && value.length === 3 && !value.includes(undefined) && value.every(Number.isFinite);
   }
 
   function validation(valid, reason) {
@@ -240,6 +240,44 @@
     return preview.valid ? validation(true) : preview;
   }
 
+  function validateStlRepairOptions(options) {
+    return Boolean(options && options.version===1 && Number.isFinite(options.maxHoleDiameterRatio) &&
+      options.maxHoleDiameterRatio>=0 && options.maxHoleDiameterRatio<=.05);
+  }
+  function validateStlRepairReport(report) {
+    if(!report||report.version!==1||report.method!=='local-stl-repair'||
+      !['m','mm','cm','in','ft'].includes(report.lengthUnit)||!validateStlRepairOptions(report)||
+      !/^[a-f0-9]{64}$/.test(report.originalSha256||'')||!/^[a-f0-9]{64}$/.test(report.repairedSha256||''))return false;
+    var counts=['originalTriangleCount','repairedTriangleCount','removedDuplicateTriangles','removedZeroAreaTriangles','removedLooseTriangles','flippedTriangles','filledHoles','addedTriangles'];
+    if(counts.some(function(key){return !Number.isInteger(report[key])||report[key]<0||report[key]>200000;}))return false;
+    var retained=report.originalTriangleCount-report.removedDuplicateTriangles-report.removedZeroAreaTriangles-report.removedLooseTriangles;
+    return report.originalTriangleCount>0&&report.repairedTriangleCount>0&&retained>0&&
+      validateBoundingBoxM(report.originalBoundingBoxM).valid&&validateBoundingBoxM(report.repairedBoundingBoxM).valid&&
+      retained+report.addedTriangles===report.repairedTriangleCount&&report.flippedTriangles<=retained&&
+      report.filledHoles<=128&&report.addedTriangles>=report.filledHoles&&report.addedTriangles<=30*report.filledHoles&&
+      Number.isFinite(report.sourceDiagonalM)&&report.sourceDiagonalM>=1e-9&&report.sourceDiagonalM<=1e6&&
+      Number.isFinite(report.maximumFilledHoleDiameterM)&&report.maximumFilledHoleDiameterM>=0&&
+      Number.isFinite(report.holeLimitDiagonalM)&&report.holeLimitDiagonalM>=1e-9&&report.holeLimitDiagonalM<=report.sourceDiagonalM&&
+      report.maximumFilledHoleDiameterM<=report.holeLimitDiagonalM*report.maxHoleDiameterRatio&&
+      (report.filledHoles>0?report.maximumFilledHoleDiameterM>0&&report.maxHoleDiameterRatio>0:report.maximumFilledHoleDiameterM===0)&&
+      report.validation&&report.validation.version===1&&report.validation.status==='valid'&&
+      report.validation.triangleCount===report.repairedTriangleCount&&Number.isInteger(report.validation.intersectionCandidates)&&
+      report.validation.intersectionCandidates>=0&&report.validation.intersectionCandidates<=2000000;
+  }
+  function validateStlRepairResult(result) {
+    return Boolean(result&&result.version===1&&result.sourceBytes instanceof ArrayBuffer&&
+      result.sourceBytes.byteLength>0&&result.sourceBytes.byteLength<=16*1024*1024&&validateStlRepairReport(result.report));
+  }
+  function validateStlRepairSource(source,geometry) {
+    if(!source||typeof source!=='object'||Array.isArray(source))return false;
+    if(source.repair===undefined)return true;
+    var repair=source.repair;
+    return Boolean(source.sourceFormat==='stl'&&repair&&repair.version===1&&repair.originalSourceBytes instanceof ArrayBuffer&&
+      repair.originalSourceBytes.byteLength>0&&repair.originalSourceBytes.byteLength<=16*1024*1024&&
+      validateStlRepairReport(repair.report)&&(!geometry||geometry.sourceMetadata&&geometry.sourceMetadata.sha256===repair.report.repairedSha256&&
+      geometry.sourceMetadata.triangleCount===repair.report.repairedTriangleCount));
+  }
+
   function createGeometryId() {
     return 'geometry-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
   }
@@ -254,4 +292,8 @@
   root.SpjutsimFEA.validatePreview = validatePreview;
   root.SpjutsimFEA.validateGeometryModel = validateGeometryModel;
   root.SpjutsimFEA.createGeometryId = createGeometryId;
+  root.SpjutsimFEA.validateStlRepairOptions = validateStlRepairOptions;
+  root.SpjutsimFEA.validateStlRepairReport = validateStlRepairReport;
+  root.SpjutsimFEA.validateStlRepairResult = validateStlRepairResult;
+  root.SpjutsimFEA.validateStlRepairSource = validateStlRepairSource;
 }(globalThis));

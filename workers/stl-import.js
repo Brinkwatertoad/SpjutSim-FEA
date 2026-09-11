@@ -4,7 +4,7 @@
   function createStlImport() {
     var scales = { m: 1, mm: 0.001, cm: 0.01, in: 0.0254, ft: 0.3048 };
     function fail(code, message) { var error = new Error(message); error.code = code; throw error; }
-    function parse(bytes, options) {
+    function readUnvalidated(bytes, options) {
       if (!options || !(options.version === 1 || options.version === 2 &&
           (options.surfaceMode === 'original' && options.reconstructionToleranceM === null ||
            options.surfaceMode === 'remesh' && options.reconstructionToleranceM === null && Number.isFinite(options.remeshFeatureAngleDegrees) && options.remeshFeatureAngleDegrees >= 1 && options.remeshFeatureAngleDegrees <= 40 ||
@@ -92,6 +92,13 @@
       var positions = unique.slice(0, vertices * 3);
       var diagonal = Math.hypot(maximum[0]-minimum[0], maximum[1]-minimum[1], maximum[2]-minimum[2]);
       if (!(diagonal >= 1e-9 && diagonal <= 1e6)) { fail('STL_SCALE_LIMIT', 'Choose units giving a model diagonal between 1 nm and 1,000 km.'); }
+      return { positions: positions, triangles: triangles, coordinates: coordinates,
+        minimum: minimum, maximum: maximum, diagonal: diagonal };
+    }
+    function parse(bytes, options) {
+      var decoded = readUnvalidated(bytes, options), positions = decoded.positions, triangles = decoded.triangles;
+      var minimum = decoded.minimum, maximum = decoded.maximum, diagonal = decoded.diagonal;
+      var count = triangles.length / 3, vertices = positions.length / 3, index, key;
       var normals = new Float64Array(count * 3);
       var edges = new Map();
       var neighbors = new Int32Array(count * 3); neighbors.fill(-1);
@@ -228,6 +235,10 @@
       var a=orient2(triangle[0],triangle[1],point,axes),b=orient2(triangle[1],triangle[2],point,axes),c=orient2(triangle[2],triangle[0],point,axes);
       return (a>=0&&b>=0&&c>=0)||(a<=0&&b<=0&&c<=0);
     }
+    function isZeroArea(positions,a,b,c) {
+      var p=positions.subarray(a*3,a*3+3),q=positions.subarray(b*3,b*3+3),r=positions.subarray(c*3,c*3+3);
+      return orient2(p,q,r,[0,1])===0&&orient2(p,q,r,[1,2])===0&&orient2(p,q,r,[2,0])===0;
+    }
     function onSegment(point,a,b,axes) {
       return orient2(a,b,point,axes)===0 && axes.every(function(axis){return point[axis]>=Math.min(a[axis],b[axis])&&point[axis]<=Math.max(a[axis],b[axis]);});
     }
@@ -338,7 +349,7 @@
       parsed.sourceHash = sourceHash;
       return parsed;
     }
-    return { parse: parse, identify: identify };
+    return { parse: parse, identify: identify, readUnvalidated: readUnvalidated, isZeroArea: isZeroArea };
   }
   root.createStlImport = createStlImport;
   root.StlImport = createStlImport();

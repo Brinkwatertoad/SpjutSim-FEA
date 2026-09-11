@@ -225,6 +225,41 @@
     });
   };
 
+  /** Explicit repair creates candidate source bytes; it never installs geometry. */
+  MesherClient.prototype.repairStl = function(request) {
+    var self=this,api=root.SpjutsimFEA;
+    if(!request||request.sourceFormat!=='stl'||!api.validateImportRequest(request).valid||
+      !api.validateStlOptions(request.importOptions)||!api.validateStlRepairOptions(request.repairOptions)) {
+      return Promise.reject(clientFailure('STL_INVALID_REPAIR_OPTIONS','Choose an STL, explicit units and a hole width from 0% through 5%.'));
+    }
+    if(request.sourceBytes.byteLength>16*1024*1024)return Promise.reject(clientFailure('STL_INPUT_LIMIT','Choose an STL file no larger than 16 MiB.'));
+    return this.ensureWorker().then(function(worker){return new Promise(function(resolve,reject){
+      var requestId=self.requestId(),settled=false,transferBytes=request.sourceBytes.slice(0);
+      var timeout=root.setTimeout(function(){finish(clientFailure('MESHER_TIMEOUT','Surface repair exceeded 120 seconds. Repair this surface in the source application.'));},120000);
+      function finish(error,result){
+        if(settled)return;settled=true;root.clearTimeout(timeout);self.cancelPending=null;
+        worker.onmessage=null;worker.onerror=null;worker.onmessageerror=null;
+        if(error){worker.terminate();if(self.worker===worker)self.worker=null;reject(error);}else resolve(result);
+      }
+      self.cancelPending=function(){finish(clientFailure('STL_REPAIR_CANCELLED','Surface repair was cancelled.'));};
+      worker.onmessage=function(event){
+        var message=event.data;if(!message||message.requestId!==requestId)return;
+        if(message.type==='progress'){if(api.validateWorkerProgress(message,requestId).valid)self.onProgress(message.progress);return;}
+        var response=api.validateWorkerResponse(message,requestId,'stl-repair-result');
+        if(!response.valid){finish(clientFailure('INVALID_MESHER_RESPONSE','The geometry engine returned an invalid repair response.',response.reason));return;}
+        if(response.error){self.onError(message.error);finish(Object.assign(new Error(message.error.userMessage),{diagnostic:message.error}));return;}
+        if(!api.validateStlRepairResult(message.result)){finish(clientFailure('INVALID_STL_REPAIR_RESULT','The geometry engine returned an invalid repair candidate.'));return;}
+        finish(null,message.result);
+      };
+      worker.onerror=function(event){finish(clientFailure('MESHER_OPERATION_FAILED','The geometry engine stopped during surface repair.',event.message||null));};
+      worker.onmessageerror=function(){finish(clientFailure('MESHER_MESSAGE_FAILED','The repaired source could not be returned.'));};
+      try{worker.postMessage({protocol:api.WORKER_PROTOCOL_VERSION,type:'stl-repair',version:1,requestId:requestId,
+        sourceName:request.sourceName,sourceFormat:'stl',sourceBytes:transferBytes,importOptions:request.importOptions,
+        repairOptions:request.repairOptions},[transferBytes]);}
+      catch(error){finish(clientFailure('MESHER_MESSAGE_FAILED','The STL could not be sent for repair.',error&&error.message));}
+    });});
+  };
+
   MesherClient.prototype.cancel = function () {
     this.dispose();
   };

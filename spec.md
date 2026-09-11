@@ -710,8 +710,9 @@ reconstruction; the native solver has no source-format dependency. Require
 explicit `m`, `mm`, `cm`, `in`, or `ft` units; the review displays dimensions in
 chosen units. Accept only one connected, closed, consistently outward
 manifold boundary with positive usable volume and no self-intersections. Exact
-coordinate indexing is allowed; tolerance welding, repair, and automatic winding
-reversal are forbidden. Stored normals are advisory.
+coordinate indexing is allowed; tolerance welding and unrequested repair/winding
+reversal are forbidden. Explicit local repair uses the separate reviewed-candidate
+workflow below. Stored normals are advisory.
 
 `workers/stl-import.js` owns strict parsing, edge and vertex-link topology,
 compensated signed volume, BVH candidate search, and filtered orientation tests
@@ -743,8 +744,30 @@ review preserves the installed model/setup/results. Later units/grouping changes
 and CAD↔STL replacement explicitly map/drop each assignment using the existing
 transfer workflow. Downstream analysis/rendering consume opaque IDs. Full parsing,
 hashing, classification, meshing, and recovery stay in workers. The build script
-bundles parsing and reconstruction helpers before the mesher shell for file and HTTP modes. General repair,
+bundles parsing and reconstruction helpers before the mesher shell for file and HTTP modes. General shape rebuilding,
 shells, multibody analysis, and OBJ remain deferred. See Section 15.11.
+
+Explicit local STL repair is offered after repairable topology/winding errors.
+The user chooses a maximum hole width from 0–5% of the retained part diagonal
+(default 1%; 0 disables filling). A version-1 `stl-repair` request on coarse
+protocol 3 returns separately serialized candidate bytes and a validated change
+report. Supported operations remove exact duplicates/zero-area faces and isolated
+stray triangles, orient consistently/outward, and fill at most 128 small strictly
+convex planar holes of 3–32 vertices. Exact predicates prevent roundoff-only
+zero-area removal. Recomputed retained bounds prevent removed outliers from
+inflating hole limits. No vertex motion, welding, smoothing, component deletion
+or component joining is performed. Serialized coordinates must retain their
+source precision; every candidate passes the unchanged full solid validator.
+
+A successful repair enters normal preview/reconstruction review and still needs
+explicit import and assignment transfer. Candidate source bytes, original bytes
+and versioned report remain controller-owned; fingerprints/counts bind the report
+to imported geometry. Original bytes can be downloaded, and a pending repair can
+be discarded. Cancellation, timeouts, stale replies and failed repair preserve
+the installed model. Input/output remain 16 MiB/200,000 triangles, and repair has
+the same 120-second worker deadline. This is bounded local repair, not arbitrary
+surface recovery. See `docs/designs/stl-surface-repair.md` for exact contracts,
+numerical criteria, ownership, limits and errors.
 
 The new UI uses version-2 STL options with `surfaceMode` (`original` or
 `reconstruct`) and `reconstructionToleranceM` (null for original, positive finite

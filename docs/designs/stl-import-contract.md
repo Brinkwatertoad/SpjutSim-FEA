@@ -2,6 +2,8 @@
 
 Status: **Accepted by the owner on 2026-09-11 (“yes, accept.”).**
 Production implementation and initial M29 verification follow this contract.
+The owner later authorized an explicit [local repair workflow](stl-surface-repair.md);
+the original no-automatic-repair rule still governs normal imports.
 The owner-authorized [simulation-surface extension](stl-simulation-surfaces.md)
 adds explicit original-surface and bounded reconstruction modes; version-1
 behavior below is retained as the initial contract.

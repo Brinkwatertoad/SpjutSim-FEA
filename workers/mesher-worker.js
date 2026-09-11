@@ -80,7 +80,7 @@ function validateRequest(message) {
       false
     );
   }
-  if (message.type !== 'initialize' && message.type !== 'diagnostics' && message.type !== 'box-smoke' && message.type !== 'import' && message.type !== 'mesh') {
+  if (message.type !== 'initialize' && message.type !== 'diagnostics' && message.type !== 'box-smoke' && message.type !== 'import' && message.type !== 'mesh' && message.type !== 'stl-repair') {
     return workerError(
       'UNKNOWN_MESHER_REQUEST',
       'worker',
@@ -88,13 +88,18 @@ function validateRequest(message) {
       'Unsupported request type: ' + message.type + '.'
     );
   }
-  if ((message.type === 'import' || message.type === 'mesh') && message.sourceFormat === 'stl') {
+  if ((message.type === 'import' || message.type === 'mesh' || message.type === 'stl-repair') && message.sourceFormat === 'stl') {
     if (message.sourceFormat === 'stl' && !validStlOptions(message.importOptions)) {
       return workerError('STL_INVALID_OPTIONS', message.type, 'Choose explicit STL units and a grouping angle from 1 to 179 degrees. Reconstruction needs a positive deviation; experimental remeshing needs a feature angle from 1 to 40 degrees.');
     }
     if (message.sourceFormat === 'stl' && (!(message.sourceBytes instanceof ArrayBuffer) || !message.sourceBytes.byteLength || message.sourceBytes.byteLength > 16 * 1024 * 1024)) {
       return workerError('STL_INPUT_LIMIT', message.type, 'Choose a nonempty STL file no larger than 16 MiB.');
     }
+  }
+  if (message.type === 'stl-repair' && (message.version !== 1 || message.sourceFormat !== 'stl' || !validCadSource(message) ||
+      !message.repairOptions || message.repairOptions.version !== 1 || !Number.isFinite(message.repairOptions.maxHoleDiameterRatio) ||
+      message.repairOptions.maxHoleDiameterRatio < 0 || message.repairOptions.maxHoleDiameterRatio > .05)) {
+    return workerError('STL_INVALID_REPAIR_OPTIONS', 'import', 'Choose an STL and a hole width from 0% through 5% of the part diagonal.');
   }
   if (message.type === 'import') {
     if (!validCadSource(message) || typeof message.geometryId !== 'string' || message.geometryId.length === 0) {
@@ -1036,6 +1041,13 @@ async function handleRequest(message) {
   }
 
   try {
+    if (message.type === 'stl-repair') {
+      progress(message.requestId, 'stl-repair', 'Trying local surface repairs and checking the resulting solid…');
+      result = await StlRepair.repair(message.sourceBytes, message.importOptions, message.repairOptions);
+      self.postMessage({ protocol: WORKER_PROTOCOL_VERSION, requestId: message.requestId,
+        type: 'stl-repair-result', result: result }, [result.sourceBytes]);
+      return;
+    }
     if (message.type === 'import') {
       result = await importGeometry(gmsh, message);
       var previews = result.originalPreview ? [result.preview, result.originalPreview] : [result.preview];
