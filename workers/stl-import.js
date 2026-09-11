@@ -21,7 +21,7 @@
       var coordinates;
       var index;
       if (binary) {
-        if (count > 50000) { fail('STL_INPUT_LIMIT', 'Import supports at most 50,000 triangles.'); }
+        if (count > 200000) { fail('STL_INPUT_LIMIT', 'Import supports at most 200,000 triangles.'); }
         coordinates = new Float64Array(count * 9);
         for (index = 0; index < count; index += 1) {
           for (var component = 0; component < 9; component += 1) {
@@ -39,7 +39,7 @@
         var tokens = body.trim().split(/\s+/);
         if (tokens.length % 21 !== 0) { fail('STL_MALFORMED', 'Each ASCII facet must contain exactly three vertices.'); }
         count = tokens.length / 21;
-        if (!count || count > 50000) { fail('STL_INPUT_LIMIT', 'Choose between 1 and 50,000 triangles.'); }
+        if (!count || count > 200000) { fail('STL_INPUT_LIMIT', 'Choose between 1 and 200,000 triangles.'); }
         coordinates = new Float64Array(count * 9);
         for (index = 0; index < count; index += 1) {
           var offset = index * 21;
@@ -113,7 +113,7 @@
           if (!previous) { edges.set(key, { triangle: index, edge: edge, first: first, count: 1 }); }
           else {
             previous.count += 1;
-            if (previous.count > 2) { fail('STL_NONMANIFOLD', 'An edge belongs to more than two triangles. Export a manifold solid.'); }
+            if (previous.count > 2) { fail('STL_NONMANIFOLD', 'This STL has an edge shared by more than two triangles. Repair the surface in the source application and export a closed solid again.'); }
             neighbors[index*3+edge] = previous.triangle;
             neighbors[previous.triangle*3+previous.edge] = index;
             previous.inconsistent = first === previous.first;

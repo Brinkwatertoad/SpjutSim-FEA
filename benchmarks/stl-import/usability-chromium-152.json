@@ -1,0 +1,125 @@
+{
+  "browser": "152.0.7977.75",
+  "purpose": "STL import capacity and supplied-gargoyle topology regression; timings are not an ETA calibration.",
+  "verification": {
+    "fileConfigurationsPassed": 43,
+    "httpConfigurationsPassed": 5,
+    "cadCorpusCasesPassed": 68,
+    "pythonTestsPassed": 79,
+    "nativeTestsPassed": 8
+  },
+  "file": [
+    {
+      "name": "stl-workflow",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null
+    },
+    {
+      "name": "stl-large",
+      "status": "Passed",
+      "errors": [],
+      "evidence": [
+        {
+          "mode": "original",
+          "triangles": 200000,
+          "importMs": 20378.39999999106,
+          "previewBytes": 26412336,
+          "mesherWasmBytes": 67108864
+        },
+        {
+          "mode": "reconstruct",
+          "triangles": 200000,
+          "importMs": 20603.10000000894,
+          "previewBytes": 26663364,
+          "mesherWasmBytes": 67108864
+        },
+        {
+          "meshMs": 20835.29999999702,
+          "nodes": 5901,
+          "elements": 3530,
+          "minimumJacobian": 0.00047279511329354997
+        }
+      ]
+    },
+    {
+      "name": "stl-large?fixture=gargoyle",
+      "status": "Passed",
+      "errors": [],
+      "evidence": {
+        "fixture": "cathedral_gargoyle.stl",
+        "triangles": 66174,
+        "bytes": 3308784,
+        "rejection": "STL_NONMANIFOLD",
+        "modes": [
+          "original",
+          "reconstruct",
+          "remesh"
+        ]
+      }
+    }
+  ],
+  "http": [
+    {
+      "name": "worker-runtime",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null
+    },
+    {
+      "name": "step-import",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null
+    },
+    {
+      "name": "stl-workflow",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null
+    },
+    {
+      "name": "stl-large",
+      "status": "Passed",
+      "errors": [],
+      "evidence": [
+        {
+          "mode": "original",
+          "triangles": 200000,
+          "importMs": 20642.704999998212,
+          "previewBytes": 26412336,
+          "mesherWasmBytes": 67108864
+        },
+        {
+          "mode": "reconstruct",
+          "triangles": 200000,
+          "importMs": 20906.94999998808,
+          "previewBytes": 26663364,
+          "mesherWasmBytes": 67108864
+        },
+        {
+          "meshMs": 21236.765000000596,
+          "nodes": 5901,
+          "elements": 3530,
+          "minimumJacobian": 0.00047279511329354997
+        }
+      ]
+    },
+    {
+      "name": "stl-large?fixture=gargoyle",
+      "status": "Passed",
+      "errors": [],
+      "evidence": {
+        "fixture": "cathedral_gargoyle.stl",
+        "triangles": 66174,
+        "bytes": 3308784,
+        "rejection": "STL_NONMANIFOLD",
+        "modes": [
+          "original",
+          "reconstruct",
+          "remesh"
+        ]
+      }
+    }
+  ]
+}

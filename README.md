@@ -274,8 +274,10 @@ Binary and ASCII STL require explicit m/mm/cm/in/ft units and a dimensions/patch
 review before installation. Import supports one closed, connected, consistently
 outward-wound, non-self-intersecting manifold solid. It rejects defects without
 welding, hole filling, or winding reversal. Connected angle-based patches default
-to 40° (adjustable 1–179°). Choose **Try surface reconstruction** and a maximum
-deviation, or **Keep STL triangles (no simplification)**. Reconstruction currently merges
+to 40° (adjustable 1–179°). Choosing units automatically previews the original
+triangles; confirm the dimensions, then select **Import model**. Open **Advanced**
+to change grouping or choose **Reconstruct simple surfaces** with a maximum
+deviation. Reconstruction currently merges
 coplanar faces (including holes) and recovers full cylinders/conical frusta with
 perpendicular flat ends. Compare the original and candidate before applying.
 More complicated fitted-surface intersections and freeform regions are reported
@@ -292,13 +294,25 @@ compare refinement before relying on stresses. Meshing failure does not silently
 change modes or settings. Mesh/checks diagnostics warn when a patch area changes
 by more than 1%, since that can alter pressure forces. See the
 [funnel experiment](docs/reviews/29-funnel-remeshing.md) for measured limitations.
-Regroup STL in the Model editor uses explicit assignment transfer, with Cancel
+**Review STL import settings…** in the Model editor uses explicit assignment transfer, with Cancel
 preserving the installed model. Source bytes and options reproduce patch IDs in
-fresh workers and after rigid orientation. Limits are 16 MiB, 50,000 triangles,
+fresh workers and after rigid orientation. Limits are 16 MiB, 200,000 triangles,
 512 internal geometric surfaces, 2 million intersection candidates, and 120
 seconds per STL worker operation. A file below the storage limits can still
 exceed the geometric/work limits. Existing solver memory preflight still applies.
+Detailed models (25,000+ triangles) show meshing-time advice during review and
+beside the mesh controls. This is qualitative guidance, not an estimated finish
+time: shape, mesh settings and hardware matter. Begin with Coarse and compare
+refinement; keeping original triangles can still produce a dense mesh.
 General STL repair, shells, multiple solids, and OBJ remain deferred.
+
+Open `tests/browser/stl-large-tests.html` to check a procedural 200,000-triangle
+cube in original/reconstruction modes and mesh the recovered surfaces in a fresh
+worker. The optional `?fixture=gargoyle` variant reads the user-supplied
+`tests/fixtures/stl/cathedral_gargoyle.stl` and verifies its nonmanifold rejection
+in all three modes. That file has 66,174 triangles and passes the size limits,
+but needs surface repair before simulation. Neither supplied STL is redistributed.
+See [capacity and usability evidence](docs/reviews/29-stl-import-usability.md).
 
 The left pane is one compact Setup sequence: Model, Material, Supports, Loads,
 and Mesh. Solve runs checks before execution; the Checks tab precedes Results. Model owns CAD import/replacement and collapses to a

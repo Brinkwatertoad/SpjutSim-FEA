@@ -32,7 +32,7 @@
   }
   try {
     await rejected(new ArrayBuffer(16*1024*1024+1), 'STL_INPUT_LIMIT');
-    var tooMany = new ArrayBuffer(84+50001*50);new DataView(tooMany).setUint32(80,50001,true);
+    var tooMany = new ArrayBuffer(84+200001*50);new DataView(tooMany).setUint32(80,200001,true);
     await rejected(tooMany, 'STL_INPUT_LIMIT');
     await rejected(cylinder(512), 'STL_PATCH_LIMIT');
     await rejected(cylinder(2048), 'STL_VALIDATION_LIMIT');

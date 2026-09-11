@@ -220,7 +220,7 @@
     }
     if (model.sourceFormat === 'stl' && (!validateStlOptions(model.importOptions) || model.surfaceKind !== 'stl-patch' ||
         !model.sourceMetadata || model.sourceMetadata.version !== model.importOptions.version || !/^[a-f0-9]{64}$/.test(model.sourceMetadata.sha256) ||
-        !Number.isInteger(model.sourceMetadata.triangleCount) || model.sourceMetadata.triangleCount < 1 || model.sourceMetadata.triangleCount > 50000 ||
+        !Number.isInteger(model.sourceMetadata.triangleCount) || model.sourceMetadata.triangleCount < 1 || model.sourceMetadata.triangleCount > 200000 ||
         !Number.isInteger(model.sourceMetadata.internalSurfaceCount) || model.sourceMetadata.internalSurfaceCount < 1 || model.sourceMetadata.internalSurfaceCount > 512 ||
         !model.sourceMetadata.validation || model.sourceMetadata.validation.status !== 'valid' || model.sourceMetadata.validation.version !== 1 ||
         model.sourceMetadata.validation.triangleCount !== model.sourceMetadata.triangleCount ||

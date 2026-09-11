@@ -20,6 +20,10 @@ during meshing. A curved patch is a selectable group of facets, not recovered CA
 curvature. Changing grouping or units on an installed model uses explicit
 assignment remapping and may be cancelled without changing the old model.
 
+The later [capacity/usability follow-up](../reviews/29-stl-import-usability.md)
+raises the triangle cap to 200,000 and defaults the simplified review to original
+triangles. The following bounds record the original M28 decision.
+
 Proposed initial bounds: 16 MiB input, 50,000 triangles, 512 internal Gmsh surfaces,
 2,000,000 intersection candidate pairs, 120 seconds per meshing worker. These are
 **proposed ceilings, not measured capacity claims**: M29 must exercise their edges

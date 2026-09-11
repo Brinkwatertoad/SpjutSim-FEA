@@ -79,7 +79,7 @@
             <div id="model-editor">
               <button id="import-step-button" type="button">Import or replace model…</button>
               <input id="import-step-input" type="file" accept=".step,.stp,.iges,.igs,.brep,.stl" hidden>
-              <button id="regroup-stl-button" type="button" hidden>Review STL units and patches…</button>
+              <button id="regroup-stl-button" type="button" hidden>Review STL import settings…</button>
               <p id="geometry-status">Choose a STEP, IGES, BREP, or STL solid to begin.</p>
               <fieldset class="fea-orientation-controls"><legend>Model orientation</legend>
                 <div class="fea-orientation-fields">
@@ -182,6 +182,7 @@
               <button id="generate-mesh-button" type="button" disabled>Generate mesh</button>
               <button id="cancel-mesh-button" type="button" hidden>Cancel</button>
               <button id="delete-mesh-button" type="button" data-action-intent="danger" hidden>Delete mesh</button>
+              <p id="mesh-stl-advice" class="fea-stl-advice" hidden></p>
               <p id="mesh-status" role="status" aria-live="polite">Import geometry to generate a mesh.</p>
             </div>
           </div>
@@ -332,23 +333,33 @@
     </section>
   </div>
   <dialog id="stl-import-dialog" class="fea-stl-dialog" aria-labelledby="stl-import-title">
-    <h2 id="stl-import-title">Review STL import</h2>
-    <p>STL contains facets without length units. Choose the source units and confirm the dimensions before importing.</p>
+    <h2 id="stl-import-title">Import STL</h2>
+    <p id="stl-source-summary"></p>
+    <p>Choose the units used to export this file. Then check that the dimensions match your part.</p>
     <div class="fea-stl-options">
-      <label>Length units <select id="stl-length-unit"><option value="">Choose units…</option><option value="m">Meters</option><option value="mm">Millimeters</option><option value="cm">Centimeters</option><option value="in">Inches</option><option value="ft">Feet</option></select></label>
-      <label>Patch grouping angle (degrees) <input id="stl-patch-angle" type="number" min="1" max="179" value="40"></label>
-      <label>Simulation surface <select id="stl-surface-mode"><option value="reconstruct">Try surface reconstruction</option><option value="original">Keep STL triangles (no simplification)</option><option value="remesh">Remesh STL surfaces (experimental)</option></select></label>
-      <label id="stl-reconstruction-tolerance-label">Maximum deviation (source units) <input id="stl-reconstruction-tolerance" type="number" min="0" step="any" value="0.01"></label>
-      <label id="stl-remesh-angle-label" hidden>Remesh feature angle (degrees) <input id="stl-remesh-angle" type="number" min="1" max="40" step="any" value="5" aria-describedby="stl-remesh-angle-help"><span id="stl-remesh-angle-help">Lower values preserve more creases. Higher values can help complex surfaces mesh, but require closer checks of the mesh and refinement.</span></label>
-      <button id="stl-review-button" type="button">Review surface</button>
+      <label>File units <select id="stl-length-unit"><option value="">Choose units…</option><option value="m">Meters</option><option value="mm">Millimeters</option><option value="cm">Centimeters</option><option value="in">Inches</option><option value="ft">Feet</option></select></label>
+      <strong id="stl-dimensions" aria-live="polite"></strong>
     </div>
-    <p id="stl-import-status" role="status" aria-live="polite"></p><p id="stl-dimensions"></p>
-    <p id="stl-remap-consequence">Changing units, grouping or the simulation surface requires mapping or dropping existing supports and loads in the next step. Cancel preserves the current model and setup.</p>
+    <details id="stl-advanced-options">
+      <summary>Advanced: simulation surfaces and selection groups</summary>
+      <p>Groups make it easier to select faces for supports and loads. To simplify the simulation geometry or generate new surface triangles, choose a processing method below.</p>
+      <div class="fea-stl-options">
+        <label>Simulation surface <select id="stl-surface-mode"><option value="original">Keep original triangles</option><option value="reconstruct">Reconstruct simple surfaces</option><option value="remesh">Remesh STL surfaces (experimental)</option></select></label>
+        <label>Selection grouping angle (degrees) <input id="stl-patch-angle" type="number" min="1" max="179" value="40"></label>
+        <label id="stl-reconstruction-tolerance-label" hidden>Maximum deviation (file units) <input id="stl-reconstruction-tolerance" type="number" min="0" step="any" value="0.01"></label>
+        <label id="stl-remesh-angle-label" hidden>Remesh feature angle (degrees) <input id="stl-remesh-angle" type="number" min="1" max="40" step="any" value="5" aria-describedby="stl-remesh-angle-help"><span id="stl-remesh-angle-help">Lower values preserve more creases. Higher values can help complex surfaces mesh; check details by refining the mesh.</span></label>
+      </div>
+      <p>Reconstruction supports flat faces and complete cylinders or cones with flat ends. Experimental remeshing can handle more complex surfaces, but does not recover smooth CAD curves. Neither method repairs holes or overlapping faces.</p>
+    </details>
+    <p id="stl-meshing-advice" class="fea-stl-advice" hidden></p>
+    <p id="stl-import-status" role="status" aria-live="polite"></p>
+    <button id="stl-use-original-button" type="button" hidden>Use original triangles instead</button>
+    <details id="stl-error-details" hidden><summary>Technical details</summary><code id="stl-error-code"></code></details>
+    <p id="stl-remap-consequence">Changing units, grouping or surfaces requires reviewing existing supports and loads in the next step. Cancel preserves the current model and setup.</p>
     <label id="stl-preview-surface-label" hidden>Compare surface <select id="stl-preview-surface"><option value="simulation">Reconstructed simulation surface</option><option value="original">Original STL surface</option></select></label>
     <canvas id="stl-review-viewport" aria-label="STL patch review viewport"></canvas>
-    <div id="stl-patch-list" class="fea-stl-patches" aria-label="Selectable surface patches"></div>
-    <p>Selectable patches group triangles for applying supports and loads; grouping does not simplify the geometry. Reconstruction creates replacement surfaces for supported solids: coplanar faces, full cylinders and conical frusta with flat ends. It reports unsupported regions and does not mix reconstructed surfaces with retained triangles. Keeping STL triangles preserves every source facet, including small or poor-quality facets that can prevent solver convergence. Source bytes are preserved; invalid solids are rejected without automatic repair.</p>
-    <footer><button id="stl-cancel-button" type="button">Cancel</button><button id="stl-accept-button" type="button" class="ui-button-primary" disabled>Use reviewed model</button></footer>
+    <details id="stl-selection-details"><summary>Inspect selectable groups</summary><div id="stl-patch-list" class="fea-stl-patches" aria-label="Selectable surface patches"></div></details>
+    <footer><button id="stl-cancel-button" type="button">Cancel</button><button id="stl-review-button" type="button" disabled>Update preview</button><button id="stl-accept-button" type="button" class="ui-button-primary" disabled>Import model</button></footer>
   </dialog>
   <div class="ui-modal-backdrop" id="replacement-migration-backdrop" hidden>
     <section class="fea-replacement-dialog" id="replacement-migration-dialog" role="dialog" aria-modal="true" aria-labelledby="replacement-migration-title" tabindex="-1">

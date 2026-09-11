@@ -116,7 +116,7 @@
     if (!review) { return; }
     if (activeImport) { activeImport.cancel(); activeImport = null; }
     try { generation = app.setGeometryReviewOptions(options); }
-    catch (error) { stlImportUI.report(error.message); return; }
+    catch (error) { stlImportUI.reportFailure(error); return; }
     var client = new api.MesherClient({ onProgress: function (progress) {
       if (activeImport === client) { stlImportUI.report(progress.userMessage); app.reportGeometryImportProgress(progress); }
     } });
@@ -124,7 +124,7 @@
     client.importGeometry(Object.assign({}, review.source, { geometryId: api.createGeometryId(), importOptions: options })).then(function (geometry) {
       if (activeImport === client) { app.completeGeometryReview(review, generation, geometry); }
     }).catch(function (error) {
-      if (activeImport === client && app.geometryReview === review) { stlImportUI.report((error.diagnostic ? error.diagnostic.code + ': ' : '') + error.message); }
+      if (activeImport === client && app.geometryReview === review) { stlImportUI.reportFailure(error); }
     }).finally(function () { client.dispose(); if (activeImport === client) { activeImport = null; } });
   }
   function cancelStlReview() {

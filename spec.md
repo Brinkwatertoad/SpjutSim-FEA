@@ -708,7 +708,7 @@ simulation-surface extension in `docs/designs/stl-simulation-surfaces.md`. The
 pinned runtime provides indexed original surfaces and bounded OCC primitive
 reconstruction; the native solver has no source-format dependency. Require
 explicit `m`, `mm`, `cm`, `in`, or `ft` units; the review displays dimensions in
-chosen units and meters. Accept only one connected, closed, consistently outward
+chosen units. Accept only one connected, closed, consistently outward
 manifold boundary with positive usable volume and no self-intersections. Exact
 coordinate indexing is allowed; tolerance welding, repair, and automatic winding
 reversal are forbidden. Stored normals are advisory.
@@ -716,7 +716,7 @@ reversal are forbidden. Stored normals are advisory.
 `workers/stl-import.js` owns strict parsing, edge and vertex-link topology,
 compensated signed volume, BVH candidate search, and filtered orientation tests
 with exact binary64 integer fallback for intersection/contact predicates. Reject
-contacts beyond shared edges/vertices. Bounds are 16 MiB, 50,000 triangles,
+contacts beyond shared edges/vertices. Bounds are 16 MiB, 200,000 triangles,
 512 internal geometric surfaces, 2,000,000 candidate pairs, and 120 seconds per
 STL operation (terminate the disposable worker on timeout/cancellation). SI
 bounds diagonal must be 1e-9 through 1e6 m; triangle cross-product norm and volume
@@ -748,7 +748,18 @@ shells, multibody analysis, and OBJ remain deferred. See Section 15.11.
 
 The new UI uses version-2 STL options with `surfaceMode` (`original` or
 `reconstruct`) and `reconstructionToleranceM` (null for original, positive finite
-SI distance for reconstruction). The initial selection tries reconstruction.
+SI distance for reconstruction). New imports default to original triangles and
+start review automatically when the user chooses units. Existing imports retain
+their reviewed settings. Surface processing and grouping live in advanced
+options; changes require an updated preview and explicit acceptance. Failed
+reconstruction/remeshing offers an explicit original-triangle retry, never an
+automatic fallback. Error codes remain available under technical details.
+Binary source triangle counts may be read from an exact-length header before
+validation; this does not establish validity or enable acceptance. At 25,000 or
+more source triangles, import and mesh controls show qualitative runtime advice,
+a Coarse-first recommendation, and the 120-second operation limit/cancellation.
+This threshold is a usability heuristic, not a calibrated time estimate. ASCII
+counts and advice become available after worker validation.
 Original mode retains every source triangle using one indexed discrete surface
 per selectable patch, avoiding the legacy near-planar subdivision limit.
 Reconstruction initially supports coplanar polyhedra (including holes) and full

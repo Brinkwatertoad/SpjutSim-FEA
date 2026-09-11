@@ -572,6 +572,12 @@
     } else if (hasGeometry) {
       message = 'Ready to generate a ' + elementLabel + ' mesh.';
     }
+    var stlAdvice=document.getElementById('mesh-stl-advice'),geometry=documentState.geometry;
+    if(stlAdvice){
+      stlAdvice.textContent=geometry&&geometry.sourceFormat==='stl'&&root.SpjutsimFEA.stlMeshingAdvice?
+        root.SpjutsimFEA.stlMeshingAdvice(geometry.sourceMetadata.triangleCount,geometry.importOptions.surfaceMode||'original'):'';
+      stlAdvice.hidden=!stlAdvice.textContent;
+    }
     if (this.meshStatus) { this.meshStatus.textContent = message; }
     if (this.generateMeshButton) { this.generateMeshButton.disabled = !hasGeometry || isGenerating || convergenceRunning; }
     if (this.generateMeshButton) { this.generateMeshButton.textContent = documentState.mesh ? 'Regenerate mesh' : 'Generate mesh'; }

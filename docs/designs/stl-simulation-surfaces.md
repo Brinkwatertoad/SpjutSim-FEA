@@ -6,14 +6,17 @@ This extension uses the existing Gmsh/OpenCASCADE runtime and native solver.
 
 ## User workflow
 
-Choose explicit source units, a grouping angle, and one simulation surface:
+Choose explicit source units to automatically preview the original STL, confirm
+the dimensions, then import. Advanced options expose grouping and simulation
+surface processing. Existing imports retain their selected mode when reopened.
+The two established methods remain available:
 
-- **Try surface reconstruction** (initial selection): merge coplanar regions or
+- **Reconstruct simple surfaces** (opt-in): merge coplanar regions or
   recover a complete cylinder/conical frustum with perpendicular flat ends.
   Specify a positive maximum deviation in source units. Review the candidate,
   reported deviation bound, dimensions and selectable surfaces. Switch the
   preview between original and reconstructed surfaces before applying.
-- **Keep STL triangles (no simplification)**: retain every source triangle and its coordinates.
+- **Keep original triangles** (initial selection): retain every source triangle and its coordinates.
   Each selectable patch becomes one indexed discrete surface. Existing boundary
   triangles remain fixed during volume meshing (`Mesh.MeshOnlyEmpty=1`), and
   quadratic boundary edges remain straight. Refinement cannot remove the input's
@@ -88,8 +91,9 @@ options version, mode and deviation are included in identity hashing. A fresh
 meshing worker reparses/reconstructs from retained source bytes and verifies IDs.
 Preview buffers transfer without cloning through the worker boundary.
 
-The 16 MiB, 50,000-triangle, 512-surface, 2-million-intersection-candidate and
-120-second operation bounds remain. Original-surface mode counts selectable
+The capacity follow-up raises the triangle cap to 200,000. The 16 MiB,
+512-surface, 2-million-intersection-candidate and 120-second operation bounds
+remain. See [measured capacity](../reviews/29-stl-import-usability.md). Original-surface mode counts selectable
 patches against the surface bound instead of requiring one geometric surface per
 near-planar facet group. Input solid/topology/intersection validation is unchanged.
 No welding, hole filling, winding reversal or general mesh repair is performed.
