@@ -1,6 +1,6 @@
 # Local Web FEA — Development Specification
 
-**Status:** Initial development specification  
+**Status:** v1 feature implementation and validation, calibration, corpus, and distribution gates complete; Task 20 candidate acceptance remains open
 **Target:** v1.0 local-first browser application  
 **Primary use case:** Simple static finite element simulations on homogeneous, single-body mechanical parts  
 **Primary CAD sources:** STEP, IGES, and OpenCASCADE BREP
@@ -59,6 +59,9 @@ The product should favor **useful, defensible engineering feedback over solver f
 - Gmsh + OpenCASCADE geometry import and volume meshing.
 - Tet4 support for early development and verification.
 - Tet10 support required for v1.0 release.
+- Binary/ASCII STL import for one validated closed solid, with explicit
+  units and durable selectable patches; M28 is accepted and M29 owner review is required
+  before claiming support.
 - Static loads and prescribed supports/displacements.
 - Sparse linear solve in WebAssembly.
 - Deformed-shape visualization.
@@ -84,9 +87,9 @@ The product should favor **useful, defensible engineering feedback over solver f
 - Remote/cloud solve service.
 - GPU/WebGPU sparse solver.
 - Parasolid import.
-- STL, OBJ, and other tessellated import formats. They are post-v1 candidates, but the
-  geometry/import boundary must not require downstream UI, meshing, or solver
-  code to understand format-specific details.
+- OBJ and other tessellated formats beyond the bounded STL subset. Binary/ASCII
+  STL for one validated closed solid is implemented under Tasks 28–29;
+  general mesh repair remains deferred. Geometry consumers stay format-neutral.
 - Mobile-device support.
 
 ### 2.3 v1 analysis assumptions
@@ -231,7 +234,9 @@ Before solve, show:
 - mesh-quality warnings;
 - memory warning level.
 
-The user explicitly chooses **Solve** after this preflight.
+The user explicitly chooses **Solve**. If preflight has not been run and is
+available, Solve runs it first and continues after a valid check. Explicit
+preflight remains available for inspecting the estimate before solving.
 
 ### Step 6 — Solve
 
@@ -605,11 +610,17 @@ Use plain component-based support objects and discriminated load objects:
   direction: 'surface-normal'
 }
 
-// Total distributed force vector over selected faces
+// Component mode: total distributed global force vector over selected faces
 {
   type: 'total-force',
   faceIds: ['face-id', ...],
   forceN: [1000, 0, 0]
+}
+
+// Default force mode: sum of local force magnitudes, distributed by area
+{
+  type: 'total-force', faceIds: ['face-id', ...],
+  direction: 'surface-normal', magnitudeN: 1, sense: 'push' // or 'pull'
 }
 ```
 
@@ -642,13 +653,23 @@ await mesher.dispose();
   elementType: 'tet4', // or 'tet10'
   nodePositionsM: Float64Array,
   elementConnectivity: Uint32Array,
-  boundaryFaces: /* typed-array boundary representation */,
+  boundaryFaces: {
+    solverElementType: 'tri3', // or 'tri6'
+    solverConnectivity: Uint32Array,
+    solverFaceRanges: /* FaceId ranges into solverConnectivity */,
+    triangleConnectivity: Uint32Array,
+    faceRanges: /* matching FaceId ranges for display/picking triangles */
+  },
   geometryFaceMap: /* FaceId -> boundary range/index mapping */,
   statistics: { /* node/element counts, sizes */ },
   quality: { /* quality summary */ },
   memoryInputs: { /* topology values used by estimator */ }
 }
 ```
+
+Quadratic meshes must retain their six-node boundary faces for load integration.
+Rendering, picking, and glyph placement consume a separate linear-triangle
+subdivision so those presentation systems do not need element-specific logic.
 
 No solver code may import or depend on Gmsh-specific types or entity tags.
 
@@ -682,12 +703,135 @@ Use Gmsh's OpenCASCADE geometry kernel for import.
 
 The implementation should set OpenCASCADE's target unit so the imported model is normalized to meters before meshing. Do not infer units from filename or UI assumptions.
 
-Future import adapters may add STL, OBJ, and other formats behind the same geometry
-contract. Downstream consumers must treat `sourceFormat` as metadata rather
-than branching on STEP behavior. Before STL is enabled for analysis, define
-watertight-solid validation and a replacement for CAD `FaceId` semantics, such
-as persistent surface-patch identities; raw STL triangles do not provide CAD
-faces suitable for durable load/support attachment.
+Binary/ASCII `.stl` uses the accepted M28 adapter plus the owner-authorized
+simulation-surface extension in `docs/designs/stl-simulation-surfaces.md`. The
+pinned runtime provides indexed original surfaces and bounded OCC primitive
+reconstruction; the native solver has no source-format dependency. Require
+explicit `m`, `mm`, `cm`, `in`, or `ft` units; the review displays dimensions in
+chosen units. Accept only one connected, closed, consistently outward
+manifold boundary with positive usable volume and no self-intersections. Exact
+coordinate indexing is allowed; tolerance welding and unrequested repair/winding
+reversal are forbidden. Explicit local repair uses the separate reviewed-candidate
+workflow below. Stored normals are advisory.
+
+`workers/stl-import.js` owns strict parsing, edge and vertex-link topology,
+compensated signed volume, BVH candidate search, and filtered orientation tests
+with exact binary64 integer fallback for intersection/contact predicates. Reject
+contacts beyond shared edges/vertices. Bounds are 16 MiB, 200,000 triangles,
+512 internal geometric surfaces, 2,000,000 candidate pairs, and 120 seconds per
+STL operation (terminate the disposable worker on timeout/cancellation). SI
+bounds diagonal must be 1e-9 through 1e6 m; triangle cross-product norm and volume
+must exceed 1e-14 times diagonal squared and cubed, respectively. Stable errors
+and numerical criteria are specified in `docs/designs/stl-import-contract.md`.
+
+Coarse worker protocol **3** supports version-1 `importOptions` containing explicit
+`lengthUnit`, `patchAngleDegrees` (1–179, UI default 40), and
+`normalization: 'none'`. Geometry retains these options, source SHA-256, triangle
+and internal-surface counts, validation version/report, and `surfaceKind:
+'stl-patch'`. Original bytes remain controller-owned; work copies transfer to
+fresh workers. Reconstruction verifies source digest and patch membership.
+
+Selectable patches are connected components of the neighbor-dihedral rule.
+Opaque `stl:` IDs hash versioned source bytes/options and sorted canonical
+triangle membership; orientation and mesh settings do not change them. Geometry
+classification uses 1e-8 radians, maps every source triangle exactly once before
+remeshing, and keeps internal subdivisions separate from user patches. Straight
+Tet10 midpoints preserve the faceted boundary; no smooth CAD curvature is inferred.
+Each patch owns contiguous Tri6 integration and separate display ranges.
+
+Installation requires dimensions/patch acceptance. Failed, cancelled, or stale
+review preserves the installed model/setup/results. Later units/grouping changes
+and CAD↔STL replacement explicitly map/drop each assignment using the existing
+transfer workflow. Downstream analysis/rendering consume opaque IDs. Full parsing,
+hashing, classification, meshing, and recovery stay in workers. The build script
+bundles parsing and reconstruction helpers before the mesher shell for file and HTTP modes. General shape rebuilding,
+shells, multibody analysis, and OBJ remain deferred. See Section 15.11.
+
+Explicit local STL repair is offered after repairable topology/winding errors.
+The user chooses a maximum hole width from 0–5% of the retained part diagonal
+(default 1%; 0 disables filling). A version-1 `stl-repair` request on coarse
+protocol 3 returns separately serialized candidate bytes and a validated change
+report. Supported operations remove exact duplicates/zero-area faces and isolated
+stray triangles, orient consistently/outward, and fill at most 128 small strictly
+convex planar holes of 3–32 vertices. Exact predicates prevent roundoff-only
+zero-area removal. Recomputed retained bounds prevent removed outliers from
+inflating hole limits. No vertex motion, welding, smoothing, component deletion
+or component joining is performed. Serialized coordinates must retain their
+source precision; every candidate passes the unchanged full solid validator.
+
+A successful repair enters normal preview/reconstruction review and still needs
+explicit import and assignment transfer. Candidate source bytes, original bytes
+and versioned report remain controller-owned; fingerprints/counts bind the report
+to imported geometry. Original bytes can be downloaded, and a pending repair can
+be discarded. Cancellation, timeouts, stale replies and failed repair preserve
+the installed model. Input/output remain 16 MiB/200,000 triangles, and repair has
+the same 120-second worker deadline. This is bounded local repair, not arbitrary
+surface recovery. See `docs/designs/stl-surface-repair.md` for exact contracts,
+numerical criteria, ownership, limits and errors.
+
+The new UI uses version-2 STL options with `surfaceMode` (`original` or
+`reconstruct`) and `reconstructionToleranceM` (null for original, positive finite
+SI distance for reconstruction). New imports default to original triangles and
+start review automatically when the user chooses units. Existing imports retain
+their reviewed settings. Surface processing and grouping live in advanced
+options; changes require an updated preview and explicit acceptance. Failed
+reconstruction/remeshing offers an explicit original-triangle retry, never an
+automatic fallback. Error codes remain available under technical details.
+Binary source triangle counts may be read from an exact-length header before
+validation; this does not establish validity or enable acceptance. At 25,000 or
+more source triangles, import and mesh controls show qualitative runtime advice,
+a Coarse-first recommendation, and the 120-second operation limit/cancellation.
+This threshold is a usability heuristic, not a calibrated time estimate. ASCII
+counts and advice become available after worker validation.
+Original mode retains every source triangle using one indexed discrete surface
+per selectable patch, avoiding the legacy near-planar subdivision limit.
+Reconstruction initially supports coplanar polyhedra (including holes) and full
+cylinders/conical frusta with perpendicular flat ends. Arbitrary fitted-surface
+intersections and freeform reconstruction remain unsupported and produce explicit
+errors. Never silently fall back after a failed reconstruction.
+
+Reconstruction has a user-selected deviation bound and original/candidate preview
+comparison. Version-2 source metadata carries the mode and reconstruction report;
+`originalPreview` is retained beside the recovered `preview`. Version, mode and
+tolerance enter patch identity. Fresh workers reproduce and verify the source,
+options, fit, closed shell and ownership. Recovered surfaces use curved Tet10
+geometry; the original path retains straight facets. Display tessellation and
+finite-element approximation error are separate from the reconstruction bound.
+Changing mode/deviation requires review and explicit assignment transfer just as
+changing units/grouping does. See the extension design for geometric bounds,
+implemented limitations, errors and acceptance tests.
+
+An additional opt-in, experimental `surfaceMode: 'remesh'` keeps both established
+paths intact. It requires `reconstructionToleranceM: null` and a finite
+`remeshFeatureAngleDegrees` in [1, 40] (UI default 5). It creates parametrized
+discrete surfaces from the validated STL, subdividing each selection group as
+needed; it does not fit smooth CAD geometry or claim a reconstruction deviation
+bound. The effective feature angle is the smaller of this setting and the
+selection grouping angle. Feature angle enters identity and review invalidation.
+The version-2 metadata has `reconstruction: null` and a `remeshing` report with
+version 1, method `stl-parametrization`, effective `featureAngleDegrees`, and
+`surfaceCountsByPatch`; counts must be positive, cover all groups, and sum to
+`internalSurfaceCount`. No alternate-geometry preview is advertised: the reference
+geometry is still the source STL. Source element ownership is checked exactly
+once before parametrization in each fresh worker, and the 512-chart/120-second
+limits remain. Parametrization failures use `STL_REMESH_FAILED`; neither failed
+parametrization nor failed meshing silently switches modes or feature angles.
+
+Experimental remeshing regenerates both surface and volume elements. It uses
+the selected mesh sizes, Gmsh surface algorithm 6, no point/curvature-derived size
+field, and straight Tet10 midpoints. Existing Jacobian, ownership, preflight,
+convergence and equilibrium gates apply. Finite-element boundaries approximate
+the source surface: coarse elements can bridge facets and distort stresses, and
+finer feature angles can make difficult inputs unmeshable. The UI states these
+limitations. Mesh quality includes optional `stlBoundaryAreas` with version 1 and
+positive finite `sourceM2`/`meshM2` arrays in boundary-patch order. Straight Tri3/
+Tri6 corner areas are exact for this mode. Any patch area change exceeding 1%
+adds an explicit pressure-force fidelity warning to the existing mesh/checks
+warnings. Area agreement is a diagnostic, not a geometric error certificate.
+The numerical cylinder checks use 5 degrees to retain their creases;
+the optional funnel trial uses 40 degrees and records volume/refinement evidence
+separately from solver convergence. Automatic freeform CAD fitting remains future
+work; successful remeshing is not reported as successful CAD reconstruction.
 
 ### 6.2 Geometry validation
 
@@ -822,7 +966,8 @@ At minimum compute/report:
 - node count;
 - minimum and distribution of a normalized tetrahedral quality metric;
 - inverted/negative-Jacobian count;
-- near-zero Jacobian count;
+- near-zero Jacobian count, using `abs(det J) <= 1e-12 * longestCornerEdge³`
+  to match native Tet4/Tet10 validation (four quadrature samples for Tet10);
 - extreme edge-length ratio/aspect indicators;
 - minimum and maximum characteristic element size.
 
@@ -917,7 +1062,17 @@ The sign convention must be explicit in the UI. Prefer positive pressure meaning
 
 A requested total force vector is distributed over the selected faces consistently by surface integration. Do not simply divide by the number of mesh nodes.
 
-The integrated equivalent nodal forces should sum to the requested total force within numerical tolerance.
+For component mode, integrated equivalent nodal forces sum to the requested
+vector within numerical tolerance. In normal mode, positive `magnitudeN` is the
+sum of distributed local force magnitudes, not necessarily the net vector norm.
+Use uniform pressure ±magnitude/selected area, positive for Push and negative for
+Pull. Opposing local normals may cancel. In the solver worker, Tri3 uses triangle
+area and Tri6 uses the same three-point surface quadrature as native `tri6_area`.
+This normalization then calls the unchanged native pressure integration. The
+surface-load record (introduced in protocol 2, retained in protocol 3) adds optional normal magnitude/sense; normal loads
+omit the preview-only equivalent nodal force array (`null`). No native API or
+WASM binary change is needed. Malformed magnitudes and degenerate areas fail
+with actionable errors.
 
 #### Gravity
 
@@ -1031,6 +1186,34 @@ Solver convergence must consider a relative residual norm, for example:
 
 Initial default tolerance should be on the order of `1e-8` for well-scaled linear systems, with a maximum iteration count tied to problem size and benchmark results.
 
+The automatic iteration limit remains `max(1000, 10 * DOF)` (saturated to the
+32-bit index limit). Every solve also has a default ten-minute PCG elapsed-time
+budget, checked between iterations (assembly and recovery are separate).
+The browser's optional `solveSettings.maxDurationMs` accepts finite values from
+1,000 to 3,600,000 ms; missing values use 600,000 ms for older documents. The
+Checks panel lets the user choose 1–60 minutes. This runtime preference survives
+setup transfer, does not invalidate accepted physical results, and cannot change
+during a worker operation or assignment draft. Native C++ callers can set a
+positive finite `max_duration_ms`; the additive C API `fem_set_time_limit`
+configures the same budget without changing version-2 structure layouts.
+Exhausting either budget returns `SOLVER_NOT_CONVERGED` and publishes no results.
+`TIME_LIMIT` is appended to the termination-reason enum without renumbering existing
+values. These bounds prevent an ill-conditioned STL mesh from running millions of
+iterations; they do not establish that such a mesh is solvable.
+
+Optional native iteration callbacks report iteration count, relative residual and
+elapsed milliseconds initially, no more than once per 250 ms during iteration, and on
+convergence or budget exhaustion. A converged report uses the freshly recomputed
+residual. The additive `fem_set_iteration_callback` C API leaves version-2 structure
+layouts unchanged. WASM callbacks post existing versioned worker progress messages;
+the message text includes count, residual, target and elapsed time. Assembly and
+recovery status must follow actual native phase transitions, and cancellation by
+worker termination remains available throughout.
+The controller marks progress-only notifications as `solve-progress` or
+`convergence-progress`; the UI
+updates status text while the viewport skips geometry, selection and overlay
+rebuilds. Engineering state changes still trigger normal rendering.
+
 Record:
 
 - iteration count;
@@ -1135,13 +1318,17 @@ Then add explicit estimates for the Jacobi diagonal, PCG work vectors, graph/ass
 
 Do **not** present this raw sum as a precise number. Apply a configurable safety multiplier derived from benchmark measurements.
 
-Initial conservative recommendation:
+Calibrated v1 policy:
 
 ```text
 estimatedPeakBytes = 1.5 * modeledPeakBytes
 ```
 
-The multiplier must be recalibrated from real browser measurements before v1.0.
+The 36-record Chromium/Firefox calibration matrix retained this multiplier.
+The maximum measured WASM/model ratio was 0.991525; a 0.25 absolute margin
+rounded upward would permit 1.3, but v1 keeps 1.5 because the matrix does not
+include successful near-cap allocations and whole-browser overhead is not part
+of the solver-only model. See `benchmarks/resource/README.md`.
 
 ### 10.4 Mesher and solver memory should not overlap unnecessarily
 
@@ -1190,11 +1377,11 @@ Do not promise that a solve below 8 GiB will succeed.
 
 v1 should not depend on `memory64` for correctness. Treat 64-bit WebAssembly memory as a future capability until the application has been tested across its supported browser matrix and the selected Emscripten/libraries support it reliably.
 
-The initial production build sets a 3.5 GiB practical upper bound for the
+The production build sets a 3.5 GiB practical upper bound for the
 single-threaded solver WASM memory and surfaces that limit in preflight. This
 stays below the 32-bit WebAssembly address-space ceiling while leaving room for
-browser/runtime allocations outside the solver heap; it must be recalibrated
-from the supported-browser memory benchmarks before being raised.
+browser/runtime allocations outside the solver heap. The v1 browser matrix did
+not exercise a successful near-cap allocation, so calibration retains this cap.
 
 If the estimate exceeds the configured WASM heap maximum, disable Solve and require a coarser mesh.
 
@@ -1257,6 +1444,19 @@ The UI must distinguish:
 - **displayed smoothed peak**: maximum of the interpolated/averaged surface field used for visualization.
 
 Never silently report a smoothed contour peak as the sole "maximum stress".
+Measured smoothed extrema/ranges use only nodes referenced by the rendered boundary
+topology, not unused interior nodes. Stress smoothing takes the mean of recovery
+samples within each element, then the unweighted mean of adjacent element
+values at each node; this method is unchanged. A sampled peak is not an exact
+continuum maximum. Whole-volume recovery
+peaks remain unchanged. Clearly identify sample versus surface locations and
+retain uncapped engineering FoS independently of the contour mapping.
+
+The von Mises legend and color mapping span zero to the whole-model unaveraged
+solver-sample peak. This presentation range is separate from boundary-only range
+metadata; the smoothed surface may never reach the top color. Keep the visible
+legend to “von Mises (MPa)” and its endpoints. Put the surface maximum and
+smoothing explanation in the legend tooltip and Results details.
 
 ### 11.4 Deformed shape
 
@@ -1302,6 +1502,14 @@ The user should be able to click the rendered surface and see approximate local 
 - displacement;
 - stress metric;
 - face ID for developer diagnostics.
+
+Use barycentric interpolation at the clicked rendered point, not the triangle
+centroid. One selected-point marker and nearby bounded HTML detail label serve
+both surface probes and Locate peak. Raw interior samples are labeled explicitly
+and shown through the surface at their undeformed coordinates; surface markers
+follow the current deformation. Locate peak does not change the camera. A new
+point replaces the old selection; background click, Escape, a second Locate peak
+click, or result invalidation clears it.
 
 ### 11.7 Result summary
 
@@ -1360,6 +1568,12 @@ Show:
 - optionally smoothed FoS contour for visualization;
 - the material strength used;
 - the failure criterion used.
+
+FoS reverses the stress color ramp: the minimum is red and the maximum is blue,
+in both the surface contour and vertical/horizontal legends. Manual or locked
+limits retain this ordering; clipped values use the corresponding endpoint color.
+Uniform fields retain a finite midpoint color. This is a relative display scale,
+not an absolute safety threshold; numerical FoS values and the contour cap stay unchanged.
 
 Values near stress singularities must inherit the singularity/convergence warning.
 
@@ -1541,7 +1755,9 @@ Use the internalized SpjutSim UI shell as the baseline application chrome:
 
 ```text
 +-------------------------------------------------------------------+
-| App title/status | File/View/etc menus            | primary Solve |
+| App title/status                      | File/View/etc menus       |
++-------------------------------------------------------------------+
+| Tools | Undo Redo Save Export              | Solve | Results        |
 +----------------------+--------------------------------------------+
 | Setup pane           | Canvas / Results layout                    |
 |  Model               | +---------------------+------------------+  |
@@ -1549,18 +1765,42 @@ Use the internalized SpjutSim UI shell as the baseline application chrome:
 |  Supports            | |    Three.js         | / Convergence    |  |
 |  Loads               | |    viewport         | / Diagnostics    |  |
 |  Mesh                | |                     |                  |  |
-|  Solve preflight     | +---------------------+------------------+  |
+|                      | +---------------------+------------------+  |
 +----------------------+--------------------------------------------+
 ```
 
 The UI foundation already models a tools pane and a canvas/results area with resizable split behavior. Preserve the concepts of results modes (`hidden`, `split`, `expanded`), responsive stacking, a user-adjustable split ratio, and an active results tab.
 
-The primary **Solve** action belongs in the shell's primary-actions region rather than being buried inside the tools pane.
+The app-owned workspace controller persists version-1 width/collapse preferences
+independently of the analysis document. Setup widths are bounded to 220–520 CSS
+pixels and Results to 260–520, while retaining at least 320 pixels for the
+viewport in desktop split mode. Below 1000 pixels only one pane is active;
+below 680 pixels drawers overlay the full-width canvas and start closed upon
+entering that compact mode. Empty Results starts collapsed. Explicit output
+commands may open it; redraws preserve the user's choice. The UI controller's
+`showOutputPanel(panelId)` selects a known output tab and opens the pane.
+A shared CSS gizmo rectangle is measured by the renderer. Result legend/probe
+share a separate bounded area on the right; short-window actions scroll above
+it. A drawer may temporarily cover these areas until dismissed.
+
+The menubar places File/Edit/View menus immediately after the app title and runtime
+status at the far right. Solve retains its accent background.
+A separate action bar immediately below the menubar contains Tools on the left,
+engineering Undo/Redo, disabled Save/Export placeholders, and Solve immediately left of
+Results on the right. Use Truss-style right/down disclosure triangles inside
+the Tools and Results panels. Solve opens Checks and runs preflight if no current
+prepared worker exists, then continues automatically when permitted. Execution
+still requires a current valid check and retains high-memory confirmation. Import, mesh completion,
+form edits, presentation, and opening reports do not start checks. Cancellation,
+model edits, failed checks, and the WASM cap prevent solving. Worker identity
+guards reject late replies from cancelled/replaced requests even at the same
+analysis revision. Explicit convergence studies retain per-level checks.
 
 Recommended result tabs for v1:
 
 - Results;
 - Convergence;
+- Checks (explicit preflight report);
 - Diagnostics.
 
 The exact tab names may change, but numerical results and convergence should live in the results pane rather than competing with geometry/material setup controls.
@@ -1570,8 +1810,8 @@ The exact tab names may change, but numerical results and convergence should liv
 Use ordinary semantic HTML controls enhanced by the internal UI helpers where useful.
 
 The whole left pane is **Setup**, without a nested Setup subpanel. Its fixed
-top-to-bottom order is Model, Material, Supports, Loads, Mesh, and Solve
-Preflight. Model owns CAD import/replacement and orientation; clicking the empty
+top-to-bottom order is Model, Material, Supports, Loads, and Mesh. Solve runs
+checks before execution; the output pane places Checks before Results. Model owns CAD import/replacement and orientation; clicking the empty
 Model row opens the file chooser, while an imported model collapses to a compact
 source/format/face/orientation summary. Material is a separate adjacent compact
 row whose existing editor expands in place. Supports and Loads follow.
@@ -1584,14 +1824,17 @@ same line.
 
 Selecting a row opens its editor directly in that row. Compact Add actions open
 the same support or load form in place. The UI moves the single form node
-between the inactive form stash and active row; it must not clone forms, keep a
-parallel draft, or expose separate Material/Supports/Loads/Mesh editing sections.
+between the inactive form stash and active row; it must not clone forms or
+expose separate Material/Supports/Loads/Mesh editing sections. Task 25 introduces
+one controller-owned transient assignment draft separate from committed
+engineering state; the UI must not keep another parallel copy.
 Save, cancel, delete, and Escape return focus to the logical row or Add action.
 Escape closes the inline editor before it clears transient face selection.
 
 Mesh is a single expandable row after Loads. It summarizes element/node counts
 after generation and offers modify/regenerate and delete actions in its one
-editor. Solve Preflight remains the focused tool below the compact rows.
+editor. Solve opens Checks during preflight and Results during execution.
+Run checks only remains in the Checks tab; reports are never appended below Setup.
 Expanded editors may use their own bounded overflow when necessary, but
 collapsed setup summaries remain compact and readable.
 
@@ -1623,12 +1866,13 @@ adjacent Add actions. Selecting a row opens its add/edit form directly beneath
 that row. Gravity remains a separate body-load control but appears in the Loads
 group when enabled; it is not part of the face-load collection.
 
-Users do not enter support or surface-load names. On creation, the controller
-assigns a stable display name using a per-category monotonically increasing
-sequence: `Support 1`, `Support 2`, ... and `Load 1`, `Load 2`, .... Deleting an
+On creation, the controller assigns a stable default display name using a
+per-category monotonically increasing sequence: `Support 1`, `Support 2`, ... and `Load 1`, `Load 2`, .... Deleting an
 item does not reuse its number, and editing an item's type does not rename it.
-Generated names remain part of the analysis item contract for diagnostics and
-future document serialization.
+Task 26 implements optional descriptive renaming while preserving stable item IDs
+and non-reused automatic numbering. Renaming alone is metadata-only and does
+not invalidate numerical results. Names remain part of the analysis item
+contract for diagnostics and future document serialization.
 
 Support and surface-load type controls remember their last authoring choice
 independently. Adding an item, cancelling an edit, selecting an existing item,
@@ -1699,6 +1943,22 @@ The default viewport controls are:
 - arrow keys rotate the camera application-wide unless an editable control,
   modal, menu, or arrow-navigated widget owns the event.
 
+Default projection is orthographic and default orientation is equal-angle
+isometric internally; present the default three-face pose with a cube icon
+labelled “Reset view”, without an “Iso” label. View commands select ±X/±Y/±Z with
+deterministic pole-safe up vectors through the View menu and signed gizmo.
+Positive labels remain visible; reveal circles and negative labels only while
+the general gizmo area is hovered or contains keyboard focus (always on no-hover
+devices). Render labels with depth testing against the gizmo arrows. The 3D
+display controls include a Perspective on/off switch independent of angle. Switching
+projection preserves target and visible scale using `2*d*tan(fov/2)` and the
+orthographic zoom on the inverse switch. Navigation preferences use version 2;
+version-1 records retain their bindings and sensitivities. View transitions last
+180 ms, are immediate under reduced-motion, and cancel on navigation. Fit
+preserves orientation; importing geometry establishes a fresh reset pose. Reset
+uses the same 180 ms eased transition for orientation, target, and scale, with
+reduced-motion and navigation cancellation behavior.
+
 Camera navigation must preserve the current face selection. Provide fit/reset
 view, bounded zoom, pole-safe orbiting, pointer-capture cleanup, and usable
 mouse, trackpad, and touch behavior. Open Settings with `Control+,` or
@@ -1732,8 +1992,9 @@ The viewport must support:
 - selecting the faces associated with an existing support or load from the
   compact setup inspector.
 
-In a face-selection presentation mode, a primary-button click on viewport
-background (no model face hit) clears the complete current face selection,
+Outside the Task 25 assignment draft interaction, in a face-selection
+presentation mode, a primary-button click on viewport background (no model
+face hit) clears the complete current face selection,
 including when a selection modifier is held. A pointer gesture classified as
 orbit/pan must not clear selection.
 Pressing `Escape` also clears the complete face selection when the event has not
@@ -1742,6 +2003,12 @@ or other dismissible overlay. These actions change only transient selected
 `FaceId` state: they do not delete supports/loads, leave edit mode, invalidate
 mesh/results, or clear a result probe. Clicking outside the viewport on other
 application controls does not clear faces.
+
+During an assignment draft, plain clicks toggle faces, background clicks preserve
+the set, Clear selection empties it, and Escape cancels the draft before normal
+selection clearing. Hover and glyph previews do not commit engineering changes.
+Apply/Save validates and commits once; Cancel preserves committed definitions and
+results. See Section 15.11.
 
 The preview mesh must preserve a face-to-triangle map for picking.
 
@@ -1767,12 +2034,14 @@ through theme roles and dispose replaced geometry/material resources.
 Render labeled X/Y/Z axes in a dedicated orthographic overlay at a fixed viewport
 corner. Apply inverse camera rotation so the triad follows view orientation but
 does not move with model pan, fit, or zoom. Clear depth between the model and
-overlay passes, exclude the overlay from picking, and resolve X/Y/Z colors from
-semantic theme roles. Lay out the overlay in screen pixels so resizing or canvas
+overlay passes, exclude the overlay from geometry/result picking, and resolve
+X/Y/Z colors from semantic theme roles. Lay out the overlay in screen pixels so resizing or canvas
 aspect ratio cannot stretch the labels. All three arrow tails meet at one point;
 the complete rotated arrows and label boxes must remain inside the viewport.
 Use 30-pixel axes, 21-pixel square label sprites, and a safe corner inset large
 enough to preserve a small margin at every tested rotation and viewport size.
+Task 23 adds separate signed-axis navigation hit targets, hover/focus descriptions,
+and equivalent keyboard-accessible view commands; these never select model faces.
 
 ### 15.8 Units
 
@@ -1799,6 +2068,78 @@ Maintain semantic roles/ARIA state for menus, tabs, switches, dialogs, and listb
 Changing geometry, material, BCs, loads, or mesh settings invalidates dependent results.
 
 The UI must clearly mark results stale and require a new solve.
+
+### 15.11 Approved pre-v1 usability and STL improvement sequence
+
+Approved on 2026-09-07. **Tasks 21–23 implemented and accepted 2026-09-08;
+Tasks 24–27 accepted; M28 accepted 2026-09-11; M29 implemented pending owner review; Task 30 planned.** Tasks 21–30 in
+`docs/plans/README.md` schedule independent delivery and mandatory owner reviews.
+These requirements refine the earlier UI descriptions where behavior changes.
+They preserve the numerical, worker, dependency, and direct-local requirements.
+
+- **Workspace (21):** Canvas/grid children shrink to available width and height.
+  Side panes scroll independently, resize/collapse with accessible controls, and
+  keep useful model space. Empty output is initially collapsed. Gizmo, legend,
+  probe, and controls have nonoverlapping bounded locations across desktop resize,
+  browser zoom, and high-DPI changes; narrow-window robustness is not mobile support.
+- **Result clarity (22):** Headline peak von Mises and yield FoS use unaveraged
+  recovery samples. The contour is explicitly a smoothed surface field with
+  boundary-only extrema and units. The quiet von Mises key/colors span zero to
+  the model sample peak; tooltip/details explain smoothing. Locate peak distinguishes
+  an interior sample from a surface location. Show convergence/singularity context;
+  sampled peaks and contour appearance alone do not establish physical safety.
+  Use consistent engineering-unit formatting without rounding stored SI values.
+- **Camera (23):** Orthographic projection and isometric orientation are defaults.
+  Perspective has an independent display switch. Signed ±X/±Y/±Z views and a
+  graphical animated Reset view have gizmo and keyboard/menu paths. Preserve apparent scale/target when changing
+  projection; exact principal views must avoid pole ambiguity. Camera transitions
+  respect reduced motion and never rotate engineering geometry or invalidate results.
+- **Display (24):** Model/Mesh/Stress/Deformation use a compact primary selector
+  and contextual options. Shaded, shaded-with-part-edges, and wireframe are separate
+  from mesh overlay; mesh lines can be turned off in shaded result views. Default
+  result presentation is a clean contour. Legend/contour colors remain consistent.
+  The key defaults to vertical with about five to seven ticks when space permits;
+  horizontal uses endpoints only. Manual/automatic ranges and field-specific range
+  locks are presentation-only, validate bounds, and visibly identify clipping and
+  the FoS cap (`10+`).
+- **Assignments (25):** A single controller-owned transient support/load draft
+  drives the inline form and preview. Plain clicks toggle draft faces, hover shows
+  candidates, and background clicks preserve selection. Apply/Save validates and
+  commits once; Cancel/Escape preserves prior engineering state. Editing suppresses
+  duplicate old glyphs. Dirty drafts require an explicit disposition before switching
+  editing tasks or checking/solving. Clearly distinguish total force across all
+  selected faces from constant pressure; glyph count/size does not encode magnitude.
+- **Setup/checks (26):** Preserve the editable setup sequence with readable group
+  readiness and optional assignment names. Solve runs checks first; Checks precedes Results.
+  Preflight is explicitly user-triggered; its report opens in Checks, prioritizing
+  actionable findings and memory/stability above expandable solver detail. Engineering
+  changes require a new check; presentation and metadata-only changes do not.
+  Preserve mandatory memory/cap/confirmation and revision gates, including explicit
+  study-internal convergence checks.
+- **History (27):** Undo/redo committed setup definitions and rigid orientation,
+  with native text undo and draft cancellation retaining separate ownership. Store
+  at most 50 compact commands / 2 MiB of definition data, not numerical buffers.
+  Validate/invalidate normally during undo; never restore stale result snapshots or
+  old analysis revisions. Clear history on source import/replacement/removal; worker
+  execution and active drafts disable engineering history commands. Mesh generation,
+  solve, and convergence are not replayable commands.
+- **STL (28–29):** First prove a pinned-runtime binary/ASCII STL-to-Tet10 path and
+  obtain owner acceptance of explicit units, dimensions, closed connected manifold
+  validation, deterministic selectable patches, and grouping/remapping semantics.
+  Then implement the accepted subset with fresh-worker identity, full load/support
+  integration, replacement/orientation behavior, classified failures, licensed corpus,
+  cancellation/resource evidence, and numerical/direct-local verification. Heavy
+  preprocessing runs in workers. Do not silently repair input, add dependencies, or
+  downgrade analysis support to a preview-only import. Failed feasibility requires
+  an explicit owner scope decision; it does not waive the v1 gate.
+- **Manual acceptance (21–30):** Every plan ends in its named owner checkpoint.
+  Provide a working review packet after automated checks, record the actual response,
+  and wait before starting the next plan. The owner's 2026-09-07 execution
+  instruction authorizes batching implementation of 21–23 before a combined
+  M21–M23 review, accepted by the owner on 2026-09-08.
+  Task 30 checks the integrated workflow;
+  only then may Task 20 freeze/audit the candidate. Old passing records do not certify
+  changed behavior. Tagging/publication still require explicit owner authorization.
 
 ---
 
@@ -1884,6 +2225,11 @@ Suggested starting targets for converged Tet10 benchmarks:
 
 Do not apply a fixed tolerance to mathematically singular peak stress.
 
+Numerical release validation must reject failed benchmark outcomes, preserve
+the signs of compared displacement/reaction components, and recompute relative
+errors from the recorded actual and reference values. A structurally valid
+failure record does not satisfy release acceptance.
+
 ### 16.3 Regression fixtures
 
 Each solver/mesher release should run a fixed corpus containing:
@@ -1911,6 +2257,11 @@ For representative mesh sizes, record:
 - UI responsiveness.
 
 These tests are required before adjusting the product's memory-warning thresholds.
+
+Every repetition in the release resource matrix must complete successfully,
+with final relative residual at or below its recorded solver tolerance.
+Failed, cancelled, or preflight-blocked runs remain diagnostic evidence and
+cannot fulfill the successful-run requirement.
 
 ---
 
@@ -2098,6 +2449,7 @@ A suggested layout:
   fem_c_api.cpp
 
 /workers
+  stl-import.js              # parsing, full solid validation, units, patch identity
   mesher-worker.js
   solver-worker.js
 
@@ -2199,6 +2551,26 @@ Worker responses should include:
 
 Do not make the main thread depend on Gmsh wrapper objects or C++/Emscripten-generated class bindings.
 
+Result schema version 2 now requires `rangeMetadataVersion: 1`. Each base
+rendered field range records `locationOwner: "surface-node"`, boundary-only
+minimum/maximum, their node indices and SI locations. Ties use the first node
+encountered in boundary connectivity. Raw extrema record
+`locationOwner: "solver-sample"`, their value, sample index, owning element,
+exact Float64 recovery position, and `isInterior: true` for the current Tet4
+centroid/Tet10 quadrature recovery rules. `nearbyBoundaryFaceId` (also retained
+as the legacy `faceId` for convergence grouping) is a nearby boundary hint, not
+the sample's physical location. Displacement maximum remains a whole-volume
+node extremum (`locationOwner: "volume-node"`). Validators reject contradictory
+values, ownership, node/sample linkage, nonfinite positions, or range metadata.
+The von Mises display range is derived separately as zero to
+`extrema.rawVonMisesMax.valuePa`; it never overwrites `ranges.vonMises`.
+
+FoS retains uncapped boundary minimum/maximum and node locations separately
+from finite color-mapped values capped at 10. The FoS contour's range is the
+actual capped boundary range, with clipping explicitly indicated.
+Native solver values and the worker envelope protocol version remain unchanged;
+older unversioned postprocessing results must be regenerated.
+
 ## 20. Performance Targets
 
 These are product targets, not hard physical limits.
@@ -2257,15 +2629,32 @@ Keep full diagnostic logs available behind a developer/debug panel.
 
 ## 22. Licensing and Distribution Decision
 
-This is the only major non-technical decision that should be settled before publicly distributing v1.0.
+On 2026-09-06 the copyright holder approved GPL-2.0-or-later for first-party
+SpjutSim FEA code and the copied UI foundation files. This does not relicense
+the separate UI Kit project or override third-party notices. The decision and
+final-review status are recorded in `docs/release/distribution-policy.md`.
 
 Gmsh is GPL-2.0-or-later, and common browser WASM packages statically include Gmsh/OpenCASCADE. Distribution of that WASM artifact carries Gmsh's license obligations unless a separate commercial license is obtained.
 
-Therefore:
+The v1 path is GPL-compatible source accompaniment. Each browser/folder release
+includes exact application source, pinned upstream source archives, notices,
+and build instructions. `docs/release/artifact-manifest.json` covers all
+vendor/generated assets and UI provenance. `tools/audit-distribution.py` checks
+hashes, coverage, local runtime URLs, source/build references, and policy
+consistency; its staged-release mode also verifies actual corresponding-source
+archive contents. `tools/package-distribution.py` creates the local source-
+accompanied stage. These are narrow Python packaging steps, not frontend tooling.
 
-- development can proceed with Gmsh now;
-- keep the mesher isolated behind the backend contract;
-- before proprietary distribution, decide whether the application will comply with the GPL obligations, obtain an appropriate Gmsh commercial license, or replace the meshing backend.
+Wrangler serves only that stage and requires a successful audit with final owner
+review bound to the artifact-manifest hash. A missing/blocked decision, missing
+source package, or stale final review prevents publication through that path.
+The literal URL audit is supplemented by offline browser verification. Final
+owner review and Task 20's complete candidate acceptance remain separate gates.
+
+Keep the mesher isolated behind its backend contract. A future proprietary
+release requires adequate rights to all retained code or a separately designed
+backend replacement; it does not revoke rights granted for earlier GPL versions.
+CAD authoring and first-party mesher/kernel replacements remain outside v1.
 
 This licensing question is one reason the mesher abstraction is a v1 architectural requirement rather than cleanup work.
 
@@ -2292,14 +2681,14 @@ These do not block implementation and should be decided using benchmark data:
 1. Exact Gmsh 3D meshing algorithm/options for the default preset.
 2. Exact tetrahedral quality metric and warning threshold.
 3. Whether to optimize the validated scalar CSR implementation into 3x3 block-CSR before or after v1.0.
-4. Whether Jacobi is sufficient for the v1 benchmark corpus or a first-party IC(0)/stronger preconditioner is required.
-5. Production PCG tolerance and maximum-iteration heuristic.
-6. Exact practical WASM heap cap for supported browsers.
-7. Calibration factor in the memory estimator.
-8. Exact browser support matrix beyond current Chromium desktop.
+4. **Reopened by the funnel STL:** retain Jacobi in production. Prior resource and numerical cases converge, but the original funnel's sliver-rich mesh does not. Experimental shifted IC(0), with and without reordering, did not establish convergence; stronger preconditioning or bounded surface remeshing needs further numerical evidence.
+5. **Resolved for v1:** relative tolerance `1e-8`, automatic maximum `max(1000, 10 * DOF)`, and a configurable ten-minute PCG budget with live progress and explicit nonconvergence. A universal two-minute/10,000-iteration cap is unsuitable: the accepted 150k-node resource case takes about eight minutes and 17,188 iterations.
+6. **Resolved for v1:** retain the 3.5 GiB single-threaded WASM heap cap; the measured matrix does not justify raising it.
+7. **Resolved for v1:** retain the calibrated 1.5 memory multiplier; measured WASM/model maximum is 0.991525.
+8. **Partially resolved:** current Chromium desktop is primary; current Firefox direct-local is the secondary resource-compatibility target. Broader support remains open.
 9. Whether to provide a downloadable/local desktop wrapper after the browser v1 is stable; it is not required to achieve direct-local browser execution.
 10. Whether the copied SpjutSim UI helpers should eventually be converted from global/IIFE scripts to ES modules; this is cleanup and must not remove the baseline direct-local path.
-11. Whether the solver should gain a threaded build after single-threaded WASM performance has been benchmarked; threaded acceleration is optional for v1 correctness.
+11. **Resolved for v1:** threaded WASM is a post-v1 optimization. Cross-origin-isolated HTTP keeps the serial path until a separately modeled and numerically verified pthread artifact exists.
 
 Each should be resolved by a benchmark, compatibility test, or licensing/product requirement rather than by prematurely coupling the architecture.
 
@@ -2338,40 +2727,57 @@ That slice exercises almost every architectural boundary without requiring the f
 
 The project is ready to call v1.0 only when all of the following are true:
 
-- [ ] STEP, IGES, and BREP import work on the agreed CAD regression corpus at an acceptable success rate.
-- [ ] Axis rotation and selected-face alignment preserve global setup state and invalidate stale mesh/results.
-- [ ] Exactly-one-solid restriction is enforced clearly.
-- [ ] CAD face selections survive remeshing within an analysis session.
-- [ ] Tet10 is the default production element.
-- [ ] One-, two-, and three-axis supports, prescribed displacement, pressure, total face force, and gravity work.
-- [ ] Force integrations and reactions satisfy equilibrium checks.
-- [ ] First-party sparse assembly avoids unbounded triplet-memory growth.
-- [ ] Production solver does not require a third-party sparse linear-algebra library.
-- [ ] Frontend runs without npm, React, TypeScript, Vite, or a framework/transpile JavaScript build step.
-- [ ] Primary supported desktop browser completes the full import -> mesh -> solve workflow when `index.html` is opened through `file://`.
-- [ ] Direct-local mode does not require `SharedArrayBuffer`, cross-origin isolation, a server process, or a network connection.
-- [ ] Direct-local meshing and solving remain off the UI thread using the tested file-safe worker path.
-- [ ] Optional HTTP mode detects cross-origin isolation and can enable threaded acceleration when a threaded build is present.
-- [ ] SpjutSim UI source is internalized and the application shell works from repository-local files only.
-- [ ] Compact Model/Material, Support, and Load summaries are visible together
+Checked items below have repository evidence summarized in
+`docs/release/v1-acceptance-audit.md`. Unchecked items remain release blockers;
+an implemented code path is not sufficient without the required release
+evidence.
+
+- [x] STEP, IGES, and BREP import work on the agreed CAD regression corpus at an acceptable success rate.
+- [x] Axis rotation and selected-face alignment preserve global setup state and invalidate stale mesh/results.
+- [x] Exactly-one-solid restriction is enforced clearly.
+- [x] CAD face selections survive remeshing within an analysis session.
+- [x] Tet10 is the default production element.
+- [x] One-, two-, and three-axis supports, prescribed displacement, pressure, total face force, and gravity work.
+- [x] Force integrations and reactions satisfy equilibrium checks.
+- [x] First-party sparse assembly avoids unbounded triplet-memory growth.
+- [x] Production solver does not require a third-party sparse linear-algebra library.
+- [x] Frontend runs without npm, React, TypeScript, Vite, or a framework/transpile JavaScript build step.
+- [x] Primary supported desktop browser completes the full import -> mesh -> solve workflow when `index.html` is opened through `file://`.
+- [x] Direct-local mode does not require `SharedArrayBuffer`, cross-origin isolation, a server process, or a network connection.
+- [x] Direct-local meshing and solving remain off the UI thread using the tested file-safe worker path.
+- [x] Optional HTTP mode detects cross-origin isolation, retains the serial path,
+  and does not advertise deferred threaded acceleration as available.
+- [x] SpjutSim UI source is internalized and the application shell works from repository-local files only.
+- [x] Compact Model/Material, Support, and Load summaries are visible together
   for an ordinary setup and every item can be selected and edited in place.
-- [ ] PCG failures are diagnosed rather than returned as plausible results.
-- [ ] Pre-solve memory estimate is shown for every solve.
-- [ ] Device-memory hints are optional and absence does not break the app.
-- [ ] >= 8 GiB estimated solves show an explicit high-memory warning/confirmation.
-- [ ] Configured WASM heap limit is enforced before solve allocation.
-- [ ] Solver and mesher run off the UI thread.
-- [ ] Worker cancellation works.
-- [ ] Deformed shape and required scalar contours render correctly.
-- [ ] Raw and smoothed stress peaks are distinguished.
-- [ ] Maximum displacement, stress extrema, reactions, and solver statistics are reported.
-- [ ] Yield-based von Mises factor of safety works when strength data is supplied.
-- [ ] Mesh convergence workflow is complete.
-- [ ] Global convergence vs unresolved peak stress are reported separately.
-- [ ] Likely stress singularities produce a clear warning.
-- [ ] Analytical and reference-solver validation tests pass agreed tolerances.
-- [ ] Memory-estimator calibration tests have been run on supported browsers.
-- [ ] Licensing/distribution posture for Gmsh has been resolved.
+- [x] PCG failures are diagnosed rather than returned as plausible results.
+- [x] Pre-solve memory estimate is shown for every solve.
+- [x] Device-memory hints are optional and absence does not break the app.
+- [x] >= 8 GiB estimated solves show an explicit high-memory warning/confirmation.
+- [x] Configured WASM heap limit is enforced before solve allocation.
+- [x] Solver and mesher run off the UI thread.
+- [x] Worker cancellation works.
+- [x] Deformed shape and required scalar contours render correctly.
+- [x] Raw and smoothed stress peaks are distinguished.
+- [x] Maximum displacement, stress extrema, reactions, and solver statistics are reported.
+- [x] Yield-based von Mises factor of safety works when strength data is supplied.
+- [x] Mesh convergence workflow is complete.
+- [x] Global convergence vs unresolved peak stress are reported separately.
+- [x] Likely stress singularities produce a clear warning.
+- [x] Analytical and reference-solver validation tests pass agreed tolerances.
+- [x] Memory-estimator calibration tests have been run on supported browsers.
+- [x] Licensing/distribution posture for Gmsh has been resolved.
+- [x] Responsive workspace/overlays and owner review M21 are accepted.
+- [x] Boundary-only contour extrema, result explanation, and owner review M22 are accepted.
+- [x] Orthographic/isometric and signed gizmo/menu views and M23 are accepted.
+- [x] Contextual display controls, independent mesh edges, vertical/horizontal legends, and M24 are accepted.
+- [x] Transactional load/support previews and M25 are accepted.
+- [x] Readable setup and the reviewed check-then-solve workflow and M26 are accepted.
+- [x] Bounded engineering edit undo/redo and M27 are accepted.
+- [x] STL feasibility, units/validation/patch contract, and M28 owner scope decision are accepted (2026-09-11).
+- [ ] The accepted STL analysis subset passes topology, numerical, corpus, resource, direct-local, and M29 reviews.
+- [ ] Integrated post-change regression and owner usability review M30 are accepted.
+- [ ] Task 20 binds all required evidence to the exact final candidate after Tasks 21–30; release authorization is recorded.
 
 ---
 
@@ -2407,9 +2813,9 @@ Reference documentation consulted while preparing this specification:
 | Area | Decision |
 |---|---|
 | Product model | Local-first browser FEA |
-| CAD format | STEP, IGES, and OpenCASCADE BREP; STL/OBJ deferred |
+| CAD format | STEP, IGES, and OpenCASCADE BREP; bounded binary/ASCII STL implemented, M29 owner review pending; OBJ deferred |
 | Geometry | One closed solid body |
-| Geometry kernel | OpenCASCADE through Gmsh |
+| Geometry kernel | OpenCASCADE through Gmsh for CAD; validated STL original-surface and bounded primitive-reconstruction paths |
 | Mesher | Gmsh, isolated behind replaceable interface |
 | Prototype element | Tet4 |
 | v1 production element | Tet10 |
@@ -2430,3 +2836,148 @@ Reference documentation consulted while preparing this specification:
 | v1 release bar | Milestone 4: post-processing + convergence complete |
 | Onshape API | Post-v1.0 |
 | Orthotropic printed-part model | Post-v1.0 |
+
+### Plans 24–27 implementation notes (owner review pending)
+
+The owner requested a combined manual review after all four implementations on
+2026-09-08. Intermediate M24–M27 acceptance gates remain unchecked until that review.
+
+Plan 24: presentation normalizes `lines` to `shaded-edges`; `shaded` and
+`wireframe` are explicit alternatives. Result part outlines follow CAD face
+boundaries separately from element overlay lines. Result colors use an unlit
+material with sRGB-to-linear vertex conversion to match the legend.
+`viewportPresentation.colorRange` holds `{mode, field, locked, minimum?, maximum?}`
+in SI units, separate from numerical result ranges. Manual bounds are finite and
+strictly ordered; an automatic locked uniform range may have equal endpoints.
+Limits reset on incompatible field changes and survive compatible unit changes.
+`legendOrientation` defaults to vertical, with two to seven height-aware labels;
+horizontal labels only endpoints. FoS cap reads `10+`. Units are Pa/kPa/MPa or
+m/mm. Only validated compact style and orientation preferences persist.
+
+Plan 25: `assignmentDraft` is the sole transient support/load transaction, with
+`kind`, optional `itemId`, `faceIds`, SI `definition`, `baseAnalysisRevision`,
+geometry identity, dirty state, and validation feedback. Controller commands
+`beginAssignmentDraft(kind, itemId?, definition?)`, `updateAssignmentDraft(patch)`,
+`toggleDraftFace(faceId)`, `commitAssignmentDraft()`, and `cancelAssignmentDraft()`
+separate previews from committed engineering state. Validation rejects stale
+revisions, malformed values/faces, and conflicting prescribed components on the
+same face. Existing mesh/native checks remain authoritative for shared-node
+conflicts across different faces. Apply uses one existing invalidation boundary;
+unchanged Save and Cancel preserve revision, mesh, preflight, and results.
+Plain draft clicks toggle faces; background preserves the set. Escape cancels
+before ordinary selection clearing. Opening another editor requires explicit
+Apply/Cancel for a dirty draft. Results enter a selectable view for authoring,
+and Cancel restores the prior available presentation. Face samples are cached
+per geometry/mesh with bounded per-face samples; the viewport reuses unchanged
+glyph resources and application updates coalesce to one animation frame.
+
+Plan 26: `solveReadiness(document)` centralizes canCheck/canSolve, status, and
+action guidance. Both controller gates and the UI use it. `lastSolveCheck` retains
+only compact preflight diagnostics and revision so a stale report remains
+inspectable without authorizing a solve. Reports prioritize actionable setup links,
+constraint readiness, and estimated memory; detailed topology/runtime figures
+are expandable. Completed/failed/cancelled solve workers require an explicit
+new check before retrying. Assignment names are trimmed nonempty text.
+`renameAssignment(kind,id,name)` and name-only assignment replacement are metadata
+edits; they retain numerical revision/results/preflight. Automatic name sequences
+still advance independently and monotonically.
+
+Plan 27: controller-owned `EngineeringHistory` retains at most 50 commands and
+2 MiB of UTF-8 serialized definitions, evicting oldest entries deterministically.
+An individual oversized command clears incompatible history. Commands contain
+small before/after definitions, labels, geometry identity, and assignment order;
+rigid orientation uses rotation matrices and operation metadata. Source bytes,
+mesh/result typed arrays, worker objects, and WASM contexts are excluded. Undo
+and redo use ordinary validation/invalidation, retain assignment IDs, and never
+rewind name/ID allocators or analysis revisions. A new edit discards redo;
+no-op Save and cancelled drafts add nothing. Metadata-only rename replay keeps
+results and preflight. Import/replacement/removal clear history after validation.
+Undo/Redo is disabled during any assignment draft or worker execution. Edit-menu
+and toolbar labels identify the command; status explains recheck/remesh needs.
+Platform shortcuts exclude editable fields, composition, modals, and Settings,
+and leave browser commands untouched when no app history action is available.
+Assignment drafts also block convergence startup before disposing a ready solver.
+
+
+### M24–M27 manual-review corrections (acceptance pending)
+
+The owner requested these changes after the first combined review. They supersede
+Task 26's originally explicit separate check-then-Solve interaction. Solve checks
+and then runs; cap/failure/draft/busy gates and large-memory confirmation remain.
+Cancelled or disposed workers are rechecked on retry. Import, mesh completion,
+opening a report, and presentation changes do not start checks by themselves.
+Checks explain concrete repairs with editor links and named free rigid motions.
+
+Deformation defaults to Auto on entry. Editing minimum/maximum chooses Manual;
+input widths match Display selects. Legends are movable/resizable by pointer or
+keyboard, with bounds clamped to the central viewport and compact validated
+per-orientation placement preferences. Horizontal defaults wider. The color bar
+fills available width/height as the legend resizes. Tools/Results use accent and
+selection-text tokens when engaged, including light themes.
+
+Planar glyph samples use a regular surface grid; curved or trimmed surfaces use
+bounded area-stratified candidates and farthest-point spacing. Samples retain
+local normals and are cached per surface. Glyphs are qualitative direction cues.
+Apply/Save clears selected faces. Force defaults to normal magnitude 1 N with
+Push/Pull; component defaults are [0,1,0] N and pressure defaults to 1 MPa. Gravity
+has its own Loads editor, directional components/presets, Apply/Save, Cancel edit,
+Remove gravity, and independent presentation visibility. Enabling gravity restores its arrow;
+disabled gravity never draws arrows. Top-right status and activity icon report
+worker progress and short outcomes; routine history prose beneath Setup is hidden.
+Transfer uses almost the full viewport with original, mapped, and current preview
+glyphs in the respective model views. M24–M27 remain pending another owner check.
+
+### M24–M27 second manual-review corrections (acceptance pending)
+
+A new solve preserves the previously selected viewport mode, result field,
+deformation mode, and user scale through engineering edits, assignment drafts,
+and remeshing. The first solve defaults to von Mises stress. Color limits reset
+to Automatic and unlocked after each solve; Auto deformation recomputes its scale
+from the new result. Convergence result updates follow the same rule.
+
+Gravity uses the assignment transaction with no face selection: its live preview
+changes neither calculation nor history; Apply enables calculation directly,
+Save changes edits it, Cancel restores the prior state, and Remove gravity disables
+it. Existing draft/busy/validation/history gates apply. Arrow visibility stays a
+presentation choice. Display independently controls support, load, and gravity
+arrows; valid active assignment previews remain visible while editing.
+
+Surface glyphs use at least six samples per nondegenerate CAD face, with target
+spacing one quarter of the model's largest extent. Area and face span both set
+density so thin surfaces also receive coverage. Planar grids constrain both axis
+spacings; curved/trimmed sampling adds points until the bounded candidate coverage
+meets the target. A 128-sample per-face cap bounds pathological surfaces; at this
+cap the spacing target may be exceeded. Samples stay deterministic and cached.
+
+Viewport controls are centered, with result/deformation controls below the primary
+row. Perspective is in Display. Rotate and pan bindings each allow left, middle,
+or right mouse buttons; assigning an occupied button swaps the other binding,
+and the navigation hint follows the selected buttons. Preferences remain local.
+
+Settings is in File, and Help → About provides application information and license
+notices. Model summaries show format and face count without orientation status.
+Material summaries put E in GPa at the left of the second line; Poisson's ratio
+remains editable in the material form. Empty Supports/Loads offer Add support… /
+Add load… rows. The CAD editor has no face-selection status or Clear selection
+button; viewport selection and background/Escape deselection remain available.
+
+### M24–M27 approval adjustments (2026-09-10)
+
+Result stress units include Pa, kPa, MPa, psi, and ksi; displacement units include
+m, mm, and inch (`in`). Stored results and color limits remain SI. Conversion
+uses the international pound and inch with standard gravity: 1 psi =
+0.45359237 × 9.80665 / 0.0254² Pa, 1 ksi = 1000 psi, and 1 in = 0.0254 m.
+Legends, manual limits, result summaries, and point displacement values follow the
+selected units without invalidating analysis. Coordinate labels retain explicit m.
+
+Fit model uses a brief, cancellable camera animation that preserves the viewing
+angle and honors reduced-motion preferences. Its Truss zoom-to-fit icon is below
+and left of the view gizmo, opposite Reset, with the same hover/focus styling.
+Undo, Redo, Save, Export, Setup, and Results reuse the Truss action icons; Setup
+and Results retain text labels, while Save/Export remain disabled placeholders.
+The Setup toggle replaces the panel's duplicate title. Add material has no
+“required before solving” subtitle. Edit shows Ctrl+Z and Ctrl+Y beside its dynamic
+Undo/Redo descriptions.
+
+The owner approved M24–M27 with these adjustments. Acceptance covers this grouped
+workflow; M28 is accepted; M29 review, plan 30, and the final release audit remain separate gates.

@@ -24,21 +24,21 @@
 
   function summarizeModelRow(documentState) {
     var geometry = documentState.geometry;
-    if (!geometry) { return row('model', 'model', 'Import CAD…', 'STEP, IGES, or BREP solid', 'No model'); }
+    if (!geometry) { return row('model', 'model', 'Import model…', 'STEP, IGES, BREP, or STL solid', 'No model'); }
     return row(
       'model',
       'model',
       geometry.sourceName,
       String(geometry.sourceFormat || '').toUpperCase(),
-      faceCountText(geometry.faceIds) + ' · ' + (geometry.orientation.operations.length ? geometry.orientation.operations.join(' · ') : 'Original orientation')
+      faceCountText(geometry.faceIds)
     );
   }
 
   function summarizeMaterialRow(documentState) {
     var material = documentState.material;
-    if (!material) { return row('material', 'material', 'Add material…', 'Required before solving', 'No material'); }
+    if (!material) { return row('material', 'material', 'Add material…', '', 'No material'); }
     return row('material', 'material', material.name || 'Unnamed material',
-      formatNumber(material.youngsModulusPa / 1e9) + ' GPa · ν ' + formatNumber(material.poissonsRatio),
+      'E: ' + formatNumber(material.youngsModulusPa / 1e9) + ' GPa',
       material.densityKgM3 ? formatNumber(material.densityKgM3) + ' kg/m³' : 'Density not set');
   }
 
@@ -58,6 +58,8 @@
     var summary;
     if (item.type === 'pressure') {
       summary = 'Pressure · ' + formatNumber(root.SpjutsimFEA.siToDisplay('pressurePa', item.pressurePa)) + ' MPa';
+    } else if (item.direction === 'surface-normal') {
+      summary='Force · '+formatNumber(item.magnitudeN)+' N · '+item.sense+' normal';
     } else {
       summary = 'Force · [' + item.forceN.map(formatNumber).join(', ') + '] N';
     }
@@ -69,17 +71,21 @@
   }
 
   function summarizeMeshRow(documentState) {
-    var settings = documentState.meshSettings || { preset: 'normal' };
+    var settings = documentState.meshSettings || { preset: 'normal', elementType: 'tet10' };
     var preset = settings.preset.charAt(0).toUpperCase() + settings.preset.slice(1);
+    var elementLabel = settings.elementType === 'tet10' ? 'Tet10' : 'Tet4';
     var metadata = documentState.meshMetadata;
-    if (!metadata) { return row('mesh', 'mesh', 'Mesh', 'Not generated', preset); }
-    return row('mesh', 'mesh', 'Mesh', metadata.statistics.elementCount + ' Tet4 elements',
+    if (documentState.meshGeneration && documentState.meshGeneration.status === 'generating') { return row('mesh','mesh','Mesh','Generating…',preset); }
+    if (!metadata) { return row('mesh', 'mesh', 'Mesh', 'Not generated · ' + elementLabel, preset); }
+    return row('mesh', 'mesh', 'Mesh', metadata.statistics.elementCount + ' ' + elementLabel + ' elements',
       metadata.statistics.nodeCount + ' nodes · ' + preset);
   }
 
   function buildSetupInspectorRows(documentState) {
     var rows = [summarizeModelRow(documentState), summarizeMaterialRow(documentState)];
+    if (!documentState.boundaryConditions.length) { rows.push(row('support','new','Add support…','','')); }
     documentState.boundaryConditions.forEach(function (item) { rows.push(summarizeSupportRow(item)); });
+    if (!documentState.loads.length) { rows.push(row('load','new','Add load…','','')); }
     documentState.loads.forEach(function (item) { rows.push(summarizeLoadRow(item)); });
     if (documentState.gravity && documentState.gravity.enabled) { rows.push(summarizeGravityRow(documentState.gravity)); }
     rows.push(summarizeMeshRow(documentState));

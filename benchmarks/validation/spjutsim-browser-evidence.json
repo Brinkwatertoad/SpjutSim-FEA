@@ -1,0 +1,582 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "caseId": "axial-traction",
+      "caseRevision": 1,
+      "source": "../../tests/fixtures/generated-unit-cube-m.step",
+      "levels": [
+        {
+          "level": 1,
+          "targetSizeM": 0.2,
+          "nodeCount": 2058,
+          "elementCount": 1111,
+          "degreeOfFreedomCount": 6174,
+          "maximumDisplacementM": 0.0000010606601717044431,
+          "strainEnergyJ": 0.0004999999999999448,
+          "rawVonMisesMaxPa": 1000.0000079844727,
+          "minimumFactorOfSafety": 249999.99800388183,
+          "iterations": 261,
+          "solveDurationMs": 48.99,
+          "estimatedPeakBytes": 110164734,
+          "peakLocationM": [
+            0.6770713386323061,
+            0.959074710581554,
+            0.01899340122875355
+          ],
+          "peakFaceId": "face-axial-traction-1",
+          "equilibriumRelativeResidual": 3.5123413471762846e-10,
+          "totalReactionN": [
+            -1000.0000000126922,
+            -6.97877685463292e-7,
+            -7.916633548722392e-8
+          ],
+          "rawVonMisesLocationM": [
+            0.6770713386323061,
+            0.959074710581554,
+            0.01899340122875355
+          ],
+          "displacementProbe": {
+            "distance": 0.03923209600446342,
+            "valueM": 0.0000010165841992035123,
+            "vectorM": [
+              9.999999999066989e-7,
+              -1.2367133515028918e-7,
+              -1.3471761250479963e-7
+            ],
+            "locationM": [
+              1,
+              0.4946853412693807,
+              0.5388704484084051
+            ]
+          }
+        },
+        {
+          "level": 2,
+          "targetSizeM": 0.13999999999999999,
+          "nodeCount": 4321,
+          "elementCount": 2485,
+          "degreeOfFreedomCount": 12963,
+          "maximumDisplacementM": 0.0000010606601717833233,
+          "strainEnergyJ": 0.0005000000000003887,
+          "rawVonMisesMaxPa": 1000.0000070942754,
+          "minimumFactorOfSafety": 249999.99822643117,
+          "iterations": 359,
+          "solveDurationMs": 152.45,
+          "estimatedPeakBytes": 121379610,
+          "peakLocationM": [
+            0.09846800794233052,
+            0.012645866682104797,
+            0.9873541333178953
+          ],
+          "peakFaceId": "face-axial-traction-2",
+          "equilibriumRelativeResidual": 5.283094989057772e-10,
+          "totalReactionN": [
+            -1000.0000001286065,
+            9.346455348341033e-7,
+            -4.7575392280021584e-7
+          ],
+          "rawVonMisesLocationM": [
+            0.09846800794233052,
+            0.012645866682104797,
+            0.9873541333178953
+          ],
+          "displacementProbe": {
+            "distance": 0.030718498832599684,
+            "valueM": 0.0000010160318221248833,
+            "vectorM": [
+              9.999999999930223e-7,
+              -1.219841005849961e-7,
+              -1.3206264721273632e-7
+            ],
+            "locationM": [
+              1,
+              0.4879364007531201,
+              0.5282505883784587
+            ]
+          }
+        }
+      ],
+      "convergence": {
+        "status": "converged",
+        "globalConverged": true,
+        "stressStable": true,
+        "likelyStressSingularity": false,
+        "warning": null,
+        "changes": {
+          "maximumDisplacement": 7.436892331361508e-11,
+          "strainEnergy": 8.87744738831229e-13,
+          "rawVonMisesMax": 8.901973771434667e-10
+        },
+        "stopReason": "criteria-met"
+      },
+      "probeM": null
+    },
+    {
+      "caseId": "cantilever-bending",
+      "caseRevision": 1,
+      "source": "../../benchmarks/validation/geometry/cantilever-prism.step",
+      "levels": [
+        {
+          "level": 1,
+          "targetSizeM": 0.3,
+          "nodeCount": 671,
+          "elementCount": 290,
+          "degreeOfFreedomCount": 2013,
+          "maximumDisplacementM": 0.008272536393783529,
+          "strainEnergyJ": 4.118017957792842,
+          "rawVonMisesMaxPa": 347040.7396965592,
+          "minimumFactorOfSafety": 720.376518960257,
+          "iterations": 1582,
+          "solveDurationMs": 83.18,
+          "estimatedPeakBytes": 103397610,
+          "peakLocationM": [
+            0.14200445661067057,
+            0.17682372542187894,
+            0.017274575140626275
+          ],
+          "peakFaceId": "face-cantilever-bending-1",
+          "equilibriumRelativeResidual": 2.8223897373630918e-11,
+          "totalReactionN": [
+            -9.923263633027091e-8,
+            -2.569148449538261e-7,
+            999.999999117251
+          ],
+          "rawVonMisesLocationM": [
+            0.14200445661067057,
+            0.17682372542187894,
+            0.017274575140626275
+          ],
+          "displacementProbe": {
+            "distance": 1.0000000028043132e-7,
+            "valueM": 0.008235558492438795,
+            "vectorM": [
+              -5.535753380532626e-9,
+              0.0000035874669130158456,
+              -0.008235557711074051
+            ],
+            "locationM": [
+              4,
+              0.125,
+              0.24999999999999967
+            ]
+          }
+        },
+        {
+          "level": 2,
+          "targetSizeM": 0.21,
+          "nodeCount": 1216,
+          "elementCount": 538,
+          "degreeOfFreedomCount": 3648,
+          "maximumDisplacementM": 0.008280959401117336,
+          "strainEnergyJ": 4.122194182654899,
+          "rawVonMisesMaxPa": 350701.8250793897,
+          "minimumFactorOfSafety": 712.8562845186408,
+          "iterations": 976,
+          "solveDurationMs": 96.585,
+          "estimatedPeakBytes": 105689298,
+          "peakLocationM": [
+            0.11781693692520046,
+            0.1768237254218789,
+            0.48383283749046113
+          ],
+          "peakFaceId": "face-cantilever-bending-2",
+          "equilibriumRelativeResidual": 1.44409045481904e-10,
+          "totalReactionN": [
+            -0.0000017133624510279333,
+            6.359658684118585e-7,
+            1000.0000041295316
+          ],
+          "rawVonMisesLocationM": [
+            0.11781693692520046,
+            0.1768237254218789,
+            0.48383283749046113
+          ],
+          "displacementProbe": {
+            "distance": 1.0000000028043132e-7,
+            "valueM": 0.008243714485385165,
+            "vectorM": [
+              1.259919929777258e-9,
+              0.0000014640706567812201,
+              -0.008243714355376752
+            ],
+            "locationM": [
+              4,
+              0.125,
+              0.25000000000000044
+            ]
+          }
+        }
+      ],
+      "convergence": {
+        "status": "converged",
+        "globalConverged": true,
+        "stressStable": true,
+        "likelyStressSingularity": false,
+        "warning": null,
+        "changes": {
+          "maximumDisplacement": 0.0010181892146327908,
+          "strainEnergy": 0.0010141346892752797,
+          "rawVonMisesMax": 0.01054943977479877
+        },
+        "stopReason": "criteria-met"
+      },
+      "probeM": null
+    },
+    {
+      "caseId": "uniform-pressure",
+      "caseRevision": 1,
+      "source": "../../tests/fixtures/generated-unit-cube-m.step",
+      "levels": [
+        {
+          "level": 1,
+          "targetSizeM": 0.2,
+          "nodeCount": 2058,
+          "elementCount": 1111,
+          "degreeOfFreedomCount": 6174,
+          "maximumDisplacementM": 0.0000010606601717044431,
+          "strainEnergyJ": 0.0004999999999999448,
+          "rawVonMisesMaxPa": 1000.0000079844727,
+          "minimumFactorOfSafety": 249999.99800388183,
+          "iterations": 261,
+          "solveDurationMs": 49.12,
+          "estimatedPeakBytes": 110164734,
+          "peakLocationM": [
+            0.6770713386323061,
+            0.959074710581554,
+            0.01899340122875355
+          ],
+          "peakFaceId": "face-uniform-pressure-1",
+          "equilibriumRelativeResidual": 3.5123413471762846e-10,
+          "totalReactionN": [
+            1000.0000000126922,
+            6.97877685463292e-7,
+            7.916633548722392e-8
+          ],
+          "rawVonMisesLocationM": [
+            0.6770713386323061,
+            0.959074710581554,
+            0.01899340122875355
+          ],
+          "displacementProbe": {
+            "distance": 0.03923209600446342,
+            "valueM": 0.0000010165841992035123,
+            "vectorM": [
+              -9.999999999066989e-7,
+              1.2367133515028918e-7,
+              1.3471761250479963e-7
+            ],
+            "locationM": [
+              1,
+              0.4946853412693807,
+              0.5388704484084051
+            ]
+          }
+        },
+        {
+          "level": 2,
+          "targetSizeM": 0.13999999999999999,
+          "nodeCount": 4321,
+          "elementCount": 2485,
+          "degreeOfFreedomCount": 12963,
+          "maximumDisplacementM": 0.00000106066017181369,
+          "strainEnergyJ": 0.0004999999999994872,
+          "rawVonMisesMaxPa": 1000.0000071004514,
+          "minimumFactorOfSafety": 249999.99822488715,
+          "iterations": 359,
+          "solveDurationMs": 149.515,
+          "estimatedPeakBytes": 121379610,
+          "peakLocationM": [
+            0.09846800794233052,
+            0.012645866682104797,
+            0.9873541333178953
+          ],
+          "peakFaceId": "face-uniform-pressure-2",
+          "equilibriumRelativeResidual": 5.380196867737662e-10,
+          "totalReactionN": [
+            1000.0000001274101,
+            -9.557389280318558e-7,
+            4.776928407266306e-7
+          ],
+          "rawVonMisesLocationM": [
+            0.09846800794233052,
+            0.012645866682104797,
+            0.9873541333178953
+          ],
+          "displacementProbe": {
+            "distance": 0.030718498832599684,
+            "valueM": 0.0000010160318221192583,
+            "vectorM": [
+              -9.999999999851443e-7,
+              1.2198410059503234e-7,
+              1.3206264721984372e-7
+            ],
+            "locationM": [
+              1,
+              0.4879364007531201,
+              0.5282505883784587
+            ]
+          }
+        }
+      ],
+      "convergence": {
+        "status": "converged",
+        "globalConverged": true,
+        "stressStable": true,
+        "likelyStressSingularity": false,
+        "warning": null,
+        "changes": {
+          "maximumDisplacement": 1.0299898527302551e-10,
+          "strainEnergy": 9.152834740123638e-13,
+          "rawVonMisesMax": 8.840213397335523e-10
+        },
+        "stopReason": "criteria-met"
+      },
+      "probeM": null
+    },
+    {
+      "caseId": "gravity-reaction",
+      "caseRevision": 1,
+      "source": "../../tests/fixtures/generated-unit-cube-m.step",
+      "levels": [
+        {
+          "level": 1,
+          "targetSizeM": 0.2,
+          "nodeCount": 2058,
+          "elementCount": 1111,
+          "degreeOfFreedomCount": 6174,
+          "maximumDisplacementM": 0.000005285443578575211,
+          "strainEnergyJ": 0.01588111770141617,
+          "rawVonMisesMaxPa": 9421.19183215313,
+          "minimumFactorOfSafety": 26535.92076819698,
+          "iterations": 256,
+          "solveDurationMs": 48.17,
+          "estimatedPeakBytes": 110164734,
+          "peakLocationM": [
+            0.07142500119972711,
+            0.11131892363003486,
+            0.016861155576139684
+          ],
+          "peakFaceId": "face-gravity-reaction-1",
+          "equilibriumRelativeResidual": 4.30935546569435e-11,
+          "totalReactionN": [
+            0.000001024825320161682,
+            -1.986219100302833e-7,
+            9810.000000044836
+          ],
+          "rawVonMisesLocationM": [
+            0.07142500119972711,
+            0.11131892363003486,
+            0.016861155576139684
+          ],
+          "displacementProbe": {
+            "distance": 0.03923209600446342,
+            "valueM": 0.0000036940605435423184,
+            "vectorM": [
+              0.0000011858726404066474,
+              6.170364859195014e-7,
+              -0.000003443697918682074
+            ],
+            "locationM": [
+              1,
+              0.4946853412693807,
+              0.5388704484084051
+            ]
+          }
+        },
+        {
+          "level": 2,
+          "targetSizeM": 0.13999999999999999,
+          "nodeCount": 4321,
+          "elementCount": 2485,
+          "degreeOfFreedomCount": 12963,
+          "maximumDisplacementM": 0.000005285565220902379,
+          "strainEnergyJ": 0.015881274886045328,
+          "rawVonMisesMaxPa": 9451.10463973245,
+          "minimumFactorOfSafety": 26451.93440658776,
+          "iterations": 349,
+          "solveDurationMs": 148.675,
+          "estimatedPeakBytes": 121379610,
+          "peakLocationM": [
+            0.3556864378515668,
+            0.07833273365032392,
+            0.011682546584743322
+          ],
+          "peakFaceId": "face-gravity-reaction-1",
+          "equilibriumRelativeResidual": 5.035646066918317e-11,
+          "totalReactionN": [
+            -1.0779485304368563e-7,
+            -0.0000011435999662801066,
+            9810.000000412445
+          ],
+          "rawVonMisesLocationM": [
+            0.3556864378515668,
+            0.07833273365032392,
+            0.011682546584743322
+          ],
+          "displacementProbe": {
+            "distance": 0.030718498832599684,
+            "valueM": 0.000003660854439861238,
+            "vectorM": [
+              0.0000012081396586844824,
+              6.186233879261384e-7,
+              -0.0000033999351315688757
+            ],
+            "locationM": [
+              1,
+              0.4879364007531201,
+              0.5282505883784587
+            ]
+          }
+        }
+      ],
+      "convergence": {
+        "status": "converged",
+        "globalConverged": true,
+        "stressStable": true,
+        "likelyStressSingularity": false,
+        "warning": null,
+        "changes": {
+          "maximumDisplacement": 0.00002301459193718241,
+          "strainEnergy": 0.000009897579762021133,
+          "rawVonMisesMax": 0.0031750555675165914
+        },
+        "stopReason": "criteria-met"
+      },
+      "probeM": null
+    },
+    {
+      "caseId": "notched-prism-stress",
+      "caseRevision": 1,
+      "source": "../../benchmarks/validation/geometry/notched-prism.step",
+      "levels": [
+        {
+          "level": 1,
+          "targetSizeM": 0.25,
+          "nodeCount": 1244,
+          "elementCount": 578,
+          "degreeOfFreedomCount": 3732,
+          "maximumDisplacementM": 0.00005396075228144611,
+          "strainEnergyJ": 0.010537958494708056,
+          "rawVonMisesMaxPa": 20570.84833584914,
+          "minimumFactorOfSafety": 12153.12056743528,
+          "iterations": 1764,
+          "solveDurationMs": 180.115,
+          "estimatedPeakBytes": 105956850,
+          "peakLocationM": [
+            1.7966030531493504,
+            0.6776359104070864,
+            0.1585410196624969
+          ],
+          "peakFaceId": "face-notched-prism-stress-7",
+          "equilibriumRelativeResidual": 4.0813980754545354e-10,
+          "totalReactionN": [
+            -1000.0000005766985,
+            5.678226266958575e-7,
+            -4.5575514417972585e-7
+          ],
+          "rawVonMisesLocationM": [
+            1.7966030531493504,
+            0.6776359104070864,
+            0.1585410196624969
+          ],
+          "rawStressProbe": {
+            "distance": 0.04500518652105351,
+            "valuePa": 10711.273004806797,
+            "locationM": [
+              1.5000000000000004,
+              0.5050464654754407,
+              0.055278640450004204
+            ]
+          },
+          "displacementProbe": {
+            "distance": 9.999999983634211e-8,
+            "valueM": 0.000045869791931274786,
+            "vectorM": [
+              0.000021079596333883508,
+              -0.000040739186769795265,
+              8.421136921681172e-8
+            ],
+            "locationM": [
+              3,
+              0.5,
+              0.1
+            ]
+          }
+        },
+        {
+          "level": 2,
+          "targetSizeM": 0.175,
+          "nodeCount": 2059,
+          "elementCount": 946,
+          "degreeOfFreedomCount": 6177,
+          "maximumDisplacementM": 0.00005419784674083527,
+          "strainEnergyJ": 0.010557466812929395,
+          "rawVonMisesMaxPa": 24465.186527753853,
+          "minimumFactorOfSafety": 10218.601837202199,
+          "iterations": 1122,
+          "solveDurationMs": 195.83,
+          "estimatedPeakBytes": 109368138,
+          "peakLocationM": [
+            1.2243570828293564,
+            0.6819055537856666,
+            0.027639320225002095
+          ],
+          "peakFaceId": "face-notched-prism-stress-7",
+          "equilibriumRelativeResidual": 3.5075098993722254e-10,
+          "totalReactionN": [
+            -1000.000000591402,
+            1.2290096895739566e-7,
+            -5.131320124363015e-7
+          ],
+          "rawVonMisesLocationM": [
+            1.2243570828293564,
+            0.6819055537856666,
+            0.027639320225002095
+          ],
+          "rawStressProbe": {
+            "distance": 0.04836552443093521,
+            "valuePa": 10238.806810588976,
+            "locationM": [
+              1.5142012832739489,
+              0.4882719350763884,
+              0.14472135954999582
+            ]
+          },
+          "displacementProbe": {
+            "distance": 9.999999983634211e-8,
+            "valueM": 0.000046069203961493496,
+            "vectorM": [
+              0.000021118845873810723,
+              -0.000040943390706993245,
+              6.826432754491296e-8
+            ],
+            "locationM": [
+              3,
+              0.5000000000000013,
+              0.09999999999999892
+            ]
+          }
+        }
+      ],
+      "convergence": {
+        "status": "converged-stress-unresolved",
+        "globalConverged": true,
+        "stressStable": false,
+        "likelyStressSingularity": false,
+        "warning": null,
+        "changes": {
+          "maximumDisplacement": 0.004393831615847892,
+          "strainEnergy": 0.0018512426511393316,
+          "rawVonMisesMax": 0.18931344630634359
+        },
+        "stopReason": "criteria-met"
+      },
+      "probeM": [
+        1.5,
+        0.5,
+        0.1
+      ]
+    }
+  ]
+}

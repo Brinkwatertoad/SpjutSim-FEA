@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-09-02T00:00:00-04:00",
+  "browser": { "name": "Headless Chromium", "version": "151.0.0.0", "platform": "Linux x86_64", "launchMode": "file://" },
+  "case": { "name": "unit-cube-axial-coarse", "elementType": "tet10", "nodeCount": 5901, "elementCount": 3517 },
+  "preflight": { "modelVersion": 1, "modeledPeakBytes": 86374908, "safetyMultiplier": 1.5, "predictedPeakBytes": 129562362 },
+  "observed": { "wasmBytesAfter": 20185088, "externalProcessPeakBytes": null },
+  "solve": { "outcome": "passed", "iterations": 388, "durationMs": 258.3, "wallTimeMs": 1619 },
+  "note": "Observed WASM bytes are the post-solve linear-memory size; external browser-process peak was not captured."
+}

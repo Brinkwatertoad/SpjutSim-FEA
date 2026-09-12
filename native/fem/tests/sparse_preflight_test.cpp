@@ -8,9 +8,9 @@ int main() {
   Diagnostic d;
   CsrGraph a, b;
   auto mesh = cube_mesh();
-  require(build_csr_graph(8, mesh.tet4_connectivity, a, d),
+  require(build_csr_graph(8, mesh.tet4_connectivity, 4, a, d),
           "cube graph failed");
-  require(build_csr_graph(8, mesh.tet4_connectivity, b, d),
+  require(build_csr_graph(8, mesh.tet4_connectivity, 4, b, d),
           "repeated cube graph failed");
   require(a.row_pointers == b.row_pointers &&
               a.column_indices == b.column_indices,

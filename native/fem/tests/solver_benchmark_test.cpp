@@ -1,6 +1,7 @@
 #include "test_support.hpp"
 
 #include <cstring>
+#include <vector>
 
 using namespace spjutsim::fem;
 int main() {
@@ -34,6 +35,14 @@ int main() {
           "reaction equilibrium wrong");
   require(first.force_balance_relative_residual < 1e-10,
           "force balance residual too high");
+  std::vector<SolvePhase> phases;
+  SolveSettings observed = settings;
+  observed.on_phase = [&](SolvePhase phase) { phases.push_back(phase); };
+  require(context.solve(observed), "instrumented solve failed");
+  require(phases == std::vector<SolvePhase>{SolvePhase::assembly,
+                                            SolvePhase::solve,
+                                            SolvePhase::postprocess},
+          "solver phase callback order changed");
   require(near(first.strain_energy_j, 0.0005, 2e-8, 1e-12),
           "strain energy wrong");
   require(near(first.raw_von_mises_max.value, 1000, 2e-8, 1e-5),

@@ -8,7 +8,7 @@ int main() {
   FemContext *context = fem_create();
   require(context != nullptr, "C API context allocation failed");
   require(fem_load_mesh(context, mesh.node_positions_m.data(), 8,
-                        mesh.tet4_connectivity.data(), 6, 10) != 0,
+                        mesh.tet4_connectivity.data(), 6, 7) != 0,
           "unsupported element type accepted");
   FemErrorInfo error{SPJUTSIM_FEM_API_VERSION, sizeof(FemErrorInfo)};
   require(fem_get_last_error(context, &error) == 0 &&
@@ -31,7 +31,7 @@ int main() {
           "C API constraints failed");
   const uint32_t face[] = {1, 3, 7, 1, 7, 5};
   const double force[] = {1000, 0, 0};
-  require(fem_add_total_face_force(context, face, 2, force) == 0,
+  require(fem_add_total_face_force(context, face, 2, 3, force) == 0,
           "C API surface force failed");
   FemMemoryEstimate estimate{SPJUTSIM_FEM_API_VERSION,
                              sizeof(FemMemoryEstimate)};
@@ -47,13 +47,36 @@ int main() {
           "C API preflight restore failed");
   FemSolveSettings settings{
       SPJUTSIM_FEM_API_VERSION, sizeof(FemSolveSettings), 1e-11, 1e-6, 0, 8};
+  require(fem_set_time_limit(context, 0) != 0 &&
+              fem_set_time_limit(context, std::numeric_limits<double>::infinity()) != 0,
+          "C API accepted an invalid time budget");
+  require(fem_set_time_limit(context, 600000) == 0,
+          "C API rejected a longer solve budget");
+  require(fem_set_time_limit(context, 1e-9) == 0 && fem_solve(context, &settings) != 0 &&
+              fem_get_last_error(context, &error) == 0 &&
+              std::strcmp(error.code, "SOLVER_NOT_CONVERGED") == 0 &&
+              error.solver_termination_reason == 6,
+          "C API did not forward the selected time budget");
+  require(fem_set_time_limit(context, 600000) == 0, "C API budget reset failed");
+  struct Progress { uint32_t iteration = 0; double residual = 1; } progress;
+  require(fem_set_iteration_callback(context,
+      [](uint32_t iteration, double residual, double elapsed_ms, void *data) {
+        auto &p = *static_cast<Progress *>(data);
+        require(iteration >= p.iteration && std::isfinite(residual) && elapsed_ms >= 0,
+                "C API progress was invalid");
+        p = {iteration, residual};
+      }, &progress) == 0, "C API progress registration failed");
   require(fem_solve(context, &settings) == 0, "C API solve failed");
   FemResultInfo result{SPJUTSIM_FEM_API_VERSION, sizeof(FemResultInfo)};
   require(fem_get_result_info(context, &result) == 0,
           "C API result view failed");
   require(result.node_count == 8 && result.element_count == 6 &&
+              result.recovery_sample_count == 6 &&
               near(result.total_reaction_n[0], -1000, 1e-9, 1e-6),
           "C API result contract wrong");
+  require(progress.iteration == result.iterations && progress.iteration > 0 &&
+              progress.residual <= settings.relative_tolerance,
+          "C API omitted verified solver progress");
   require(std::isfinite(result.solve_duration_ms) &&
               result.solve_duration_ms >= 0,
           "C API omitted solve duration");

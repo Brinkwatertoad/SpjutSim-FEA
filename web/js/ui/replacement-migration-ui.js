@@ -13,7 +13,7 @@
     }
     value = item.original.type === 'pressure'
       ? root.SpjutsimFEA.siToDisplay('pressurePa', item.original.pressurePa) + ' MPa surface-normal pressure'
-      : '[' + item.original.forceN.join(', ') + '] N global total force';
+      : item.original.direction === 'surface-normal' ? item.original.magnitudeN + ' N ' + item.original.sense + ' along local normals' : '[' + item.original.forceN.join(', ') + '] N global total force';
     return 'Load · ' + value + ' · ' + item.oldFaceIds.length + (item.oldFaceIds.length === 1 ? ' current face' : ' current faces');
   }
 
@@ -70,12 +70,12 @@
     this.oldViewport.setGeometryPreview(draft.oldGeometry);
     this.newViewport.setGeometryPreview(draft.newGeometry);
     this.newViewport.setFacePickHandler(function (faceId, additive) {
-      if (!faceId) { self.selectedNewFaceIds.clear(); }
-      else if (additive) {
+      if (!faceId) { return; }
+      else {
         if (self.selectedNewFaceIds.has(faceId)) { self.selectedNewFaceIds.delete(faceId); } else { self.selectedNewFaceIds.add(faceId); }
-      } else { self.selectedNewFaceIds = new Set([faceId]); }
+      }
       self.newViewport.setSelectedFaceIds(Array.from(self.selectedNewFaceIds));
-      self.renderButtons();
+      self.renderOverlays();self.renderButtons();
     });
     this.render();
     this.dialog.focus();
@@ -116,7 +116,7 @@
       this.oldViewport.setSelectedFaceIds([]);
       this.newViewport.setSelectedFaceIds([]);
       this.status.textContent = summary.mapped + ' mapped · ' + summary.dropped + ' explicitly dropped';
-      this.renderButtons();
+      this.renderOverlays();this.renderButtons();
       return;
     }
     item = this.draft.items[this.activeIndex];
@@ -127,7 +127,12 @@
     this.selectedNewFaceIds = new Set(item.decision === 'mapped' ? item.newFaceIds : []);
     this.newViewport.setSelectedFaceIds(Array.from(this.selectedNewFaceIds));
     this.status.textContent = 'Highlighted faces on the current model belong to this item. Select corresponding replacement faces, or explicitly drop it.';
-    this.renderButtons();
+    this.renderOverlays();this.renderButtons();
+  };
+
+  ReplacementMigrationUI.prototype.renderOverlays = function () {
+    var states=root.SpjutsimFEA.replacementMigrationOverlays(this.draft,this.activeIndex,Array.from(this.selectedNewFaceIds));
+    this.oldViewport.setAnalysisOverlay(states.current);this.newViewport.setAnalysisOverlay(states.replacement);
   };
 
   ReplacementMigrationUI.prototype.recordMapping = function () {

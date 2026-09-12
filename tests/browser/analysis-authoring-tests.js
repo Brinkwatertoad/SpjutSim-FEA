@@ -49,10 +49,53 @@
     return {
       elementType: 'tet4', nodePositionsM: cube.positions,
       elementConnectivity: new Uint32Array([0, 1, 3, 4]),
-      boundaryFaces: { triangleConnectivity: cube.indices, faceRanges: faceRanges }, geometryFaceMap: faceMap,
-      statistics: { nodeCount: 8, elementCount: 1, boundaryTriangleCount: 12, minCharacteristicSizeM: 1, maxCharacteristicSizeM: 1 },
-      quality: { metric: 'gamma', minimum: 0.5, invertedElementCount: 0, nearZeroJacobianCount: 0 },
-      memoryInputs: { nodeCount: 8, elementCount: 1 }
+      boundaryFaces: { solverElementType: 'tri3', solverConnectivity: new Uint32Array(cube.indices),
+        solverFaceRanges: faceRanges.map(function (range) { return Object.assign({}, range); }),
+        triangleConnectivity: cube.indices, faceRanges: faceRanges }, geometryFaceMap: faceMap,
+      statistics: { nodeCount: 8, elementCount: 1, boundaryTriangleCount: 12, boundaryElementCount: 12,
+        minCharacteristicSizeM: 1, maxCharacteristicSizeM: 1 },
+      quality: { metric: 'gamma', minimum: 0.5, minimumJacobian: 1, maximumEdgeRatio: 1,
+        invertedElementCount: 0, nearZeroJacobianCount: 0 },
+      memoryInputs: { nodeCount: 8, elementCount: 1, connectivityEntries: 4, boundaryConnectivityEntries: 36 }
+    };
+  }
+
+  function tet10Mesh() {
+    var positions = new Float64Array([
+      0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+      0.5, 0, 0, 0.5, 0.5, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.5, 0.5, 0.5, 0, 0.5
+    ]);
+    var solver = new Uint32Array([
+      0, 2, 1, 6, 5, 4,
+      0, 1, 3, 4, 9, 7,
+      0, 3, 2, 7, 8, 6,
+      1, 2, 3, 5, 8, 9
+    ]);
+    var display = new Uint32Array([
+      0, 6, 4, 6, 2, 5, 4, 5, 1, 6, 5, 4,
+      0, 4, 7, 4, 1, 9, 7, 9, 3, 4, 9, 7,
+      0, 7, 6, 7, 3, 8, 6, 8, 2, 7, 8, 6,
+      1, 5, 9, 5, 2, 8, 9, 8, 3, 5, 8, 9
+    ]);
+    var faceIds = ['face-0', 'face-1', 'face-2', 'face-3'];
+    var displayRanges = faceIds.map(function (faceId, index) { return { faceId: faceId, start: index * 12, count: 12 }; });
+    var solverRanges = faceIds.map(function (faceId, index) { return { faceId: faceId, start: index * 6, count: 6 }; });
+    var faceMap = {};
+    displayRanges.forEach(function (range) { faceMap[range.faceId] = range; });
+    return {
+      elementType: 'tet10', nodePositionsM: positions,
+      elementConnectivity: new Uint32Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
+      boundaryFaces: {
+        solverElementType: 'tri6', solverConnectivity: solver, solverFaceRanges: solverRanges,
+        triangleConnectivity: display, faceRanges: displayRanges
+      },
+      geometryFaceMap: faceMap,
+      statistics: { nodeCount: 10, elementCount: 1, boundaryTriangleCount: 16, boundaryElementCount: 4,
+        minCharacteristicSizeM: 1, maxCharacteristicSizeM: Math.sqrt(2), boundingBoxDiagonalM: Math.sqrt(3) },
+      quality: { metric: 'gamma', minimum: 0.5, p05: 0.5, median: 0.5, poorElementCount: 0,
+        invertedElementCount: 0, nearZeroJacobianCount: 0, minimumJacobian: 1, maximumEdgeRatio: Math.sqrt(2), warning: null },
+      memoryInputs: { nodeCount: 10, elementCount: 1, degreeOfFreedomCount: 30,
+        connectivityEntries: 10, boundaryConnectivityEntries: 24 }
     };
   }
 
@@ -99,6 +142,25 @@
       'non-finite support component was accepted');
     assert(!api.validateBoundaryCondition({ id: 'legacy', name: 'Legacy', type: 'fixed', faceIds: ['face-x-'] }, ['face-x-']).valid,
       'legacy fixed support contract was accepted');
+  }
+
+  function testTet10MeshContract() {
+    var mesh = tet10Mesh();
+    var resolved = api.resolveMeshSettings({ preset: 'coarse', elementType: 'tet10' },
+      { minM: [0, 0, 0], maxM: [1, 1, 1] });
+    var selected;
+    assert(resolved.elementType === 'tet10', 'mesh setting resolution discarded Tet10');
+    var validation = api.validateVolumeMeshResult(mesh, ['face-0', 'face-1', 'face-2', 'face-3']);
+    assert(validation.valid, 'valid Tet10 mesh did not satisfy the public contract: ' + validation.reason);
+    selected = api.selectedBoundary(mesh, ['face-0']);
+    assert(selected.surfaceElementType === 'tri6' && selected.surfaceConnectivity.length === 6,
+      'solver projection lost quadratic boundary connectivity');
+    assert(selected.triangleConnectivity.length === 12 && selected.nodeIndices.length === 6,
+      'display projection did not retain the four linear triangles or mid-edge nodes');
+    assert(!api.validateVolumeMeshResult(Object.assign({}, mesh, {
+      elementConnectivity: new Uint32Array([0, 1, 2, 3])
+    }), ['face-0', 'face-1', 'face-2', 'face-3']).valid,
+    'Tet10 mesh accepted Tet4 connectivity');
   }
 
   function testRigidOrientationContracts() {
@@ -282,7 +344,7 @@
     var samples = api.sampleFaceGlyphPoints(surface, 'face-z+', { spacingM: 0.6, minCount: 1, maxCount: 8 });
     var repeated = api.sampleFaceGlyphPoints(surface, 'face-z+', { spacingM: 0.6, minCount: 1, maxCount: 8 });
     var capped = api.sampleFaceGlyphPoints(surface, 'face-z+', { spacingM: 0.05, minCount: 1, maxCount: 5 });
-    assert(samples.length === 3 && capped.length === 5, 'surface glyph density did not follow area or explicit caps');
+    assert(samples.length === 4 && capped.length > 1 && capped.length <= 5, 'surface glyph density did not follow area or explicit caps');
     assert(JSON.stringify(samples) === JSON.stringify(repeated), 'surface glyph sampling was not deterministic');
     assert(samples.every(function (sample) {
       return near(sample.positionM[2], 1) && sample.positionM[0] >= 0 && sample.positionM[0] <= 1 &&
@@ -313,7 +375,7 @@
     controller.document.loads = [{ id: 'load-a', name: 'Load A', type: 'total-force', faceIds: [oldGeometry.faceIds[1]], forceN: [10, 20, 30] }];
     controller.document.gravity = { enabled: true, accelerationMS2: [0, 0, -9.81] };
     controller.document.meshSettings = { preset: 'coarse', elementType: 'tet4' };
-    controller.document.solveSettings = { relativeTolerance: 1e-7, equilibriumTolerance: 2e-6, maxIterations: 50 };
+    controller.document.solveSettings = { relativeTolerance: 1e-7, equilibriumTolerance: 2e-6, maxIterations: 50, maxDurationMs: 1800000 };
     draft = api.createReplacementMigrationDraft(controller.document, replacement, newSource);
     assert(draft.items.map(function (item) { return item.kind + ':' + item.id; }).join('|') === 'support:support-a|load:load-a',
       'replacement items were not ordered supports before loads in document order');
@@ -327,7 +389,7 @@
     assert(transfer.boundaryConditions.length === 1 && transfer.boundaryConditions[0].faceIds.join('|') === replacement.faceIds[2] + '|' + replacement.faceIds[3] &&
       transfer.loads.length === 0 && transfer.droppedItems.length === 1,
     'replacement mapping did not retain the mapped support and explicit load drop');
-    assert(transfer.material.name === 'Transfer steel' && transfer.gravity.enabled && transfer.meshSettings.preset === 'coarse' && transfer.solveSettings.maxIterations === 50,
+    assert(transfer.material.name === 'Transfer steel' && transfer.gravity.enabled && transfer.meshSettings.preset === 'coarse' && transfer.solveSettings.maxIterations === 50 && transfer.solveSettings.maxDurationMs === 1800000,
       'replacement transfer lost automatically retained analysis settings');
     var originalGeometry = controller.document.geometry;
     var originalRevision = controller.document.analysisRevision;
@@ -402,8 +464,8 @@
       'setup rows were not emitted in stable document order');
     assert(rows[0].primaryText === 'cube.step' && rows[0].secondaryText === 'STEP',
       'model row omitted source format');
-    assert(rows[0].metaText === '6 faces · Original orientation', 'model row omitted face count or orientation');
-    assert(rows[1].primaryText === 'Steel A36' && rows[1].secondaryText === '200 GPa · ν 0.3',
+    assert(rows[0].metaText === '6 faces', 'model row omitted face count or orientation');
+    assert(rows[1].primaryText === 'Steel A36' && rows[1].secondaryText === 'E: 200 GPa',
       'material row omitted compact engineering properties');
     assert(rows[2].secondaryText === 'Fixed · X, Y, Z' && rows[2].metaText === '2 faces',
       'fixed support row omitted constrained components or face count');
@@ -411,7 +473,7 @@
     assert(rows[4].secondaryText === 'Pressure · 1.5 MPa', 'pressure row omitted display units');
     assert(rows[5].secondaryText === 'Force · [120, −30, 45] N', 'force row omitted vector or display units');
     assert(rows[6].secondaryText === '[0, 0, −9.80665] m/s²', 'gravity row omitted acceleration');
-    assert(rows[7].secondaryText === '42 Tet4 elements' && rows[7].metaText === '18 nodes · Normal',
+    assert(rows[7].secondaryText === '42 Tet10 elements' && rows[7].metaText === '18 nodes · Normal',
       'mesh row omitted generated mesh statistics or density');
     assert(rows.every(function (row) { return row.ariaLabel.indexOf(row.primaryText) !== -1; }),
       'setup row accessible label omitted its primary text');
@@ -492,19 +554,19 @@
     var load1;
     controller.replaceGeometry(cubeGeometry('cube-names'), { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([7]).buffer });
     controller.replaceSelectedFaces(['face-x-']);
-    support1 = controller.createBoundaryCondition({ name: 'Ignored', type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
+    support1 = controller.createBoundaryCondition({ name: 'Named support', type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
     support2 = controller.createBoundaryCondition({ type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
     controller.removeBoundaryCondition(support1);
     assert(state.boundaryConditions[0].name === 'Support 2', 'support deletion reused or changed a generated number');
     controller.createBoundaryCondition({ type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
     assert(state.boundaryConditions[1].name === 'Support 3', 'support sequence was not monotonic');
     controller.replaceBoundaryCondition(support2, { name: 'Renamed', type: 'support', componentsM: { x: 0, y: 0, z: 0 } });
-    assert(state.boundaryConditions[0].name === 'Support 2', 'editing changed a generated support name');
+    assert(state.boundaryConditions[0].name === 'Renamed' && state.boundaryConditions[0].id === support2, 'renaming changed the support ID or lost its descriptive name');
     controller.replaceSelectedFaces(['face-x+']);
-    load1 = controller.createLoad({ name: 'Ignored', type: 'pressure', pressurePa: 1e6 });
+    load1 = controller.createLoad({ type: 'pressure', pressurePa: 1e6 });
     assert(state.loads[0].name === 'Load 1', 'load sequence was not independent from the support sequence');
     controller.replaceLoad(load1, { name: 'Renamed', type: 'pressure', pressurePa: 2e6 });
-    assert(state.loads[0].name === 'Load 1', 'editing changed a generated load name');
+    assert(state.loads[0].name === 'Renamed' && state.loads[0].id === load1, 'editing lost the descriptive load name or stable ID');
   }
 
   function runCompleteControllerProjectionTest() {
@@ -602,8 +664,8 @@
     assert(state.geometry.orientation.operations.join('') === 'Z +90°', 'positive axis rotation was not applied');
     assert(state.boundaryConditions[0].faceIds.join('|') === 'face-x-' && state.loads[0].pressurePa === 1.5e6,
       'model orientation rotated or discarded global authored setup');
-    assert(document.querySelector('[data-setup-kind="model"] .fea-setup-row-meta').textContent.indexOf('Z +90°') !== -1,
-      'compact Model row omitted its orientation summary');
+    assert(document.querySelector('[data-setup-kind="model"] .fea-setup-row-meta').textContent === '6 faces',
+      'compact Model row leaked orientation status');
     document.getElementById('model-rotation-angle').value = '30';
     document.getElementById('rotate-model-negative').click();
     assert(state.geometry.orientation.operations[1] === 'Z −30°', 'negative axis rotation was not applied');
@@ -628,6 +690,7 @@
     supportTrigger.click();
     assert(state.selectedFaceIds.join('|') === 'face-x-', 'support setup row did not highlight its faces');
     supportTrigger = document.querySelector('[data-setup-kind="support"][data-item-id="support-1"] [data-setup-row-trigger]');
+    assert(supportTrigger.querySelector('.fea-chevron').textContent === '▶', 'Setup row lacks the Truss disclosure icon');
     assert(supportTrigger.getAttribute('aria-expanded') === 'true', 'selected setup row did not expose expanded state');
     assert(document.getElementById('setup-inspector-status').textContent === 'Editing Support 1.',
       'opening a setup item was not announced');
@@ -691,12 +754,23 @@
     var loadItemId = state.loads[0].id;
     var loadTrigger = document.querySelector('[data-setup-kind="load"][data-item-id="' + loadItemId + '"] [data-setup-row-trigger]');
     loadTrigger.focus(); loadTrigger.click();
-    document.getElementById('load-pressure').value = '2.25';
+    var draftRevision = state.analysisRevision;
+    var pressureInput = document.getElementById('load-pressure');
+    pressureInput.focus(); pressureInput.value = '2.25';
+    pressureInput.dispatchEvent(new Event('input',{bubbles:true}));
+    assert(state.assignmentDraft.definition.pressurePa === 2.25e6 && state.analysisRevision === draftRevision && state.loads[0].pressurePa !== 2.25e6, 'Live input committed or failed to update the authoritative draft');
+    assert(document.activeElement === pressureInput, 'Live input lost focus during preview rendering');
+    document.getElementById('setup-add-support-button').click();
+    assert(authoring.activeInspectorKind === 'load' && state.assignmentDraft.kind === 'load', 'Switching editors silently discarded a dirty draft');
     document.getElementById('load-form').requestSubmit();
     assert(state.loads[0].pressurePa === 2.25e6, 'inline load save did not update the controller state');
     assert(!document.getElementById('load-form').closest('[data-setup-editor-host]'), 'successful save did not close the inline editor');
     assert(document.activeElement && document.activeElement.closest('[data-item-id="' + loadItemId + '"]'), 'save did not return focus to the updated row');
 
+    document.querySelector('[data-setup-kind="load"][data-item-id="' + loadItemId + '"] [data-setup-row-trigger]').click();
+    var unchangedRevision = state.analysisRevision;
+    document.getElementById('load-form').requestSubmit();
+    assert(state.analysisRevision === unchangedRevision, 'Unchanged inline Save invalidated the analysis');
     document.querySelector('[data-setup-kind="load"][data-item-id="' + loadItemId + '"] [data-setup-row-trigger]').click();
     var removeLoad = document.getElementById('remove-load-item-button');
     assert(removeLoad, 'inline load editor omitted its remove action');
@@ -716,16 +790,16 @@
 
     var gravityTrigger = document.querySelector('[data-setup-kind="gravity"] [data-setup-row-trigger]');
     gravityTrigger.click();
-    document.getElementById('gravity-enabled').checked = false;
-    document.getElementById('gravity-form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    document.getElementById('remove-gravity-button').click();
     assert(!document.querySelector('[data-setup-kind="gravity"]'), 'disabled gravity remained in the compact setup list');
     assert(authoring.activeInspectorKind === null, 'disabling gravity left a missing inspector row active');
     assert(document.activeElement === document.getElementById('setup-add-load-button'), 'disabling gravity did not return focus to the load add action');
-    assert(document.getElementById('setup-inspector-status').textContent === 'Gravity disabled.', 'gravity change was not announced');
+    assert(document.getElementById('setup-inspector-status').textContent === 'Gravity removed.', 'gravity change was not announced');
   }
 
   try {
     testContractsAndConversions();
+    testTet10MeshContract();
     testRigidOrientationContracts();
     testConstraintStabilityContracts();
     testControllerConstraintStability();

@@ -31,14 +31,14 @@ decision must be explicitly closed before release.
 
 ## Implementation
 
-- [ ] **Define pure study contracts and classification.** Create
+- [x] **Define pure study contracts and classification.** Create
   `web/js/analysis/convergence.js` with versioned study settings, level rows,
   stop reasons, and statuses: `converged`, `converged-stress-unresolved`,
   `unconverged`, `indeterminate-resource-limit`, and `failed`. Compute relative
   changes with explicit zero-denominator handling; require the final step to
   meet 2% displacement and strain-energy limits, and track 5% raw-peak-stress
   stability separately.
-- [ ] **Implement controller-owned sequencing.** Add
+- [x] **Implement controller-owned sequencing.** Add
   `beginConvergenceStudy`, `cancelConvergenceStudy`,
   `restartConvergenceStudy`, and `selectConvergenceLevel` commands to
   `web/js/analysis/app-controller.js`, with orchestration in
@@ -46,37 +46,42 @@ decision must be explicitly closed before release.
   it, solve it, retain the compact metrics required by Section 13.3, and dispose
   prior full mesh/result buffers unless that level is selected for inspection.
   Any setup edit invalidates the complete study.
-- [ ] **Enforce resource and cancellation gates per level.** Stop before a mesh
+- [x] **Enforce resource and cancellation gates per level.** Stop before a mesh
   above the WASM cap, classify the study indeterminate when a required next
   level cannot run, and pause for explicit confirmation at 8 GiB rather than
   confirming an entire study in advance. Worker termination must discard the
   partial level and leave completed rows inspectable.
-- [ ] **Implement the stress-singularity heuristic.** When global metrics
+- [x] **Implement the stress-singularity heuristic.** When global metrics
   converge but raw peak stress does not, compare peak locations/features across
   the final levels using model-scale-normalized distance and CAD `FaceId` where
   available. Emit the exact caution from Section 13.5 only for a materially
   rising/unstable peak that remains spatially concentrated; otherwise report
   stress unresolved without claiming likely singular behavior.
-- [ ] **Build the Convergence UI.** Wire the existing tab to start/cancel
+- [x] **Build the Convergence UI.** Wire the existing tab to start/cancel
   controls, visible refinement settings, a level table, and dependency-free
   plots for DOF/mesh size versus maximum displacement, strain energy, and raw
   peak von Mises stress. Show the deterministic target size, memory estimate,
   iterations/time, stop reason, global/stress status, and selection of an
   available level for viewport inspection.
-- [ ] **Complete analytical and reference validation.** Add committed benchmark
+- [x] **Complete analytical and reference validation (carried forward to
+  [Task 16](16-reference-validation-matrix.md)).** Add committed benchmark
   definitions/results for axial traction, cantilever bending, a uniform
   pressure/symmetry case, gravity/reaction balance, and a nonsingular stress-
   concentration case. Record source solver/version, units, probe definitions,
   mesh sequence, and tolerances; meet Section 16.2 for converged Tet10 results
   and never tolerance-test a singular raw peak.
-- [ ] **Expand regression and resource evidence.** Grow `tests/fixtures` and
+- [x] **Expand regression and resource evidence (completed by
+  [Task 17](17-cad-regression-corpus.md) and
+  [Task 18](18-browser-resource-calibration.md)).** Grow `tests/fixtures` and
   `benchmarks/cad-corpus` toward the required representative/problematic corpus,
   recording expected import status, mesh-count ranges, quality status, and
   selected numerical outputs. Run supported-browser direct-local and optional-
   HTTP cases at representative sizes; record predicted/observed WASM memory,
   completion, cancellation response, wall time, and UI responsiveness. Refit
   Task 13's safety factor only when these records support the change.
-- [ ] **Close distribution and release documentation.** Resolve and document the
+- [ ] **Close distribution and release documentation (carried forward to
+  [Task 19](19-distribution-licensing-decision.md) and
+  [Task 20](20-v1-release-candidate.md)).** Resolve and document the
   Gmsh/OpenCASCADE/Emscripten/Three.js license and source-offer posture in
   `THIRD_PARTY.md`; update README run/test/release instructions and `spec.md`
   only for decisions the evidence settles. Audit Section 26 line by line,

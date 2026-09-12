@@ -47,8 +47,8 @@ class FrameworkTests(unittest.TestCase):
             for filename in ('mesher-worker-source.js', 'solver-worker-source.js'):
                 generated = (output_dir / filename).read_text(encoding='utf-8')
                 self.assertEqual(generated, (checked_in / filename).read_text(encoding='utf-8'))
-                self.assertIn('Worker protocol: 1', generated)
-                self.assertIn('WORKER_PROTOCOL_VERSION = 1', generated)
+                self.assertIn('Worker protocol: 3', generated)
+                self.assertIn('WORKER_PROTOCOL_VERSION = 3', generated)
 
     def test_local_runtime_generation_rejects_stale_protocol(self):
         generator = ROOT / 'tools/build-local-runtime.py'
@@ -58,7 +58,7 @@ class FrameworkTests(unittest.TestCase):
             for filename in ('mesher-worker.js', 'solver-worker.js'):
                 content = (ROOT / 'workers' / filename).read_text(encoding='utf-8')
                 (source_dir / filename).write_text(
-                    content.replace('WORKER_PROTOCOL_VERSION = 1', 'WORKER_PROTOCOL_VERSION = 2'),
+                    content.replace('WORKER_PROTOCOL_VERSION = 3', 'WORKER_PROTOCOL_VERSION = 4'),
                     encoding='utf-8',
                 )
             result = subprocess.run(
@@ -71,7 +71,7 @@ class FrameworkTests(unittest.TestCase):
                 capture_output=True,
             )
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn('protocol is 2, expected 1', result.stderr)
+            self.assertIn('protocol is 4, expected 3', result.stderr)
 
     def test_gmsh_runtime_packaging_embeds_serial_inputs(self):
         generator = ROOT / 'tools/build-local-runtime.py'
@@ -238,7 +238,8 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn('replaceSelectedFaces', controller)
         self.assertIn('toggleSelectedFace', controller)
         self.assertIn('clearSelectedFaces', controller)
-        self.assertIn('face-selection-status', ui)
+        self.assertNotIn('face-selection-status', ui)
+        self.assertNotIn('clear-face-selection-button', (ROOT / 'web/index.html').read_text())
         self.assertIn("event.key !== 'Escape'", ui)
         self.assertTrue(harness.is_file())
         self.assertIn('selectEveryFace', script.read_text())
@@ -355,7 +356,7 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn('"occtVersion": "7.8.1"', manifest)
         self.assertEqual(
             hashlib.sha256(source.encode('utf-8')).hexdigest(),
-            '49e61f1b64e86d1bcdbb15bef03bf4077c2c4530d55a943a87a9fb5212b8f0de',
+            '85cf9d1160de66b60fcd378eb2735644ddf2c0991dd0aaae87cd58e210a80603',
         )
         self.assertNotIn('SharedArrayBuffer', source)
         self.assertNotIn('PThread', source)

@@ -46,19 +46,30 @@
 
   MesherClient.prototype.importGeometry = function (request) {
     var self = this;
+    if (request && request.sourceFormat === 'stl') {
+      if (!root.SpjutsimFEA.validateStlOptions(request.importOptions)) { return Promise.reject(clientFailure('STL_INVALID_OPTIONS', 'Choose explicit STL units, a grouping angle from 1 to 179 degrees, and a positive deviation when reconstructing.')); }
+      if (!(request.sourceBytes instanceof ArrayBuffer) || !request.sourceBytes.byteLength || request.sourceBytes.byteLength > 16 * 1024 * 1024) {
+        return Promise.reject(clientFailure('STL_INPUT_LIMIT', 'Choose a nonempty STL file no larger than 16 MiB.'));
+      }
+    }
     var validation = root.SpjutsimFEA.validateImportRequest(request);
     if (!validation.valid) {
-      return Promise.reject(clientFailure('INVALID_IMPORT_REQUEST', 'Choose a non-empty STEP, IGES, or BREP file.', validation.reason));
+      return Promise.reject(clientFailure('INVALID_IMPORT_REQUEST', 'Choose a non-empty STEP, IGES, BREP, or STL file.', validation.reason));
     }
     return this.ensureWorker().then(function (worker) {
       return new Promise(function (resolve, reject) {
         var requestId = self.requestId();
         var settled = false;
         var transferBytes = request.sourceBytes.slice(0);
+        var timeout = request.sourceFormat === 'stl' ? root.setTimeout(function () {
+          finish(clientFailure('MESHER_TIMEOUT', 'The geometry operation exceeded 120 seconds. Try a simpler tessellation or coarser mesh.'));
+        }, 120000) : null;
 
         function finish(error, result) {
           if (settled) { return; }
           settled = true;
+          root.clearTimeout(timeout);
+          if (error) { worker.terminate(); if (self.worker === worker) { self.worker = null; } }
           self.cancelPending = null;
           worker.onmessage = null;
           worker.onerror = null;
@@ -111,6 +122,7 @@
             geometryId: request.geometryId || root.SpjutsimFEA.createGeometryId(),
             sourceName: request.sourceName,
             sourceFormat: request.sourceFormat,
+            importOptions: request.importOptions,
             sourceBytes: transferBytes
           }, [transferBytes]);
         } catch (error) {
@@ -120,22 +132,25 @@
     });
   };
 
-  /** Generate a solver-ready Tet4 mesh without exposing Gmsh data to the caller. */
+  /** Generate a solver-ready tetrahedral mesh without exposing Gmsh data to the caller. */
   MesherClient.prototype.generateMesh = function (request) {
     var self = this;
     var geometryValidation;
     var settingsValidation;
     var resolvedSettings;
     if (!request || typeof request !== 'object' || Array.isArray(request)) {
-      return Promise.reject(clientFailure('INVALID_MESH_REQUEST', 'Choose valid Tet4 mesh settings.', 'Mesh request must be an object.', 'mesh'));
+      return Promise.reject(clientFailure('INVALID_MESH_REQUEST', 'Choose valid tetrahedral mesh settings.', 'Mesh request must be an object.', 'mesh'));
     }
     geometryValidation = root.SpjutsimFEA.validateGeometryModel(request.geometry);
     if (!geometryValidation.valid || !(request.sourceBytes instanceof ArrayBuffer) || request.sourceBytes.byteLength === 0) {
       return Promise.reject(clientFailure('INVALID_MESH_REQUEST', 'The geometry must be re-imported before meshing.', geometryValidation.reason || 'missing-source-bytes', 'mesh'));
     }
+    if (request.geometry.sourceFormat === 'stl' && request.sourceBytes.byteLength > 16 * 1024 * 1024) {
+      return Promise.reject(clientFailure('STL_INPUT_LIMIT', 'Choose an STL file no larger than 16 MiB.', null, 'mesh'));
+    }
     settingsValidation = root.SpjutsimFEA.validateMeshSettings(request.settings, request.geometry.boundingBoxM);
     if (!settingsValidation.valid) {
-      return Promise.reject(clientFailure('INVALID_MESH_SETTINGS', 'Choose valid Tet4 mesh settings.', settingsValidation.reason, 'mesh'));
+      return Promise.reject(clientFailure('INVALID_MESH_SETTINGS', 'Choose valid tetrahedral mesh settings.', settingsValidation.reason, 'mesh'));
     }
     resolvedSettings = root.SpjutsimFEA.resolveMeshSettings(request.settings, request.geometry.boundingBoxM);
     return this.ensureWorker().then(function (worker) {
@@ -143,10 +158,15 @@
         var requestId = self.requestId();
         var settled = false;
         var transferBytes = request.sourceBytes.slice(0);
+        var timeout = request.geometry.sourceFormat === 'stl' ? root.setTimeout(function () {
+          finish(clientFailure('MESHER_TIMEOUT', 'The geometry operation exceeded 120 seconds. Try a simpler tessellation or coarser mesh.', null, 'mesh'));
+        }, 120000) : null;
 
         function finish(error, result) {
           if (settled) { return; }
           settled = true;
+          root.clearTimeout(timeout);
+          if (error) { worker.terminate(); if (self.worker === worker) { self.worker = null; } }
           self.cancelPending = null;
           worker.onmessage = null;
           worker.onerror = null;
@@ -193,6 +213,7 @@
             protocol: root.SpjutsimFEA.WORKER_PROTOCOL_VERSION,
             type: 'mesh', requestId: requestId, geometryId: request.geometry.geometryId,
             sourceName: request.geometry.sourceName, sourceFormat: request.geometry.sourceFormat,
+            importOptions: request.geometry.importOptions, sourceHash: request.geometry.sourceMetadata && request.geometry.sourceMetadata.sha256,
             faceIds: request.geometry.faceIds.slice(), settings: resolvedSettings,
             orientation: { rotation: request.geometry.orientation.rotation.slice(), operations: request.geometry.orientation.operations.slice() },
             sourceBytes: transferBytes
@@ -204,6 +225,41 @@
     });
   };
 
+  /** Explicit repair creates candidate source bytes; it never installs geometry. */
+  MesherClient.prototype.repairStl = function(request) {
+    var self=this,api=root.SpjutsimFEA;
+    if(!request||request.sourceFormat!=='stl'||!api.validateImportRequest(request).valid||
+      !api.validateStlOptions(request.importOptions)||!api.validateStlRepairOptions(request.repairOptions)) {
+      return Promise.reject(clientFailure('STL_INVALID_REPAIR_OPTIONS','Choose an STL, explicit units and a hole width from 0% through 5%.'));
+    }
+    if(request.sourceBytes.byteLength>16*1024*1024)return Promise.reject(clientFailure('STL_INPUT_LIMIT','Choose an STL file no larger than 16 MiB.'));
+    return this.ensureWorker().then(function(worker){return new Promise(function(resolve,reject){
+      var requestId=self.requestId(),settled=false,transferBytes=request.sourceBytes.slice(0);
+      var timeout=root.setTimeout(function(){finish(clientFailure('MESHER_TIMEOUT','Surface repair exceeded 120 seconds. Repair this surface in the source application.'));},120000);
+      function finish(error,result){
+        if(settled)return;settled=true;root.clearTimeout(timeout);self.cancelPending=null;
+        worker.onmessage=null;worker.onerror=null;worker.onmessageerror=null;
+        if(error){worker.terminate();if(self.worker===worker)self.worker=null;reject(error);}else resolve(result);
+      }
+      self.cancelPending=function(){finish(clientFailure('STL_REPAIR_CANCELLED','Surface repair was cancelled.'));};
+      worker.onmessage=function(event){
+        var message=event.data;if(!message||message.requestId!==requestId)return;
+        if(message.type==='progress'){if(api.validateWorkerProgress(message,requestId).valid)self.onProgress(message.progress);return;}
+        var response=api.validateWorkerResponse(message,requestId,'stl-repair-result');
+        if(!response.valid){finish(clientFailure('INVALID_MESHER_RESPONSE','The geometry engine returned an invalid repair response.',response.reason));return;}
+        if(response.error){self.onError(message.error);finish(Object.assign(new Error(message.error.userMessage),{diagnostic:message.error}));return;}
+        if(!api.validateStlRepairResult(message.result)){finish(clientFailure('INVALID_STL_REPAIR_RESULT','The geometry engine returned an invalid repair candidate.'));return;}
+        finish(null,message.result);
+      };
+      worker.onerror=function(event){finish(clientFailure('MESHER_OPERATION_FAILED','The geometry engine stopped during surface repair.',event.message||null));};
+      worker.onmessageerror=function(){finish(clientFailure('MESHER_MESSAGE_FAILED','The repaired source could not be returned.'));};
+      try{worker.postMessage({protocol:api.WORKER_PROTOCOL_VERSION,type:'stl-repair',version:1,requestId:requestId,
+        sourceName:request.sourceName,sourceFormat:'stl',sourceBytes:transferBytes,importOptions:request.importOptions,
+        repairOptions:request.repairOptions},[transferBytes]);}
+      catch(error){finish(clientFailure('MESHER_MESSAGE_FAILED','The STL could not be sent for repair.',error&&error.message));}
+    });});
+  };
+
   MesherClient.prototype.cancel = function () {
     this.dispose();
   };
@@ -212,6 +268,9 @@
     this.disposed = true;
     if (this.cancelPending) { this.cancelPending(); }
     if (this.worker) {
+      this.worker.onmessage = null;
+      this.worker.onerror = null;
+      this.worker.onmessageerror = null;
       this.worker.terminate();
       this.worker = null;
     }

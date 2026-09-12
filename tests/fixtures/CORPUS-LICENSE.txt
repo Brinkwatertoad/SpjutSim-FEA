@@ -1,0 +1,9 @@
+The CAD files under tests/fixtures/cad-corpus are project-authored fixtures.
+
+To the extent possible under law, the SpjutSim FEA contributors have waived
+all copyright and related or neighboring rights to these fixture files under
+CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/
+
+The generator source remains covered by the repository's normal source-code
+license. Gmsh/OpenCASCADE are operator tools used to export the neutral files;
+they are not the authors of the modeled geometry.

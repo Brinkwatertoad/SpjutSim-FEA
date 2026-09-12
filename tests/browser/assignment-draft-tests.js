@@ -1,0 +1,64 @@
+(function () {
+  'use strict';
+  var api=SpjutsimFEA;
+  function assert(ok,message){if(!ok)throw new Error(message);}
+  function rejects(action){var threw=false;try{action();}catch(e){threw=true;}assert(threw,'Invalid draft accepted');}
+  try {
+    var app=new api.AppController({document:api.createAnalysisDocument()});
+    app.replaceGeometry(api.assignmentTestGeometry('draft-cube'),{sourceName:'cube.step',sourceFormat:'step',sourceBytes:new ArrayBuffer(1)});
+    assert(typeof app.beginAssignmentDraft === 'function', 'Transactional assignment commands are missing');
+    app.document.mesh=api.assignmentTestMesh();
+    var result={sentinel:true}, check={status:'ready',analysisRevision:app.document.analysisRevision};
+    app.document.results=result; app.document.solvePreflight=check;
+    app.document.viewportPresentation.mode='stress';
+    var revision=app.document.analysisRevision, mesh=app.document.mesh;
+    app.beginAssignmentDraft('load',null,{type:'total-force',forceN:[100,0,0]});
+    assert(app.document.viewportPresentation.mode === 'mesh','Draft did not enter selectable presentation');
+    var convergenceError='';
+    try { app.beginConvergenceStudy(); } catch(error) { convergenceError=error.message; }
+    assert(/Apply or Cancel/.test(convergenceError),'Convergence must explicitly reject an assignment draft');
+    rejects(function(){app.commitAssignmentDraft();});
+    app.toggleDraftFace('face-x+'); app.toggleDraftFace('face-y+'); app.toggleDraftFace('face-y+');
+    assert(app.document.assignmentDraft.faceIds.join() === 'face-x+','Plain toggles do not maintain set');
+    rejects(function(){app.beginAssignmentDraft('support');});
+    assert(app.document.analysisRevision===revision && app.document.results===result && app.document.solvePreflight===check,'Preview invalidated committed state');
+    app.cancelAssignmentDraft();
+    assert(app.document.viewportPresentation.mode==='stress' && app.document.results===result && app.document.mesh===mesh,'Cancel did not preserve solved presentation');
+    app.replaceSelectedFaces(['face-x+']); app.beginAssignmentDraft('load',null,{type:'total-force',forceN:[100,0,0]});
+    var id=app.commitAssignmentDraft();
+    assert(app.document.loads[0].forceN[0]===100 && app.document.loads[0].id===id && app.document.analysisRevision===revision+1 && !app.document.results && app.document.mesh===mesh,'Apply must commit once and retain mesh');
+    revision=app.document.analysisRevision;
+    app.beginAssignmentDraft('load',id);app.commitAssignmentDraft();
+    assert(app.document.analysisRevision===revision,'Unchanged Save invalidated analysis');
+    app.beginAssignmentDraft('load',id);app.updateAssignmentDraft({definition:{type:'pressure',pressurePa:Infinity}});rejects(function(){app.commitAssignmentDraft();});app.cancelAssignmentDraft();
+    assert(app.document.loads[0].id===id && app.document.loads[0].forceN[0]===100,'Cancelled edit changed original');
+    app.beginAssignmentDraft('load',id);
+    app.updateAssignmentDraft({faceIds:['face-x+','face-x+']}); rejects(function(){app.commitAssignmentDraft();});
+    app.updateAssignmentDraft({faceIds:['missing']});rejects(function(){app.commitAssignmentDraft();});app.cancelAssignmentDraft();
+    app.beginAssignmentDraft('load',id);app.replaceMaterial({youngsModulusPa:200e9,poissonsRatio:0.3});rejects(function(){app.commitAssignmentDraft();});app.cancelAssignmentDraft();
+    app.replaceSelectedFaces(['face-x-']);app.createBoundaryCondition({type:'support',componentsM:{x:0}});
+    app.beginAssignmentDraft('support',null,{type:'support',componentsM:{x:0.001}});rejects(function(){app.commitAssignmentDraft();});app.cancelAssignmentDraft();
+    var retainedResult = {unchanged:true}; app.document.results = retainedResult;
+    revision = app.document.analysisRevision;
+    app.renameAssignment('load',id,'  End force <test>  ');
+    assert(app.document.loads[0].name === 'End force <test>' && app.document.analysisRevision === revision && app.document.results === retainedResult, 'Rename changed numerical state or failed to trim');
+    rejects(function(){app.renameAssignment('load',id,'   ');});
+    app.document.viewportPresentation.mode='stress';
+    app.beginAssignmentDraft('load',id);app.updateAssignmentDraft({definition:Object.assign({},app.document.assignmentDraft.definition,{name:'Final force'})});app.commitAssignmentDraft();
+    assert(app.document.analysisRevision === revision && app.document.results === retainedResult, 'Name-only Save invalidated results');
+    assert(app.document.viewportPresentation.mode==='stress','Metadata-only Save did not restore its available result view');
+    app.replaceMaterial({youngsModulusPa:200e9,poissonsRatio:0.3,densityKgM3:7850});
+    var beforeGravity=app.document.gravity, historyCount=app.history.cursor;
+    app.beginAssignmentDraft('gravity',null,{enabled:true,accelerationMS2:[0,9.81,0]});
+    assert(app.document.assignmentDraft.validation.valid && !app.historyState().canUndo,'Gravity draft must validate without faces and gate history');
+    app.updateAssignmentDraft({definition:{enabled:true,accelerationMS2:[9.81,0,0]}});
+    app.cancelAssignmentDraft();
+    assert(app.document.gravity===beforeGravity && app.history.cursor===historyCount,'Cancel gravity changed calculation or history');
+    app.beginAssignmentDraft('gravity',null,{enabled:true,accelerationMS2:[0,9.81,0]});app.commitAssignmentDraft();
+    assert(app.document.gravity.enabled && app.document.gravity.accelerationMS2[1]===9.81 && app.history.cursor===historyCount+1,'Apply gravity must create one history edit');
+    app.beginAssignmentDraft('gravity','gravity');app.commitAssignmentDraft();
+    assert(app.history.cursor===historyCount+1,'Unchanged gravity Save created history');
+    app.undoEngineeringEdit();assert(!app.document.gravity.enabled,'Gravity Apply cannot be undone');
+    document.getElementById('test-status').textContent='Passed';
+  }catch(error){document.getElementById('test-status').textContent='Failed: '+error.message;}
+}());

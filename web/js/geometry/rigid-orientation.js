@@ -278,7 +278,17 @@
     return Object.assign({}, reset, { orientation: identityRigidOrientation() });
   }
 
+  function restoreGeometryOrientation(geometry, orientation) {
+    if (!validateRigidOrientation(orientation).valid || !validateRigidOrientation(geometry && geometry.orientation).valid) { throw new Error('Invalid rigid orientation history.'); }
+    var matrix = geometry.orientation.rotation;
+    var inverse = [matrix[0],matrix[3],matrix[6],matrix[1],matrix[4],matrix[7],matrix[2],matrix[5],matrix[8]];
+    var delta = multiplyRotation3(orientation.rotation,inverse);
+    var transformed = applyRotationToGeometry(geometry,delta,null);
+    return Object.assign({},transformed,{orientation:rigidOrientation(orientation.rotation,orientation.operations)});
+  }
+
   root.SpjutsimFEA = root.SpjutsimFEA || {};
+  root.SpjutsimFEA.restoreGeometryOrientation = restoreGeometryOrientation;
   root.SpjutsimFEA.identityRigidOrientation = identityRigidOrientation;
   root.SpjutsimFEA.validateRigidOrientation = validateRigidOrientation;
   root.SpjutsimFEA.axisRotationMatrix = axisRotationMatrix;

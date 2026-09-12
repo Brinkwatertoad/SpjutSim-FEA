@@ -13,6 +13,7 @@ struct CsrMatrix {
 bool checked_scalar_graph_counts(std::uint64_t, std::uint64_t, std::uint64_t &,
                                  std::uint64_t &, Diagnostic &);
 bool build_csr_graph(std::uint32_t, const std::vector<std::uint32_t> &,
+                     std::uint32_t nodes_per_element,
                      CsrGraph &, Diagnostic &);
 std::uint32_t csr_position(const CsrGraph &, std::uint32_t, std::uint32_t);
 void csr_multiply(const CsrMatrix &, const std::vector<double> &,

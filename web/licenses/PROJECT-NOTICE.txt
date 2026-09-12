@@ -1,0 +1,25 @@
+SpjutSim FEA
+Copyright (c) 2026 Brinkwatertoad.
+
+First-party FEA source and the copied UI foundation files are licensed under
+GPL-2.0-or-later. See LICENSE for the grant and full license text. This does not
+relicense the separate SpjutSim-UI-Kit project. Materials with their own notices,
+including the CC0 CAD fixtures, retain those terms.
+
+This application includes Three.js (MIT), GMSH-JS (GPL-2.0-or-later), Gmsh
+(GPL-2.0-or-later with its upstream exception), and Open CASCADE Technology
+(LGPL-2.1 with its upstream exception). It makes use of facilities provided by
+Open CASCADE Technology. The generated runtimes also contain Emscripten runtime
+and system-library code under the licenses preserved in web/licenses/.
+
+Upstream authors retain their copyrights. Complete upstream notices, including
+Gmsh's bundled dependency notices, are available through web/licenses/index.html.
+No upstream endorsement or commercial Gmsh entitlement is claimed.
+
+The application is provided WITHOUT ANY WARRANTY, including MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the applicable licenses for details.
+
+Corresponding source accompanies each packaged release in its sources/
+directory, including the exact application tree, upstream source archives,
+and compilation/packaging instructions. See docs/release/SOURCE.md. This is
+source accompaniment, not a three-year written source offer under GPLv2 3(b).

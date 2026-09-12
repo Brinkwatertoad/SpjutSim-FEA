@@ -1,0 +1,2990 @@
+[
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.5,
+      "solveLatencyMs": 0.19999992847442627
+    },
+    "case": {
+      "degreeOfFreedomCount": 72630,
+      "elementCount": 15773,
+      "elementType": "tet10",
+      "exactNnz": 5776434,
+      "id": "axial-tet10-25k",
+      "kind": "axial",
+      "nodeCount": 24210
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 139000000,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 78446592,
+        "graphPreflight": 32243712,
+        "initial": 16777216,
+        "inputLoaded": 32243712,
+        "postprocess": 94175232,
+        "solve": 78446592
+      },
+      "wasmMemoryHighWaterBytes": 94175232
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 5968800,
+        "matrixIndexBytes": 23105736,
+        "matrixValuesBytes": 46211472,
+        "meshBytes": 1211960,
+        "resultBytes": 10819560,
+        "rowPointerBytes": 290524,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4648320
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 150491236,
+      "predictedPeakBytes": 225736854,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T19:58:41.481Z",
+    "repetition": 1,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.470235457159572e-9,
+      "iterations": 725,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 1454.7000000476837,
+        "postprocess": 501.59999997615796,
+        "preflight": 82.70000004768372,
+        "solve": 3259.3
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 3760.899999976158
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.5,
+      "solveLatencyMs": 0.19999992847442627
+    },
+    "case": {
+      "degreeOfFreedomCount": 213975,
+      "elementCount": 45631,
+      "elementType": "tet10",
+      "exactNnz": 16846785,
+      "id": "cantilever-tet10-75k",
+      "kind": "cantilever",
+      "nodeCount": 71325
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 139000000,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 228458496,
+        "graphPreflight": 93716480,
+        "initial": 16777216,
+        "inputLoaded": 93716480,
+        "postprocess": 274202624,
+        "solve": 228458496
+      },
+      "wasmMemoryHighWaterBytes": 274202624
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 17283060,
+        "matrixIndexBytes": 67387140,
+        "matrixValuesBytes": 134774280,
+        "meshBytes": 3537040,
+        "resultBytes": 31372800,
+        "rowPointerBytes": 855904,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 13694400
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 310171428,
+      "predictedPeakBytes": 465257142,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T19:59:46.459Z",
+    "repetition": 1,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 6.9763621692592615e-9,
+      "iterations": 4314,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 2636.7999999523163,
+        "postprocess": 1524.7999999761596,
+        "preflight": 192.79999995231628,
+        "solve": 60613.6
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 62138.39999997616
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.5,
+      "solveLatencyMs": 0.19999992847442627
+    },
+    "case": {
+      "degreeOfFreedomCount": 434226,
+      "elementCount": 90920,
+      "elementType": "tet10",
+      "exactNnz": 33825690,
+      "id": "mixed-scale-tet10-150k",
+      "kind": "mixed-scale",
+      "nodeCount": 144742
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 139000000,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 458489856,
+        "graphPreflight": 187891712,
+        "initial": 16777216,
+        "inputLoaded": 187891712,
+        "postprocess": 550240256,
+        "solve": 458489856
+      },
+      "wasmMemoryHighWaterBytes": 550240256
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 34468104,
+        "matrixIndexBytes": 135302760,
+        "matrixValuesBytes": 270605520,
+        "meshBytes": 7110608,
+        "resultBytes": 62657552,
+        "rowPointerBytes": 1736908,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 27790464
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 554943636,
+      "predictedPeakBytes": 832415454,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:08:13.877Z",
+    "repetition": 1,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.981863802862236e-9,
+      "iterations": 17188,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 5573.399999976158,
+        "postprocess": 3209.7999999523163,
+        "preflight": 381,
+        "solve": 498233.5
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 501443.2999999523
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.5,
+      "solveLatencyMs": 0.19999992847442627
+    },
+    "case": {
+      "degreeOfFreedomCount": 74451,
+      "elementCount": 88697,
+      "elementType": "tet4",
+      "exactNnz": 2618847,
+      "id": "poor-quality-tet4",
+      "kind": "poor-quality",
+      "nodeCount": 24817
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 139000000,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 40763392,
+        "graphPreflight": 20185088,
+        "initial": 16777216,
+        "inputLoaded": 20185088,
+        "postprocess": 70582272,
+        "solve": 40763392
+      },
+      "wasmMemoryHighWaterBytes": 70582272
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 1824,
+        "graphBytes": 4555260,
+        "matrixIndexBytes": 10475388,
+        "matrixValuesBytes": 20950776,
+        "meshBytes": 2014760,
+        "resultBytes": 22677032,
+        "rowPointerBytes": 297808,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4764864
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 125311452,
+      "predictedPeakBytes": 187967178,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:08:33.595Z",
+    "repetition": 1,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 7.606605909414971e-9,
+      "iterations": 6638,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 3833.5,
+        "postprocess": 457.10000004768335,
+        "preflight": 62.199999928474426,
+        "solve": 15344.1
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 15801.200000047684
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.5,
+      "solveLatencyMs": 0.19999992847442627
+    },
+    "case": {
+      "degreeOfFreedomCount": 72630,
+      "elementCount": 15773,
+      "elementType": "tet10",
+      "exactNnz": 5776434,
+      "id": "axial-tet10-25k",
+      "kind": "axial",
+      "nodeCount": 24210
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 139000000,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 78446592,
+        "graphPreflight": 32243712,
+        "initial": 16777216,
+        "inputLoaded": 32243712,
+        "postprocess": 94175232,
+        "solve": 78446592
+      },
+      "wasmMemoryHighWaterBytes": 94175232
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 5968800,
+        "matrixIndexBytes": 23105736,
+        "matrixValuesBytes": 46211472,
+        "meshBytes": 1211960,
+        "resultBytes": 10819560,
+        "rowPointerBytes": 290524,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4648320
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 150491236,
+      "predictedPeakBytes": 225736854,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:08:38.824Z",
+    "repetition": 2,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.470235457159572e-9,
+      "iterations": 725,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 1452.2999999523163,
+        "postprocess": 492.9000000000001,
+        "preflight": 86,
+        "solve": 3189.1
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 3682
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.5,
+      "solveLatencyMs": 0.19999992847442627
+    },
+    "case": {
+      "degreeOfFreedomCount": 213975,
+      "elementCount": 45631,
+      "elementType": "tet10",
+      "exactNnz": 16846785,
+      "id": "cantilever-tet10-75k",
+      "kind": "cantilever",
+      "nodeCount": 71325
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 139000000,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 228458496,
+        "graphPreflight": 93716480,
+        "initial": 16777216,
+        "inputLoaded": 93716480,
+        "postprocess": 274202624,
+        "solve": 228458496
+      },
+      "wasmMemoryHighWaterBytes": 274202624
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 17283060,
+        "matrixIndexBytes": 67387140,
+        "matrixValuesBytes": 134774280,
+        "meshBytes": 3537040,
+        "resultBytes": 31372800,
+        "rowPointerBytes": 855904,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 13694400
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 310171428,
+      "predictedPeakBytes": 465257142,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:09:42.541Z",
+    "repetition": 2,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 6.9763621692592615e-9,
+      "iterations": 4314,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 2576.7000000476837,
+        "postprocess": 1510.800000023839,
+        "preflight": 195.79999995231628,
+        "solve": 59426.8
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 60937.60000002384
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.5,
+      "solveLatencyMs": 0.19999992847442627
+    },
+    "case": {
+      "degreeOfFreedomCount": 434226,
+      "elementCount": 90920,
+      "elementType": "tet10",
+      "exactNnz": 33825690,
+      "id": "mixed-scale-tet10-150k",
+      "kind": "mixed-scale",
+      "nodeCount": 144742
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 139000000,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 458489856,
+        "graphPreflight": 187891712,
+        "initial": 16777216,
+        "inputLoaded": 187891712,
+        "postprocess": 550240256,
+        "solve": 458489856
+      },
+      "wasmMemoryHighWaterBytes": 550240256
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 34468104,
+        "matrixIndexBytes": 135302760,
+        "matrixValuesBytes": 270605520,
+        "meshBytes": 7110608,
+        "resultBytes": 62657552,
+        "rowPointerBytes": 1736908,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 27790464
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 554943636,
+      "predictedPeakBytes": 832415454,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:18:14.666Z",
+    "repetition": 2,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.981863802862236e-9,
+      "iterations": 17188,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 5377.299999952316,
+        "postprocess": 3210.999999976135,
+        "preflight": 375.7000000476837,
+        "solve": 503146.9
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 506357.89999997616
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.5,
+      "solveLatencyMs": 0.19999992847442627
+    },
+    "case": {
+      "degreeOfFreedomCount": 74451,
+      "elementCount": 88697,
+      "elementType": "tet4",
+      "exactNnz": 2618847,
+      "id": "poor-quality-tet4",
+      "kind": "poor-quality",
+      "nodeCount": 24817
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 139000000,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 40763392,
+        "graphPreflight": 20185088,
+        "initial": 16777216,
+        "inputLoaded": 20185088,
+        "postprocess": 70582272,
+        "solve": 40763392
+      },
+      "wasmMemoryHighWaterBytes": 70582272
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 1824,
+        "graphBytes": 4555260,
+        "matrixIndexBytes": 10475388,
+        "matrixValuesBytes": 20950776,
+        "meshBytes": 2014760,
+        "resultBytes": 22677032,
+        "rowPointerBytes": 297808,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4764864
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 125311452,
+      "predictedPeakBytes": 187967178,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:18:35.127Z",
+    "repetition": 2,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 7.606605909414971e-9,
+      "iterations": 6638,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 3798.7999999523163,
+        "postprocess": 493.90000004768444,
+        "preflight": 59.39999997615814,
+        "solve": 16086.3
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 16580.200000047684
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.5,
+      "solveLatencyMs": 0.19999992847442627
+    },
+    "case": {
+      "degreeOfFreedomCount": 72630,
+      "elementCount": 15773,
+      "elementType": "tet10",
+      "exactNnz": 5776434,
+      "id": "axial-tet10-25k",
+      "kind": "axial",
+      "nodeCount": 24210
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 139000000,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 78446592,
+        "graphPreflight": 32243712,
+        "initial": 16777216,
+        "inputLoaded": 32243712,
+        "postprocess": 94175232,
+        "solve": 78446592
+      },
+      "wasmMemoryHighWaterBytes": 94175232
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 5968800,
+        "matrixIndexBytes": 23105736,
+        "matrixValuesBytes": 46211472,
+        "meshBytes": 1211960,
+        "resultBytes": 10819560,
+        "rowPointerBytes": 290524,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4648320
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 150491236,
+      "predictedPeakBytes": 225736854,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:18:40.492Z",
+    "repetition": 3,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.470235457159572e-9,
+      "iterations": 725,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 1476,
+        "postprocess": 506.09999997615796,
+        "preflight": 81.5,
+        "solve": 3293.8
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 3799.899999976158
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.5,
+      "solveLatencyMs": 0.19999992847442627
+    },
+    "case": {
+      "degreeOfFreedomCount": 213975,
+      "elementCount": 45631,
+      "elementType": "tet10",
+      "exactNnz": 16846785,
+      "id": "cantilever-tet10-75k",
+      "kind": "cantilever",
+      "nodeCount": 71325
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 116000000,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 228458496,
+        "graphPreflight": 93716480,
+        "initial": 16777216,
+        "inputLoaded": 93716480,
+        "postprocess": 274202624,
+        "solve": 228458496
+      },
+      "wasmMemoryHighWaterBytes": 274202624
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 17283060,
+        "matrixIndexBytes": 67387140,
+        "matrixValuesBytes": 134774280,
+        "meshBytes": 3537040,
+        "resultBytes": 31372800,
+        "rowPointerBytes": 855904,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 13694400
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 310171428,
+      "predictedPeakBytes": 465257142,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:19:45.777Z",
+    "repetition": 3,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 6.9763621692592615e-9,
+      "iterations": 4314,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 2597.7999999523163,
+        "postprocess": 1543.5000000238433,
+        "preflight": 199.29999995231628,
+        "solve": 60932.6
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 62476.10000002384
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.5,
+      "solveLatencyMs": 0.19999992847442627
+    },
+    "case": {
+      "degreeOfFreedomCount": 434226,
+      "elementCount": 90920,
+      "elementType": "tet10",
+      "exactNnz": 33825690,
+      "id": "mixed-scale-tet10-150k",
+      "kind": "mixed-scale",
+      "nodeCount": 144742
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 116000000,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 458489856,
+        "graphPreflight": 187891712,
+        "initial": 16777216,
+        "inputLoaded": 187891712,
+        "postprocess": 550240256,
+        "solve": 458489856
+      },
+      "wasmMemoryHighWaterBytes": 550240256
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 34468104,
+        "matrixIndexBytes": 135302760,
+        "matrixValuesBytes": 270605520,
+        "meshBytes": 7110608,
+        "resultBytes": 62657552,
+        "rowPointerBytes": 1736908,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 27790464
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 554943636,
+      "predictedPeakBytes": 832415454,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:28:05.439Z",
+    "repetition": 3,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.981863802862236e-9,
+      "iterations": 17188,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 5567.5,
+        "postprocess": 3204.299999928451,
+        "preflight": 372.8000000715256,
+        "solve": 490489.4
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 493693.6999999285
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.5,
+      "solveLatencyMs": 0.19999992847442627
+    },
+    "case": {
+      "degreeOfFreedomCount": 74451,
+      "elementCount": 88697,
+      "elementType": "tet4",
+      "exactNnz": 2618847,
+      "id": "poor-quality-tet4",
+      "kind": "poor-quality",
+      "nodeCount": 24817
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 116000000,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 40763392,
+        "graphPreflight": 20185088,
+        "initial": 16777216,
+        "inputLoaded": 20185088,
+        "postprocess": 70582272,
+        "solve": 40763392
+      },
+      "wasmMemoryHighWaterBytes": 70582272
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 1824,
+        "graphBytes": 4555260,
+        "matrixIndexBytes": 10475388,
+        "matrixValuesBytes": 20950776,
+        "meshBytes": 2014760,
+        "resultBytes": 22677032,
+        "rowPointerBytes": 297808,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4764864
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 125311452,
+      "predictedPeakBytes": 187967178,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:28:24.998Z",
+    "repetition": 3,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 7.606605909414971e-9,
+      "iterations": 6638,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 3633.1999999284744,
+        "postprocess": 466.5000000238415,
+        "preflight": 58,
+        "solve": 15378.1
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 15844.600000023842
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": true,
+      "launchMode": "cross-origin-isolated-http",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.7199999094009399,
+      "solveLatencyMs": 0.1549999713897705
+    },
+    "case": {
+      "degreeOfFreedomCount": 72630,
+      "elementCount": 15773,
+      "elementType": "tet10",
+      "exactNnz": 5776434,
+      "id": "axial-tet10-25k",
+      "kind": "axial",
+      "nodeCount": 24210
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 139323467,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 78446592,
+        "graphPreflight": 32243712,
+        "initial": 16777216,
+        "inputLoaded": 32243712,
+        "postprocess": 94175232,
+        "solve": 78446592
+      },
+      "wasmMemoryHighWaterBytes": 94175232
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 5968800,
+        "matrixIndexBytes": 23105736,
+        "matrixValuesBytes": 46211472,
+        "meshBytes": 1211960,
+        "resultBytes": 10819560,
+        "rowPointerBytes": 290524,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4648320
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 150491236,
+      "predictedPeakBytes": 225736854,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:29:07.583Z",
+    "repetition": 1,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.470235457159572e-9,
+      "iterations": 725,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 1347.6049998998642,
+        "postprocess": 504.0099999237059,
+        "preflight": 80.93500006198883,
+        "solve": 3138.195
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 3642.204999923706
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": true,
+      "launchMode": "cross-origin-isolated-http",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.7199999094009399,
+      "solveLatencyMs": 0.1549999713897705
+    },
+    "case": {
+      "degreeOfFreedomCount": 213975,
+      "elementCount": 45631,
+      "elementType": "tet10",
+      "exactNnz": 16846785,
+      "id": "cantilever-tet10-75k",
+      "kind": "cantilever",
+      "nodeCount": 71325
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 160060545,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 228458496,
+        "graphPreflight": 93716480,
+        "initial": 16777216,
+        "inputLoaded": 93716480,
+        "postprocess": 274202624,
+        "solve": 228458496
+      },
+      "wasmMemoryHighWaterBytes": 274202624
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 17283060,
+        "matrixIndexBytes": 67387140,
+        "matrixValuesBytes": 134774280,
+        "meshBytes": 3537040,
+        "resultBytes": 31372800,
+        "rowPointerBytes": 855904,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 13694400
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 310171428,
+      "predictedPeakBytes": 465257142,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:30:10.024Z",
+    "repetition": 1,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 6.9763621692592615e-9,
+      "iterations": 4314,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 2565.079999923706,
+        "postprocess": 1477.9500000810658,
+        "preflight": 191.42499995231628,
+        "solve": 58199.09
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 59677.04000008106
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": true,
+      "launchMode": "cross-origin-isolated-http",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.7199999094009399,
+      "solveLatencyMs": 0.1549999713897705
+    },
+    "case": {
+      "degreeOfFreedomCount": 434226,
+      "elementCount": 90920,
+      "elementType": "tet10",
+      "exactNnz": 33825690,
+      "id": "mixed-scale-tet10-150k",
+      "kind": "mixed-scale",
+      "nodeCount": 144742
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 200568190,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 458489856,
+        "graphPreflight": 187891712,
+        "initial": 16777216,
+        "inputLoaded": 187891712,
+        "postprocess": 550240256,
+        "solve": 458489856
+      },
+      "wasmMemoryHighWaterBytes": 550240256
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 34468104,
+        "matrixIndexBytes": 135302760,
+        "matrixValuesBytes": 270605520,
+        "meshBytes": 7110608,
+        "resultBytes": 62657552,
+        "rowPointerBytes": 1736908,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 27790464
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 554943636,
+      "predictedPeakBytes": 832415454,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:38:31.624Z",
+    "repetition": 1,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.981863802862236e-9,
+      "iterations": 17188,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 5427.534999966621,
+        "postprocess": 3205.029999976163,
+        "preflight": 370.0849999189377,
+        "solve": 492570.37
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 495775.39999997616
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": true,
+      "launchMode": "cross-origin-isolated-http",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.7199999094009399,
+      "solveLatencyMs": 0.1549999713897705
+    },
+    "case": {
+      "degreeOfFreedomCount": 74451,
+      "elementCount": 88697,
+      "elementType": "tet4",
+      "exactNnz": 2618847,
+      "id": "poor-quality-tet4",
+      "kind": "poor-quality",
+      "nodeCount": 24817
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 106147354,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 40763392,
+        "graphPreflight": 20185088,
+        "initial": 16777216,
+        "inputLoaded": 20185088,
+        "postprocess": 70582272,
+        "solve": 40763392
+      },
+      "wasmMemoryHighWaterBytes": 70582272
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 1824,
+        "graphBytes": 4555260,
+        "matrixIndexBytes": 10475388,
+        "matrixValuesBytes": 20950776,
+        "meshBytes": 2014760,
+        "resultBytes": 22677032,
+        "rowPointerBytes": 297808,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4764864
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 125311452,
+      "predictedPeakBytes": 187967178,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:38:50.330Z",
+    "repetition": 1,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 7.606605909414971e-9,
+      "iterations": 6638,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 3665.7249999046326,
+        "postprocess": 442.0249999809257,
+        "preflight": 60,
+        "solve": 14514.995
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 14957.019999980927
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": true,
+      "launchMode": "cross-origin-isolated-http",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.7199999094009399,
+      "solveLatencyMs": 0.1549999713897705
+    },
+    "case": {
+      "degreeOfFreedomCount": 72630,
+      "elementCount": 15773,
+      "elementType": "tet10",
+      "exactNnz": 5776434,
+      "id": "axial-tet10-25k",
+      "kind": "axial",
+      "nodeCount": 24210
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 106062374,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 78446592,
+        "graphPreflight": 32243712,
+        "initial": 16777216,
+        "inputLoaded": 32243712,
+        "postprocess": 94175232,
+        "solve": 78446592
+      },
+      "wasmMemoryHighWaterBytes": 94175232
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 5968800,
+        "matrixIndexBytes": 23105736,
+        "matrixValuesBytes": 46211472,
+        "meshBytes": 1211960,
+        "resultBytes": 10819560,
+        "rowPointerBytes": 290524,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4648320
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 150491236,
+      "predictedPeakBytes": 225736854,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:38:55.547Z",
+    "repetition": 2,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.470235457159572e-9,
+      "iterations": 725,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 1421.2200000286102,
+        "postprocess": 490.9449999952317,
+        "preflight": 81.16999995708466,
+        "solve": 3210.06
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 3701.0049999952316
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": true,
+      "launchMode": "cross-origin-isolated-http",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.7199999094009399,
+      "solveLatencyMs": 0.1549999713897705
+    },
+    "case": {
+      "degreeOfFreedomCount": 213975,
+      "elementCount": 45631,
+      "elementType": "tet10",
+      "exactNnz": 16846785,
+      "id": "cantilever-tet10-75k",
+      "kind": "cantilever",
+      "nodeCount": 71325
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 114951922,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 228458496,
+        "graphPreflight": 93716480,
+        "initial": 16777216,
+        "inputLoaded": 93716480,
+        "postprocess": 274202624,
+        "solve": 228458496
+      },
+      "wasmMemoryHighWaterBytes": 274202624
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 17283060,
+        "matrixIndexBytes": 67387140,
+        "matrixValuesBytes": 134774280,
+        "meshBytes": 3537040,
+        "resultBytes": 31372800,
+        "rowPointerBytes": 855904,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 13694400
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 310171428,
+      "predictedPeakBytes": 465257142,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:39:57.951Z",
+    "repetition": 2,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 6.9763621692592615e-9,
+      "iterations": 4314,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 2575.4649999141693,
+        "postprocess": 1501.1299999666226,
+        "preflight": 198.5,
+        "solve": 58117.28
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 59618.40999996662
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": true,
+      "launchMode": "cross-origin-isolated-http",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.7199999094009399,
+      "solveLatencyMs": 0.1549999713897705
+    },
+    "case": {
+      "degreeOfFreedomCount": 434226,
+      "elementCount": 90920,
+      "elementType": "tet10",
+      "exactNnz": 33825690,
+      "id": "mixed-scale-tet10-150k",
+      "kind": "mixed-scale",
+      "nodeCount": 144742
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 142065004,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 458489856,
+        "graphPreflight": 187891712,
+        "initial": 16777216,
+        "inputLoaded": 187891712,
+        "postprocess": 550240256,
+        "solve": 458489856
+      },
+      "wasmMemoryHighWaterBytes": 550240256
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 34468104,
+        "matrixIndexBytes": 135302760,
+        "matrixValuesBytes": 270605520,
+        "meshBytes": 7110608,
+        "resultBytes": 62657552,
+        "rowPointerBytes": 1736908,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 27790464
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 554943636,
+      "predictedPeakBytes": 832415454,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:48:02.999Z",
+    "repetition": 2,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.981863802862236e-9,
+      "iterations": 17188,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 5296.165000081062,
+        "postprocess": 3088.435000023863,
+        "preflight": 369.03000009059906,
+        "solve": 476267.04
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 479355.47500002384
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": true,
+      "launchMode": "cross-origin-isolated-http",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.7199999094009399,
+      "solveLatencyMs": 0.1549999713897705
+    },
+    "case": {
+      "degreeOfFreedomCount": 74451,
+      "elementCount": 88697,
+      "elementType": "tet4",
+      "exactNnz": 2618847,
+      "id": "poor-quality-tet4",
+      "kind": "poor-quality",
+      "nodeCount": 24817
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 106199154,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 40763392,
+        "graphPreflight": 20185088,
+        "initial": 16777216,
+        "inputLoaded": 20185088,
+        "postprocess": 70582272,
+        "solve": 40763392
+      },
+      "wasmMemoryHighWaterBytes": 70582272
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 1824,
+        "graphBytes": 4555260,
+        "matrixIndexBytes": 10475388,
+        "matrixValuesBytes": 20950776,
+        "meshBytes": 2014760,
+        "resultBytes": 22677032,
+        "rowPointerBytes": 297808,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4764864
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 125311452,
+      "predictedPeakBytes": 187967178,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:48:22.064Z",
+    "repetition": 2,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 7.606605909414971e-9,
+      "iterations": 6638,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 3679.389999985695,
+        "postprocess": 436.68500007629336,
+        "preflight": 61.88499999046326,
+        "solve": 14861.61
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 15298.295000076294
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": true,
+      "launchMode": "cross-origin-isolated-http",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.7199999094009399,
+      "solveLatencyMs": 0.1549999713897705
+    },
+    "case": {
+      "degreeOfFreedomCount": 72630,
+      "elementCount": 15773,
+      "elementType": "tet10",
+      "exactNnz": 5776434,
+      "id": "axial-tet10-25k",
+      "kind": "axial",
+      "nodeCount": 24210
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 106066722,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 78446592,
+        "graphPreflight": 32243712,
+        "initial": 16777216,
+        "inputLoaded": 32243712,
+        "postprocess": 94175232,
+        "solve": 78446592
+      },
+      "wasmMemoryHighWaterBytes": 94175232
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 5968800,
+        "matrixIndexBytes": 23105736,
+        "matrixValuesBytes": 46211472,
+        "meshBytes": 1211960,
+        "resultBytes": 10819560,
+        "rowPointerBytes": 290524,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4648320
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 150491236,
+      "predictedPeakBytes": 225736854,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:48:27.206Z",
+    "repetition": 3,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.470235457159572e-9,
+      "iterations": 725,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 1436.0750000476837,
+        "postprocess": 479.41500000476844,
+        "preflight": 83.81000006198883,
+        "solve": 3132.08
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 3611.4950000047684
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": true,
+      "launchMode": "cross-origin-isolated-http",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.7199999094009399,
+      "solveLatencyMs": 0.1549999713897705
+    },
+    "case": {
+      "degreeOfFreedomCount": 213975,
+      "elementCount": 45631,
+      "elementType": "tet10",
+      "exactNnz": 16846785,
+      "id": "cantilever-tet10-75k",
+      "kind": "cantilever",
+      "nodeCount": 71325
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 115025954,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 228458496,
+        "graphPreflight": 93716480,
+        "initial": 16777216,
+        "inputLoaded": 93716480,
+        "postprocess": 274202624,
+        "solve": 228458496
+      },
+      "wasmMemoryHighWaterBytes": 274202624
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 17283060,
+        "matrixIndexBytes": 67387140,
+        "matrixValuesBytes": 134774280,
+        "meshBytes": 3537040,
+        "resultBytes": 31372800,
+        "rowPointerBytes": 855904,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 13694400
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 310171428,
+      "predictedPeakBytes": 465257142,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:49:29.510Z",
+    "repetition": 3,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 6.9763621692592615e-9,
+      "iterations": 4314,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 2504.055000066757,
+        "postprocess": 1483.4799999570823,
+        "preflight": 200.20500004291534,
+        "solve": 58102.065
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 59585.544999957085
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": true,
+      "launchMode": "cross-origin-isolated-http",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.7199999094009399,
+      "solveLatencyMs": 0.1549999713897705
+    },
+    "case": {
+      "degreeOfFreedomCount": 434226,
+      "elementCount": 90920,
+      "elementType": "tet10",
+      "exactNnz": 33825690,
+      "id": "mixed-scale-tet10-150k",
+      "kind": "mixed-scale",
+      "nodeCount": 144742
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 142053088,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 458489856,
+        "graphPreflight": 187891712,
+        "initial": 16777216,
+        "inputLoaded": 187891712,
+        "postprocess": 550240256,
+        "solve": 458489856
+      },
+      "wasmMemoryHighWaterBytes": 550240256
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 34468104,
+        "matrixIndexBytes": 135302760,
+        "matrixValuesBytes": 270605520,
+        "meshBytes": 7110608,
+        "resultBytes": 62657552,
+        "rowPointerBytes": 1736908,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 27790464
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 554943636,
+      "predictedPeakBytes": 832415454,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:57:36.271Z",
+    "repetition": 3,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.981863802862236e-9,
+      "iterations": 17188,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 5200.905000090599,
+        "postprocess": 3028.749999947555,
+        "preflight": 377.65000009536743,
+        "solve": 478136.805
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 481165.55499994755
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": true,
+      "launchMode": "cross-origin-isolated-http",
+      "name": "Chromium",
+      "version": "152.0.7977.75"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0.7199999094009399,
+      "solveLatencyMs": 0.1549999713897705
+    },
+    "case": {
+      "degreeOfFreedomCount": 74451,
+      "elementCount": 88697,
+      "elementType": "tet4",
+      "exactNnz": 2618847,
+      "id": "poor-quality-tet4",
+      "kind": "poor-quality",
+      "nodeCount": 24817
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": 106189582,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 40763392,
+        "graphPreflight": 20185088,
+        "initial": 16777216,
+        "inputLoaded": 20185088,
+        "postprocess": 70582272,
+        "solve": 40763392
+      },
+      "wasmMemoryHighWaterBytes": 70582272
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 1824,
+        "graphBytes": 4555260,
+        "matrixIndexBytes": 10475388,
+        "matrixValuesBytes": 20950776,
+        "meshBytes": 2014760,
+        "resultBytes": 22677032,
+        "rowPointerBytes": 297808,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4764864
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 125311452,
+      "predictedPeakBytes": 187967178,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T20:57:55.294Z",
+    "repetition": 3,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 7.606605909414971e-9,
+      "iterations": 6638,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 3629.539999961853,
+        "postprocess": 441.889999918938,
+        "preflight": 60.61500000953674,
+        "solve": 14863.945
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 15305.834999918938
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Firefox",
+      "version": "155.0.1"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0,
+      "solveLatencyMs": 0
+    },
+    "case": {
+      "degreeOfFreedomCount": 72630,
+      "elementCount": 15773,
+      "elementType": "tet10",
+      "exactNnz": 5776434,
+      "id": "axial-tet10-25k",
+      "kind": "axial",
+      "nodeCount": 24210
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": null,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 78446592,
+        "graphPreflight": 32243712,
+        "initial": 16777216,
+        "inputLoaded": 32243712,
+        "postprocess": 94175232,
+        "solve": 78446592
+      },
+      "wasmMemoryHighWaterBytes": 94175232
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 5968800,
+        "matrixIndexBytes": 23105736,
+        "matrixValuesBytes": 46211472,
+        "meshBytes": 1211960,
+        "resultBytes": 10819560,
+        "rowPointerBytes": 290524,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4648320
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 150491236,
+      "predictedPeakBytes": 225736854,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T19:25:33.632Z",
+    "repetition": 1,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.470235457159572e-9,
+      "iterations": 725,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 2073,
+        "postprocess": 592,
+        "preflight": 84,
+        "solve": 3565
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 4157
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Firefox",
+      "version": "155.0.1"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0,
+      "solveLatencyMs": 0
+    },
+    "case": {
+      "degreeOfFreedomCount": 213975,
+      "elementCount": 45631,
+      "elementType": "tet10",
+      "exactNnz": 16846785,
+      "id": "cantilever-tet10-75k",
+      "kind": "cantilever",
+      "nodeCount": 71325
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": null,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 228458496,
+        "graphPreflight": 93716480,
+        "initial": 16777216,
+        "inputLoaded": 93716480,
+        "postprocess": 274202624,
+        "solve": 228458496
+      },
+      "wasmMemoryHighWaterBytes": 274202624
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 17283060,
+        "matrixIndexBytes": 67387140,
+        "matrixValuesBytes": 134774280,
+        "meshBytes": 3537040,
+        "resultBytes": 31372800,
+        "rowPointerBytes": 855904,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 13694400
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 310171428,
+      "predictedPeakBytes": 465257142,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T19:26:43.440Z",
+    "repetition": 1,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 6.976362169259261e-9,
+      "iterations": 4314,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 3778,
+        "postprocess": 1703,
+        "preflight": 199,
+        "solve": 64120
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 65823
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Firefox",
+      "version": "155.0.1"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0,
+      "solveLatencyMs": 0
+    },
+    "case": {
+      "degreeOfFreedomCount": 434226,
+      "elementCount": 90920,
+      "elementType": "tet10",
+      "exactNnz": 33825690,
+      "id": "mixed-scale-tet10-150k",
+      "kind": "mixed-scale",
+      "nodeCount": 144742
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": null,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 458489856,
+        "graphPreflight": 187891712,
+        "initial": 16777216,
+        "inputLoaded": 187891712,
+        "postprocess": 550240256,
+        "solve": 458489856
+      },
+      "wasmMemoryHighWaterBytes": 550240256
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 34468104,
+        "matrixIndexBytes": 135302760,
+        "matrixValuesBytes": 270605520,
+        "meshBytes": 7110608,
+        "resultBytes": 62657552,
+        "rowPointerBytes": 1736908,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 27790464
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 554943636,
+      "predictedPeakBytes": 832415454,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T19:35:35.874Z",
+    "repetition": 1,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.981863802862236e-9,
+      "iterations": 17188,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 7621,
+        "postprocess": 3493,
+        "preflight": 375,
+        "solve": 520930
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 524423
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Firefox",
+      "version": "155.0.1"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0,
+      "solveLatencyMs": 0
+    },
+    "case": {
+      "degreeOfFreedomCount": 74451,
+      "elementCount": 88697,
+      "elementType": "tet4",
+      "exactNnz": 2618847,
+      "id": "poor-quality-tet4",
+      "kind": "poor-quality",
+      "nodeCount": 24817
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": null,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 40763392,
+        "graphPreflight": 20185088,
+        "initial": 16777216,
+        "inputLoaded": 20185088,
+        "postprocess": 70582272,
+        "solve": 40763392
+      },
+      "wasmMemoryHighWaterBytes": 70582272
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 1824,
+        "graphBytes": 4555260,
+        "matrixIndexBytes": 10475388,
+        "matrixValuesBytes": 20950776,
+        "meshBytes": 2014760,
+        "resultBytes": 22677032,
+        "rowPointerBytes": 297808,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4764864
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 125311452,
+      "predictedPeakBytes": 187967178,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T19:35:57.488Z",
+    "repetition": 1,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 7.606605909414971e-9,
+      "iterations": 6638,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 5353,
+        "postprocess": 477,
+        "preflight": 59,
+        "solve": 15706
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 16183
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Firefox",
+      "version": "155.0.1"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0,
+      "solveLatencyMs": 0
+    },
+    "case": {
+      "degreeOfFreedomCount": 72630,
+      "elementCount": 15773,
+      "elementType": "tet10",
+      "exactNnz": 5776434,
+      "id": "axial-tet10-25k",
+      "kind": "axial",
+      "nodeCount": 24210
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": null,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 78446592,
+        "graphPreflight": 32243712,
+        "initial": 16777216,
+        "inputLoaded": 32243712,
+        "postprocess": 94175232,
+        "solve": 78446592
+      },
+      "wasmMemoryHighWaterBytes": 94175232
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 5968800,
+        "matrixIndexBytes": 23105736,
+        "matrixValuesBytes": 46211472,
+        "meshBytes": 1211960,
+        "resultBytes": 10819560,
+        "rowPointerBytes": 290524,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4648320
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 150491236,
+      "predictedPeakBytes": 225736854,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T19:36:03.553Z",
+    "repetition": 2,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.470235457159572e-9,
+      "iterations": 725,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 2113,
+        "postprocess": 547,
+        "preflight": 85,
+        "solve": 3316
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 3863
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Firefox",
+      "version": "155.0.1"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0,
+      "solveLatencyMs": 0
+    },
+    "case": {
+      "degreeOfFreedomCount": 213975,
+      "elementCount": 45631,
+      "elementType": "tet10",
+      "exactNnz": 16846785,
+      "id": "cantilever-tet10-75k",
+      "kind": "cantilever",
+      "nodeCount": 71325
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": null,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 228458496,
+        "graphPreflight": 93716480,
+        "initial": 16777216,
+        "inputLoaded": 93716480,
+        "postprocess": 274202624,
+        "solve": 228458496
+      },
+      "wasmMemoryHighWaterBytes": 274202624
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 17283060,
+        "matrixIndexBytes": 67387140,
+        "matrixValuesBytes": 134774280,
+        "meshBytes": 3537040,
+        "resultBytes": 31372800,
+        "rowPointerBytes": 855904,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 13694400
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 310171428,
+      "predictedPeakBytes": 465257142,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T19:37:09.726Z",
+    "repetition": 2,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 6.976362169259261e-9,
+      "iterations": 4314,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 3601,
+        "postprocess": 1637,
+        "preflight": 200,
+        "solve": 60728
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 62365
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Firefox",
+      "version": "155.0.1"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0,
+      "solveLatencyMs": 0
+    },
+    "case": {
+      "degreeOfFreedomCount": 434226,
+      "elementCount": 90920,
+      "elementType": "tet10",
+      "exactNnz": 33825690,
+      "id": "mixed-scale-tet10-150k",
+      "kind": "mixed-scale",
+      "nodeCount": 144742
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": null,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 458489856,
+        "graphPreflight": 187891712,
+        "initial": 16777216,
+        "inputLoaded": 187891712,
+        "postprocess": 550240256,
+        "solve": 458489856
+      },
+      "wasmMemoryHighWaterBytes": 550240256
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 34468104,
+        "matrixIndexBytes": 135302760,
+        "matrixValuesBytes": 270605520,
+        "meshBytes": 7110608,
+        "resultBytes": 62657552,
+        "rowPointerBytes": 1736908,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 27790464
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 554943636,
+      "predictedPeakBytes": 832415454,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T19:45:58.121Z",
+    "repetition": 2,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.981863802862236e-9,
+      "iterations": 17188,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 7468,
+        "postprocess": 3373,
+        "preflight": 375,
+        "solve": 517166
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 520539
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Firefox",
+      "version": "155.0.1"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0,
+      "solveLatencyMs": 0
+    },
+    "case": {
+      "degreeOfFreedomCount": 74451,
+      "elementCount": 88697,
+      "elementType": "tet4",
+      "exactNnz": 2618847,
+      "id": "poor-quality-tet4",
+      "kind": "poor-quality",
+      "nodeCount": 24817
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": null,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 40763392,
+        "graphPreflight": 20185088,
+        "initial": 16777216,
+        "inputLoaded": 20185088,
+        "postprocess": 70582272,
+        "solve": 40763392
+      },
+      "wasmMemoryHighWaterBytes": 70582272
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 1824,
+        "graphBytes": 4555260,
+        "matrixIndexBytes": 10475388,
+        "matrixValuesBytes": 20950776,
+        "meshBytes": 2014760,
+        "resultBytes": 22677032,
+        "rowPointerBytes": 297808,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4764864
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 125311452,
+      "predictedPeakBytes": 187967178,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T19:46:20.428Z",
+    "repetition": 2,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 7.606605909414971e-9,
+      "iterations": 6638,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 5336,
+        "postprocess": 491,
+        "preflight": 61,
+        "solve": 15992
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 16483
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Firefox",
+      "version": "155.0.1"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0,
+      "solveLatencyMs": 0
+    },
+    "case": {
+      "degreeOfFreedomCount": 72630,
+      "elementCount": 15773,
+      "elementType": "tet10",
+      "exactNnz": 5776434,
+      "id": "axial-tet10-25k",
+      "kind": "axial",
+      "nodeCount": 24210
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": null,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 78446592,
+        "graphPreflight": 32243712,
+        "initial": 16777216,
+        "inputLoaded": 32243712,
+        "postprocess": 94175232,
+        "solve": 78446592
+      },
+      "wasmMemoryHighWaterBytes": 94175232
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 5968800,
+        "matrixIndexBytes": 23105736,
+        "matrixValuesBytes": 46211472,
+        "meshBytes": 1211960,
+        "resultBytes": 10819560,
+        "rowPointerBytes": 290524,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4648320
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 150491236,
+      "predictedPeakBytes": 225736854,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T19:46:26.422Z",
+    "repetition": 3,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.470235457159572e-9,
+      "iterations": 725,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 2032,
+        "postprocess": 545,
+        "preflight": 77,
+        "solve": 3335
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 3880
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Firefox",
+      "version": "155.0.1"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0,
+      "solveLatencyMs": 0
+    },
+    "case": {
+      "degreeOfFreedomCount": 213975,
+      "elementCount": 45631,
+      "elementType": "tet10",
+      "exactNnz": 16846785,
+      "id": "cantilever-tet10-75k",
+      "kind": "cantilever",
+      "nodeCount": 71325
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": null,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 228458496,
+        "graphPreflight": 93716480,
+        "initial": 16777216,
+        "inputLoaded": 93716480,
+        "postprocess": 274202624,
+        "solve": 228458496
+      },
+      "wasmMemoryHighWaterBytes": 274202624
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 17283060,
+        "matrixIndexBytes": 67387140,
+        "matrixValuesBytes": 134774280,
+        "meshBytes": 3537040,
+        "resultBytes": 31372800,
+        "rowPointerBytes": 855904,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 13694400
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 310171428,
+      "predictedPeakBytes": 465257142,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T19:47:34.169Z",
+    "repetition": 3,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 6.976362169259261e-9,
+      "iterations": 4314,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 3643,
+        "postprocess": 1681,
+        "preflight": 200,
+        "solve": 62218
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 63899
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Firefox",
+      "version": "155.0.1"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0,
+      "solveLatencyMs": 0
+    },
+    "case": {
+      "degreeOfFreedomCount": 434226,
+      "elementCount": 90920,
+      "elementType": "tet10",
+      "exactNnz": 33825690,
+      "id": "mixed-scale-tet10-150k",
+      "kind": "mixed-scale",
+      "nodeCount": 144742
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": null,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 458489856,
+        "graphPreflight": 187891712,
+        "initial": 16777216,
+        "inputLoaded": 187891712,
+        "postprocess": 550240256,
+        "solve": 458489856
+      },
+      "wasmMemoryHighWaterBytes": 550240256
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 8880,
+        "graphBytes": 34468104,
+        "matrixIndexBytes": 135302760,
+        "matrixValuesBytes": 270605520,
+        "meshBytes": 7110608,
+        "resultBytes": 62657552,
+        "rowPointerBytes": 1736908,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 27790464
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 554943636,
+      "predictedPeakBytes": 832415454,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T19:56:14.254Z",
+    "repetition": 3,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 9.981863802862236e-9,
+      "iterations": 17188,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 7568,
+        "postprocess": 3447,
+        "preflight": 377,
+        "solve": 508678
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 512125
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  },
+  {
+    "application": {
+      "gitCommit": "87129725e8869ad8b7310103b4cc4ce17a1bbc0f",
+      "solverRuntimeSha256": "539a7f06dbfb97f136ba0f01b560fdd0186fdd413ade65b959fc98cfd4140625"
+    },
+    "browser": {
+      "crossOriginIsolated": false,
+      "launchMode": "file://",
+      "name": "Firefox",
+      "version": "155.0.1"
+    },
+    "cancellation": {
+      "editAfterCancelPassed": true,
+      "meshLatencyMs": 0,
+      "solveLatencyMs": 0
+    },
+    "case": {
+      "degreeOfFreedomCount": 74451,
+      "elementCount": 88697,
+      "elementType": "tet4",
+      "exactNnz": 2618847,
+      "id": "poor-quality-tet4",
+      "kind": "poor-quality",
+      "nodeCount": 24817
+    },
+    "observed": {
+      "externalProcessPeakBytes": null,
+      "jsHeapPeakBytes": null,
+      "mesherSolverOverlap": false,
+      "wasmMemoryByPhaseBytes": {
+        "assembly": 40763392,
+        "graphPreflight": 20185088,
+        "initial": 16777216,
+        "inputLoaded": 20185088,
+        "postprocess": 70582272,
+        "solve": 40763392
+      },
+      "wasmMemoryHighWaterBytes": 70582272
+    },
+    "preflight": {
+      "allocations": {
+        "assemblyWorkBytes": 1824,
+        "graphBytes": 4555260,
+        "matrixIndexBytes": 10475388,
+        "matrixValuesBytes": 20950776,
+        "meshBytes": 2014760,
+        "resultBytes": 22677032,
+        "rowPointerBytes": 297808,
+        "runtimeOverheadBytes": 67108864,
+        "solverWorkBytes": 4764864
+      },
+      "modelVersion": 1,
+      "modeledPeakBytes": 125311452,
+      "predictedPeakBytes": 187967178,
+      "safetyMultiplier": 1.5,
+      "wasmHeapCapBytes": 3758096384
+    },
+    "recordedAt": "2026-09-06T19:56:35.969Z",
+    "repetition": 3,
+    "schemaVersion": 2,
+    "solve": {
+      "finalRelativeResidual": 7.606605909414971e-9,
+      "iterations": 6638,
+      "maximumIterations": 0,
+      "outcome": "passed",
+      "phaseDurationMs": {
+        "assembly": 0,
+        "input": 5333,
+        "postprocess": 469,
+        "preflight": 58,
+        "solve": 15840
+      },
+      "preconditioner": "jacobi",
+      "relativeTolerance": 1e-8,
+      "wallTimeMs": 16309
+    },
+    "system": {
+      "architecture": "x86_64",
+      "logicalCores": 24,
+      "memoryBytes": 17179869184,
+      "os": "Linux x86_64"
+    }
+  }
+]

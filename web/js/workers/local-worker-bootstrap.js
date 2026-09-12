@@ -165,7 +165,7 @@
             return;
           }
           validation = root.SpjutsimFEA.validateWorkerResponse(message, requestId, 'diagnostics-result');
-          if (!validation.valid || validation.error || message.result.apiVersion !== 1 ||
+          if (!validation.valid || validation.error || message.result.apiVersion !== 2 ||
               message.result.runtimeMode !== 'serial-local-embedded') {
             finish(startupFailure(
               'LOCAL_WORKER_INVALID_RESPONSE',

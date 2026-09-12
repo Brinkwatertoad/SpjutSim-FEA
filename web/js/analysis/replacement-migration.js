@@ -125,7 +125,24 @@
     };
   }
 
+  function replacementMigrationOverlays(draft, activeIndex, selectedFaceIds) {
+    function state(geometry){return {geometry:geometry,mesh:null,boundaryConditions:[],loads:[],gravity:draft.gravity,viewportPresentation:{}};}
+    var current=state(draft.oldGeometry),replacement=state(draft.newGeometry);
+    draft.items.forEach(function(item){
+      current[item.kind==='support'?'boundaryConditions':'loads'].push(item.original);
+      if(item.decision==='mapped')replacement[item.kind==='support'?'boundaryConditions':'loads'].push(Object.assign({},item.original,{faceIds:item.newFaceIds}));
+    });
+    var active=draft.items[activeIndex];
+    if(active && selectedFaceIds.length){
+      var candidate=Object.assign({},active.original,{faceIds:selectedFaceIds});
+      var validation=(active.kind==='support'?root.SpjutsimFEA.validateBoundaryCondition:root.SpjutsimFEA.validateLoad)(candidate,draft.newGeometry.faceIds);
+      replacement.assignmentDraft={kind:active.kind,itemId:active.id,validation:validation};
+    }
+    return {current:current,replacement:replacement};
+  }
+
   root.SpjutsimFEA = root.SpjutsimFEA || {};
+  root.SpjutsimFEA.replacementMigrationOverlays=replacementMigrationOverlays;
   root.SpjutsimFEA.createReplacementMigrationDraft = createReplacementMigrationDraft;
   root.SpjutsimFEA.mapReplacementMigrationItem = mapReplacementMigrationItem;
   root.SpjutsimFEA.dropReplacementMigrationItem = dropReplacementMigrationItem;

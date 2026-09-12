@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "caseId": "notched-prism-stress",
+  "revision": 1,
+  "title": "Extruded plate with symmetric edge notch",
+  "geometry": {"path": "benchmarks/validation/geometry/notched-prism.step", "sha256": "50ac6db4647783a889f01319801ca3278a46f90348b792581c59d8fbee011f2a", "sourceUnits": "m"},
+  "material": {"youngsModulusPa": 1000000000, "poissonsRatio": 0.25, "densityKgM3": 1000},
+  "load": {"type": "total-force", "face": "x-max", "forceN": [1000, 0, 0]},
+  "supports": ["x-min:xyz"],
+  "probes": [{"id": "notch-interior", "feature": "interior ligament point away from re-entrant corners", "coordinatesM": [1.5, 0.5, 0.1]}]
+}

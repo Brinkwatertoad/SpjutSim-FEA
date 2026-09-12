@@ -1,6 +1,8 @@
 'use strict';
-var WORKER_PROTOCOL_VERSION = 1;
+var WORKER_PROTOCOL_VERSION = 3;
 var WASM_HEAP_CAP_BYTES = 3758096384;
+// Calibrated by the 36-record supported-browser matrix in benchmarks/resource/.
+var MEMORY_SAFETY_MULTIPLIER = 1.5;
 var activeAnalysis = null;
 var femModulePromise = typeof createSpjutsimFemModule === 'function'
   ? createSpjutsimFemModule({ noInitialRun: true })
@@ -38,16 +40,19 @@ function validateInput(input) {
   var mesh;
   var nodeCount;
   var i;
-  if (!input || input.protocol !== 1 || !input.mesh || !input.material || !input.constraintStability ||
+  if (!input || input.protocol !== WORKER_PROTOCOL_VERSION || !input.mesh || !input.material || !input.constraintStability ||
       !Array.isArray(input.boundaryConditions) || !Array.isArray(input.loads) || !input.gravity) {
     throw diagnostic('INVALID_SOLVER_INPUT', 'preflight', 'The analysis input is incomplete.');
   }
   mesh = input.mesh;
-  if (mesh.elementType !== 'tet4' || !validTypedArray(mesh.nodePositionsM, Float64Array, 3, false) ||
-      !validTypedArray(mesh.elementConnectivity, Uint32Array, 4, false) || !mesh.boundaryFaces ||
+  var elementNodes = mesh.elementType === 'tet10' ? 10 : mesh.elementType === 'tet4' ? 4 : 0;
+  var faceNodes = mesh.boundaryFaces && mesh.boundaryFaces.solverElementType === 'tri6' ? 6 : 3;
+  if (!elementNodes || !validTypedArray(mesh.nodePositionsM, Float64Array, 3, false) ||
+      !validTypedArray(mesh.elementConnectivity, Uint32Array, elementNodes, false) || !mesh.boundaryFaces ||
+      !validTypedArray(mesh.boundaryFaces.solverConnectivity, Uint32Array, faceNodes, false) ||
       !validTypedArray(mesh.boundaryFaces.triangleConnectivity, Uint32Array, 3, false) ||
       !Array.isArray(mesh.boundaryFaces.faceRanges)) {
-    throw diagnostic('INVALID_SOLVER_MESH', 'preflight', 'The Tet4 mesh buffers are invalid.');
+    throw diagnostic('INVALID_SOLVER_MESH', 'preflight', 'The tetrahedral mesh buffers are invalid.');
   }
   nodeCount = mesh.nodePositionsM.length / 3;
   if (input.constraintStability.basis !== 'mesh' || input.constraintStability.provisional !== false ||
@@ -86,9 +91,10 @@ function validateInput(input) {
     });
   });
   input.loads.forEach(function (load) {
-    if (!(load.triangleConnectivity instanceof Uint32Array) || !load.triangleConnectivity.length ||
-        load.triangleConnectivity.length % 3) {
-      throw diagnostic('INVALID_LOAD', 'preflight', 'A surface load has no boundary triangles.');
+    var loadFaceNodes = load.surfaceElementType === 'tri6' ? 6 : load.surfaceElementType === 'tri3' ? 3 : 0;
+    if (!loadFaceNodes || !(load.surfaceConnectivity instanceof Uint32Array) || !load.surfaceConnectivity.length ||
+        load.surfaceConnectivity.length % loadFaceNodes) {
+      throw diagnostic('INVALID_LOAD', 'preflight', 'A surface load has invalid solver-face connectivity.');
     }
   });
   return input;
@@ -143,15 +149,44 @@ function buildConstraints(input) {
     valuesM: new Float64Array(entries.map(function (item) { return item[1]; })) };
 }
 
+// Match native tri6_area's three-point quadrature; normalization stays off the UI thread.
+function normalForcePressure(load, positions) {
+  if (!(Number.isFinite(load.magnitudeN) && load.magnitudeN > 0) || ['push','pull'].indexOf(load.sense) < 0) {
+    throw diagnostic('INVALID_NORMAL_FORCE','preflight','Enter a positive normal force and choose Push or Pull.');
+  }
+  var connectivity=load.surfaceConnectivity, nodes=load.surfaceElementType === 'tri6' ? 6 : 3, area=0;
+  var points=[[2/3,1/6,1/6],[1/6,2/3,1/6],[1/6,1/6,2/3]], dl=[[-1,-1],[1,0],[0,1]], edges=[[0,1],[1,2],[2,0]],u=[0,0,0],v=[0,0,0];
+  for(var start=0;start<connectivity.length;start+=nodes) {
+    for(var q=0;q<(nodes===6?3:1);q++) {
+      var l=points[q];u[0]=u[1]=u[2]=v[0]=v[1]=v[2]=0;
+      for(var node=0;node<nodes;node++) {
+        var dr,ds;
+        if(nodes===3) { dr=dl[node][0];ds=dl[node][1]; }
+        else if(node<3) { dr=(4*l[node]-1)*dl[node][0];ds=(4*l[node]-1)*dl[node][1]; }
+        else { var e=edges[node-3];dr=4*(dl[e[0]][0]*l[e[1]]+l[e[0]]*dl[e[1]][0]);ds=4*(dl[e[0]][1]*l[e[1]]+l[e[0]]*dl[e[1]][1]); }
+        var index=connectivity[start+node]*3;
+        for(var axis=0;axis<3;axis++){u[axis]+=positions[index+axis]*dr;v[axis]+=positions[index+axis]*ds;}
+      }
+      var jacobian=Math.hypot(u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]);
+      if(!(jacobian>0) || !Number.isFinite(jacobian))throw diagnostic('INVALID_LOAD_SURFACE','preflight','The selected load surface is degenerate. Regenerate the mesh.');
+      area+=jacobian/(nodes===6?6:2);
+    }
+  }
+  var pressure=(load.sense==='pull'?-1:1)*load.magnitudeN/area;
+  if(!Number.isFinite(pressure) || !area)throw diagnostic('INVALID_NORMAL_FORCE','preflight','The normal force or selected area is outside the supported range.');
+  return pressure;
+}
+
 function loadAnalysis(Module, input) {
   var context = Module._fem_create();
   var constraints;
   if (!context) { throw diagnostic('MEMORY_LIMIT_EXCEEDED', 'preflight', 'WebAssembly could not create the FEM context.'); }
   try {
+    var elementNodes = input.mesh.elementType === 'tet10' ? 10 : 4;
     withWasmArray(Module, input.mesh.nodePositionsM, function (positions) {
       withWasmArray(Module, input.mesh.elementConnectivity, function (connectivity) {
         checkNative(Module, context, Module._fem_load_mesh(context, positions, input.mesh.nodePositionsM.length / 3,
-          connectivity, input.mesh.elementConnectivity.length / 4, 4), 'mesh');
+          connectivity, input.mesh.elementConnectivity.length / elementNodes, elementNodes), 'mesh');
       });
     });
     checkNative(Module, context, Module._fem_set_material(context, input.material.youngsModulusPa,
@@ -164,14 +199,15 @@ function loadAnalysis(Module, input) {
     });
     checkNative(Module, context, Module._fem_clear_loads(context), 'preflight');
     input.loads.forEach(function (load) {
-      withWasmArray(Module, load.triangleConnectivity, function (triangles) {
-        if (load.type === 'pressure') {
+      var faceNodes = load.surfaceElementType === 'tri6' ? 6 : 3;
+      withWasmArray(Module, load.surfaceConnectivity, function (triangles) {
+        if (load.type === 'pressure' || load.direction === 'surface-normal') {
           checkNative(Module, context, Module._fem_add_pressure(context, triangles,
-            load.triangleConnectivity.length / 3, load.pressurePa), 'preflight');
+            load.surfaceConnectivity.length / faceNodes, faceNodes, load.type === 'pressure' ? load.pressurePa : normalForcePressure(load,input.mesh.nodePositionsM)), 'preflight');
         } else {
           withWasmArray(Module, new Float64Array(load.forceN), function (force) {
             checkNative(Module, context, Module._fem_add_total_face_force(context, triangles,
-              load.triangleConnectivity.length / 3, force), 'preflight');
+              load.surfaceConnectivity.length / faceNodes, faceNodes, force), 'preflight');
           });
         }
       });
@@ -206,15 +242,15 @@ function copyResultArray(Module, pointer, length) {
   return new Float64Array(Module.HEAPF64.subarray(pointer / 8, pointer / 8 + length));
 }
 
-function smooth(connectivity, elements, nodeCount) {
+function smooth(connectivity, elements, nodeCount, elementNodes) {
   var sums = new Float64Array(nodeCount);
   var counts = new Uint32Array(nodeCount);
   var element;
   var corner;
   var node;
   for (element = 0; element < elements.length; element += 1) {
-    for (corner = 0; corner < 4; corner += 1) {
-      node = connectivity[element * 4 + corner]; sums[node] += elements[element]; counts[node] += 1;
+    for (corner = 0; corner < elementNodes; corner += 1) {
+      node = connectivity[element * elementNodes + corner]; sums[node] += elements[element]; counts[node] += 1;
     }
   }
   for (node = 0; node < nodeCount; node += 1) { sums[node] = counts[node] ? sums[node] / counts[node] : 0; }
@@ -235,91 +271,200 @@ function range(field) {
   return { minimum: minimum, maximum: maximum };
 }
 
-function elementLocation(mesh, element) {
+// One boundary traversal updates every rendered field; repeated shared nodes are harmless.
+function boundaryRanges(connectivity, fields, positions, visitTriangle) {
+  var names = Object.keys(fields);
+  var ranges = {};
+  var nodeCount = positions.length / 3;
+  if (!(connectivity instanceof Uint32Array) || !connectivity.length || connectivity.length % 3) {
+    throw diagnostic('INVALID_RESULT_BOUNDARY', 'postprocess', 'The result boundary has no valid triangles.');
+  }
+  names.forEach(function (name) {
+    if (fields[name].length !== nodeCount) {
+      throw diagnostic('INVALID_RESULT_FIELD', 'postprocess', 'A result field does not match the mesh nodes.');
+    }
+    ranges[name] = { minimum: Infinity, maximum: -Infinity, locationOwner: 'surface-node',
+      minimumNodeIndex: -1, maximumNodeIndex: -1 };
+  });
+  for (var index = 0; index < connectivity.length; index += 1) {
+    var node = connectivity[index];
+    if (node >= nodeCount) {
+      throw diagnostic('INVALID_RESULT_BOUNDARY', 'postprocess', 'The result boundary references a missing node.');
+    }
+    if (visitTriangle && index % 3 === 0) { visitTriangle(index / 3); }
+    for (var field = 0; field < names.length; field += 1) {
+      var name = names[field];
+      var value = fields[name][node];
+      var range = ranges[name];
+      if (!Number.isFinite(value)) {
+        throw diagnostic('INVALID_RESULT_FIELD', 'postprocess', 'A displayed result contains a nonfinite value.');
+      }
+      if (value < range.minimum) { range.minimum = value; range.minimumNodeIndex = node; }
+      if (value > range.maximum) { range.maximum = value; range.maximumNodeIndex = node; }
+    }
+  }
+  names.forEach(function (name) {
+    var range = ranges[name];
+    range.minimumLocationM = Array.prototype.slice.call(positions, range.minimumNodeIndex * 3, range.minimumNodeIndex * 3 + 3);
+    range.maximumLocationM = Array.prototype.slice.call(positions, range.maximumNodeIndex * 3, range.maximumNodeIndex * 3 + 3);
+  });
+  return ranges;
+}
+
+function recoverySampleLocation(mesh, element, sample) {
   var location = [0, 0, 0];
-  var corner;
+  var weights = [0.25, 0.25, 0.25, 0.25];
+  var localNode;
   var axis;
   var node;
-  for (corner = 0; corner < 4; corner += 1) {
-    node = mesh.elementConnectivity[element * 4 + corner];
-    for (axis = 0; axis < 3; axis += 1) { location[axis] += mesh.nodePositionsM[node * 3 + axis] / 4; }
+  var elementNodes = mesh.elementType === 'tet10' ? 10 : 4;
+  if (mesh.elementType === 'tet10') {
+    var a = 0.5854101966249685;
+    var b = 0.1381966011250105;
+    var barycentric = [b, b, b, b];
+    var edges = [[0, 1], [1, 2], [2, 0], [0, 3], [2, 3], [3, 1]];
+    barycentric[sample % 4] = a;
+    weights = barycentric.map(function (value) { return value * (2 * value - 1); });
+    edges.forEach(function (edge) { weights.push(4 * barycentric[edge[0]] * barycentric[edge[1]]); });
+  }
+  for (localNode = 0; localNode < elementNodes; localNode += 1) {
+    node = mesh.elementConnectivity[element * elementNodes + localNode];
+    for (axis = 0; axis < 3; axis += 1) { location[axis] += mesh.nodePositionsM[node * 3 + axis] * weights[localNode]; }
   }
   return location;
 }
 
-function boundaryMapping(mesh) {
+function boundaryMapping(mesh, fields) {
   var byKey = Object.create(null);
   var faces = [[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]];
   var boundary = mesh.boundaryFaces.triangleConnectivity;
+  var solverBoundary = mesh.boundaryFaces.solverConnectivity;
   var elementIndices = new Uint32Array(boundary.length / 3);
   var faceIndices = new Uint32Array(boundary.length / 3);
   var element;
   var face;
   var triangle;
   var key;
-  for (element = 0; element < mesh.elementConnectivity.length / 4; element += 1) {
+  var elementNodes = mesh.elementType === 'tet10' ? 10 : 4;
+  var faceNodes = mesh.elementType === 'tet10' ? 6 : 3;
+  for (element = 0; element < mesh.elementConnectivity.length / elementNodes; element += 1) {
     for (face = 0; face < 4; face += 1) {
-      key = faces[face].map(function (corner) { return mesh.elementConnectivity[element * 4 + corner]; })
+      key = faces[face].map(function (corner) { return mesh.elementConnectivity[element * elementNodes + corner]; })
         .sort(function (a, b) { return a - b; }).join(':');
       byKey[key] = element;
     }
   }
-  for (triangle = 0; triangle < elementIndices.length; triangle += 1) {
-    key = [boundary[triangle * 3], boundary[triangle * 3 + 1], boundary[triangle * 3 + 2]]
-      .sort(function (a, b) { return a - b; }).join(':');
-    elementIndices[triangle] = byKey[key];
-  }
   mesh.boundaryFaces.faceRanges.forEach(function (faceRange, index) {
-    for (triangle = faceRange.start / 3; triangle < (faceRange.start + faceRange.count) / 3; triangle += 1) { faceIndices[triangle] = index; }
+    var solverRange = mesh.boundaryFaces.solverFaceRanges[index];
+    var solverFaceCount = solverRange.count / faceNodes;
+    var displayTrianglesPerFace = (faceRange.count / 3) / solverFaceCount;
+    var localFace;
+    var localTriangle;
+    for (localFace = 0; localFace < solverFaceCount; localFace += 1) {
+      var solverOffset = solverRange.start + localFace * faceNodes;
+      key = [solverBoundary[solverOffset], solverBoundary[solverOffset + 1], solverBoundary[solverOffset + 2]]
+        .sort(function (a, b) { return a - b; }).join(':');
+      element = byKey[key];
+      if (!Number.isInteger(element)) { throw new Error('A boundary face could not be mapped to its tetrahedral element.'); }
+      for (localTriangle = 0; localTriangle < displayTrianglesPerFace; localTriangle += 1) {
+        triangle = faceRange.start / 3 + localFace * displayTrianglesPerFace + localTriangle;
+        elementIndices[triangle] = element;
+      }
+    }
   });
-  return { elementIndices: elementIndices, faceIndices: faceIndices };
+  var boundaryFace = 0;
+  var ranges = boundaryRanges(boundary, fields, mesh.nodePositionsM, function (triangleIndex) {
+    while (triangleIndex * 3 >= mesh.boundaryFaces.faceRanges[boundaryFace].start +
+        mesh.boundaryFaces.faceRanges[boundaryFace].count) { boundaryFace += 1; }
+    faceIndices[triangleIndex] = boundaryFace;
+  });
+  return { elementIndices: elementIndices, faceIndices: faceIndices, ranges: ranges };
 }
 
-function makeResult(Module, input, revision, preflight) {
+function boundaryFaceForElement(mapping, surface, faceIds, elementIndex, locationM) {
+  var nearestFace = null;
+  var nearestDistanceSquared = Infinity;
+  for (var triangle = 0; triangle < mapping.elementIndices.length; triangle += 1) {
+    if (mapping.elementIndices[triangle] !== elementIndex) { continue; }
+    var distanceSquared = 0;
+    for (var axis = 0; axis < 3; axis += 1) {
+      var centroid = 0;
+      for (var corner = 0; corner < 3; corner += 1) {
+        var node = surface.triangleConnectivity[triangle * 3 + corner];
+        centroid += surface.nodePositionsM[node * 3 + axis] / 3;
+      }
+      distanceSquared += Math.pow(centroid - locationM[axis], 2);
+    }
+    if (distanceSquared < nearestDistanceSquared) {
+      nearestDistanceSquared = distanceSquared;
+      nearestFace = faceIds[mapping.faceIndices[triangle]] || null;
+    }
+  }
+  return nearestFace;
+}
+
+function makeResult(Module, input, revision, preflight, memory) {
   var v = Module._fem_wasm_result_value;
   var p = Module._fem_wasm_result_pointer;
+  var ip = Module._fem_wasm_result_index_pointer;
   var nodes = v(0);
   var elements = v(1);
+  var samples = v(21);
+  var elementNodes = input.mesh.elementType === 'tet10' ? 10 : 4;
   var displacement = copyResultArray(Module, p(0), nodes * 3);
   var displacementMagnitude = copyResultArray(Module, p(1), nodes);
   var raw = { strain: copyResultArray(Module, p(2), elements * 6), stressPa: copyResultArray(Module, p(3), elements * 6),
     vonMisesPa: copyResultArray(Module, p(4), elements), maxPrincipalPa: copyResultArray(Module, p(5), elements),
     minPrincipalPa: copyResultArray(Module, p(6), elements) };
-  var surface = { vonMisesPa: smooth(input.mesh.elementConnectivity, raw.vonMisesPa, nodes),
-    maxPrincipalPa: smooth(input.mesh.elementConnectivity, raw.maxPrincipalPa, nodes),
-    minPrincipalPa: smooth(input.mesh.elementConnectivity, raw.minPrincipalPa, nodes),
+  var recovery = { strain: copyResultArray(Module, p(8), samples * 6), stressPa: copyResultArray(Module, p(9), samples * 6),
+    vonMisesPa: copyResultArray(Module, p(10), samples), maxPrincipalPa: copyResultArray(Module, p(11), samples),
+    minPrincipalPa: copyResultArray(Module, p(12), samples),
+    elementIndices: new Uint32Array(Module.HEAPU32.subarray(ip(0) / 4, ip(0) / 4 + samples)) };
+  var surface = { vonMisesPa: smooth(input.mesh.elementConnectivity, raw.vonMisesPa, nodes, elementNodes),
+    maxPrincipalPa: smooth(input.mesh.elementConnectivity, raw.maxPrincipalPa, nodes, elementNodes),
+    minPrincipalPa: smooth(input.mesh.elementConnectivity, raw.minPrincipalPa, nodes, elementNodes),
     displacementMagnitudeM: new Float32Array(displacementMagnitude), uxM: component(displacement, 0),
     uyM: component(displacement, 1), uzM: component(displacement, 2) };
-  var mapping = boundaryMapping(input.mesh);
+  var mapping = boundaryMapping(input.mesh, { vonMises: surface.vonMisesPa, maxPrincipal: surface.maxPrincipalPa,
+    minPrincipal: surface.minPrincipalPa, displacementMagnitude: surface.displacementMagnitudeM,
+    ux: surface.uxM, uy: surface.uyM, uz: surface.uzM });
   var maximumDisplacement = range(displacementMagnitude).maximum;
   var maximumNode = displacementMagnitude.indexOf(maximumDisplacement);
+  var rawVonMisesLocation = recoverySampleLocation(input.mesh, v(18), v(22));
+  var nearbyBoundaryFaceId = boundaryFaceForElement(mapping, { nodePositionsM: input.mesh.nodePositionsM,
+    triangleConnectivity: input.mesh.boundaryFaces.triangleConnectivity },
+  input.mesh.boundaryFaces.faceRanges.map(function (item) { return item.faceId; }), v(18), rawVonMisesLocation);
   var warnings = preflight.warnings.slice();
   if (Number.isFinite(input.mesh.statistics.boundingBoxDiagonalM) &&
       maximumDisplacement > 0.05 * input.mesh.statistics.boundingBoxDiagonalM) {
     warnings.push('Displacement exceeds 5% of the model diagonal; geometric nonlinearity may matter.');
   }
   return {
-    schemaVersion: 1, analysisRevision: revision, elementType: 'tet4',
+    schemaVersion: 2, rangeMetadataVersion: 1, analysisRevision: revision, elementType: input.mesh.elementType,
     originalSurface: { nodePositionsM: new Float32Array(input.mesh.nodePositionsM),
       triangleConnectivity: new Uint32Array(input.mesh.boundaryFaces.triangleConnectivity),
       faceIds: input.mesh.boundaryFaces.faceRanges.map(function (item) { return item.faceId; }),
       triangleFaceIndices: mapping.faceIndices, triangleElementIndices: mapping.elementIndices },
-    displacementM: displacement, displacementMagnitudeM: displacementMagnitude, rawElementFields: raw, surfaceFields: surface,
-    ranges: { vonMises: range(surface.vonMisesPa), maxPrincipal: range(surface.maxPrincipalPa),
-      minPrincipal: range(surface.minPrincipalPa), displacementMagnitude: range(surface.displacementMagnitudeM),
-      ux: range(surface.uxM), uy: range(surface.uyM), uz: range(surface.uzM) },
+    displacementM: displacement, displacementMagnitudeM: displacementMagnitude, rawElementFields: raw,
+    recoverySampleFields: recovery, surfaceFields: surface,
+    ranges: mapping.ranges,
     extrema: {
-      maxDisplacement: { valueM: maximumDisplacement, nodeIndex: maximumNode,
+      maxDisplacement: { valueM: maximumDisplacement, nodeIndex: maximumNode, locationOwner: 'volume-node',
         locationM: Array.prototype.slice.call(input.mesh.nodePositionsM, maximumNode * 3, maximumNode * 3 + 3) },
-      rawVonMisesMax: { valuePa: v(15), elementIndex: v(18), locationM: elementLocation(input.mesh, v(18)) },
-      displayedVonMisesMax: { valuePa: range(surface.vonMisesPa).maximum },
-      rawMaxPrincipal: { valuePa: v(16), elementIndex: v(19), locationM: elementLocation(input.mesh, v(19)) },
-      rawMinPrincipal: { valuePa: v(17), elementIndex: v(20), locationM: elementLocation(input.mesh, v(20)) }
+      rawVonMisesMax: { valuePa: v(15), elementIndex: v(18), sampleIndex: v(22), locationM: rawVonMisesLocation,
+        locationOwner: 'solver-sample', isInterior: true,
+        nearbyBoundaryFaceId: nearbyBoundaryFaceId, faceId: nearbyBoundaryFaceId },
+      displayedVonMisesMax: { valuePa: mapping.ranges.vonMises.maximum,
+        locationOwner: 'surface-node', nodeIndex: mapping.ranges.vonMises.maximumNodeIndex,
+        locationM: mapping.ranges.vonMises.maximumLocationM },
+      rawMaxPrincipal: { locationOwner: 'solver-sample', isInterior: true, valuePa: v(16), elementIndex: v(19), sampleIndex: v(23), locationM: recoverySampleLocation(input.mesh, v(19), v(23)) },
+      rawMinPrincipal: { locationOwner: 'solver-sample', isInterior: true, valuePa: v(17), elementIndex: v(20), sampleIndex: v(24), locationM: recoverySampleLocation(input.mesh, v(20), v(24)) }
     },
     reactionsN: copyResultArray(Module, p(7), nodes * 3),
     equilibrium: { totalReactionN: [v(9), v(10), v(11)], totalAppliedForceN: [v(12), v(13), v(14)], relativeResidual: v(8) },
     solverStatistics: { iterations: v(3), terminationReason: 'converged', finalRelativeResidual: v(5),
-      solveDurationMs: v(6), strainEnergyJ: v(7), wasmMemoryBytes: Module.HEAPU8.buffer.byteLength },
+      solveDurationMs: v(6), strainEnergyJ: v(7), wasmMemoryBytes: Module.HEAPU8.buffer.byteLength,
+      wasmMemoryHighWaterBytes: memory.postprocess, wasmMemoryByPhaseBytes: memory },
     meshStatistics: input.mesh.statistics, preflight: preflight, warnings: warnings
   };
 }
@@ -330,6 +475,7 @@ function transfers(result) {
   Object.keys(result.originalSurface).forEach(function (key) { add(result.originalSurface[key]); });
   add(result.displacementM); add(result.displacementMagnitudeM); add(result.reactionsN);
   Object.keys(result.rawElementFields).forEach(function (key) { add(result.rawElementFields[key]); });
+  Object.keys(result.recoverySampleFields).forEach(function (key) { add(result.recoverySampleFields[key]); });
   Object.keys(result.surfaceFields).forEach(function (key) { add(result.surfaceFields[key]); });
   return output;
 }
@@ -338,19 +484,27 @@ function handlePreflight(Module, message) {
   var input = validateInput(message.input);
   var loaded;
   var estimate;
+  var memory = { initial: Module.HEAPU8.buffer.byteLength };
   if (activeAnalysis) { Module._fem_destroy(activeAnalysis.context); activeAnalysis = null; }
   progress(message.requestId, 'preparing', 'Preparing solver input…');
   loaded = loadAnalysis(Module, input);
+  memory.inputLoaded = Math.max(memory.initial, Module.HEAPU8.buffer.byteLength);
   progress(message.requestId, 'preflight', 'Counting exact matrix nonzeros and estimating memory…');
   checkNative(Module, loaded.context, Module._fem_wasm_preflight(loaded.context, Number(message.deviceMemoryGiB) || 0,
-    WASM_HEAP_CAP_BYTES, 1.5), 'preflight');
+    WASM_HEAP_CAP_BYTES, MEMORY_SAFETY_MULTIPLIER), 'preflight');
   estimate = memoryResult(Module, input, loaded.constraintCount);
-  activeAnalysis = { context: loaded.context, input: input, revision: message.analysisRevision, preflight: estimate };
+  memory.graphPreflight = Math.max(memory.inputLoaded, Module.HEAPU8.buffer.byteLength);
+  activeAnalysis = { context: loaded.context, input: input, revision: message.analysisRevision, preflight: estimate, memory: memory };
   reply(message.requestId, 'preflight-result', estimate);
 }
 
 function handleSolve(Module, message) {
   var result;
+  var timeLimitMs = message.solveSettings && message.solveSettings.maxDurationMs;
+  if (timeLimitMs === undefined) { timeLimitMs = 600000; }
+  if (!Number.isFinite(timeLimitMs) || timeLimitMs < 1000 || timeLimitMs > 3600000) {
+    throw diagnostic('INVALID_SOLVE_SETTINGS', 'solve', 'Choose a solve time limit between one second and 60 minutes.');
+  }
   if (!activeAnalysis || activeAnalysis.revision !== message.analysisRevision) {
     throw diagnostic('STALE_SOLVE_REQUEST', 'solve', 'The analysis changed after preflight. Run preflight again.');
   }
@@ -361,16 +515,35 @@ function handleSolve(Module, message) {
     throw diagnostic('HIGH_MEMORY_CONFIRMATION_REQUIRED', 'preflight', 'Confirm the high-memory warning before solving.');
   }
   progress(message.requestId, 'assembly', 'Assembling stiffness and load vectors…');
-  progress(message.requestId, 'constraints', 'Applying constraints…');
-  progress(message.requestId, 'solve', 'Solving the sparse system…');
-  checkNative(Module, activeAnalysis.context, Module._fem_wasm_solve(activeAnalysis.context,
-    Number(message.solveSettings && message.solveSettings.relativeTolerance) || 1e-8,
-    Number(message.solveSettings && message.solveSettings.equilibriumTolerance) || 1e-6,
-    Number(message.solveSettings && message.solveSettings.maxIterations) || 0), 'solve');
-  progress(message.requestId, 'recovery', 'Recovering stresses and reactions…');
+  if (Module._fem_set_time_limit(activeAnalysis.context, timeLimitMs) !== 0) {
+    throw diagnostic('INVALID_SOLVE_SETTINGS', 'solve', 'The solver rejected the time limit.');
+  }
+  Module.onFemPhase = function (phase) {
+    // Native phase callbacks report completion, before the next phase begins.
+    if (phase === 0) { progress(message.requestId, 'solve', 'Solving the sparse system…'); }
+    if (phase === 1) { progress(message.requestId, 'recovery', 'Recovering stresses and reactions…'); }
+  };
+  Module.onFemIteration = function (iteration, residual, elapsedMs) {
+    progress(message.requestId, 'solve', 'Solving: iteration ' + iteration +
+      ', relative residual ' + residual.toExponential(2) +
+      ' (target ' + (Number(message.solveSettings && message.solveSettings.relativeTolerance) || 1e-8).toExponential(0) +
+      '), ' + (elapsedMs / 1000).toFixed(1) + ' s / ' + (timeLimitMs / 1000) + ' s limit…');
+  };
+  try {
+    checkNative(Module, activeAnalysis.context, Module._fem_wasm_solve(activeAnalysis.context,
+      Number(message.solveSettings && message.solveSettings.relativeTolerance) || 1e-8,
+      Number(message.solveSettings && message.solveSettings.equilibriumTolerance) || 1e-6,
+      Number(message.solveSettings && message.solveSettings.maxIterations) || 0), 'solve');
+  } finally {
+    delete Module.onFemPhase;
+    delete Module.onFemIteration;
+  }
+  activeAnalysis.memory.assembly = Math.max(activeAnalysis.memory.graphPreflight, Module._fem_wasm_phase_memory_value(0));
+  activeAnalysis.memory.solve = Math.max(activeAnalysis.memory.assembly, Module._fem_wasm_phase_memory_value(1));
   checkNative(Module, activeAnalysis.context, Module._fem_wasm_read_results(activeAnalysis.context), 'postprocess');
+  activeAnalysis.memory.postprocess = Math.max(activeAnalysis.memory.solve, Module._fem_wasm_phase_memory_value(2), Module.HEAPU8.buffer.byteLength);
   progress(message.requestId, 'visualization', 'Preparing visualization buffers…');
-  result = makeResult(Module, activeAnalysis.input, activeAnalysis.revision, activeAnalysis.preflight);
+  result = makeResult(Module, activeAnalysis.input, activeAnalysis.revision, activeAnalysis.preflight, activeAnalysis.memory);
   Module._fem_destroy(activeAnalysis.context);
   activeAnalysis = null;
   reply(message.requestId, 'solve-result', result, transfers(result));
@@ -384,9 +557,9 @@ self.onmessage = function (event) {
     return;
   }
   femModulePromise.then(function (Module) {
-    if (Module._fem_wasm_api_version() !== 1) { throw diagnostic('FEM_API_VERSION_MISMATCH', 'worker-startup', 'The FEM WebAssembly API does not match the application.'); }
+    if (Module._fem_wasm_api_version() !== 2) { throw diagnostic('FEM_API_VERSION_MISMATCH', 'worker-startup', 'The FEM WebAssembly API does not match the application.'); }
     if (message.type === 'diagnostics') {
-      reply(message.requestId, 'diagnostics-result', { apiVersion: 1, runtimeMode: 'serial-local-embedded',
+      reply(message.requestId, 'diagnostics-result', { apiVersion: 2, runtimeMode: 'serial-local-embedded',
         wasmMemoryBytes: Module.HEAPU8.buffer.byteLength, wasmHeapCapBytes: WASM_HEAP_CAP_BYTES });
     } else if (message.type === 'preflight') { handlePreflight(Module, message); }
     else if (message.type === 'solve') { handleSolve(Module, message); }

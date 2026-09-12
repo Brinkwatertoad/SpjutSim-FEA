@@ -16,6 +16,7 @@
         nodePositionsM: new Float64Array(mesh.nodePositionsM),
         elementConnectivity: new Uint32Array(mesh.elementConnectivity),
         boundaryFaces: Object.assign({}, mesh.boundaryFaces, {
+          solverConnectivity: new Uint32Array(mesh.boundaryFaces.solverConnectivity),
           triangleConnectivity: new Uint32Array(mesh.boundaryFaces.triangleConnectivity)
         })
       }),
@@ -31,6 +32,7 @@
       }),
       loads: input.loads.map(function (load) {
         return Object.assign({}, load, {
+          surfaceConnectivity: new Uint32Array(load.surfaceConnectivity),
           triangleConnectivity: new Uint32Array(load.triangleConnectivity),
           triangleAreasM2: new Float64Array(load.triangleAreasM2),
           outwardNormals: new Float64Array(load.outwardNormals),
@@ -41,12 +43,12 @@
       gravity: { enabled: input.gravity.enabled, accelerationMS2: input.gravity.accelerationMS2.slice() }
     };
     var buffers = [copy.mesh.nodePositionsM.buffer, copy.mesh.elementConnectivity.buffer,
-      copy.mesh.boundaryFaces.triangleConnectivity.buffer];
+      copy.mesh.boundaryFaces.solverConnectivity.buffer, copy.mesh.boundaryFaces.triangleConnectivity.buffer];
     copy.boundaryConditions.forEach(function (condition) {
       buffers.push(condition.boundaryTriangleConnectivity.buffer, condition.nodeIndices.buffer);
     });
     copy.loads.forEach(function (load) {
-      buffers.push(load.triangleConnectivity.buffer, load.triangleAreasM2.buffer, load.outwardNormals.buffer,
+      buffers.push(load.surfaceConnectivity.buffer, load.triangleConnectivity.buffer, load.triangleAreasM2.buffer, load.outwardNormals.buffer,
         load.nodeIndices.buffer, load.equivalentNodalForcesN.buffer);
     });
     return { input: copy, buffers: buffers };
@@ -104,7 +106,7 @@
         };
         worker.onerror = function (event) { finish(clientFailure('SOLVER_WORKER_FAILED', 'The solver worker stopped unexpectedly.', event.message)); };
         worker.onmessageerror = function () { finish(clientFailure('SOLVER_MESSAGE_FAILED', 'The solver could not return its result.')); };
-        try { worker.postMessage(Object.assign({ protocol: 1, type: type, requestId: requestId }, payload), transfer || []); }
+        try { worker.postMessage(Object.assign({ protocol: root.SpjutsimFEA.WORKER_PROTOCOL_VERSION, type: type, requestId: requestId }, payload), transfer || []); }
         catch (error) { finish(clientFailure('SOLVER_MESSAGE_FAILED', 'The solver could not receive the analysis.', error.message)); }
       });
     });

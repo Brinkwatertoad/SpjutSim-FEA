@@ -12,7 +12,9 @@ class DeploymentTests(unittest.TestCase):
         config = json.loads((ROOT / 'wrangler.jsonc').read_text(encoding='utf-8'))
         self.assertEqual(config['name'], 'spjutsim-fea')
         self.assertTrue(config['workers_dev'])
-        self.assertEqual(config['assets']['directory'], './web')
+        self.assertEqual(config['assets']['directory'], './build/distribution/web')
+        self.assertEqual(config['build']['command'],
+                         'python3 tools/audit-distribution.py --release-root build/distribution/web --require-approved')
         self.assertEqual(config['routes'], [{
             'pattern': 'fea.spjutsim.com',
             'custom_domain': True,

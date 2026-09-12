@@ -31,7 +31,7 @@ triangulation before adding quadratic elements.
 
 ## Implementation
 
-- [ ] **Generalize mesh settings and result contracts.** Update
+- [x] **Generalize mesh settings and result contracts.** Update
   `web/js/mesh/volume-mesh.js`, `web/js/analysis/analysis-document.js`,
   `web/js/workers/mesher-client.js`, and `workers/mesher-worker.js` so
   `elementType` accepts `tet4` or `tet10`, derives nodes-per-element from a
@@ -39,38 +39,38 @@ triangulation before adding quadratic elements.
   result carries ten volume nodes per element, six solver nodes per boundary
   face, and separate three-node display triangles grouped by the same stable
   `FaceId` ranges.
-- [ ] **Lock down ordering and boundary orientation.** Define one documented
+- [x] **Lock down ordering and boundary orientation.** Define one documented
   application ordering for Tet10 and Tri6 nodes beside the extraction code,
   convert Gmsh type 11 and type 9 connectivity into it, and test corner-node,
   mid-edge-node, face-orientation, and outward-normal relationships on the cube.
   Derive the table from the pinned Gmsh element properties/node-ordering
   documentation rather than memory. Unknown/mixed element blocks fail with a
   structured mesh error.
-- [ ] **Generate and optimize second-order meshes.** For Tet10 requests, create
+- [x] **Generate and optimize second-order meshes.** For Tet10 requests, create
   the 3D mesh, convert/set it to second order, run the selected high-order
   optimization supported by the pinned Gmsh build, and report distinct
   generate/upgrade/optimize/extract progress. Keep Coarse/Normal/Fine sizes and
   custom min/max controls shared with Tet4; expose element order as the
   `tet4`/`tet10` choice rather than raw Gmsh options.
-- [ ] **Make quality metadata element-aware.** Extend the quality contract with
+- [x] **Make quality metadata element-aware.** Extend the quality contract with
   the named Gmsh metric, minimum/p05/median, poor count, characteristic-size
   range, edge/aspect indicator, and Jacobian status. Tet10 validity samples the
   isoparametric Jacobian at a named fixed sample set containing the four
   stiffness quadrature points that Task 13 will share; a negative/inverted or
   near-zero sample is a hard no-mesh/no-solve failure, while poor but valid
   quality remains a warning.
-- [ ] **Keep visualization consumers linear and stable.** Update
+- [x] **Keep visualization consumers linear and stable.** Update
   `web/js/mesh/mesh-display.js`, `web/js/analysis/solver-input.js`,
   `web/js/render/analysis-glyphs.js`, and `web/js/render/viewport-controller.js`
   so display, picking, and glyph sampling use display triangles, while solver
   input preserves Tri6 connectivity. Remeshing must retain CAD `FaceId`
   selection and replace—not accumulate—GPU resources.
-- [ ] **Add the authoring choice without prematurely changing the production
+- [x] **Add the authoring choice without prematurely changing the production
   default.** Add Tet10 to the Mesh editor and summaries, invalidate mesh/results
   when element type changes, and visibly explain that Tet10 mesh inspection is
   available while Tet10 Solve remains disabled until Task 13. Keep a fresh
   document on Tet4 during this transition.
-- [ ] **Regenerate worker wrappers and update documentation.** Run
+- [x] **Regenerate worker wrappers and update documentation.** Run
   `python3 tools/build-local-runtime.py`; update `README.md` with the temporary
   Tet10-mesh/Tet4-solve boundary and document the finalized mesh fields near
   their validators.

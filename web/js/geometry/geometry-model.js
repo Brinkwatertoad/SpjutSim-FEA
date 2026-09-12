@@ -35,7 +35,7 @@
    * @typedef {Object} GeometryModel
    * @property {string} geometryId
    * @property {string} sourceName
-   * @property {'step'|'iges'|'brep'} sourceFormat
+   * @property {'step'|'iges'|'brep'|'stl'} sourceFormat
    * @property {{rotation: number[], operations: string[]}} orientation
    * @property {FaceId[]} faceIds
    * @property {BoundingBoxM} boundingBoxM
@@ -44,7 +44,7 @@
    */
 
   function validFiniteVector(value) {
-    return Array.isArray(value) && value.length === 3 && value.every(Number.isFinite);
+    return Array.isArray(value) && value.length === 3 && !value.includes(undefined) && value.every(Number.isFinite);
   }
 
   function validation(valid, reason) {
@@ -54,8 +54,25 @@
   var SUPPORTED_CAD_FORMATS = Object.freeze({
     step: Object.freeze({ format: 'step', extensions: Object.freeze(['step', 'stp']), label: 'STEP' }),
     iges: Object.freeze({ format: 'iges', extensions: Object.freeze(['iges', 'igs']), label: 'IGES' }),
-    brep: Object.freeze({ format: 'brep', extensions: Object.freeze(['brep']), label: 'OpenCASCADE BREP' })
+    brep: Object.freeze({ format: 'brep', extensions: Object.freeze(['brep']), label: 'OpenCASCADE BREP' }),
+    stl: Object.freeze({ format: 'stl', extensions: Object.freeze(['stl']), label: 'STL' })
   });
+
+  function validateStlOptions(options) {
+    return Boolean(options && (options.version === 1 || options.version === 2 &&
+      (options.surfaceMode === 'original' && options.reconstructionToleranceM === null ||
+       options.surfaceMode === 'remesh' && options.reconstructionToleranceM === null && Number.isFinite(options.remeshFeatureAngleDegrees) && options.remeshFeatureAngleDegrees >= 1 && options.remeshFeatureAngleDegrees <= 40 ||
+       options.surfaceMode === 'reconstruct' && Number.isFinite(options.reconstructionToleranceM) && options.reconstructionToleranceM > 0)) && options.normalization === 'none' &&
+      ['m','mm','cm','in','ft'].includes(options.lengthUnit) && Number.isFinite(options.patchAngleDegrees) &&
+      options.patchAngleDegrees >= 1 && options.patchAngleDegrees <= 179);
+  }
+
+  function sameStlOptions(left, right) {
+    return validateStlOptions(left) && validateStlOptions(right) &&
+      left.version === right.version && left.lengthUnit === right.lengthUnit && left.patchAngleDegrees === right.patchAngleDegrees &&
+      (left.version === 1 || left.surfaceMode === right.surfaceMode && left.reconstructionToleranceM === right.reconstructionToleranceM &&
+        (left.surfaceMode !== 'remesh' || left.remeshFeatureAngleDegrees === right.remeshFeatureAngleDegrees));
+  }
 
   function sourceFormatForFilename(name) {
     var match;
@@ -83,6 +100,9 @@
     }
     if (!(request.sourceBytes instanceof ArrayBuffer) || request.sourceBytes.byteLength === 0) {
       return validation(false, 'invalid-source-bytes');
+    }
+    if (request.sourceFormat === 'stl' && !validateStlOptions(request.importOptions)) {
+      return validation(false, 'invalid-stl-options');
     }
     if (request.geometryId !== undefined && (typeof request.geometryId !== 'string' || request.geometryId.length === 0)) {
       return validation(false, 'invalid-geometry-id');
@@ -160,6 +180,32 @@
     return previousEnd === preview.indices.length ? validation(true) : validation(false, 'incomplete-face-ranges');
   }
 
+  function validateStlSurfaceMetadata(model) {
+    var metadata=model.sourceMetadata,options=model.importOptions,original=model.originalPreview||model.preview;
+    if (!original || !(original.indices instanceof Uint32Array) || original.indices.length !== metadata.triangleCount*3) { return false; }
+    if (options.version===1) { return !model.originalPreview && !metadata.remeshing; }
+    if (metadata.surfaceMode!==options.surfaceMode) { return false; }
+    if (options.surfaceMode!=='remesh' && metadata.remeshing) { return false; }
+    if (options.surfaceMode==='original') { return metadata.reconstruction===null && !model.originalPreview; }
+    if (options.surfaceMode==='remesh') {
+      var remeshing=metadata.remeshing;
+      return Boolean(metadata.reconstruction===null && !model.originalPreview && remeshing && remeshing.version===1 &&
+        remeshing.method==='stl-parametrization' && remeshing.featureAngleDegrees===Math.min(options.remeshFeatureAngleDegrees,options.patchAngleDegrees) &&
+        Array.isArray(remeshing.surfaceCountsByPatch) &&
+        remeshing.surfaceCountsByPatch.length===model.faceIds.length &&
+        !remeshing.surfaceCountsByPatch.includes(undefined) &&
+        remeshing.surfaceCountsByPatch.every(function(count){return Number.isInteger(count) && count>0 && count<=512;}) &&
+        remeshing.surfaceCountsByPatch.reduce(function(sum,count){return sum+count;},0)===metadata.internalSurfaceCount);
+    }
+    var reconstruction=metadata.reconstruction;
+    return Boolean(model.originalPreview && validatePreview(original,model.faceIds).valid && reconstruction && reconstruction.version===1 &&
+      reconstruction.toleranceM===options.reconstructionToleranceM && Number.isFinite(reconstruction.maximumDeviationM) && reconstruction.maximumDeviationM>=0 &&
+      reconstruction.maximumDeviationM<=reconstruction.toleranceM && Array.isArray(reconstruction.surfaces) && reconstruction.surfaces.length===model.faceIds.length &&
+      reconstruction.surfaces.every(function(surface,index){return surface && ['plane','cylinder','cone'].includes(surface.kind) && surface.patchIndex===index &&
+        Number.isInteger(surface.triangleCount) && surface.triangleCount>0 && Number.isFinite(surface.maximumDeviationM) && surface.maximumDeviationM>=0 && surface.maximumDeviationM<=reconstruction.toleranceM;}) &&
+      reconstruction.surfaces.reduce(function(sum,surface){return sum+surface.triangleCount;},0)===metadata.triangleCount);
+  }
+
   function validateGeometryModel(model) {
     var boundingBox;
     var preview;
@@ -172,6 +218,17 @@
         new Set(model.faceIds).size !== model.faceIds.length) {
       return validation(false, 'invalid-geometry-model');
     }
+    if (model.sourceFormat === 'stl' && (!validateStlOptions(model.importOptions) || model.surfaceKind !== 'stl-patch' ||
+        !model.sourceMetadata || model.sourceMetadata.version !== model.importOptions.version || !/^[a-f0-9]{64}$/.test(model.sourceMetadata.sha256) ||
+        !Number.isInteger(model.sourceMetadata.triangleCount) || model.sourceMetadata.triangleCount < 1 || model.sourceMetadata.triangleCount > 200000 ||
+        !Number.isInteger(model.sourceMetadata.internalSurfaceCount) || model.sourceMetadata.internalSurfaceCount < 1 || model.sourceMetadata.internalSurfaceCount > 512 ||
+        !model.sourceMetadata.validation || model.sourceMetadata.validation.status !== 'valid' || model.sourceMetadata.validation.version !== 1 ||
+        model.sourceMetadata.validation.triangleCount !== model.sourceMetadata.triangleCount ||
+        !Number.isInteger(model.sourceMetadata.validation.intersectionCandidates) || model.sourceMetadata.validation.intersectionCandidates < 0 ||
+        model.sourceMetadata.validation.intersectionCandidates > 2000000 || model.faceIds.some(function(id){return !/^stl:[a-f0-9]{64}$/.test(id);}) ||
+        !validateStlSurfaceMetadata(model))) {
+      return validation(false, 'invalid-stl-source-contract');
+    }
     orientation = root.SpjutsimFEA.validateRigidOrientation(model.orientation);
     if (!orientation.valid) { return orientation; }
     boundingBox = validateBoundingBoxM(model.boundingBoxM);
@@ -183,6 +240,44 @@
     return preview.valid ? validation(true) : preview;
   }
 
+  function validateStlRepairOptions(options) {
+    return Boolean(options && options.version===1 && Number.isFinite(options.maxHoleDiameterRatio) &&
+      options.maxHoleDiameterRatio>=0 && options.maxHoleDiameterRatio<=.05);
+  }
+  function validateStlRepairReport(report) {
+    if(!report||report.version!==1||report.method!=='local-stl-repair'||
+      !['m','mm','cm','in','ft'].includes(report.lengthUnit)||!validateStlRepairOptions(report)||
+      !/^[a-f0-9]{64}$/.test(report.originalSha256||'')||!/^[a-f0-9]{64}$/.test(report.repairedSha256||''))return false;
+    var counts=['originalTriangleCount','repairedTriangleCount','removedDuplicateTriangles','removedZeroAreaTriangles','removedLooseTriangles','flippedTriangles','filledHoles','addedTriangles'];
+    if(counts.some(function(key){return !Number.isInteger(report[key])||report[key]<0||report[key]>200000;}))return false;
+    var retained=report.originalTriangleCount-report.removedDuplicateTriangles-report.removedZeroAreaTriangles-report.removedLooseTriangles;
+    return report.originalTriangleCount>0&&report.repairedTriangleCount>0&&retained>0&&
+      validateBoundingBoxM(report.originalBoundingBoxM).valid&&validateBoundingBoxM(report.repairedBoundingBoxM).valid&&
+      retained+report.addedTriangles===report.repairedTriangleCount&&report.flippedTriangles<=retained&&
+      report.filledHoles<=128&&report.addedTriangles>=report.filledHoles&&report.addedTriangles<=30*report.filledHoles&&
+      Number.isFinite(report.sourceDiagonalM)&&report.sourceDiagonalM>=1e-9&&report.sourceDiagonalM<=1e6&&
+      Number.isFinite(report.maximumFilledHoleDiameterM)&&report.maximumFilledHoleDiameterM>=0&&
+      Number.isFinite(report.holeLimitDiagonalM)&&report.holeLimitDiagonalM>=1e-9&&report.holeLimitDiagonalM<=report.sourceDiagonalM&&
+      report.maximumFilledHoleDiameterM<=report.holeLimitDiagonalM*report.maxHoleDiameterRatio&&
+      (report.filledHoles>0?report.maximumFilledHoleDiameterM>0&&report.maxHoleDiameterRatio>0:report.maximumFilledHoleDiameterM===0)&&
+      report.validation&&report.validation.version===1&&report.validation.status==='valid'&&
+      report.validation.triangleCount===report.repairedTriangleCount&&Number.isInteger(report.validation.intersectionCandidates)&&
+      report.validation.intersectionCandidates>=0&&report.validation.intersectionCandidates<=2000000;
+  }
+  function validateStlRepairResult(result) {
+    return Boolean(result&&result.version===1&&result.sourceBytes instanceof ArrayBuffer&&
+      result.sourceBytes.byteLength>0&&result.sourceBytes.byteLength<=16*1024*1024&&validateStlRepairReport(result.report));
+  }
+  function validateStlRepairSource(source,geometry) {
+    if(!source||typeof source!=='object'||Array.isArray(source))return false;
+    if(source.repair===undefined)return true;
+    var repair=source.repair;
+    return Boolean(source.sourceFormat==='stl'&&repair&&repair.version===1&&repair.originalSourceBytes instanceof ArrayBuffer&&
+      repair.originalSourceBytes.byteLength>0&&repair.originalSourceBytes.byteLength<=16*1024*1024&&
+      validateStlRepairReport(repair.report)&&(!geometry||geometry.sourceMetadata&&geometry.sourceMetadata.sha256===repair.report.repairedSha256&&
+      geometry.sourceMetadata.triangleCount===repair.report.repairedTriangleCount));
+  }
+
   function createGeometryId() {
     return 'geometry-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
   }
@@ -191,8 +286,14 @@
   root.SpjutsimFEA.SUPPORTED_CAD_FORMATS = SUPPORTED_CAD_FORMATS;
   root.SpjutsimFEA.sourceFormatForFilename = sourceFormatForFilename;
   root.SpjutsimFEA.validateImportRequest = validateImportRequest;
+  root.SpjutsimFEA.validateStlOptions = validateStlOptions;
+  root.SpjutsimFEA.sameStlOptions = sameStlOptions;
   root.SpjutsimFEA.validateBoundingBoxM = validateBoundingBoxM;
   root.SpjutsimFEA.validatePreview = validatePreview;
   root.SpjutsimFEA.validateGeometryModel = validateGeometryModel;
   root.SpjutsimFEA.createGeometryId = createGeometryId;
+  root.SpjutsimFEA.validateStlRepairOptions = validateStlRepairOptions;
+  root.SpjutsimFEA.validateStlRepairReport = validateStlRepairReport;
+  root.SpjutsimFEA.validateStlRepairResult = validateStlRepairResult;
+  root.SpjutsimFEA.validateStlRepairSource = validateStlRepairSource;
 }(globalThis));

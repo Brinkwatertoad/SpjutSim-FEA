@@ -46,10 +46,10 @@
     var sprite;
     canvas.width = 64; canvas.height = 64;
     context = canvas.getContext('2d');
-    context.font = 'bold 44px sans-serif'; context.textAlign = 'center'; context.textBaseline = 'middle';
+    context.font = 'bold ' + (letter.length > 1 ? '36' : '44') + 'px sans-serif'; context.textAlign = 'center'; context.textBaseline = 'middle';
     context.fillStyle = color; context.fillText(letter, 32, 34);
     texture = new root.THREE.CanvasTexture(canvas);
-    sprite = new root.THREE.Sprite(new root.THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
+    sprite = new root.THREE.Sprite(new root.THREE.SpriteMaterial({ map: texture, transparent: true, alphaTest: 0.1, depthTest: true, depthWrite: true }));
     sprite.name = 'axis-triad-label-' + letter.toLowerCase();
     sprite.scale.set(AXIS_TRIAD_LABEL_SIZE_PX, AXIS_TRIAD_LABEL_SIZE_PX, 1);
     return sprite;
@@ -62,6 +62,49 @@
       }
       disposeMaterial(child.material);
     });
+  }
+
+  function setMaterialTheme(material, color, emissive) {
+    if (!material) { return; }
+    if (Array.isArray(material)) {
+      material.forEach(function (item, index) {
+        setMaterialTheme(item, index === 0 ? color : emissive || color, index === 0 ? null : emissive);
+      });
+      return;
+    }
+    if (material.color && typeof material.color.set === 'function') { material.color.set(color); }
+    if (emissive && material.emissive && typeof material.emissive.set === 'function') { material.emissive.set(emissive); }
+  }
+
+  function refreshViewportTheme(viewport) {
+    var geometryColor = themeColor('--ui-color-geometry', '#f4f1ea');
+    var selectionColor = themeColor('--ui-color-selection', '#93c5fd');
+    var lineColor = themeColor('--ui-color-grid-major', '#334155');
+    var featureEdges;
+    if (viewport.scene && viewport.scene.background && typeof viewport.scene.background.set === 'function') {
+      viewport.scene.background.set(themeColor('--ui-color-canvas', '#111827'));
+    }
+    if (viewport.previewMesh && Array.isArray(viewport.previewMesh.material)) {
+      setMaterialTheme(viewport.previewMesh.material[0], geometryColor);
+      setMaterialTheme(viewport.previewMesh.material[1], selectionColor, selectionColor);
+    }
+    if (viewport.importedGeometry && typeof viewport.importedGeometry.getObjectByName === 'function') {
+      featureEdges = viewport.importedGeometry.getObjectByName('imported-geometry-feature-edges');
+      if (featureEdges) { setMaterialTheme(featureEdges.material, lineColor); }
+    }
+    if (viewport.meshSurface && Array.isArray(viewport.meshSurface.material)) {
+      setMaterialTheme(viewport.meshSurface.material[0], geometryColor);
+      setMaterialTheme(viewport.meshSurface.material[1], selectionColor, selectionColor);
+    }
+    if (viewport.meshDisplay && viewport.meshDisplay.userData.lines) {
+      setMaterialTheme(viewport.meshDisplay.userData.lines.material, lineColor);
+    }
+    if (viewport.resultDisplay && viewport.resultDisplay.userData.lines) {
+      setMaterialTheme(viewport.resultDisplay.userData.lines.material, lineColor);
+    }
+    if (typeof viewport.rebuildReferenceGrid === 'function') { viewport.rebuildReferenceGrid(); }
+    if (typeof viewport.rebuildAnalysisOverlay === 'function') { viewport.rebuildAnalysisOverlay(); }
+    if (typeof viewport.rebuildAxisTriad === 'function') { viewport.rebuildAxisTriad(); }
   }
 
   /** Convert a pointer event from CSS pixels to canvas and Three.js coordinates. */
@@ -101,8 +144,12 @@
     }
     this.scene = new root.THREE.Scene();
     this.scene.background = new root.THREE.Color(themeColor('--ui-color-canvas', '#111827'));
-    this.camera = new root.THREE.PerspectiveCamera(40, 1, 0.01, 1000);
-    this.camera.position.set(2.8, 2.1, 3.4);
+    this.camera = new root.THREE.OrthographicCamera(-2, 2, 2, -2, 0.01, 1000);
+    this.camera.aspect = 1;
+    this.camera.fov = 40;
+    this.camera.position.set(3, 3, 3);
+    this.viewAnimationFrame = null;
+    this.peakMarker = null;
     this.camera.lookAt(0, 0, 0);
     this.axisTriadScene = new root.THREE.Scene();
     this.axisTriadCamera = new root.THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 200);
@@ -128,6 +175,7 @@
     this.resultDisplay = null;
     this.resultSurface = null;
     this.resultModel = null;
+    this.updatedResultModel = null;
     this.analysisOverlay = null;
     this.analysisOverlayState = null;
     this.themeObserver = null;
@@ -162,6 +210,7 @@
     this.synchronizeOrbitFromCamera();
     this.observeCameraInteraction();
     this.observePointerPicking();
+    this.observeGizmoInteraction();
     this.resize();
     this.resetViewState = this.captureViewState();
   }
@@ -187,9 +236,22 @@
       metalness: 0.04
     });
     var referenceObject = new root.THREE.Mesh(geometry, material);
+    grid.name = 'reference-grid';
     referenceObject.name = 'reference-solid';
     referenceObject.position.y = 0.36;
     this.scene.add(grid, referenceObject);
+  };
+
+  ViewportController.prototype.rebuildReferenceGrid = function () {
+    var current = this.scene.getObjectByName('reference-grid');
+    var grid = new root.THREE.GridHelper(4, 8,
+      themeColor('--ui-color-grid-major', '#334155'),
+      themeColor('--ui-color-grid-minor', '#1f2937'));
+    grid.name = 'reference-grid';
+    if (current) { this.scene.remove(current); disposeObjectResources(current); }
+    this.scene.add(grid);
+    var referenceObject = this.scene.getObjectByName('reference-solid');
+    if (referenceObject) { setMaterialTheme(referenceObject.material, themeColor('--ui-color-geometry', '#f4f1ea')); }
   };
 
   ViewportController.prototype.rebuildAxisTriad = function () {
@@ -200,12 +262,17 @@
       ['z', new root.THREE.Vector3(0, 0, 1), themeColor('--ui-color-axis-z', '#3b82f6')]
     ];
     if (this.axisTriad) { this.axisTriadScene.remove(this.axisTriad); disposeObjectResources(this.axisTriad); }
+    var active = Boolean(this.gizmoActive);
     definitions.forEach(function (definition) {
       var endpoint = definition[1].clone().multiplyScalar(AXIS_TRIAD_LENGTH_PX);
       var arrow = cylinderConeArrow(definition[1], endpoint, AXIS_TRIAD_LENGTH_PX, definition[2], 'axis-triad-' + definition[0]);
       var label = axisLabel(definition[0].toUpperCase(), definition[2]);
       label.position.copy(definition[1]).multiplyScalar(AXIS_TRIAD_LABEL_OFFSET_PX);
-      group.add(arrow, label);
+      arrow.traverse(function (part) { if (part.material) { part.material.depthTest = true; part.material.depthWrite = true; } });
+      var negative = axisLabel('-' + definition[0].toUpperCase(), definition[2]);
+      negative.position.copy(definition[1]).multiplyScalar(-AXIS_TRIAD_LABEL_OFFSET_PX);
+      negative.visible = active;
+      group.add(arrow, label, negative);
     });
     group.name = 'axis-triad';
     this.axisTriadScene.add(group);
@@ -220,17 +287,42 @@
     this.axisTriadCamera.bottom = -height / 2;
     this.axisTriadCamera.updateProjectionMatrix();
     if (this.axisTriad) {
-      this.axisTriad.position.set(-width / 2 + AXIS_TRIAD_SAFE_INSET_PX, -height / 2 + AXIS_TRIAD_SAFE_INSET_PX, 0);
+      var bounds = this.canvas.parentElement && this.canvas.parentElement.querySelector('.fea-gizmo-bounds');
+      this.gizmoQuaternion = null;
+      this.gizmoButtons = bounds ? Array.from(bounds.querySelectorAll('[data-view-orientation]')) : [];
+      var rect = bounds && bounds.getBoundingClientRect();
+      this.gizmoSize = rect ? { width: rect.width, height: rect.height } : null;
+      var canvasRect = this.canvas.getBoundingClientRect();
+      this.axisTriad.position.set(
+        -width / 2 + (rect && rect.width ? rect.left - canvasRect.left + rect.width / 2 : AXIS_TRIAD_SAFE_INSET_PX),
+        height / 2 - (rect && rect.height ? rect.top - canvasRect.top + rect.height / 2 : height - AXIS_TRIAD_SAFE_INSET_PX), 0);
     }
+  };
+
+  ViewportController.prototype.updateGizmoTargets = function () {
+    if (!this.gizmoSize || !this.gizmoButtons || !this.gizmoButtons.length) { return; }
+    if (this.gizmoQuaternion && this.gizmoQuaternion.equals(this.axisTriad.quaternion)) { return; }
+    if (!this.gizmoQuaternion) { this.gizmoQuaternion = new root.THREE.Quaternion(); }
+    this.gizmoQuaternion.copy(this.axisTriad.quaternion);
+    var self = this;
+    var direction = new root.THREE.Vector3();
+    this.gizmoButtons.forEach(function (button) {
+      var name = button.dataset.viewOrientation;
+      if (!/^[+-][xyz]$/.test(name)) { return; }
+      direction.set(0, 0, 0); direction[name[1]] = name[0] === '+' ? 1 : -1;
+      direction.applyQuaternion(self.axisTriad.quaternion);
+      button.style.left = (self.gizmoSize.width / 2 + direction.x * AXIS_TRIAD_LABEL_OFFSET_PX) + 'px';
+      button.style.top = (self.gizmoSize.height / 2 - direction.y * AXIS_TRIAD_LABEL_OFFSET_PX) + 'px';
+      button.style.zIndex = String(10 + Math.round(direction.z * 5));
+      button.dataset.depth = direction.z < 0 ? 'back' : 'front';
+    });
   };
 
   ViewportController.prototype.observeTheme = function () {
     var self = this;
     if (typeof root.MutationObserver !== 'function') { return; }
     this.themeObserver = new root.MutationObserver(function () {
-      self.scene.background.set(themeColor('--ui-color-canvas', '#111827'));
-      self.rebuildAnalysisOverlay();
-      self.rebuildAxisTriad();
+      refreshViewportTheme(self);
       self.render();
     });
     this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style', 'data-color-scheme', 'data-theme'] });
@@ -246,7 +338,7 @@
         return;
       }
       if ((self.presentation.mode === 'stress' || self.presentation.mode === 'deformation') && self.resultModel) {
-        if (self.probeHandler) { self.probeHandler(self.pickResultAtPointer(event)); }
+        self.selectResultPoint(self.pickResultAtPointer(event));
         return;
       }
       faceId = self.pickFaceAtPointer(event);
@@ -255,25 +347,206 @@
       }
     };
     this.canvas.addEventListener('click', this.pointerClickListener);
+    this.draftHoverListener = function (event) {
+      if (!self.assignmentDraftActive || self.activePointers.size) { return; }
+      self.draftHoverPointer = {clientX:event.clientX,clientY:event.clientY};
+      if (self.draftHoverFrame) { return; }
+      self.draftHoverFrame = root.requestAnimationFrame(function () {
+        self.draftHoverFrame = null;
+        self.showDraftHover(self.assignmentDraftActive ? self.pickFaceAtPointer(self.draftHoverPointer) : null);
+      });
+    };
+    this.draftHoverLeave = function () { self.showDraftHover(null); };
+    this.canvas.addEventListener('pointermove',this.draftHoverListener);
+    this.canvas.addEventListener('pointerleave',this.draftHoverLeave);
   };
 
-  ViewportController.prototype.synchronizeOrbitFromCamera = function () {
+  ViewportController.prototype.observeGizmoInteraction = function () {
+    if (this.disposeGizmoInteraction) { this.disposeGizmoInteraction(); }
+    var bounds = this.canvas.parentElement && this.canvas.parentElement.querySelector('.fea-gizmo-bounds');
+    if (!bounds) { return; }
+    var self = this; var gesture = null; var suppressClick = false;
+    function target(event) {
+      var button = event.target.closest && event.target.closest('[data-view-orientation]');
+      return button && bounds.contains(button) ? button : null;
+    }
+    var hovered = false;
+    var touchMedia = root.matchMedia && root.matchMedia('(hover: none)');
+    function refresh(focused) {
+      var hasFocus = typeof focused === 'boolean' ? focused : Boolean(bounds.querySelector(':focus-visible'));
+      self.gizmoActive = hovered || hasFocus || Boolean(touchMedia && touchMedia.matches);
+      bounds.dataset.active = String(self.gizmoActive);
+      ['x', 'y', 'z'].forEach(function (axis) {
+        self.axisTriad.getObjectByName('axis-triad-label--' + axis).visible = self.gizmoActive;
+      });
+      self.render();
+    }
+    var listeners = {
+      pointerenter: function () { hovered = true; refresh(); },
+      pointerleave: function () { hovered = false; refresh(); },
+      focusin: refresh,
+      focusout: function (event) {
+        // activeElement still points at the old target during focusout.
+        refresh(Boolean(event.relatedTarget && bounds.contains(event.relatedTarget) && event.relatedTarget.matches(':focus-visible')));
+      },
+      pointerdown: function (event) {
+        var button = target(event);
+        if (!button || event.button !== 0) { return; }
+        self.cancelViewAnimation(); suppressClick = false;
+        gesture = { id: event.pointerId, x: event.clientX, y: event.clientY, button: button, moved: false };
+        try { button.setPointerCapture(event.pointerId); } catch (error) { /* Synthetic or cancelled pointer. */ }
+      },
+      pointermove: function (event) {
+        if (gesture && gesture.id === event.pointerId && root.SpjutsimFEA.didExceedViewportDragThreshold(
+          gesture.x, gesture.y, event.clientX, event.clientY, 3)) { gesture.moved = true; }
+      },
+      pointerup: function (event) {
+        if (!gesture || gesture.id !== event.pointerId) { return; }
+        suppressClick = gesture.moved;
+        var button = gesture.button; gesture = null;
+        if (button.hasPointerCapture(event.pointerId)) { button.releasePointerCapture(event.pointerId); }
+      },
+      pointercancel: function (event) {
+        if (!gesture || gesture.id !== event.pointerId) { return; }
+        suppressClick = true; gesture = null;
+      },
+      lostpointercapture: function (event) {
+        if (gesture && gesture.id === event.pointerId) { suppressClick = true; gesture = null; }
+      },
+      click: function (event) {
+        var button = target(event);
+        if (!button || event.button !== 0) { return; }
+        event.stopPropagation();
+        if (event.detail > 0 && suppressClick) { suppressClick = false; return; }
+        self.setViewOrientation(button.dataset.viewOrientation);
+      }
+    };
+    Object.keys(listeners).forEach(function (type) { bounds.addEventListener(type, listeners[type]); });
+    if (touchMedia && touchMedia.addEventListener) { touchMedia.addEventListener('change', refresh); }
+    refresh();
+    this.cancelGizmoGesture = function () { if (gesture) { suppressClick = true; gesture = null; } };
+    this.disposeGizmoInteraction = function () {
+      Object.keys(listeners).forEach(function (type) { bounds.removeEventListener(type, listeners[type]); });
+      if (touchMedia && touchMedia.removeEventListener) { touchMedia.removeEventListener('change', refresh); }
+      gesture = null;
+    };
+  };
+
+  ViewportController.prototype.synchronizeOrbitFromCamera = function (preserveScale) {
     var offset = new root.THREE.Vector3().subVectors(this.camera.position, this.viewTarget);
-    this.orbitDistance = Math.max(offset.length(), this.minimumOrbitDistance);
-    this.orbitPolar = Math.acos(Math.max(-1, Math.min(1, offset.y / this.orbitDistance)));
+    var distance = Math.max(offset.length(), this.minimumOrbitDistance);
+    if (!preserveScale) { this.orbitDistance = distance; }
+    this.orbitPolar = Math.acos(Math.max(-1, Math.min(1, offset.y / distance)));
     this.orbitAzimuth = Math.atan2(offset.x, offset.z);
   };
 
   ViewportController.prototype.applyOrbitCamera = function () {
     var sinPolar = Math.sin(this.orbitPolar);
+    var distance = this.camera.isOrthographicCamera ? Math.max(this.orbitDistance, this.modelExtent * 2) : this.orbitDistance;
     this.camera.position.set(
-      this.viewTarget.x + this.orbitDistance * sinPolar * Math.sin(this.orbitAzimuth),
-      this.viewTarget.y + this.orbitDistance * Math.cos(this.orbitPolar),
-      this.viewTarget.z + this.orbitDistance * sinPolar * Math.cos(this.orbitAzimuth)
+      this.viewTarget.x + distance * sinPolar * Math.sin(this.orbitAzimuth),
+      this.viewTarget.y + distance * Math.cos(this.orbitPolar),
+      this.viewTarget.z + distance * sinPolar * Math.cos(this.orbitAzimuth)
     );
     this.camera.lookAt(this.viewTarget);
+    this.updateCameraProjection();
     this.camera.updateMatrixWorld();
     this.render();
+  };
+
+  ViewportController.prototype.updateCameraProjection = function () {
+    // Orbit distance represents equivalent perspective scale for both projections.
+    // This keeps wheel, pinch and pan sensitivity continuous across camera changes.
+    // Orthographic eye distance stays outside the solid even at high magnification.
+    if (this.camera.isOrthographicCamera) {
+      var halfHeight = this.orbitDistance * Math.tan(this.camera.fov * Math.PI / 360);
+      this.camera.top = halfHeight; this.camera.bottom = -halfHeight;
+      this.camera.right = halfHeight * this.camera.aspect; this.camera.left = -this.camera.right;
+      this.camera.zoom = 1;
+    }
+    this.camera.near = Math.max(this.modelExtent * 0.0001, 1e-9);
+    this.camera.far = Math.max(this.camera.position.distanceTo(this.viewTarget) + this.modelExtent * 4, this.camera.near * 100);
+    this.camera.updateProjectionMatrix();
+  };
+
+  ViewportController.prototype.getProjection = function () {
+    return this.camera.isOrthographicCamera ? 'orthographic' : 'perspective';
+  };
+
+  ViewportController.prototype.cancelViewAnimation = function () {
+    if (this.viewAnimationFrame !== null) { root.cancelAnimationFrame(this.viewAnimationFrame); }
+    this.viewAnimationFrame = null;
+  };
+
+  ViewportController.prototype.setProjection = function (projection) {
+    if (projection !== 'orthographic' && projection !== 'perspective') { throw new Error('Unknown camera projection.'); }
+    this.cancelViewAnimation();
+    if (this.activePointers.size) { this.suppressNextClick = true; }
+    this.activePointers.clear(); this.pointerInteraction = null; this.pinchDistance = null;
+    if (this.cancelGizmoGesture) { this.cancelGizmoGesture(); }
+    this.navigationPreferences.projection = projection;
+    if (projection === this.getProjection()) { return projection; }
+    var previous = this.camera;
+    if (previous.isOrthographicCamera) {
+      this.orbitDistance = (previous.top - previous.bottom) / previous.zoom / (2 * Math.tan(previous.fov * Math.PI / 360));
+    }
+    this.camera = projection === 'orthographic' ? new root.THREE.OrthographicCamera() : new root.THREE.PerspectiveCamera();
+    this.camera.fov = previous.fov; this.camera.aspect = previous.aspect;
+    this.camera.up.copy(previous.up); this.camera.quaternion.copy(previous.quaternion);
+    this.applyOrbitCamera();
+    return projection;
+  };
+
+  ViewportController.prototype.setViewOrientation = function (orientation, options) {
+    var directions = { isometric: [1, 1, 1], '+x': [1, 0, 0], '-x': [-1, 0, 0],
+      '+y': [0, 1, 0], '-y': [0, -1, 0], '+z': [0, 0, 1], '-z': [0, 0, -1] };
+    if (!Object.prototype.hasOwnProperty.call(directions, orientation)) { throw new Error('Unknown camera orientation.'); }
+    this.cancelViewAnimation();
+    var direction = new root.THREE.Vector3().fromArray(directions[orientation]).normalize();
+    var up = new root.THREE.Vector3(0, 1, 0);
+    if (orientation === '+y') { up.set(0, 0, -1); }
+    if (orientation === '-y') { up.set(0, 0, 1); }
+    var finalCamera = this.camera.clone();
+    var eyeDistance = this.camera.position.distanceTo(this.viewTarget);
+    finalCamera.position.copy(this.viewTarget).addScaledVector(direction, eyeDistance);
+    finalCamera.up.copy(up); finalCamera.lookAt(this.viewTarget);
+    this.animateViewTo(finalCamera, this.viewTarget.clone(), this.orbitDistance, options);
+    return orientation;
+  };
+
+  ViewportController.prototype.animateViewTo = function (finalCamera, finalTarget, finalDistance, options) {
+    this.cancelViewAnimation();
+    var self = this;
+    function finish() {
+      self.viewTarget.copy(finalTarget); self.orbitDistance = finalDistance;
+      self.camera.position.copy(finalCamera.position); self.camera.up.copy(finalCamera.up);
+      self.camera.quaternion.copy(finalCamera.quaternion); self.updateCameraProjection(); self.camera.updateMatrixWorld();
+      self.synchronizeOrbitFromCamera(true); self.viewAnimationFrame = null; self.render();
+    }
+    if ((options && options.animate === false) || (root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+      finish(); return;
+    }
+    var start = this.camera.quaternion.clone(); var pose = start.clone();
+    var startTarget = this.viewTarget.clone();
+    var startDistance = this.orbitDistance;
+    var startEyeDistance = this.camera.position.distanceTo(startTarget);
+    var finalEyeDistance = finalCamera.position.distanceTo(finalTarget);
+    var startTime = null;
+    function frame(time) {
+      if (startTime === null) { startTime = time; }
+      var fraction = Math.min((time - startTime) / 180, 1);
+      if (fraction === 1) { finish(); return; }
+      var eased = fraction * fraction * (3 - 2 * fraction);
+      pose.copy(start).slerp(finalCamera.quaternion, eased);
+      self.viewTarget.copy(startTarget).lerp(finalTarget, eased);
+      self.orbitDistance = startDistance + (finalDistance - startDistance) * eased;
+      self.camera.position.set(0, 0, startEyeDistance + (finalEyeDistance - startEyeDistance) * eased).applyQuaternion(pose).add(self.viewTarget);
+      self.camera.up.set(0, 1, 0).applyQuaternion(pose);
+      self.camera.quaternion.copy(pose); self.updateCameraProjection(); self.camera.updateMatrixWorld();
+      self.synchronizeOrbitFromCamera(true); self.render();
+      self.viewAnimationFrame = root.requestAnimationFrame(frame);
+    }
+    this.viewAnimationFrame = root.requestAnimationFrame(frame);
   };
 
   ViewportController.prototype.captureViewState = function () {
@@ -281,7 +554,8 @@
       target: [this.viewTarget.x, this.viewTarget.y, this.viewTarget.z],
       azimuth: this.orbitAzimuth,
       polar: this.orbitPolar,
-      distance: this.orbitDistance
+      distance: this.orbitDistance,
+      up: this.camera.up.toArray()
     };
   };
 
@@ -289,17 +563,29 @@
     if (!state || !Array.isArray(state.target) || state.target.length !== 3) { return; }
     this.viewTarget.set(Number(state.target[0]), Number(state.target[1]), Number(state.target[2]));
     this.orbitAzimuth = Number(state.azimuth) || 0;
-    this.orbitPolar = root.SpjutsimFEA.clampViewportOrbitPolar(state.polar);
+    this.cancelViewAnimation();
+    this.orbitPolar = Math.max(0, Math.min(Math.PI, Number(state.polar)));
+    this.camera.up.fromArray(state.up || [0, 1, 0]);
     this.orbitDistance = root.SpjutsimFEA.clampViewportOrbitDistance(state.distance, this.minimumOrbitDistance, this.maximumOrbitDistance);
     this.applyOrbitCamera();
   };
 
-  ViewportController.prototype.resetView = function () {
-    this.restoreViewState(this.resetViewState);
+  ViewportController.prototype.resetView = function (options) {
+    var state = this.resetViewState;
+    if (!state) { return; }
+    var target = new root.THREE.Vector3().fromArray(state.target);
+    var distance = root.SpjutsimFEA.clampViewportOrbitDistance(state.distance, this.minimumOrbitDistance, this.maximumOrbitDistance);
+    var eyeDistance = this.camera.isOrthographicCamera ? Math.max(distance, this.modelExtent * 2) : distance;
+    var finalCamera = this.camera.clone();
+    finalCamera.position.set(Math.sin(state.polar) * Math.sin(state.azimuth), Math.cos(state.polar),
+      Math.sin(state.polar) * Math.cos(state.azimuth)).multiplyScalar(eyeDistance).add(target);
+    finalCamera.up.fromArray(state.up || [0, 1, 0]); finalCamera.lookAt(target);
+    this.animateViewTo(finalCamera, target, distance, options);
   };
 
   ViewportController.prototype.setNavigationPreferences = function (preferences) {
     this.navigationPreferences = root.SpjutsimFEA.normalizeViewportNavigationPreferences(preferences);
+    this.setProjection(this.navigationPreferences.projection);
     return this.navigationPreferences;
   };
 
@@ -308,6 +594,8 @@
   };
 
   ViewportController.prototype.orbitByPixels = function (deltaX, deltaY) {
+    this.cancelViewAnimation();
+    this.camera.up.set(0, 1, 0);
     this.orbitAzimuth -= deltaX * this.navigationPreferences.rotateSensitivity;
     this.orbitPolar = root.SpjutsimFEA.clampViewportOrbitPolar(
       this.orbitPolar - deltaY * this.navigationPreferences.rotateSensitivity
@@ -316,12 +604,15 @@
   };
 
   ViewportController.prototype.orbitByRadians = function (azimuth, polar) {
+    this.cancelViewAnimation();
+    this.camera.up.set(0, 1, 0);
     this.orbitAzimuth += Number(azimuth) || 0;
     this.orbitPolar = root.SpjutsimFEA.clampViewportOrbitPolar(this.orbitPolar + (Number(polar) || 0));
     this.applyOrbitCamera();
   };
 
   ViewportController.prototype.panByPixels = function (deltaX, deltaY) {
+    this.cancelViewAnimation();
     var cameraDirection = new root.THREE.Vector3();
     var right = new root.THREE.Vector3();
     var up = new root.THREE.Vector3();
@@ -342,36 +633,44 @@
   };
 
   ViewportController.prototype.zoomByWheelDelta = function (deltaY) {
+    this.cancelViewAnimation();
     this.orbitDistance = root.SpjutsimFEA.zoomViewportDistance(
       this.orbitDistance, deltaY, this.navigationPreferences, this.minimumOrbitDistance, this.maximumOrbitDistance
     );
     this.applyOrbitCamera();
   };
 
+  function fitOrbitDistance(camera, extent, minimum, maximum) {
+    var verticalFov = camera.fov * Math.PI / 180;
+    var horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * Math.max(camera.aspect,0.01));
+    return root.SpjutsimFEA.clampViewportOrbitDistance(extent * 0.95 / Math.sin(Math.min(verticalFov,horizontalFov) / 2),minimum,maximum);
+  }
+
   ViewportController.prototype.fitModel = function (center, extent, makeResetView) {
+    this.cancelViewAnimation();
     var safeExtent = Math.max(Number(extent) || 0, 0.000001);
-    var verticalFov = this.camera.fov * Math.PI / 180;
-    var horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * Math.max(this.camera.aspect, 0.01));
-    var limitingFov = Math.min(verticalFov, horizontalFov);
     this.modelCenter.copy(center || new root.THREE.Vector3());
     this.viewTarget.copy(this.modelCenter);
     this.modelExtent = safeExtent;
     this.minimumOrbitDistance = Math.max(safeExtent * 0.02, 0.000001);
     this.maximumOrbitDistance = Math.max(safeExtent * 100, 10);
-    this.orbitDistance = root.SpjutsimFEA.clampViewportOrbitDistance(
-      safeExtent * 0.95 / Math.sin(limitingFov / 2), this.minimumOrbitDistance, this.maximumOrbitDistance
-    );
-    this.orbitAzimuth = Math.atan2(2.8, 3.4);
-    this.orbitPolar = Math.acos(2.1 / Math.sqrt(2.8 * 2.8 + 2.1 * 2.1 + 3.4 * 3.4));
-    this.camera.near = Math.max(safeExtent * 0.001, 0.000001);
-    this.camera.far = Math.max(safeExtent * 100, 10);
-    this.camera.updateProjectionMatrix();
+    this.orbitDistance = fitOrbitDistance(this.camera,safeExtent,this.minimumOrbitDistance,this.maximumOrbitDistance);
+    if (makeResetView !== false) {
+      this.orbitAzimuth = Math.PI / 4;
+      this.orbitPolar = Math.acos(1 / Math.sqrt(3));
+      this.camera.up.set(0, 1, 0);
+    }
     if (makeResetView !== false) { this.resetViewState = this.captureViewState(); }
     this.applyOrbitCamera();
   };
 
-  ViewportController.prototype.fitCurrentModel = function () {
-    this.fitModel(this.modelCenter, this.modelExtent, false);
+  ViewportController.prototype.fitCurrentModel = function (options) {
+    var target = this.modelCenter.clone();
+    var distance = fitOrbitDistance(this.camera,this.modelExtent,this.minimumOrbitDistance,this.maximumOrbitDistance);
+    var eyeDistance = this.camera.isOrthographicCamera ? Math.max(distance,this.modelExtent*2) : distance;
+    var finalCamera = this.camera.clone();
+    finalCamera.position.set(0,0,eyeDistance).applyQuaternion(this.camera.quaternion).add(target);
+    this.animateViewTo(finalCamera,target,distance,options);
   };
 
   ViewportController.prototype.observeCameraInteraction = function () {
@@ -381,6 +680,9 @@
       var isTouch = event.pointerType === 'touch';
       var isNavigationButton = isTouch || event.button === self.navigationPreferences.rotateButton || event.button === self.navigationPreferences.panButton;
       if (!isNavigationButton) { return; }
+      if (event.button === 1) { event.preventDefault(); }
+      self.cancelViewAnimation();
+      self.suppressNextClick = false;
       self.canvas.focus({ preventScroll: true });
       self.activePointers.set(event.pointerId, {
         pointerId: event.pointerId, pointerType: event.pointerType, button: event.button,
@@ -514,6 +816,8 @@
   };
 
   ViewportController.prototype.clearGeometryPreview = function () {
+    this.clearDraftHover();
+    this.selectionPreview = null; this.selectionMesh = null; this.selectionKey = null;
     if (this.importedGeometry) {
       this.scene.remove(this.importedGeometry);
       disposeObjectResources(this.importedGeometry);
@@ -609,6 +913,8 @@
   };
 
   ViewportController.prototype.clearMeshDisplay = function () {
+    this.selectionMesh = null;
+    if (this.meshSurface && this.draftHoverSource === this.meshSurface.geometry) { this.clearDraftHover(); }
     if (!this.meshDisplay) { return; }
     this.scene.remove(this.meshDisplay);
     disposeObjectResources(this.meshDisplay);
@@ -677,9 +983,14 @@
     target[0] = stops[low][0] + (stops[low + 1][0] - stops[low][0]) * fraction;
     target[1] = stops[low][1] + (stops[low + 1][1] - stops[low][1]) * fraction;
     target[2] = stops[low][2] + (stops[low + 1][2] - stops[low][2]) * fraction;
+    for (var channel = 0; channel < 3; channel += 1) {
+      var value = target[channel];
+      target[channel] = value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+    }
   }
 
   ViewportController.prototype.clearResultDisplay = function () {
+    this.clearPeakMarker();
     if (this.resultDisplay) {
       this.scene.remove(this.resultDisplay);
       disposeObjectResources(this.resultDisplay);
@@ -687,7 +998,40 @@
     this.resultDisplay = null;
     this.resultSurface = null;
     this.resultModel = null;
+    this.updatedResultModel = null;
     if (this.probeHandler) { this.probeHandler(null); }
+  };
+
+  ViewportController.prototype.clearPeakMarker = function () {
+    if (this.peakMarker) { this.scene.remove(this.peakMarker); disposeObjectResources(this.peakMarker); }
+    this.peakMarker=null; this.selectedResultPoint=null;
+    if(this.probeHandler)this.probeHandler(null);
+  };
+
+  ViewportController.prototype.selectResultPoint = function (probe) {
+    this.clearPeakMarker();
+    if(!probe){this.render();return;}
+    this.selectedResultPoint=probe;
+    var group=new root.THREE.Group();group.name=probe.isInterior?'raw-peak-marker':'selected-result-point';
+    group.position.fromArray(probe.coordinatesM);group.userData.locationOwner=probe.isInterior?'solver-sample':'surface';group.userData.isInterior=Boolean(probe.isInterior);
+    var dot=new root.THREE.Mesh(new root.THREE.SphereGeometry(5,12,8),new root.THREE.MeshBasicMaterial({color:'#ffdb40',depthTest:false,depthWrite:false}));
+    dot.renderOrder=1000;group.add(dot);this.peakMarker=group;this.scene.add(group);
+    this.refreshSelectedResultPoint();this.render();
+  };
+  ViewportController.prototype.refreshSelectedResultPoint = function () {
+    var probe=this.selectedResultPoint;if(!probe)return;
+    var field=probe.isInterior?'vonMises':this.presentation.field,definition=root.SpjutsimFEA.resultFieldDefinition(field,this.presentation);
+    if(!probe.isInterior){var values=this.activeResultField();probe.fieldValue=probe.nodes.reduce(function(sum,node,i){return sum+values[node]*probe.weights[i];},0);}
+    probe.fieldLabel=probe.isInterior?'Peak von Mises · interior solver sample':definition[0]+' · approximate surface value';probe.unit=definition[1];probe.unitScale=definition[2];
+    if(this.probeHandler)this.probeHandler(probe);
+  };
+  ViewportController.prototype.locatePeak = function () {
+    if(this.selectedResultPoint && this.selectedResultPoint.isInterior){this.selectResultPoint(null);return null;}
+    var peak=this.resultModel && this.resultModel.extrema && this.resultModel.extrema.rawVonMisesMax;
+    if(!peak || !Array.isArray(peak.locationM) || !peak.locationM.every(Number.isFinite))return null;
+    this.cancelViewAnimation();
+    this.selectResultPoint({isInterior:true,coordinatesM:peak.locationM.slice(),elementIndex:peak.elementIndex,fieldValue:peak.valuePa});
+    this.render();return peak;
   };
 
   ViewportController.prototype.setResultModel = function (result) {
@@ -708,7 +1052,7 @@
     geometry.setAttribute('color', new root.THREE.BufferAttribute(new Float32Array(result.originalSurface.nodePositionsM.length), 3));
     geometry.setIndex(new root.THREE.BufferAttribute(result.originalSurface.triangleConnectivity, 1));
     geometry.computeVertexNormals();
-    material = new root.THREE.MeshStandardMaterial({ vertexColors: true, side: root.THREE.DoubleSide, roughness: 0.72, metalness: 0.02 });
+    material = new root.THREE.MeshBasicMaterial({ vertexColors: true, side: root.THREE.DoubleSide, toneMapped: false });
     surface = new root.THREE.Mesh(geometry, material);
     surface.name = 'result-surface';
     triangles = result.originalSurface.triangleConnectivity;
@@ -719,19 +1063,34 @@
       lineIndices[triangle * 6 + 4] = triangles[triangle * 3 + 2]; lineIndices[triangle * 6 + 5] = triangles[triangle * 3];
     }
     lineGeometry = new root.THREE.BufferGeometry();
-    lineGeometry.setAttribute('position', new root.THREE.BufferAttribute(new Float32Array(result.originalSurface.nodePositionsM), 3));
+    lineGeometry.setAttribute('position', geometry.getAttribute('position'));
     lineGeometry.setIndex(new root.THREE.BufferAttribute(lineIndices, 1));
     lines = new root.THREE.LineSegments(lineGeometry, new root.THREE.LineBasicMaterial({ color: themeColor('--ui-color-grid-major', '#334155'), transparent: true, opacity: 0.8 }));
     lines.name = 'result-mesh-overlay';
     group = new root.THREE.Group();
     group.name = 'result-display';
-    group.add(surface, lines);
+    var partGeometry = new root.THREE.BufferGeometry();
+    partGeometry.setAttribute('position', geometry.getAttribute('position'));
+    partGeometry.setIndex(new root.THREE.BufferAttribute(root.SpjutsimFEA.buildPartEdgeIndices(triangles, (function () {
+      var faceIndices = result.originalSurface.triangleFaceIndices, ranges = [], start = 0;
+      for (var i = 1; i <= faceIndices.length; i += 1) {
+        if (i === faceIndices.length || faceIndices[i] !== faceIndices[start]) {
+          ranges.push({start:start * 3,count:(i - start) * 3}); start = i;
+        }
+      }
+      return ranges;
+    }())), 1));
+    var partEdges = new root.THREE.LineSegments(partGeometry, new root.THREE.LineBasicMaterial({color: '#263445', transparent:true, opacity:0.45}));
+    partEdges.name = 'result-part-edges';
+    group.userData.partEdges = partEdges;
+    group.add(surface, lines, partEdges);
     group.userData.lines = lines;
     this.scene.add(group);
     this.resultDisplay = group;
     this.resultSurface = surface;
     this.resultModel = result;
     this.updateResultPresentation();
+    this.refreshSelectedResultPoint();
     this.applyPresentation();
     this.render();
   };
@@ -740,6 +1099,7 @@
     if (!this.resultModel) { return null; }
     var fields = {
       vonMises: this.resultModel.surfaceFields.vonMisesPa,
+      factorOfSafety: this.resultModel.surfaceFields.factorOfSafety,
       maxPrincipal: this.resultModel.surfaceFields.maxPrincipalPa,
       minPrincipal: this.resultModel.surfaceFields.minPrincipalPa,
       displacementMagnitude: this.resultModel.surfaceFields.displacementMagnitudeM,
@@ -753,7 +1113,6 @@
     var field;
     var fieldRange;
     var position;
-    var linePosition;
     var colors;
     var original;
     var displacement;
@@ -762,27 +1121,33 @@
     var rgb = [0, 0, 0];
     if (!result || !this.resultSurface) { return; }
     field = this.activeResultField();
-    fieldRange = result.ranges[this.presentation.field] || result.ranges.vonMises;
+    fieldRange = root.SpjutsimFEA.resolveColorRange(result, this.presentation) || root.SpjutsimFEA.getResultDisplayRange(result, 'vonMises');
     position = this.resultSurface.geometry.getAttribute('position');
-    linePosition = this.resultDisplay.userData.lines.geometry.getAttribute('position');
     colors = this.resultSurface.geometry.getAttribute('color');
     original = result.originalSurface.nodePositionsM;
     displacement = result.displacementM;
     scale = (Number(this.presentation.deformationScale) || 0) * this.deformationAnimationMultiplier;
+    var positionChanged = this.updatedResultModel !== result || this.updatedResultScale !== scale;
+    var colorKey = [this.presentation.field,fieldRange.minimum,fieldRange.maximum].join('|');
+    var reverseColors = this.presentation.field === 'factorOfSafety';
+    var colorChanged = this.updatedResultModel !== result || this.updatedResultColorKey !== colorKey;
+    if (!positionChanged && !colorChanged) { return; }
+    this.updatedResultModel = result; this.updatedResultScale = scale; this.updatedResultColorKey = colorKey;
     for (node = 0; node < field.length; node += 1) {
-      position.array[node * 3] = original[node * 3] + displacement[node * 3] * scale;
-      position.array[node * 3 + 1] = original[node * 3 + 1] + displacement[node * 3 + 1] * scale;
-      position.array[node * 3 + 2] = original[node * 3 + 2] + displacement[node * 3 + 2] * scale;
-      linePosition.array[node * 3] = position.array[node * 3];
-      linePosition.array[node * 3 + 1] = position.array[node * 3 + 1];
-      linePosition.array[node * 3 + 2] = position.array[node * 3 + 2];
-      resultColor(fieldRange.maximum === fieldRange.minimum ? 0.5 :
-        (field[node] - fieldRange.minimum) / (fieldRange.maximum - fieldRange.minimum), rgb);
-      colors.array[node * 3] = rgb[0]; colors.array[node * 3 + 1] = rgb[1]; colors.array[node * 3 + 2] = rgb[2];
+      if (positionChanged) {
+        position.array[node * 3] = original[node * 3] + displacement[node * 3] * scale;
+        position.array[node * 3 + 1] = original[node * 3 + 1] + displacement[node * 3 + 1] * scale;
+        position.array[node * 3 + 2] = original[node * 3 + 2] + displacement[node * 3 + 2] * scale;
+      }
+      if (colorChanged) {
+        var normalized = fieldRange.maximum === fieldRange.minimum ? 0.5 :
+          (Number.isFinite(fieldRange.maximum - fieldRange.minimum) ? (field[node] - fieldRange.minimum) / (fieldRange.maximum - fieldRange.minimum) : (field[node] / 2 - fieldRange.minimum / 2) / (fieldRange.maximum / 2 - fieldRange.minimum / 2));
+        resultColor(reverseColors ? 1 - normalized : normalized, rgb);
+        colors.array[node * 3] = rgb[0]; colors.array[node * 3 + 1] = rgb[1]; colors.array[node * 3 + 2] = rgb[2];
+      }
     }
-    position.needsUpdate = true; linePosition.needsUpdate = true; colors.needsUpdate = true;
-    this.resultSurface.geometry.computeVertexNormals();
-    this.resultSurface.geometry.computeBoundingSphere();
+    if (positionChanged) { position.needsUpdate = true; this.resultSurface.geometry.computeBoundingSphere(); }
+    if (colorChanged) { colors.needsUpdate = true; }
   };
 
   ViewportController.prototype.clearAnalysisOverlay = function () {
@@ -798,12 +1163,17 @@
     var glyphLength = Math.max(this.modelExtent * 0.14, 0.000001);
     var loadColor = themeColor('--ui-color-load', '#ef4444');
     var supportColor = themeColor('--ui-color-support', '#22c55e');
-    this.clearAnalysisOverlay();
-    if (!this.analysisOverlayState) { return; }
+    if (!this.analysisOverlayState) { this.clearAnalysisOverlay(); return; }
+    var previous = this.analysisOverlay;
+    var reusable = new Map();
+    if (previous) { previous.children.forEach(function (object) { reusable.set(object.userData.glyphKey,object); }); }
     descriptors = root.SpjutsimFEA.buildAnalysisGlyphDescriptors(this.analysisOverlayState);
     group = new root.THREE.Group();
     group.name = 'analysis-overlay';
     descriptors.forEach(function (descriptor) {
+      var key = JSON.stringify([descriptor,loadColor,supportColor,glyphLength]);
+      var reused = reusable.get(key);
+      if (reused) { group.add(reused); reusable.delete(key); return; }
       var direction = new root.THREE.Vector3().fromArray(descriptor.direction).normalize();
       var position = new root.THREE.Vector3().fromArray(descriptor.positionM);
       var object;
@@ -818,11 +1188,16 @@
       } else {
         object = cylinderConeArrow(direction, position, glyphLength, loadColor, 'analysis-glyph-' + descriptor.type);
       }
+      if (descriptor.preview) {
+        object.traverse(function (child) { if (child.material) { child.material.transparent = true; child.material.opacity = 0.55; child.material.depthTest = false; } });
+      }
+      object.userData.glyphKey = key;
       object.userData.descriptor = descriptor;
       object.userData.tipPositionM = descriptor.positionM.slice();
       object.renderOrder = 10;
       group.add(object);
     });
+    if (previous) { this.scene.remove(previous); disposeObjectResources(previous); }
     this.scene.add(group);
     this.analysisOverlay = group;
   };
@@ -830,18 +1205,23 @@
   /** Replace load/support glyphs without altering geometry, mesh, or numeric analysis data. */
   ViewportController.prototype.setAnalysisOverlay = function (documentState) {
     this.analysisOverlayState = documentState || null;
+    if (!documentState || !documentState.assignmentDraft) { this.showDraftHover(null); }
     this.rebuildAnalysisOverlay();
     this.render();
   };
 
   ViewportController.prototype.setPresentation = function (presentation) {
     if (!presentation || ['model', 'mesh', 'stress', 'deformation'].indexOf(presentation.mode) < 0 ||
-        (presentation.displayStyle !== 'lines' && presentation.displayStyle !== 'wireframe')) {
+        (['lines', 'shaded', 'shaded-edges', 'wireframe'].indexOf(presentation.displayStyle) < 0)) {
       throw new Error('Invalid viewport presentation.');
     }
+    var presentationKey = JSON.stringify(presentation);
+    if (this.presentationKey === presentationKey) { return; }
+    this.presentationKey = presentationKey;
     this.presentation = Object.assign({ field: 'vonMises', meshOverlay: false, deformationScale: 0,
       deformationMode: 'undeformed', userDeformationScale: 1 }, presentation);
     this.updateResultPresentation();
+    this.refreshSelectedResultPoint();
     this.applyPresentation();
     this.render();
   };
@@ -861,21 +1241,45 @@
     var meshMaterials;
     if (this.previewMesh) {
       modelVisible = this.presentation.mode === 'model' || (!this.meshSurface && !this.resultSurface);
-      this.previewMesh.visible = modelVisible && this.presentation.displayStyle === 'lines';
+      this.previewMesh.visible = modelVisible && this.presentation.displayStyle !== 'wireframe';
       featureEdges = this.importedGeometry.getObjectByName('imported-geometry-feature-edges');
-      if (featureEdges) { featureEdges.visible = modelVisible; }
+      this.previewMesh.material.forEach(function (material) { material.wireframe = false; });
+      if (featureEdges) { featureEdges.visible = modelVisible && this.presentation.displayStyle !== 'shaded'; }
     }
     if (this.meshDisplay) {
       this.meshDisplay.visible = this.presentation.mode === 'mesh';
       meshMaterials = this.meshSurface.material;
       meshMaterials.forEach(function (material) { material.wireframe = this.presentation.displayStyle === 'wireframe'; }, this);
-      this.meshDisplay.userData.lines.visible = this.presentation.displayStyle === 'lines';
+      this.meshDisplay.userData.lines.visible = this.presentation.displayStyle !== 'wireframe';
     }
     if (this.resultDisplay) {
       this.resultDisplay.visible = this.presentation.mode === 'stress' || this.presentation.mode === 'deformation';
       this.resultSurface.material.wireframe = this.presentation.displayStyle === 'wireframe';
-      this.resultDisplay.userData.lines.visible = this.presentation.meshOverlay === true || this.presentation.displayStyle === 'lines';
+      this.resultDisplay.userData.lines.visible = this.presentation.meshOverlay === true;
+      if (this.resultDisplay.userData.partEdges) { this.resultDisplay.userData.partEdges.visible = this.presentation.displayStyle === 'shaded-edges' || this.presentation.displayStyle === 'lines'; }
     }
+  };
+
+  ViewportController.prototype.clearDraftHover = function () {
+    if (this.draftHoverFrame) { root.cancelAnimationFrame(this.draftHoverFrame); this.draftHoverFrame = null; }
+    if (this.draftHoverMesh) { this.scene.remove(this.draftHoverMesh); disposeObjectResources(this.draftHoverMesh); }
+    this.draftHoverMesh = null; this.draftHoverSource = null;
+  };
+
+  ViewportController.prototype.showDraftHover = function (faceId) {
+    var surface = this.presentation.mode === 'mesh' ? this.meshSurface : this.previewMesh;
+    if (!faceId || !surface) { if (this.draftHoverMesh) { this.draftHoverMesh.visible = false; this.render(); } return; }
+    if (this.draftHoverSource !== surface.geometry) {
+      if (this.draftHoverMesh) { this.scene.remove(this.draftHoverMesh); disposeObjectResources(this.draftHoverMesh); }
+      var geometry = new root.THREE.BufferGeometry();
+      geometry.setAttribute('position',surface.geometry.getAttribute('position'));
+      geometry.setIndex(surface.geometry.index);
+      this.draftHoverMesh = new root.THREE.Mesh(geometry,new root.THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.22,side:root.THREE.DoubleSide,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));
+      this.draftHoverSource = surface.geometry; this.scene.add(this.draftHoverMesh);
+    }
+    var index = surface.userData.faceIdsByRange.indexOf(faceId), range = surface.geometry.groups[index];
+    if (!range) { return; }
+    this.draftHoverMesh.geometry.setDrawRange(range.start,range.count); this.draftHoverMesh.visible = true; this.render();
   };
 
   ViewportController.prototype.setSelectedFaceIds = function (faceIds) {
@@ -892,6 +1296,9 @@
         throw new Error('Unknown CAD face identifier.');
       }
     });
+    var selectionKey = JSON.stringify(faceIds);
+    if (this.selectionKey === selectionKey && this.selectionPreview === this.previewMesh && this.selectionMesh === this.meshSurface) { return; }
+    this.selectionKey = selectionKey; this.selectionPreview = this.previewMesh; this.selectionMesh = this.meshSurface;
     this.selectedFaceIds = new Set(faceIds);
     [this.previewMesh, this.meshSurface].forEach(function (surface) {
       if (!surface) { return; }
@@ -937,8 +1344,8 @@
     var vector = [0, 0, 0];
     var axis;
     var fieldDefinitions = {
-      vonMises: ['von Mises stress', 'MPa', 1e6], maxPrincipal: ['maximum principal stress', 'MPa', 1e6],
-      minPrincipal: ['minimum principal stress', 'MPa', 1e6], displacementMagnitude: ['displacement magnitude', 'mm', 1e-3],
+      vonMises: ['approximate smoothed von Mises stress', 'MPa', 1e6], maxPrincipal: ['approximate smoothed maximum principal stress', 'MPa', 1e6],
+      factorOfSafety: ['approximate smoothed factor of safety', '', 1], minPrincipal: ['approximate smoothed minimum principal stress', 'MPa', 1e6], displacementMagnitude: ['displacement magnitude', 'mm', 1e-3],
       ux: ['Ux', 'mm', 1e-3], uy: ['Uy', 'mm', 1e-3], uz: ['Uz', 'mm', 1e-3]
     };
     var definition = fieldDefinitions[this.presentation.field] || fieldDefinitions.vonMises;
@@ -953,16 +1360,20 @@
     indices = this.resultModel.originalSurface.triangleConnectivity;
     nodes = [indices[triangle * 3], indices[triangle * 3 + 1], indices[triangle * 3 + 2]];
     field = this.activeResultField(); displacement = this.resultModel.displacementM;
-    nodes.forEach(function (node) {
+    var positions=this.resultSurface.geometry.getAttribute('position');
+    var vertices=nodes.map(function(node){return new root.THREE.Vector3().fromBufferAttribute(positions,node);});
+    var barycentric=new root.THREE.Vector3();root.THREE.Triangle.getBarycoord(intersections[0].point,vertices[0],vertices[1],vertices[2],barycentric);
+    var weights=barycentric.toArray();
+    nodes.forEach(function (node,index) {
       for (axis = 0; axis < 3; axis += 1) {
-        point[axis] += this.resultModel.originalSurface.nodePositionsM[node * 3 + axis] / 3;
-        vector[axis] += displacement[node * 3 + axis] / 3;
+        point[axis] += this.resultModel.originalSurface.nodePositionsM[node * 3 + axis] * weights[index];
+        vector[axis] += displacement[node * 3 + axis] * weights[index];
       }
     }, this);
     return { faceId: this.resultModel.originalSurface.faceIds[this.resultModel.originalSurface.triangleFaceIndices[triangle]],
-      elementIndex: this.resultModel.originalSurface.triangleElementIndices[triangle], coordinatesM: point,
-      displacementM: vector, fieldLabel: definition[0], unit: definition[1], unitScale: definition[2],
-      fieldValue: (field[nodes[0]] + field[nodes[1]] + field[nodes[2]]) / 3 };
+      elementIndex: this.resultModel.originalSurface.triangleElementIndices[triangle], coordinatesM: point, nodes:nodes, weights:weights,
+      displacementM: vector, fieldLabel: definition[0] + (this.presentation.field === 'factorOfSafety' && this.resultModel.ranges.factorOfSafety.clipped ? ' (contour capped at 10)' : ''), unit: definition[1], unitScale: definition[2],
+      fieldValue: nodes.reduce(function(sum,node,i){return sum+field[node]*weights[i];},0) };
   };
 
   ViewportController.prototype.observeResize = function () {
@@ -970,17 +1381,18 @@
     if (typeof root.ResizeObserver === 'function') {
       this.resizeObserver = new root.ResizeObserver(function () { self.resize(); });
       this.resizeObserver.observe(this.canvas);
-      return;
     }
     this.resizeListener = function () { self.resize(); };
     root.addEventListener('resize', this.resizeListener);
   };
 
   ViewportController.prototype.resize = function () {
+    var pixelRatio = Math.min(root.devicePixelRatio || 1, 2);
+    if (this.renderer.getPixelRatio() !== pixelRatio) { this.renderer.setPixelRatio(pixelRatio); }
     var width = Math.max(1, this.canvas.clientWidth);
     var height = Math.max(1, this.canvas.clientHeight);
     this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
+    this.updateCameraProjection();
     this.renderer.setSize(width, height, false);
     this.layoutAxisTriad(width, height);
     this.render();
@@ -988,6 +1400,16 @@
 
   ViewportController.prototype.render = function () {
     this.axisTriad.quaternion.copy(this.camera.quaternion).invert();
+    this.updateGizmoTargets();
+    if (this.peakMarker) {
+      var probe=this.selectedResultPoint,scale=(this.presentation.deformationScale || 0)*this.deformationAnimationMultiplier;
+      this.peakMarker.position.fromArray(probe.coordinatesM);
+      if(probe.displacementM)this.peakMarker.position.addScaledVector(new root.THREE.Vector3().fromArray(probe.displacementM),scale);
+      var pixelScale=this.camera.isOrthographicCamera ? (this.camera.top-this.camera.bottom)/this.camera.zoom/Math.max(this.canvas.clientHeight,1) : 2*this.camera.position.distanceTo(this.peakMarker.position)*Math.tan(this.camera.fov*Math.PI/360)/Math.max(this.canvas.clientHeight,1);
+      this.peakMarker.scale.setScalar(pixelScale);
+      this.peakMarker.visible=this.presentation.mode==='stress' || this.presentation.mode==='deformation';
+      if(this.probePositionHandler){var point=this.peakMarker.position.clone().project(this.camera);this.probePositionHandler({x:(point.x+1)*this.canvas.clientWidth/2,y:(1-point.y)*this.canvas.clientHeight/2,visible:this.peakMarker.visible && point.z>=-1 && point.z<=1});}
+    }
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
     this.renderer.clearDepth();
@@ -995,9 +1417,13 @@
   };
 
   ViewportController.prototype.dispose = function () {
+    this.cancelViewAnimation();
+    if (this.disposeGizmoInteraction) { this.disposeGizmoInteraction(); }
     if (this.resizeObserver) { this.resizeObserver.disconnect(); }
     if (this.resizeListener) { root.removeEventListener('resize', this.resizeListener); }
     if (this.pointerClickListener) { this.canvas.removeEventListener('click', this.pointerClickListener); }
+    this.clearDraftHover();
+    this.canvas.removeEventListener('pointermove',this.draftHoverListener); this.canvas.removeEventListener('pointerleave',this.draftHoverLeave);
     if (this.pointerDownListener) { this.canvas.removeEventListener('pointerdown', this.pointerDownListener); }
     if (this.pointerMoveListener) { this.canvas.removeEventListener('pointermove', this.pointerMoveListener); }
     if (this.pointerUpListener) {
@@ -1024,5 +1450,6 @@
 
   root.SpjutsimFEA = root.SpjutsimFEA || {};
   root.SpjutsimFEA.pointerToCanvasCoordinates = pointerToCanvasCoordinates;
+  root.SpjutsimFEA.refreshViewportTheme = refreshViewportTheme;
   root.SpjutsimFEA.ViewportController = ViewportController;
 }(globalThis));

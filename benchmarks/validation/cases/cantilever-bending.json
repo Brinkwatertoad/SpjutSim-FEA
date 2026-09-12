@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "caseId": "cantilever-bending",
+  "revision": 1,
+  "title": "Slender rectangular cantilever",
+  "geometry": {"path": "benchmarks/validation/geometry/cantilever-prism.step", "sha256": "ea2d3965dd47cc1dfb41f790ee05f748319856054f108a8d758db9205bd40cd4", "sourceUnits": "m"},
+  "material": {"youngsModulusPa": 1000000000, "poissonsRatio": 0.25, "densityKgM3": 1000},
+  "load": {"type": "total-force", "face": "x-max", "forceN": [0, 0, -1000]},
+  "supports": ["x-min:xyz"],
+  "probes": [{"id": "free-end-center", "feature": "center of free end", "coordinatesM": [4, 0.125, 0.25]}]
+}

@@ -1,5 +1,7 @@
 #include "spjutsim/pcg.hpp"
 #include "test_support.hpp"
+#include <chrono>
+#include <thread>
 
 using namespace spjutsim::fem;
 int main() {
@@ -43,6 +45,38 @@ int main() {
                   TerminationReason::iteration_limit,
           "nonconvergence diagnostics omitted iterations or residual");
   Context cancelled;
+  Context timed;
+  configure_axial(timed);
+  SolveSettings deadline;
+  deadline.max_duration_ms = 1;
+  std::uint32_t progress_count = 0;
+  deadline.on_iteration = [&](std::uint32_t iteration, double residual,
+                               double elapsed_ms) {
+    require(iteration == 0 && std::isfinite(residual) && elapsed_ms >= 0,
+            "initial progress omitted the live residual");
+    ++progress_count;
+    std::this_thread::sleep_for(std::chrono::milliseconds(3));
+  };
+  require(!timed.solve(deadline) && progress_count == 2 &&
+              timed.last_diagnostic().code == ErrorCode::solver_not_converged &&
+              timed.last_solver_diagnostics().termination ==
+                  TerminationReason::time_limit,
+          "elapsed solve budget returned an unconverged result");
+  Context progress;
+  configure_axial(progress);
+  SolveSettings reporting;
+  std::uint32_t last_iteration = 0;
+  double last_residual = 1;
+  reporting.on_iteration = [&](std::uint32_t iteration, double residual, double) {
+    require(iteration >= last_iteration && std::isfinite(residual),
+            "iteration progress was invalid or went backwards");
+    last_iteration = iteration;
+    last_residual = residual;
+  };
+  require(progress.solve(reporting) && last_iteration > 0 &&
+              last_iteration == progress.last_solver_diagnostics().iterations &&
+              last_residual <= reporting.relative_tolerance,
+          "converged solve did not report its verified final residual");
   configure_axial(cancelled);
   SolveSettings cancel;
   cancel.is_cancelled = []() { return true; };

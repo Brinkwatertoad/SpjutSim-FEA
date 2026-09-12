@@ -56,9 +56,14 @@
   }
 
   function selectEveryFace(geometry) {
-    geometry.preview.faceRanges.forEach(function (range) {
-      assert(pickRange(geometry, range) === range.faceId, 'picked an unexpected opaque FaceId');
+    var projection = viewport.getProjection();
+    ['orthographic', 'perspective'].forEach(function (mode) {
+      viewport.setProjection(mode);
+      geometry.preview.faceRanges.forEach(function (range) {
+        assert(pickRange(geometry, range) === range.faceId, 'picked an unexpected opaque FaceId in ' + mode);
+      });
     });
+    viewport.setProjection(projection);
   }
 
   function testReplacementMigrationUI(geometry) {
@@ -249,6 +254,14 @@
         'load arrow tip did not touch its sampled surface point');
       assert(viewport.analysisOverlay.getObjectByName('support-axis-x') && viewport.analysisOverlay.getObjectByName('support-axis-y') &&
         viewport.analysisOverlay.getObjectByName('support-axis-z'), 'support glyph omitted enabled global-axis cues');
+      var savedSupport = viewport.analysisOverlay.getObjectByName('analysis-glyph-support');
+      overlayState.assignmentDraft = {kind:'load',itemId:'load',validation:{valid:true,value:{id:'load',type:'total-force',faceIds:[geometry.faceIds[1]],forceN:[0,1,0]}}};
+      viewport.setAnalysisOverlay(overlayState);
+      assert(viewport.analysisOverlay.getObjectByName('analysis-glyph-support') === savedSupport, 'Draft edit rebuilt unchanged committed glyphs');
+      assert(viewport.analysisOverlay.children.filter(function(item){return item.userData.descriptor.itemId === 'load';}).length === 0, 'Edited original glyphs double-displayed');
+      assert(viewport.analysisOverlay.children.some(function(item){return item.userData.descriptor.preview;}), 'Draft glyphs lack preview identity');
+      overlayState.assignmentDraft = null; viewport.setAnalysisOverlay(overlayState);
+      oldLoadGlyph = viewport.analysisOverlay.getObjectByName('analysis-glyph-total-force');
       oldLoadGlyph.getObjectByName('glyph-shaft').geometry.addEventListener('dispose', function () { overlayGeometryDisposed = true; });
       document.documentElement.style.setProperty('--ui-color-load', '#123456');
       overlayState.loads[0].forceN = [1e9, 0, 0];
@@ -259,6 +272,9 @@
       assert(newLoadGlyph.getObjectByName('glyph-shaft').geometry.parameters.height === oldLoadGlyph.getObjectByName('glyph-shaft').geometry.parameters.height,
         'glyph visual scale changed with numeric load magnitude');
       document.documentElement.style.removeProperty('--ui-color-load');
+      viewport.setSelectedFaceIds([geometry.faceIds[0]]);viewport.showDraftHover(geometry.faceIds[0]);
+      viewport.clearGeometryPreview();
+      assert(!viewport.draftHoverSource && !viewport.draftHoverMesh && !viewport.selectionPreview && !viewport.selectionMesh, 'Clearing geometry retained hover/selection numerical buffers');
     });
   }
 

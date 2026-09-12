@@ -1,5 +1,5 @@
 'use strict';
-var WORKER_PROTOCOL_VERSION = 1;
+var WORKER_PROTOCOL_VERSION = 3;
 var gmshPromise = null;
 var requestQueue = Promise.resolve();
 
@@ -8,12 +8,22 @@ var requestQueue = Promise.resolve();
 var PREVIEW_MAX_SURFACE_EDGE_LENGTH_FRACTION = 0.025;
 var PREVIEW_CURVATURE_SEGMENTS_PER_2PI = 48;
 var PREVIEW_RELATIVE_TRIANGLE_AREA_SQUARED = 1e-28;
-var CAD_FORMAT_EXTENSIONS = Object.freeze({ step: /\.(step|stp)$/i, iges: /\.(iges|igs)$/i, brep: /\.brep$/i });
+var CAD_FORMAT_EXTENSIONS = Object.freeze({ step: /\.(step|stp)$/i, iges: /\.(iges|igs)$/i, brep: /\.brep$/i, stl: /\.stl$/i });
 
 function validCadSource(message) {
   return message && CAD_FORMAT_EXTENSIONS[message.sourceFormat] &&
     typeof message.sourceName === 'string' && CAD_FORMAT_EXTENSIONS[message.sourceFormat].test(message.sourceName) &&
-    message.sourceBytes instanceof ArrayBuffer && message.sourceBytes.byteLength > 0;
+    message.sourceBytes instanceof ArrayBuffer && message.sourceBytes.byteLength > 0 &&
+    (message.sourceFormat !== 'stl' || validStlOptions(message.importOptions));
+}
+
+function validStlOptions(options) {
+  return options && (options.version === 1 || options.version === 2 &&
+      (options.surfaceMode === 'original' && options.reconstructionToleranceM === null ||
+       options.surfaceMode === 'remesh' && options.reconstructionToleranceM === null && Number.isFinite(options.remeshFeatureAngleDegrees) && options.remeshFeatureAngleDegrees >= 1 && options.remeshFeatureAngleDegrees <= 40 ||
+       options.surfaceMode === 'reconstruct' && Number.isFinite(options.reconstructionToleranceM) && options.reconstructionToleranceM > 0)) && options.normalization === 'none' &&
+    ['m','mm','cm','in','ft'].includes(options.lengthUnit) && Number.isFinite(options.patchAngleDegrees) &&
+    options.patchAngleDegrees >= 1 && options.patchAngleDegrees <= 179;
 }
 
 function validOrientation(orientation) {
@@ -70,13 +80,26 @@ function validateRequest(message) {
       false
     );
   }
-  if (message.type !== 'initialize' && message.type !== 'diagnostics' && message.type !== 'box-smoke' && message.type !== 'import' && message.type !== 'mesh') {
+  if (message.type !== 'initialize' && message.type !== 'diagnostics' && message.type !== 'box-smoke' && message.type !== 'import' && message.type !== 'mesh' && message.type !== 'stl-repair') {
     return workerError(
       'UNKNOWN_MESHER_REQUEST',
       'worker',
       'The mesher received an unsupported request.',
       'Unsupported request type: ' + message.type + '.'
     );
+  }
+  if ((message.type === 'import' || message.type === 'mesh' || message.type === 'stl-repair') && message.sourceFormat === 'stl') {
+    if (message.sourceFormat === 'stl' && !validStlOptions(message.importOptions)) {
+      return workerError('STL_INVALID_OPTIONS', message.type, 'Choose explicit STL units and a grouping angle from 1 to 179 degrees. Reconstruction needs a positive deviation; experimental remeshing needs a feature angle from 1 to 40 degrees.');
+    }
+    if (message.sourceFormat === 'stl' && (!(message.sourceBytes instanceof ArrayBuffer) || !message.sourceBytes.byteLength || message.sourceBytes.byteLength > 16 * 1024 * 1024)) {
+      return workerError('STL_INPUT_LIMIT', message.type, 'Choose a nonempty STL file no larger than 16 MiB.');
+    }
+  }
+  if (message.type === 'stl-repair' && (message.version !== 1 || message.sourceFormat !== 'stl' || !validCadSource(message) ||
+      !message.repairOptions || message.repairOptions.version !== 1 || !Number.isFinite(message.repairOptions.maxHoleDiameterRatio) ||
+      message.repairOptions.maxHoleDiameterRatio < 0 || message.repairOptions.maxHoleDiameterRatio > .05)) {
+    return workerError('STL_INVALID_REPAIR_OPTIONS', 'import', 'Choose an STL and a hole width from 0% through 5% of the part diagonal.');
   }
   if (message.type === 'import') {
     if (!validCadSource(message) || typeof message.geometryId !== 'string' || message.geometryId.length === 0) {
@@ -89,14 +112,17 @@ function validateRequest(message) {
     }
   }
   if (message.type === 'mesh') {
+    if (message.sourceFormat === 'stl' && !/^[a-f0-9]{64}$/.test(message.sourceHash || '')) {
+      return workerError('STL_PATCH_MAPPING_FAILED', 'mesh', 'The retained STL source fingerprint is missing. Review the import again.');
+    }
     if (!validCadSource(message) || typeof message.geometryId !== 'string' || message.geometryId.length === 0 ||
         !validOrientation(message.orientation) || !Array.isArray(message.faceIds) || message.faceIds.length === 0 ||
         message.faceIds.some(function (faceId) { return typeof faceId !== 'string' || faceId.length === 0; }) ||
-        !message.settings || message.settings.elementType !== 'tet4' ||
+        !message.settings || (message.settings.elementType !== 'tet4' && message.settings.elementType !== 'tet10') ||
         !Number.isFinite(message.settings.minSizeM) || !Number.isFinite(message.settings.maxSizeM) ||
         message.settings.minSizeM <= 0 || message.settings.minSizeM > message.settings.maxSizeM) {
       return workerError(
-        'INVALID_MESH_REQUEST', 'mesh', 'Choose valid Tet4 mesh settings.',
+        'INVALID_MESH_REQUEST', 'mesh', 'Choose valid tetrahedral mesh settings.',
         'Mesh requests require a canonical CAD source, stable FaceIds, and a positive min/max size range.'
       );
     }
@@ -377,7 +403,159 @@ function extractPreview(gmsh, surfaceTags, geometryId, modelScaleM) {
   };
 }
 
-function importGeometry(gmsh, message) {
+function restoreOriginalStlGeometry(gmsh, message, parsed) {
+  if (parsed.patches.length > 512) {
+    throw knownImportError('STL_PATCH_LIMIT', 'The STL has more than 512 selectable patches. Increase the grouping angle and review again.');
+  }
+  gmsh.clear(); gmsh.option.restoreDefaults(); gmsh.model.add(message.geometryId);
+  var tags = parsed.patches.map(function () { return gmsh.model.addDiscreteEntity(2); });
+  var nodeTags = new Uint32Array(parsed.positions.length / 3);
+  for (var index = 0; index < nodeTags.length; index += 1) { nodeTags[index] = index + 1; }
+  gmsh.model.mesh.addNodes(2, tags[0], nodeTags, parsed.positions);
+  var blocks = parsed.patches.map(function (patch) { return new Uint32Array(patch.triangleCount * 3); });
+  var offsets = new Uint32Array(tags.length);
+  for (index = 0; index < parsed.triangles.length; index += 3) {
+    var patch = parsed.patchByTriangle[index / 3], block = blocks[patch], offset = offsets[patch];
+    block[offset] = parsed.triangles[index] + 1;
+    block[offset + 1] = parsed.triangles[index + 1] + 1;
+    block[offset + 2] = parsed.triangles[index + 2] + 1;
+    offsets[patch] += 3;
+  }
+  tags.forEach(function (tag, index) { gmsh.model.mesh.addElementsByType(tag, 2, [], blocks[index]); });
+  var loop = gmsh.model.geo.addSurfaceLoop(tags), solid = gmsh.model.geo.addVolume([loop]);
+  gmsh.model.geo.synchronize();
+  // The validated source triangulation is the boundary discretization. Only
+  // the empty volume is meshed; this mode cannot simplify surface slivers.
+  gmsh.option.setNumber('Mesh.MeshOnlyEmpty', 1);
+  return { solidTag: solid, surfaceTags: tags.map(function (tag) { return [tag]; }), internalSurfaceCount: tags.length };
+}
+
+function restoreStlGeometry(gmsh, message, parsed) {
+  if (message.importOptions.version === 2) {
+    if (message.importOptions.surfaceMode === 'original') { return restoreOriginalStlGeometry(gmsh, message, parsed); }
+    if (message.importOptions.surfaceMode === 'remesh') {
+      progress(message.requestId, 'stl-remesh', 'Creating parametrized STL surfaces for a fresh mesh…');
+      gmsh.clear(); gmsh.option.restoreDefaults(); gmsh.model.add(message.geometryId);
+      try { return StlRemesh.build(gmsh, parsed); }
+      catch (error) {
+        if (error && error.code) { throw error; }
+        throw knownImportError('STL_REMESH_FAILED', 'The STL could not be parametrized for remeshing. Keep the original triangles or review different grouping.', String(error));
+      }
+    }
+    progress(message.requestId, 'stl-reconstruct', 'Recovering simulation surfaces within the selected deviation…');
+    gmsh.clear(); gmsh.option.restoreDefaults(); gmsh.model.add(message.geometryId);
+    try { return StlReconstruction.build(gmsh, parsed, message.importOptions.reconstructionToleranceM); }
+    catch(error) { if(error && error.code)throw error; throw knownImportError('STL_RECONSTRUCTION_FAILED', 'The fitted surfaces could not form a usable solid. Use the original STL surface or review different grouping/deviation.', String(error)); }
+  }
+  // Cap planar components before Gmsh allocates discrete parametrizations.
+  var visited = new Uint8Array(parsed.triangles.length / 3), queue = new Uint32Array(visited.length), regions = 0;
+  for (var triangle = 0; triangle < visited.length; triangle += 1) {
+    if (visited[triangle]) { continue; }
+    if (++regions > 512) { throw knownImportError('STL_PATCH_LIMIT', 'The STL has more than 512 geometric surface regions. Export a simpler tessellation.'); }
+    var head = 0, tail = 1; queue[0] = triangle; visited[triangle] = 1;
+    while (head < tail) {
+      var current = queue[head++], n = parsed.normals;
+      for (var edge = 0; edge < 3; edge += 1) {
+        var other = parsed.neighbors[current * 3 + edge];
+        var a = current * 3, b = other * 3;
+        var cross = Math.hypot(n[a+1]*n[b+2]-n[a+2]*n[b+1], n[a+2]*n[b]-n[a]*n[b+2], n[a]*n[b+1]-n[a+1]*n[b]);
+        if (!visited[other] && cross <= 1e-8 && n[a]*n[b]+n[a+1]*n[b+1]+n[a+2]*n[b+2] > 0) { visited[other] = 1; queue[tail++] = other; }
+      }
+    }
+  }
+  gmsh.clear(); gmsh.option.restoreDefaults(); gmsh.model.add(message.geometryId);
+  var discrete = gmsh.model.addDiscreteEntity(2);
+  var nodeTags = new Uint32Array(parsed.positions.length / 3), connectivity = new Uint32Array(parsed.triangles.length);
+  for (var index = 0; index < nodeTags.length; index += 1) { nodeTags[index] = index + 1; }
+  for (index = 0; index < connectivity.length; index += 1) { connectivity[index] = parsed.triangles[index] + 1; }
+  gmsh.model.mesh.addNodes(2, discrete, nodeTags, parsed.positions);
+  gmsh.model.mesh.addElementsByType(discrete, 2, [], connectivity);
+  progress(message.requestId, 'stl-classify', 'Creating geometry while preserving STL facets…');
+  gmsh.model.mesh.classifySurfaces(1e-8, true, true, Math.PI);
+  var surfaces = entityTags(gmsh.model.getEntities(2));
+  if (surfaces.length > 512) { throw knownImportError('STL_PATCH_LIMIT', 'This STL requires more than 512 internal surface regions. Export a simpler tessellation.', 'Classified internal surfaces: ' + surfaces.length); }
+  gmsh.model.mesh.createGeometry();
+  function key(positions, ids, start) {
+    var vertices = [];
+    for (var i = 0; i < 3; i += 1) { var offset = ids[start + i] * 3; vertices.push(positions[offset] + ',' + positions[offset+1] + ',' + positions[offset+2]); }
+    return vertices.sort().join(';');
+  }
+  var sourcePatches = new Map();
+  for (index = 0; index < parsed.triangles.length; index += 3) { sourcePatches.set(key(parsed.positions, parsed.triangles, index), parsed.patchByTriangle[index / 3]); }
+  var nodes = denseNodeMap(gmsh), groups = parsed.patchIds.map(function () { return []; }), matched = 0;
+  surfaces.forEach(function (tag) {
+    var triangles = extractElementConnectivity(gmsh.model.mesh.getElements(2, tag), 2, 3, nodes.indexByNodeTag, 'STL_PATCH_MAPPING_FAILED').connectivity;
+    var owner;
+    for (var offset = 0; offset < triangles.length; offset += 3) {
+      var triangleKey = key(nodes.positions, triangles, offset);
+      var candidate = sourcePatches.get(triangleKey);
+      sourcePatches.delete(triangleKey);
+      if (candidate === undefined || (owner !== undefined && owner !== candidate)) { throw knownImportError('STL_PATCH_MAPPING_FAILED', 'Geometry reconstruction changed the patch boundaries. Re-export the STL or review grouping.'); }
+      owner = candidate; matched += 1;
+    }
+    groups[owner].push(tag);
+  });
+  if (matched !== parsed.triangles.length / 3 || groups.some(function (tags) { return !tags.length; })) {
+    throw knownImportError('STL_PATCH_MAPPING_FAILED', 'Geometry reconstruction lost source triangles or patches. Re-export the STL.');
+  }
+  var loop = gmsh.model.geo.addSurfaceLoop(surfaces), solid = gmsh.model.geo.addVolume([loop]);
+  gmsh.model.geo.synchronize();
+  return { solidTag: solid, surfaceTags: groups, internalSurfaceCount: surfaces.length };
+}
+
+async function importStlGeometry(gmsh, message) {
+  try {
+    progress(message.requestId, 'stl-validate', 'Checking STL topology and surface intersections…');
+    var parsed = await StlImport.identify(StlImport.parse(message.sourceBytes, message.importOptions), message.sourceBytes);
+    var restored = restoreStlGeometry(gmsh, message, parsed);
+    var positions = new Float64Array(parsed.triangles.length * 3), normals = new Float32Array(positions.length);
+    var indices = new Uint32Array(parsed.triangles.length), offsets = new Uint32Array(parsed.patches.length);
+    var start = 0;
+    var ranges = parsed.patches.map(function (patch, index) {
+      var range = { faceId: parsed.patchIds[index], start: start, count: patch.triangleCount * 3 };
+      offsets[index] = start; start += range.count; return range;
+    });
+    var edgeIndices = [];
+    for (var triangle = 0; triangle < parsed.triangles.length / 3; triangle += 1) {
+      var patch = parsed.patchByTriangle[triangle];
+      for (var vertex = 0; vertex < 3; vertex += 1) {
+        var source = parsed.triangles[triangle * 3 + vertex], target = offsets[patch]++;
+        positions.set(parsed.positions.subarray(source * 3, source * 3 + 3), target * 3);
+        normals.set(parsed.normals.subarray(triangle * 3, triangle * 3 + 3), target * 3); indices[target] = target;
+        var neighbor = parsed.neighbors[triangle * 3 + vertex];
+        if (neighbor > triangle && parsed.patchByTriangle[neighbor] !== patch) { edgeIndices.push(source, parsed.triangles[triangle * 3 + (vertex + 1) % 3]); }
+      }
+    }
+    var geometry = { geometryId: message.geometryId, sourceName: message.sourceName, sourceFormat: 'stl', surfaceKind: 'stl-patch',
+      importOptions: Object.assign({}, message.importOptions),
+      sourceMetadata: { version: 1, sha256: parsed.sourceHash, triangleCount: parsed.triangles.length / 3, internalSurfaceCount: restored.internalSurfaceCount, validation: parsed.validation },
+      orientation: { rotation: [1,0,0,0,1,0,0,0,1], operations: [] }, faceIds: parsed.patchIds,
+      boundingBoxM: { minM: parsed.minimum, maxM: parsed.maximum }, volumeM3: parsed.volume,
+      preview: { positionsM: positions, normals: normals, indices: indices, faceRanges: ranges,
+        featureEdges: { positionsM: parsed.positions, indices: new Uint32Array(edgeIndices) } } };
+    if (message.importOptions.version === 2) {
+      geometry.sourceMetadata.version = 2;
+      geometry.sourceMetadata.surfaceMode = message.importOptions.surfaceMode;
+      geometry.sourceMetadata.reconstruction = restored.reconstruction || null;
+      if (restored.remeshing) { geometry.sourceMetadata.remeshing = restored.remeshing; }
+      if (restored.analytic) {
+        geometry.originalPreview = geometry.preview;
+        geometry.boundingBoxM = boundingBoxM(gmsh, restored.solidTag);
+        geometry.volumeM3 = gmsh.model.occ.getMass(3, restored.solidTag).mass;
+        if (!Number.isFinite(geometry.volumeM3) || geometry.volumeM3 <= 0) { throw knownImportError('STL_RECONSTRUCTION_UNSUPPORTED', 'Recovered surfaces do not enclose a positive volume. Use the original STL surface.'); }
+        var scale = configurePreviewTessellation(gmsh, geometry.boundingBoxM);
+        gmsh.model.mesh.setOutwardOrientation(restored.solidTag); gmsh.model.mesh.generate(2);
+        var candidate = extractPreview(gmsh, restored.surfaceTags.map(function(tags){return tags[0];}), message.geometryId, scale).preview;
+        candidate.faceRanges.forEach(function(range,index){range.faceId=parsed.patchIds[index];});
+        geometry.preview = candidate;
+      }
+    }
+    return geometry;
+  } finally { gmsh.clear(); }
+}
+
+async function importGeometry(gmsh, message) {
+  if (message.sourceFormat === 'stl') { return importStlGeometry(gmsh, message); }
   var temporaryPath = '/spjutsim-import-' + message.requestId.replace(/[^A-Za-z0-9_-]/g, '_') + '.' + message.sourceFormat;
   var solids;
   var surfaces;
@@ -419,6 +597,7 @@ function importGeometry(gmsh, message) {
       geometryId: message.geometryId,
       sourceName: message.sourceName,
       sourceFormat: message.sourceFormat,
+      surfaceKind: 'cad-face',
       orientation: { rotation: [1, 0, 0, 0, 1, 0, 0, 0, 1], operations: [] },
       faceIds: preview.faceIds,
       boundingBoxM: box,
@@ -436,7 +615,15 @@ function importGeometry(gmsh, message) {
 var MESH_POOR_GAMMA_THRESHOLD = 0.1;
 var MESH_NEAR_ZERO_JACOBIAN_RELATIVE = 1e-12;
 
-function restoreMeshGeometry(gmsh, message, temporaryPath) {
+async function restoreMeshGeometry(gmsh, message, temporaryPath) {
+  if (message.sourceFormat === 'stl') {
+    var parsed = await StlImport.identify(StlImport.parse(message.sourceBytes, message.importOptions), message.sourceBytes);
+    if (parsed.sourceHash !== message.sourceHash || parsed.patchIds.length !== message.faceIds.length ||
+        parsed.patchIds.some(function(id, index) { return id !== message.faceIds[index]; })) {
+      throw knownMeshError('STL_PATCH_MAPPING_FAILED', 'The source or import settings no longer match the assigned patches. Review the import again.');
+    }
+    return restoreStlGeometry(gmsh, message, parsed);
+  }
   var solids;
   var surfaces;
   gmsh.clear();
@@ -506,28 +693,62 @@ function extractElementConnectivity(elements, expectedType, nodesPerElement, ind
   return { connectivity: connectivity, elementTags: elementTags };
 }
 
-function extractBoundaryFaces(gmsh, surfaceTags, faceIds, indexByNodeTag) {
-  var connectivity = [];
+function appendDisplayTriangles(connectivity, nodes, elementType) {
+  if (elementType === 'tri3') {
+    connectivity.push(nodes[0], nodes[1], nodes[2]);
+    return;
+  }
+  // Application Tri6 order follows Gmsh: vertices 0/1/2, then edges
+  // 0-1, 1-2, and 2-0. Four linear triangles preserve the curved mid-nodes.
+  connectivity.push(
+    nodes[0], nodes[3], nodes[5],
+    nodes[3], nodes[1], nodes[4],
+    nodes[5], nodes[4], nodes[2],
+    nodes[3], nodes[4], nodes[5]
+  );
+}
+
+function extractBoundaryFaces(gmsh, surfaceTags, faceIds, indexByNodeTag, descriptor) {
+  var solverConnectivity = [];
+  var displayConnectivity = [];
+  var solverFaceRanges = [];
   var faceRanges = [];
   var geometryFaceMap = Object.create(null);
   var surfaceIndex;
   for (surfaceIndex = 0; surfaceIndex < surfaceTags.length; surfaceIndex += 1) {
-    var start = connectivity.length;
-    var extracted = extractElementConnectivity(
-      gmsh.model.mesh.getElements(2, surfaceTags[surfaceIndex]), 2, 3, indexByNodeTag, 'BOUNDARY_EXTRACTION_FAILED'
-    );
+    var solverStart = solverConnectivity.length;
+    var displayStart = displayConnectivity.length;
+    var tags = Array.isArray(surfaceTags[surfaceIndex]) ? surfaceTags[surfaceIndex] : [surfaceTags[surfaceIndex]];
+    var extracted = null;
+    tags.forEach(function(tag) {
+      var part = extractElementConnectivity(gmsh.model.mesh.getElements(2, tag), descriptor.gmshFaceType,
+        descriptor.solverFaceNodes, indexByNodeTag, 'BOUNDARY_EXTRACTION_FAILED');
+      if (!extracted) { extracted = part; }
+      else { for (var index = 0; index < part.connectivity.length; index += 1) { extracted.connectivity.push(part.connectivity[index]); } }
+    });
     var faceId = faceIds[surfaceIndex];
     var range;
     var connectivityIndex;
     for (connectivityIndex = 0; connectivityIndex < extracted.connectivity.length; connectivityIndex += 1) {
-      connectivity.push(extracted.connectivity[connectivityIndex]);
+      solverConnectivity.push(extracted.connectivity[connectivityIndex]);
     }
-    range = { faceId: faceId, start: start, count: connectivity.length - start };
+    for (connectivityIndex = 0; connectivityIndex < extracted.connectivity.length; connectivityIndex += descriptor.solverFaceNodes) {
+      appendDisplayTriangles(displayConnectivity,
+        extracted.connectivity.slice(connectivityIndex, connectivityIndex + descriptor.solverFaceNodes),
+        descriptor.solverFaceType);
+    }
+    solverFaceRanges.push({ faceId: faceId, start: solverStart, count: solverConnectivity.length - solverStart });
+    range = { faceId: faceId, start: displayStart, count: displayConnectivity.length - displayStart };
     faceRanges.push(range);
     geometryFaceMap[faceId] = { faceId: faceId, start: range.start, count: range.count };
   }
   return {
-    triangleConnectivity: new Uint32Array(connectivity), faceRanges: faceRanges, geometryFaceMap: geometryFaceMap
+    solverElementType: descriptor.solverFaceType,
+    solverConnectivity: new Uint32Array(solverConnectivity),
+    solverFaceRanges: solverFaceRanges,
+    triangleConnectivity: new Uint32Array(displayConnectivity),
+    faceRanges: faceRanges,
+    geometryFaceMap: geometryFaceMap
   };
 }
 
@@ -535,15 +756,53 @@ function quantile(sortedValues, fraction) {
   return sortedValues[Math.min(sortedValues.length - 1, Math.max(0, Math.round((sortedValues.length - 1) * fraction)))];
 }
 
-function meshStatistics(positions, connectivity, gammaQualities, diagonalM) {
+var TET10_QUADRATURE_A = 0.5854101966249685;
+var TET10_QUADRATURE_B = 0.1381966011250105;
+var TET10_QUADRATURE_BARYCENTRIC = [
+  [TET10_QUADRATURE_A, TET10_QUADRATURE_B, TET10_QUADRATURE_B, TET10_QUADRATURE_B],
+  [TET10_QUADRATURE_B, TET10_QUADRATURE_A, TET10_QUADRATURE_B, TET10_QUADRATURE_B],
+  [TET10_QUADRATURE_B, TET10_QUADRATURE_B, TET10_QUADRATURE_A, TET10_QUADRATURE_B],
+  [TET10_QUADRATURE_B, TET10_QUADRATURE_B, TET10_QUADRATURE_B, TET10_QUADRATURE_A]
+];
+var TET10_EDGE_PAIRS = [[0, 1], [1, 2], [2, 0], [0, 3], [2, 3], [3, 1]];
+var BARYCENTRIC_DERIVATIVES = [[-1, -1, -1], [1, 0, 0], [0, 1, 0], [0, 0, 1]];
+
+function tet10JacobianDeterminant(positions, ids, barycentric) {
+  var derivatives = [];
+  var node;
+  var axis;
+  for (node = 0; node < 4; node += 1) {
+    derivatives.push(BARYCENTRIC_DERIVATIVES[node].map(function (value) { return (4 * barycentric[node] - 1) * value; }));
+  }
+  TET10_EDGE_PAIRS.forEach(function (pair) {
+    derivatives.push([0, 1, 2].map(function (coordinate) {
+      return 4 * (BARYCENTRIC_DERIVATIVES[pair[0]][coordinate] * barycentric[pair[1]] +
+        barycentric[pair[0]] * BARYCENTRIC_DERIVATIVES[pair[1]][coordinate]);
+    }));
+  });
+  var jacobian = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+  for (node = 0; node < 10; node += 1) {
+    for (axis = 0; axis < 3; axis += 1) {
+      jacobian[0][axis] += positions[ids[node] * 3] * derivatives[node][axis];
+      jacobian[1][axis] += positions[ids[node] * 3 + 1] * derivatives[node][axis];
+      jacobian[2][axis] += positions[ids[node] * 3 + 2] * derivatives[node][axis];
+    }
+  }
+  return jacobian[0][0] * (jacobian[1][1] * jacobian[2][2] - jacobian[1][2] * jacobian[2][1]) -
+    jacobian[0][1] * (jacobian[1][0] * jacobian[2][2] - jacobian[1][2] * jacobian[2][0]) +
+    jacobian[0][2] * (jacobian[1][0] * jacobian[2][1] - jacobian[1][1] * jacobian[2][0]);
+}
+
+function meshStatistics(positions, connectivity, gammaQualities, diagonalM, descriptor) {
   var minEdge = Infinity;
   var maxEdge = 0;
+  var maximumEdgeRatio = 1;
+  var minimumJacobian = Infinity;
   var inverted = 0;
   var nearZero = 0;
   var index;
-  var nearZeroSixVolume = MESH_NEAR_ZERO_JACOBIAN_RELATIVE * diagonalM * diagonalM * diagonalM * 6;
   var edgePairs = [[0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3]];
-  for (index = 0; index < connectivity.length; index += 4) {
+  for (index = 0; index < connectivity.length; index += descriptor.volumeNodes) {
     var ids = [connectivity[index], connectivity[index + 1], connectivity[index + 2], connectivity[index + 3]];
     var ax = positions[ids[1] * 3] - positions[ids[0] * 3];
     var ay = positions[ids[1] * 3 + 1] - positions[ids[0] * 3 + 1];
@@ -556,8 +815,17 @@ function meshStatistics(positions, connectivity, gammaQualities, diagonalM) {
     var cz = positions[ids[3] * 3 + 2] - positions[ids[0] * 3 + 2];
     var sixVolume = ax * (by * cz - bz * cy) - ay * (bx * cz - bz * cx) + az * (bx * cy - by * cx);
     var edgeIndex;
-    if (sixVolume <= 0) { inverted += 1; }
-    if (Math.abs(sixVolume) <= nearZeroSixVolume) { nearZero += 1; }
+    var elementMinimumJacobian = sixVolume;
+    if (descriptor.elementType === 'tet10') {
+      var tet10Ids = Array.prototype.slice.call(connectivity, index, index + 10);
+      elementMinimumJacobian = Math.min.apply(null, TET10_QUADRATURE_BARYCENTRIC.map(function (point) {
+        return tet10JacobianDeterminant(positions, tet10Ids, point);
+      }));
+    }
+    minimumJacobian = Math.min(minimumJacobian, elementMinimumJacobian);
+    if (elementMinimumJacobian <= 0) { inverted += 1; }
+    var elementMinEdge = Infinity;
+    var elementMaxEdge = 0;
     for (edgeIndex = 0; edgeIndex < edgePairs.length; edgeIndex += 1) {
       var first = ids[edgePairs[edgeIndex][0]] * 3;
       var second = ids[edgePairs[edgeIndex][1]] * 3;
@@ -567,7 +835,12 @@ function meshStatistics(positions, connectivity, gammaQualities, diagonalM) {
       var length = Math.sqrt(dx * dx + dy * dy + dz * dz);
       minEdge = Math.min(minEdge, length);
       maxEdge = Math.max(maxEdge, length);
+      elementMinEdge = Math.min(elementMinEdge, length);
+      elementMaxEdge = Math.max(elementMaxEdge, length);
     }
+    // Match the native Tet4/Tet10 gate: local corner-edge scale, not model size.
+    if (Math.abs(elementMinimumJacobian) <= MESH_NEAR_ZERO_JACOBIAN_RELATIVE * elementMaxEdge * elementMaxEdge * elementMaxEdge) { nearZero += 1; }
+    maximumEdgeRatio = Math.max(maximumEdgeRatio, elementMaxEdge / elementMinEdge);
   }
   gammaQualities.sort(function (left, right) { return left - right; });
   return {
@@ -579,6 +852,7 @@ function meshStatistics(positions, connectivity, gammaQualities, diagonalM) {
       metric: 'gamma', minimum: gammaQualities[0], p05: quantile(gammaQualities, 0.05),
       median: quantile(gammaQualities, 0.5), poorElementCount: gammaQualities.filter(function (value) { return value < MESH_POOR_GAMMA_THRESHOLD; }).length,
       invertedElementCount: inverted, nearZeroJacobianCount: nearZero,
+      minimumJacobian: minimumJacobian, maximumEdgeRatio: maximumEdgeRatio,
       warning: gammaQualities[0] < MESH_POOR_GAMMA_THRESHOLD ? 'Some elements have low gamma quality.' : null
     }
   };
@@ -597,7 +871,7 @@ function rotatePositionsInPlace(positions, rotation) {
   }
 }
 
-function generateMesh(gmsh, message) {
+async function generateMesh(gmsh, message) {
   var temporaryPath = '/spjutsim-mesh-' + message.requestId.replace(/[^A-Za-z0-9_-]/g, '_') + '.' + message.sourceFormat;
   var restored;
   var nodes;
@@ -608,9 +882,12 @@ function generateMesh(gmsh, message) {
   var box;
   var diagonalM;
   var summary;
+  var descriptor = message.settings.elementType === 'tet10'
+    ? { elementType: 'tet10', volumeNodes: 10, gmshVolumeType: 11, solverFaceType: 'tri6', solverFaceNodes: 6, gmshFaceType: 9 }
+    : { elementType: 'tet4', volumeNodes: 4, gmshVolumeType: 4, solverFaceType: 'tri3', solverFaceNodes: 3, gmshFaceType: 2 };
   try {
     progress(message.requestId, 'mesh-import', 'Restoring CAD geometry…');
-    restored = restoreMeshGeometry(gmsh, message, temporaryPath);
+    restored = await restoreMeshGeometry(gmsh, message, temporaryPath);
     box = boundingBoxM(gmsh, restored.solidTag);
     diagonalM = Math.sqrt(Math.pow(box.maxM[0] - box.minM[0], 2) + Math.pow(box.maxM[1] - box.minM[1], 2) + Math.pow(box.maxM[2] - box.minM[2], 2));
     gmsh.option.setNumber('Mesh.ElementOrder', 1);
@@ -618,39 +895,75 @@ function generateMesh(gmsh, message) {
     gmsh.option.setNumber('Mesh.MeshSizeMax', message.settings.maxSizeM);
     gmsh.option.setNumber('Mesh.MeshSizeFromCurvature', 1);
     gmsh.option.setNumber('Mesh.MeshSizeExtendFromBoundary', 1);
-    gmsh.model.mesh.setOutwardOrientation(restored.solidTag);
-    progress(message.requestId, 'mesh-generate', 'Generating Tet4 volume mesh…');
+    if (restored.remeshing) {
+      // Curvature/point sizing on noisy discrete input can impose extreme local
+      // refinement. Use the requested size field and retain feature boundaries.
+      gmsh.option.setNumber('Mesh.MeshSizeFromCurvature', 0);
+      gmsh.option.setNumber('Mesh.MeshSizeFromPoints', 0);
+      gmsh.option.setNumber('Mesh.Algorithm', 6);
+    }
+    if (message.sourceFormat === 'stl' && !restored.analytic) { gmsh.option.setNumber('Mesh.SecondOrderLinear', 1); }
+    else { gmsh.model.mesh.setOutwardOrientation(restored.solidTag); }
+    progress(message.requestId, 'mesh-generate', restored.remeshing ? 'Remeshing STL surfaces and generating tetrahedra…' : 'Generating first-order tetrahedral volume mesh…');
     gmsh.model.mesh.generate(3);
+    if (descriptor.elementType === 'tet10') {
+      progress(message.requestId, 'mesh-upgrade', 'Converting the volume mesh to Tet10…');
+      gmsh.model.mesh.setOrder(2);
+      if (message.sourceFormat !== 'stl' || restored.analytic) {
+        progress(message.requestId, 'mesh-optimize', 'Optimizing the quadratic mesh…');
+        gmsh.model.mesh.optimize('HighOrder');
+      }
+    }
     progress(message.requestId, 'mesh-extract', 'Extracting solver-ready mesh data…');
     nodes = denseNodeMap(gmsh);
-    tetrahedra = extractElementConnectivity(gmsh.model.mesh.getElements(3, restored.solidTag), 4, 4, nodes.indexByNodeTag, 'MESH_EXTRACTION_FAILED');
-    boundary = extractBoundaryFaces(gmsh, restored.surfaceTags, message.faceIds, nodes.indexByNodeTag);
+    tetrahedra = extractElementConnectivity(gmsh.model.mesh.getElements(3, restored.solidTag), descriptor.gmshVolumeType,
+      descriptor.volumeNodes, nodes.indexByNodeTag, 'MESH_EXTRACTION_FAILED');
+    boundary = extractBoundaryFaces(gmsh, restored.surfaceTags, message.faceIds, nodes.indexByNodeTag, descriptor);
     rotatePositionsInPlace(nodes.positions, message.orientation.rotation);
     qualityResult = gmsh.model.mesh.getElementQualities(tetrahedra.elementTags, 'gamma');
     gammaQualities = Array.prototype.slice.call((qualityResult && qualityResult.elementsQuality) || qualityResult || []);
     if (gammaQualities.length !== tetrahedra.elementTags.length || gammaQualities.some(function (value) { return !Number.isFinite(value); })) {
       throw knownMeshError('MESH_QUALITY_FAILED', 'The generated mesh quality could not be evaluated.', 'Gmsh gamma quality output did not match tetrahedron count.');
     }
-    summary = meshStatistics(nodes.positions, tetrahedra.connectivity, gammaQualities, diagonalM);
+    summary = meshStatistics(nodes.positions, tetrahedra.connectivity, gammaQualities, diagonalM, descriptor);
+    if (restored.remeshing) {
+      var boundaryCheck = StlRemesh.boundaryDiagnostics(restored.referenceAreasM2, nodes.positions, boundary, descriptor.solverFaceNodes);
+      summary.quality.stlBoundaryAreas = boundaryCheck.areas;
+      if (boundaryCheck.warning) {
+        summary.quality.warning = (summary.quality.warning ? summary.quality.warning + ' ' : '') +
+          boundaryCheck.warning;
+      }
+    }
     if (summary.invertedElementCount > 0) {
-      throw knownMeshError('INVERTED_ELEMENTS', 'The generated mesh contains inverted elements.', 'Found ' + summary.invertedElementCount + ' non-positive Tet4 Jacobians.');
+      throw knownMeshError('INVERTED_ELEMENTS', 'The generated mesh contains inverted elements.', 'Found ' + summary.invertedElementCount + ' non-positive ' + descriptor.elementType + ' Jacobians.');
     }
     if (summary.nearZeroJacobianCount > 0) {
-      throw knownMeshError('DEGENERATE_ELEMENTS', 'The generated mesh contains degenerate elements.', 'Found ' + summary.nearZeroJacobianCount + ' near-zero Tet4 Jacobians.');
+      throw knownMeshError('DEGENERATE_ELEMENTS', 'The generated mesh contains degenerate elements.', 'Found ' + summary.nearZeroJacobianCount + ' near-zero ' + descriptor.elementType + ' Jacobians.');
     }
     return {
-      elementType: 'tet4', nodePositionsM: nodes.positions, elementConnectivity: new Uint32Array(tetrahedra.connectivity),
-      boundaryFaces: { triangleConnectivity: boundary.triangleConnectivity, faceRanges: boundary.faceRanges }, geometryFaceMap: boundary.geometryFaceMap,
-      statistics: { nodeCount: nodes.positions.length / 3, elementCount: tetrahedra.connectivity.length / 4, boundaryTriangleCount: boundary.triangleConnectivity.length / 3, minCharacteristicSizeM: summary.minCharacteristicSizeM, maxCharacteristicSizeM: summary.maxCharacteristicSizeM, boundingBoxDiagonalM: diagonalM },
+      elementType: descriptor.elementType, nodePositionsM: nodes.positions, elementConnectivity: new Uint32Array(tetrahedra.connectivity),
+      boundaryFaces: { solverElementType: boundary.solverElementType, solverConnectivity: boundary.solverConnectivity,
+        solverFaceRanges: boundary.solverFaceRanges, triangleConnectivity: boundary.triangleConnectivity, faceRanges: boundary.faceRanges },
+      geometryFaceMap: boundary.geometryFaceMap,
+      statistics: { nodeCount: nodes.positions.length / 3, elementCount: tetrahedra.connectivity.length / descriptor.volumeNodes,
+        boundaryTriangleCount: boundary.triangleConnectivity.length / 3,
+        boundaryElementCount: boundary.solverConnectivity.length / descriptor.solverFaceNodes,
+        minCharacteristicSizeM: summary.minCharacteristicSizeM, maxCharacteristicSizeM: summary.maxCharacteristicSizeM, boundingBoxDiagonalM: diagonalM },
       quality: summary.quality,
-      memoryInputs: { nodeCount: nodes.positions.length / 3, elementCount: tetrahedra.connectivity.length / 4, degreeOfFreedomCount: nodes.positions.length, connectivityEntries: tetrahedra.connectivity.length, boundaryConnectivityEntries: boundary.triangleConnectivity.length }
+      memoryInputs: { nodeCount: nodes.positions.length / 3, elementCount: tetrahedra.connectivity.length / descriptor.volumeNodes,
+        degreeOfFreedomCount: nodes.positions.length, connectivityEntries: tetrahedra.connectivity.length,
+        boundaryConnectivityEntries: boundary.solverConnectivity.length }
     };
   } catch (error) {
+    if (restored && restored.remeshing && error && error.spjutsimError && error.spjutsimError.code === 'MESH_EXTRACTION_FAILED') {
+      throw knownMeshError('STL_REMESH_FAILED', 'The experimental surface mesh could not form a usable volume. Try a different remesh feature angle or a finer mesh, or keep the original STL triangles.', error.spjutsimError.developerMessage);
+    }
     if (error && error.spjutsimError) { throw error; }
+    if (error && error.code && error.code.indexOf('STL_') === 0) { throw knownMeshError(error.code, error.message); }
     throw knownMeshError('MESH_GENERATION_FAILED', 'The volume mesh could not be generated.', error && error.message);
   } finally {
     try { gmsh.FS.unlink(temporaryPath); } catch (ignore) {}
-    try { gmsh.clear(); } catch (ignoreClear) {}
+    try { gmsh.clear(); if (restored && restored.remeshing) { gmsh.option.restoreDefaults(); } } catch (ignoreClear) {}
   }
 }
 
@@ -728,21 +1041,28 @@ async function handleRequest(message) {
   }
 
   try {
+    if (message.type === 'stl-repair') {
+      progress(message.requestId, 'stl-repair', 'Trying local surface repairs and checking the resulting solid…');
+      result = await StlRepair.repair(message.sourceBytes, message.importOptions, message.repairOptions);
+      self.postMessage({ protocol: WORKER_PROTOCOL_VERSION, requestId: message.requestId,
+        type: 'stl-repair-result', result: result }, [result.sourceBytes]);
+      return;
+    }
     if (message.type === 'import') {
-      result = importGeometry(gmsh, message);
+      result = await importGeometry(gmsh, message);
+      var previews = result.originalPreview ? [result.preview, result.originalPreview] : [result.preview];
+      var transfers = [];
+      previews.forEach(function(preview){transfers.push(preview.positionsM.buffer, preview.normals.buffer, preview.indices.buffer, preview.featureEdges.positionsM.buffer, preview.featureEdges.indices.buffer);});
       self.postMessage({
         protocol: WORKER_PROTOCOL_VERSION,
         requestId: message.requestId,
         type: 'import-result',
         result: result
-      }, [
-        result.preview.positionsM.buffer, result.preview.normals.buffer, result.preview.indices.buffer,
-        result.preview.featureEdges.positionsM.buffer, result.preview.featureEdges.indices.buffer
-      ]);
+      }, Array.from(new Set(transfers)));
       return;
     }
     if (message.type === 'mesh') {
-      result = generateMesh(gmsh, message);
+      result = await generateMesh(gmsh, message);
       self.postMessage({
         protocol: WORKER_PROTOCOL_VERSION,
         requestId: message.requestId,
@@ -751,6 +1071,7 @@ async function handleRequest(message) {
       }, [
         result.nodePositionsM.buffer,
         result.elementConnectivity.buffer,
+        result.boundaryFaces.solverConnectivity.buffer,
         result.boundaryFaces.triangleConnectivity.buffer
       ]);
       return;
@@ -763,7 +1084,7 @@ async function handleRequest(message) {
       result: result
     });
   } catch (error) {
-    var normalizedError = (error && error.spjutsimError) || error;
+    var normalizedError = (error && error.spjutsimError) || (error && error.code && error.code.indexOf('STL_') === 0 ? workerError(error.code, 'import', error.message) : error);
     errorResponse(message.requestId, workerError(
       (normalizedError && normalizedError.code) || (message.type === 'import' ? 'GEOMETRY_IMPORT_FAILED' : (message.type === 'mesh' ? 'MESH_GENERATION_FAILED' : 'MESHER_OPERATION_FAILED')),
       (normalizedError && normalizedError.stage) || (message.type === 'import' ? 'import' : (message.type === 'mesh' ? 'mesh' : 'geometry')),

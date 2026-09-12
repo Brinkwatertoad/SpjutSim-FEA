@@ -10,7 +10,7 @@
 
 namespace spjutsim::fem {
 
-inline constexpr std::uint32_t kApiVersion = 1;
+inline constexpr std::uint32_t kApiVersion = 2;
 inline constexpr double kDefaultJacobianRelativeTolerance = 1.0e-12;
 inline constexpr double kDefaultPcgRelativeTolerance = 1.0e-8;
 inline constexpr double kDefaultEquilibriumTolerance = 1.0e-6;
@@ -47,10 +47,17 @@ struct Diagnostic {
   bool recoverable = true;
 };
 
+enum class ElementType : std::uint32_t { tet4 = 4, tet10 = 10 };
+
 struct Mesh {
   std::vector<double> node_positions_m;
   std::vector<std::uint32_t> tet4_connectivity;
+  ElementType element_type = ElementType::tet4;
 };
+
+inline std::uint32_t nodes_per_element(const Mesh &mesh) noexcept {
+  return static_cast<std::uint32_t>(mesh.element_type);
+}
 
 struct Material {
   double youngs_modulus_pa = 0.0;
@@ -68,6 +75,7 @@ enum class SurfaceLoadType { pressure, total_force };
 struct SurfaceLoad {
   SurfaceLoadType type = SurfaceLoadType::pressure;
   std::vector<std::uint32_t> triangle_connectivity;
+  std::uint32_t nodes_per_face = 3;
   double pressure_pa = 0.0;
   std::array<double, 3> total_force_n{0.0, 0.0, 0.0};
 };
@@ -79,12 +87,17 @@ struct Loads {
   std::array<double, 3> gravity_m_s2{0.0, 0.0, -9.80665};
 };
 
+enum class SolvePhase { assembly, solve, postprocess };
+
 struct SolveSettings {
   double relative_tolerance = kDefaultPcgRelativeTolerance;
   double equilibrium_tolerance = kDefaultEquilibriumTolerance;
   std::uint32_t max_iterations = 0;
   std::uint32_t cancellation_check_interval = 8;
+  double max_duration_ms = 600000;
   std::function<bool()> is_cancelled;
+  std::function<void(SolvePhase)> on_phase;
+  std::function<void(std::uint32_t, double, double)> on_iteration;
 };
 
 enum class TerminationReason {
@@ -93,7 +106,8 @@ enum class TerminationReason {
   non_finite,
   non_spd,
   stagnated,
-  iteration_limit
+  iteration_limit,
+  time_limit
 };
 const char *termination_reason_name(TerminationReason reason) noexcept;
 
@@ -108,6 +122,7 @@ struct SolverDiagnostics {
 struct Extremum {
   double value = 0.0;
   std::uint32_t element_index = 0;
+  std::uint32_t sample_index = 0;
 };
 
 struct Results {
@@ -118,6 +133,12 @@ struct Results {
   std::vector<double> element_von_mises_pa;
   std::vector<double> element_max_principal_pa;
   std::vector<double> element_min_principal_pa;
+  std::vector<double> recovery_strain;
+  std::vector<double> recovery_stress_pa;
+  std::vector<double> recovery_von_mises_pa;
+  std::vector<double> recovery_max_principal_pa;
+  std::vector<double> recovery_min_principal_pa;
+  std::vector<std::uint32_t> recovery_sample_element;
   std::vector<double> reaction_n;
   std::array<double, 3> total_reaction_n{0.0, 0.0, 0.0};
   std::array<double, 3> total_applied_force_n{0.0, 0.0, 0.0};

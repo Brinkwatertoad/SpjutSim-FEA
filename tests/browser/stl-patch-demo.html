@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>STL units and patch experiment</title></head>
+<body>
+  <h1>STL units and patch experiment</h1>
+  <p>Plan 28 feasibility demo. Not production import or a complete solid validator.</p>
+  <p>Choose a fixture, confirm its units, then select colored patches. Drag to rotate.</p>
+  <label>Fixture <select id="fixture"><option>cube-ascii.stl</option><option>cube-binary.stl</option><option selected>cylinder-32.stl</option><option>thin-plate.stl</option><option>open.stl</option><option>reversed.stl</option><option>nonmanifold.stl</option></select></label>
+  <label>Length units <select id="units"><option value="">Choose units…</option><option>mm</option><option>cm</option><option>m</option><option>in</option><option>ft</option></select></label>
+  <label>Grouping angle (degrees) <input id="angle" type="number" min="1" max="179" value="40"></label>
+  <button id="preview">Review patches</button>
+  <button id="mesh" disabled>Probe Tet10</button><button id="cancel" disabled>Cancel probe</button>
+  <p id="test-status" role="status">Choose explicit units to preview dimensions.</p>
+  <p id="dimensions"></p>
+  <p id="consequences">Changing units or grouping creates a new patch identity and requires assignment remapping before installation.</p>
+  <canvas id="viewport" width="900" height="520" aria-label="Experimental STL patch preview"></canvas>
+  <div id="patches" aria-label="Selectable patches"></div>
+  <pre id="report"></pre>
+  <style>body{font:16px system-ui;max-width:1100px;margin:24px auto;padding:0 16px}label,button{display:inline-block;margin:5px}canvas{width:100%;max-width:900px;height:520px;background:#202936;touch-action:none}input{width:75px}pre{white-space:pre-wrap;overflow-wrap:anywhere}#patches button[aria-pressed=true]{outline:3px solid #1764d7}</style>
+  <script src="../../web/vendor/three/three.min.js"></script>
+  <script src="../../web/generated/local-runtime/gmsh-runtime-source-part-001.js"></script>
+  <script src="../../web/generated/local-runtime/gmsh-runtime-source-part-002.js"></script>
+  <script src="../../web/generated/local-runtime/gmsh-runtime-source-part-003.js"></script>
+  <script src="../../web/generated/local-runtime/gmsh-runtime-source-part-004.js"></script>
+  <script src="../../web/generated/local-runtime/gmsh-runtime-source-part-005.js"></script>
+  <script src="../../web/generated/local-runtime/gmsh-runtime-source-part-006.js"></script>
+  <script src="../../web/generated/local-runtime/gmsh-runtime-source-part-007.js"></script>
+  <script src="../../web/generated/local-runtime/gmsh-runtime-source-part-008.js"></script>
+  <script src="../../web/generated/local-runtime/gmsh-runtime-source.js"></script>
+  <script src="../../web/generated/local-runtime/mesher-worker-source.js"></script>
+  <script src="stl-experiment.js"></script>
+  <script src="stl-mesher-experiment.js"></script>
+  <script src="stl-patch-demo.js"></script>
+</body>
+</html>

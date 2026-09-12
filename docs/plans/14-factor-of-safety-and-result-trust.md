@@ -31,41 +31,41 @@ status.
 
 ## Implementation
 
-- [ ] **Add a pure FoS contract.** Create
+- [x] **Add a pure FoS contract.** Create
   `web/js/analysis/factor-of-safety.js` with an explicit strength-selection
   result: smaller of tensile/compressive yield when both exist, the supplied
   yield when only one exists, and unavailable when neither exists. Compute raw
   FoS at recovery samples and a separately named surface-smoothed FoS field;
   represent zero-stress FoS as unbounded in engineering data while providing a
   finite, clearly labeled contour ceiling for color mapping only.
-- [ ] **Extend and validate result snapshots.** Update
+- [x] **Extend and validate result snapshots.** Update
   `web/js/analysis/result-model.js` and `web/js/analysis/app-controller.js` so
   the validated solver result is decorated with the material strength
   value/source, criterion identifier (`von-mises-yield`), raw minimum FoS and
   location/sample owner, displayed minimum, applied-load summary, and warnings
   before it becomes controller state. Reject missing/inconsistent typed fields
   and never derive FoS from ultimate strength.
-- [ ] **Add the FoS result view.** Extend `web/index.html`,
+- [x] **Add the FoS result view.** Extend `web/index.html`,
   `web/js/render/viewport-controller.js`, and `web/js/ui/ui-controller.js` with
   an available-only-when-defined FoS field, unitless legend, minimum markers,
   strength/criterion explanation, and separate raw/displayed values. Preserve
   unclipped extrema when the contour ceiling or percentile clipping is active.
-- [ ] **Finish result summaries and probes.** Report element type,
+- [x] **Finish result summaries and probes.** Report element type,
   nodes/elements/DOFs, residual/iterations/time, max displacement/location, raw
   and displayed stress extrema, principal extrema, minimum FoS, strain energy,
   applied loads, total reactions, equilibrium residual, and warnings. Probes
   identify coordinates, displacement vector/magnitude, active field, and
   diagnostic `FaceId`, and label smoothed/interpolated values as approximate.
-- [ ] **Centralize single-solve warnings.** Add pure warning generation for mesh
+- [x] **Centralize single-solve warnings.** Add pure warning generation for mesh
   quality, unusual material assumptions, solver diagnostics, and
   `maxDisplacement > 0.05 * boundingBoxDiagonal`. Display the small-strain,
   linear-elastic, static, single-isotropic-solid assumptions in the completed
   summary and in any serialized result-summary metadata.
-- [ ] **Prepare convergence integration.** Define a stable summary/warning slot
+- [x] **Prepare convergence integration.** Define a stable summary/warning slot
   for `convergenceStatus: 'not-run' | ...` and singularity annotations without
   inferring convergence from one mesh. Task 15 fills these fields; Task 14 must
   display `Not studied` rather than implying trust.
-- [ ] **Document and regenerate.** Load the new analysis script in the direct-
+- [x] **Document and regenerate.** Load the new analysis script in the direct-
   local-safe order, update README result capabilities/limitations, regenerate
   worker wrappers when worker code changes, and keep the result contract
   versioned with its validator.

@@ -9,7 +9,7 @@
 
   function testResponseValidation() {
     var wrongType = api.validateWorkerResponse({
-      protocol: 1,
+      protocol: 3,
       requestId: 'diagnostics-1',
       type: 'box-smoke-result',
       result: {}
@@ -17,7 +17,7 @@
     assert(!wrongType.valid && wrongType.reason === 'unexpected-response-type', 'wrong response type was accepted');
 
     var wrongProtocol = api.validateWorkerResponse({
-      protocol: 2,
+      protocol: 4,
       requestId: 'diagnostics-1',
       type: 'diagnostics-result',
       result: {}
@@ -25,7 +25,7 @@
     assert(!wrongProtocol.valid && wrongProtocol.reason === 'invalid-envelope', 'version-mismatched response was accepted');
 
     var malformedError = api.validateWorkerResponse({
-      protocol: 1,
+      protocol: 3,
       requestId: 'diagnostics-1',
       type: 'error',
       error: { code: 'BROKEN' }
@@ -41,7 +41,7 @@
       worker = this;
       this.terminated = false;
       root.setTimeout(function () {
-        worker.onmessage({ data: { protocol: 1, type: 'ready', worker: 'solver' } });
+        worker.onmessage({ data: { protocol: 3, type: 'ready', worker: 'solver' } });
       }, 0);
     }
     SilentWorker.prototype.postMessage = function () {};
@@ -79,10 +79,13 @@
       elementType: 'tet4',
       nodePositionsM: new Float64Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]),
       elementConnectivity: new Uint32Array([0, 1, 2, 3]),
-      boundaryFaces: { triangleConnectivity: new Uint32Array([0, 2, 1]), faceRanges: [{ faceId: 'opaque-face', start: 0, count: 3 }] },
+      boundaryFaces: { solverElementType: 'tri3', solverConnectivity: new Uint32Array([0, 2, 1]),
+        solverFaceRanges: [{ faceId: 'opaque-face', start: 0, count: 3 }],
+        triangleConnectivity: new Uint32Array([0, 2, 1]), faceRanges: [{ faceId: 'opaque-face', start: 0, count: 3 }] },
       geometryFaceMap: { 'opaque-face': { faceId: 'opaque-face', start: 0, count: 3 } },
-      statistics: { nodeCount: 4, elementCount: 1, boundaryTriangleCount: 1, minCharacteristicSizeM: 1, maxCharacteristicSizeM: Math.sqrt(2) },
-      quality: { metric: 'gamma', minimum: 0.7, p05: 0.7, median: 0.7, poorElementCount: 0, invertedElementCount: 0, nearZeroJacobianCount: 0, warning: null },
+      statistics: { nodeCount: 4, elementCount: 1, boundaryTriangleCount: 1, boundaryElementCount: 1, minCharacteristicSizeM: 1, maxCharacteristicSizeM: Math.sqrt(2) },
+      quality: { metric: 'gamma', minimum: 0.7, p05: 0.7, median: 0.7, poorElementCount: 0,
+        minimumJacobian: 1, maximumEdgeRatio: Math.sqrt(2), invertedElementCount: 0, nearZeroJacobianCount: 0, warning: null },
       memoryInputs: { nodeCount: 4, elementCount: 1, degreeOfFreedomCount: 12, connectivityEntries: 4, boundaryConnectivityEntries: 3 }
     };
   }
@@ -90,7 +93,7 @@
   function validResultModel() {
     var scalar = new Float32Array([10, 20, 30, 40]);
     return {
-      schemaVersion: 1, analysisRevision: 0, elementType: 'tet4',
+      schemaVersion: 2, rangeMetadataVersion: 1, analysisRevision: 0, elementType: 'tet4',
       originalSurface: {
         nodePositionsM: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]),
         triangleConnectivity: new Uint32Array([0, 2, 1]), faceIds: ['opaque-face'],
@@ -101,14 +104,34 @@
       reactionsN: new Float64Array(12),
       rawElementFields: { strain: new Float64Array(6), stressPa: new Float64Array(6),
         vonMisesPa: new Float64Array([40]), maxPrincipalPa: new Float64Array([30]), minPrincipalPa: new Float64Array([-10]) },
+      recoverySampleFields: { strain: new Float64Array(6), stressPa: new Float64Array(6),
+        vonMisesPa: new Float64Array([40]), maxPrincipalPa: new Float64Array([30]), minPrincipalPa: new Float64Array([-10]),
+        elementIndices: new Uint32Array([0]) },
       surfaceFields: { vonMisesPa: scalar, maxPrincipalPa: new Float32Array(scalar), minPrincipalPa: new Float32Array(scalar),
         displacementMagnitudeM: new Float32Array([0, 0.01, 0.01, 0.01]), uxM: new Float32Array([0, 0.01, 0, 0]),
         uyM: new Float32Array([0, 0, 0.01, 0]), uzM: new Float32Array([0, 0, 0, 0.01]) },
-      ranges: { vonMises: { minimum: 10, maximum: 40 }, maxPrincipal: { minimum: 10, maximum: 40 },
-        minPrincipal: { minimum: 10, maximum: 40 }, displacementMagnitude: { minimum: 0, maximum: 0.01 },
-        ux: { minimum: 0, maximum: 0.01 }, uy: { minimum: 0, maximum: 0.01 }, uz: { minimum: 0, maximum: 0.01 } },
-      extrema: { maxDisplacement: { valueM: 0.01 }, rawVonMisesMax: { valuePa: 40 },
-        displayedVonMisesMax: { valuePa: 40 }, rawMaxPrincipal: { valuePa: 30 }, rawMinPrincipal: { valuePa: -10 } },
+      ranges: {
+        vonMises: { minimum: 10, maximum: 30, locationOwner: 'surface-node', minimumNodeIndex: 0, maximumNodeIndex: 2,
+          minimumLocationM: [0, 0, 0], maximumLocationM: [0, 1, 0] },
+        maxPrincipal: { minimum: 10, maximum: 30, locationOwner: 'surface-node', minimumNodeIndex: 0, maximumNodeIndex: 2,
+          minimumLocationM: [0, 0, 0], maximumLocationM: [0, 1, 0] },
+        minPrincipal: { minimum: 10, maximum: 30, locationOwner: 'surface-node', minimumNodeIndex: 0, maximumNodeIndex: 2,
+          minimumLocationM: [0, 0, 0], maximumLocationM: [0, 1, 0] },
+        displacementMagnitude: { minimum: 0, maximum: Math.fround(0.01), locationOwner: 'surface-node', minimumNodeIndex: 0, maximumNodeIndex: 2,
+          minimumLocationM: [0, 0, 0], maximumLocationM: [0, 1, 0] },
+        ux: { minimum: 0, maximum: Math.fround(0.01), locationOwner: 'surface-node', minimumNodeIndex: 0, maximumNodeIndex: 1,
+          minimumLocationM: [0, 0, 0], maximumLocationM: [1, 0, 0] },
+        uy: { minimum: 0, maximum: Math.fround(0.01), locationOwner: 'surface-node', minimumNodeIndex: 0, maximumNodeIndex: 2,
+          minimumLocationM: [0, 0, 0], maximumLocationM: [0, 1, 0] },
+        uz: { minimum: 0, maximum: 0, locationOwner: 'surface-node', minimumNodeIndex: 0, maximumNodeIndex: 0,
+          minimumLocationM: [0, 0, 0], maximumLocationM: [0, 0, 0] }
+      },
+      extrema: { maxDisplacement: { valueM: 0.01, nodeIndex: 1, locationOwner: 'volume-node', locationM: [1, 0, 0] },
+        rawVonMisesMax: { valuePa: 40, sampleIndex: 0, elementIndex: 0, locationOwner: 'solver-sample', isInterior: true,
+          faceId: 'opaque-face', nearbyBoundaryFaceId: 'opaque-face', locationM: [0.25, 0.25, 0.25] },
+        displayedVonMisesMax: { valuePa: 30, nodeIndex: 2, locationOwner: 'surface-node', locationM: [0, 1, 0] },
+        rawMaxPrincipal: { valuePa: 30, sampleIndex: 0, elementIndex: 0, locationOwner: 'solver-sample', isInterior: true, locationM: [0.25, 0.25, 0.25] },
+        rawMinPrincipal: { valuePa: -10, sampleIndex: 0, elementIndex: 0, locationOwner: 'solver-sample', isInterior: true, locationM: [0.25, 0.25, 0.25] } },
       equilibrium: { totalReactionN: [-1, 0, 0], totalAppliedForceN: [1, 0, 0], relativeResidual: 0 },
       solverStatistics: { iterations: 1, finalRelativeResidual: 0, solveDurationMs: 1, wasmMemoryBytes: 16777216 },
       meshStatistics: { nodeCount: 4, elementCount: 1 }, preflight: {}, warnings: []
@@ -283,6 +306,7 @@
       'Mesh view retained Model feature edges');
     var viewState = viewport.captureViewState();
     var result = validResultModel();
+    assert(api.validateResultModel(result, 0).valid, 'rendering fixture violated the versioned result contract');
     viewport.setResultModel(result);
     viewport.setPresentation({ mode: 'stress', displayStyle: 'lines', field: 'vonMises', meshOverlay: false,
       deformationMode: 'undeformed', deformationScale: 0, userDeformationScale: 1 });
@@ -377,19 +401,24 @@
         posted = message;
         root.setTimeout(function () {
           worker.onmessage({ data: {
-            protocol: 1, requestId: message.requestId, type: 'import-result', result: validGeometry()
+            protocol: 3, requestId: message.requestId, type: 'import-result', result: validGeometry()
           } });
         }, 0);
       },
       terminate: function () {}
     };
     api.startLocalWorker = function () { return Promise.resolve(worker); };
-    return new api.MesherClient().importGeometry({
+    var client = new api.MesherClient();
+    return client.importGeometry({
       geometryId: 'geometry-test', sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: original
     }).then(function () {
       assert(posted.sourceBytes !== original, 'canonical CAD bytes were transferred directly');
       assert(posted.sourceFormat === 'step', 'source format was not sent to the mesher');
       assert(original.byteLength === 3, 'canonical CAD bytes were detached');
+      worker.onmessage = worker.onerror = worker.onmessageerror = function () {};
+      client.dispose();
+      assert(client.worker === null && worker.onmessage === null && worker.onerror === null && worker.onmessageerror === null,
+        'Mesher disposal retained worker event handlers');
     }).finally(function () { api.startLocalWorker = originalStartWorker; });
   }
 
@@ -402,7 +431,7 @@
       postMessage: function (message) {
         posted = message;
         root.setTimeout(function () {
-          worker.onmessage({ data: { protocol: 1, requestId: message.requestId, type: 'mesh-result', result: validVolumeMesh() } });
+          worker.onmessage({ data: { protocol: 3, requestId: message.requestId, type: 'mesh-result', result: validVolumeMesh() } });
         }, 0);
       },
       terminate: function () {}
@@ -457,6 +486,22 @@
     assert(menuGroup.dataset.open === 'false' && event.defaultPrevented, 'Escape did not dismiss and consume the open menu');
   }
 
+  function testConvergenceControllerLifecycle() {
+    var controller = new api.AppController({ document: api.createAnalysisDocument() });
+    controller.replaceGeometry(validGeometry(), { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([1]).buffer });
+    controller.document.material = { youngsModulusPa: 1e9, poissonsRatio: .25 };
+    var revision = controller.beginConvergenceStudy();
+    assert(controller.document.convergenceStudy.status === 'running' &&
+      controller.document.convergenceStudy.settings.refinementFactor === .7, 'convergence study did not start deterministically');
+    controller.completeConvergenceLevel(revision, { level: 1 }, { warnings: [], convergenceStatus: 'not-run' });
+    controller.completeConvergenceStudy(revision, { status: 'unconverged', stopReason: 'level-limit', warning: null });
+    assert(controller.document.convergenceStudy.status === 'completed' && controller.document.results.convergenceStatus === 'unconverged',
+      'convergence completion did not install its status');
+    controller.replaceMaterial({ youngsModulusPa: 2e9, poissonsRatio: .25 });
+    assert(controller.document.convergenceStudy === null && controller.document.results === null,
+      'engineering edit did not invalidate convergence state');
+  }
+
   root.SpjutsimWorkerRuntimeTests = Promise.resolve().then(function () {
     testResponseValidation();
     testGeometryContractAndInvalidation();
@@ -467,6 +512,7 @@
     testViewportCameraNavigation();
     testDeformationAnimationControls();
     testEscapeClearsFaceSelection();
+    testConvergenceControllerLifecycle();
     return testSolverTimeoutTerminatesWorker().then(testMesherClientUsesDedicatedTransferCopy).then(testMeshContractAndDedicatedTransferCopy);
   }).then(function () {
     status.textContent = 'Passed';
