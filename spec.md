@@ -2079,7 +2079,11 @@ They preserve the numerical, worker, dependency, and direct-local requirements.
 
 - **Workspace (21):** Canvas/grid children shrink to available width and height.
   Side panes scroll independently, resize/collapse with accessible controls, and
-  keep useful model space. Empty output is initially collapsed. Gizmo, legend,
+  keep useful model space. Native stable gutters keep content width unchanged as
+  overflow starts or stops. Setup and Results share a 17px right inset, subtracting
+  the measured native gutter from padding with a 2px minimum margin for wider
+  scrollbars; overlay scrollbars receive the same total inset. Empty output is
+  initially collapsed. Gizmo, legend,
   probe, and controls have nonoverlapping bounded locations across desktop resize,
   browser zoom, and high-DPI changes; narrow-window robustness is not mobile support.
 - **Result clarity (22):** Headline peak von Mises and yield FoS use unaveraged

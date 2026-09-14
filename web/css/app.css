@@ -69,7 +69,14 @@ button { font: inherit; }
 .fea-actionbar .fea-primary { background: var(--accent, #4387f5); color: white; border: 1px solid transparent; border-radius: 5px; }
 #app-status { min-width: 0; text-align: right; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; margin-left: 8px; color: var(--secondary-text, #aeb4bf); font-size: 12px; }
 .fea-workspace { min-height: 0; display: grid; grid-template-columns: 280px 6px minmax(0, 1fr) 0 0; }
-.fea-tools, .fea-results { min-width: 0; overflow: auto; padding: 14px; background: var(--surface, #202329); }
+.fea-tools, .fea-results {
+  min-width: 0;
+  overflow: auto;
+  padding: 14px;
+  padding-right: max(var(--ui-scrollbar-content-margin), calc(var(--ui-scrollbar-content-inset) - var(--ui-scrollbar-width)));
+  scrollbar-gutter: stable;
+  background: var(--surface, #202329);
+}
 .fea-tools { border-right: 1px solid var(--border, #3a3e46); }
 .fea-results { border-left: 1px solid var(--border, #3a3e46); }
 h1 { margin: 0 0 10px; font-size: 15px; }

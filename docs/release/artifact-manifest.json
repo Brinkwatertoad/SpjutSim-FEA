@@ -245,7 +245,7 @@
         },
         {
           "path": "web/ui/shell-behaviors.js",
-          "sha256": "faa9a4e2b1faa557ae9286273108e2ed8091d677d2cc2e8ebb3e4b5b8b99a8b1"
+          "sha256": "b25b9fa43ce0719a3043220bf707cad9cc94244da194cca7068e7fba89a898d5"
         },
         {
           "path": "web/ui/tooltips.js",
@@ -253,12 +253,12 @@
         },
         {
           "path": "web/ui/ui-tokens.css",
-          "sha256": "d1c40c702d5dd6536584d60a29fb8bae94970ac20b2dff897c85de3509818c27"
+          "sha256": "3a64642412d333807ad2368826613ce3e9dde2e5d6b7fc454b013698866f4065"
         }
       ],
       "build_recipe": {
         "path": "UI_FOUNDATION.md",
-        "sha256": "8d396759db674fdc4ea9720be0ea11ccf384eb1df1e469dc346ba3464eecfc89"
+        "sha256": "3dda10e68e389799a4c759d350f1e9d0d3bc55cd47987f82c0317e2c969de27c"
       },
       "modifications": "Copied as first-party source on 2026-08-25; FEA-owned adaptations and owner-approved GPL grant apply to these copies only. Current content is pinned per artifact.",
       "notices": [
@@ -908,7 +908,7 @@
     },
     {
       "path": "web/ui/shell-behaviors.js",
-      "sha256": "faa9a4e2b1faa557ae9286273108e2ed8091d677d2cc2e8ebb3e4b5b8b99a8b1",
+      "sha256": "b25b9fa43ce0719a3043220bf707cad9cc94244da194cca7068e7fba89a898d5",
       "components": [
         "ui-foundation"
       ]
@@ -922,7 +922,7 @@
     },
     {
       "path": "web/ui/ui-tokens.css",
-      "sha256": "d1c40c702d5dd6536584d60a29fb8bae94970ac20b2dff897c85de3509818c27",
+      "sha256": "3a64642412d333807ad2368826613ce3e9dde2e5d6b7fc454b013698866f4065",
       "components": [
         "ui-foundation"
       ]

@@ -40,6 +40,9 @@
   --ui-space-4: 10px;
   --ui-space-5: 12px;
   --ui-space-6: 16px;
+  --ui-scrollbar-width: 0px;
+  --ui-scrollbar-content-inset: 17px;
+  --ui-scrollbar-content-margin: 2px;
   --ui-color-role-column-gap: 28px;
   --ui-action-control-height: 30px;
   --ui-action-segment-width: 31px;

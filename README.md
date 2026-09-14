@@ -62,8 +62,9 @@ pixel ratio.
 
 Open `tests/browser/workspace-layout-tests.html` directly in Chromium with local
 file access enabled (or from the optional HTTP server) to exercise the real
-application's resize sequence, pane controls, keyboard focus, and preference
-fallbacks. Repeat at 2× DPI. `tests/browser/result-range-tests.html`,
+application's resize sequence, pane controls, keyboard focus, preference
+fallbacks, and stable content widths across scrollbar modes and overflow changes.
+Repeat at 2× DPI. `tests/browser/result-range-tests.html`,
 `tests/browser/result-formatting-tests.html`, and
 `tests/browser/result-presentation-tests.html` cover boundary-only contour
 ranges, scientific number formatting, and a quiet von Mises legend/color scale

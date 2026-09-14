@@ -112,6 +112,15 @@
     Object.keys(css).forEach(function (name) { style.setProperty(name, css[name]); });
     this.rootElement.dataset.colorScheme = this.activeSchemeId;
     style.colorScheme = portable.relativeLuminance(palette.appBackground) < 0.35 ? 'dark' : 'light';
+    // Measure the final palette's scrollbar geometry for the application root.
+    // Scoped previews must not change the host document's scrollbar metrics.
+    var doc = this.rootElement.ownerDocument;
+    if (this.rootElement === doc.documentElement) {
+      if (!root.PortableUIShellBehaviors || typeof root.PortableUIShellBehaviors.applyScrollbarMetrics !== 'function') {
+        throw new Error('The UI Kit scrollbar measurement helper must load before applying the FEA document palette.');
+      }
+      root.PortableUIShellBehaviors.applyScrollbarMetrics(doc);
+    }
     return palette;
   };
 

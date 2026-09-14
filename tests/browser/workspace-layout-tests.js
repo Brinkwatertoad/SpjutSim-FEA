@@ -4,6 +4,61 @@
   var status = document.getElementById('test-status');
   function assert(value, message) { if (!value) { throw new Error(message); } }
   function settle() { return new Promise(function (resolve) { setTimeout(resolve, 100); }); }
+  function checkPaneGutters(win, doc) {
+    var panes = ['setup-pane', 'results-pane'].map(function (id) { return doc.getElementById(id); });
+    var rootStyle = win.getComputedStyle(doc.documentElement);
+    var measured = parseFloat(rootStyle.getPropertyValue('--ui-scrollbar-width'));
+    var paneStyle = win.getComputedStyle(panes[0]);
+    var lane = panes[0].offsetWidth - panes[0].clientWidth - parseFloat(paneStyle.borderLeftWidth) - parseFloat(paneStyle.borderRightWidth);
+    assert(measured === lane, 'Startup scrollbar measurement does not match the pane gutter');
+    var originalScheme = doc.documentElement.dataset.colorScheme;
+    var schemes = new win.SpjutsimFEA.FEAColorSchemes(null, doc.documentElement);
+    var modeStyle = doc.createElement('style'); doc.head.appendChild(modeStyle);
+    var baselineWidths = [];
+    try {
+      ['', '* { scrollbar-width: none !important; }', '* { scrollbar-width: thin !important; }'].forEach(function (css, mode) {
+        modeStyle.textContent = css;
+        schemes.activeSchemeId = mode === 1 ? 'light' : 'dark';
+        schemes.applyActive();
+        panes.forEach(function (pane, index) {
+          var originalStyle = pane.getAttribute('style');
+          var spacer = doc.createElement('div'); spacer.style.cssText = 'height: 600px; flex-shrink: 0;';
+          pane.appendChild(spacer);
+          try {
+            var child = pane.firstElementChild;
+            var style = win.getComputedStyle(pane);
+            var reserved = pane.offsetWidth - pane.clientWidth - parseFloat(style.borderLeftWidth) - parseFloat(style.borderRightWidth);
+            var padding = parseFloat(style.paddingRight);
+            assert(style.scrollbarGutter === 'stable', 'Pane is missing its stable native gutter');
+            assert(Math.abs(reserved + padding - Math.max(17, reserved + 2)) <= 0.5, 'Pane must count native scrollbar space once inside the shared inset');
+            assert(parseFloat(win.getComputedStyle(doc.documentElement).getPropertyValue('--ui-scrollbar-width')) === reserved,
+              'Scrollbar measurement did not follow the applied palette/style');
+            var width = child.getBoundingClientRect().width;
+            if (mode === 0) { baselineWidths[index] = { width: width, lane: reserved }; }
+            else if (reserved <= 15 && baselineWidths[index].lane <= 15) {
+              assert(Math.abs(width - baselineWidths[index].width) <= 0.5, 'Content width changed between native, overlay, and thin scrollbar modes');
+            }
+            [false, true, false].forEach(function (overflowing) {
+              pane.style.height = overflowing ? '160px' : (pane.scrollHeight + 100) + 'px';
+              assert((pane.scrollHeight > pane.clientHeight) === overflowing, 'Gutter fixture did not change overflow state');
+              assert(Math.abs(child.getBoundingClientRect().width - width) <= 0.5, 'Content width changed when scrolling became necessary or stopped');
+            });
+            if (mode === 1) {
+              pane.style.position = 'relative';
+              spacer.style.cssText = 'position: absolute; right: 0; top: 0; width: 15px; height: 40px;';
+              assert(spacer.getBoundingClientRect().left - child.getBoundingClientRect().right >= 1.5,
+                'Content overlaps the conservative 15px overlay scrollbar region');
+            }
+          } finally {
+            spacer.remove();
+            if (originalStyle === null) { pane.removeAttribute('style'); } else { pane.setAttribute('style', originalStyle); }
+          }
+        });
+      });
+    } finally {
+      modeStyle.remove(); schemes.activeSchemeId = originalScheme; schemes.applyActive();
+    }
+  }
   frame.addEventListener('load', async function () {
     try {
       var win = frame.contentWindow, doc = win.document;
@@ -81,7 +136,10 @@
         assert(instance.preferences.setupOpen === true, 'Invalid stored record did not restore default preferences');
         instance.dispose();
       });
-      status.textContent = 'Passed: initialized resize sequence, independent pane sizing, compact drawers, keyboard/focus and storage fallback';
+      frame.style.width = '1440px'; frame.style.height = '900px'; await settle();
+      layout.setPaneOpen('setup', true); layout.setPaneOpen('results', true); await settle();
+      checkPaneGutters(win, doc);
+      status.textContent = 'Passed: stable pane gutters across scrollbar modes and overflow, initialized resize sequence, independent pane sizing, compact drawers, keyboard/focus and storage fallback';
     } catch (error) { status.textContent = 'Failed: ' + error.message; console.error(error); }
   });
 }());

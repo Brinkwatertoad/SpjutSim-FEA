@@ -91,6 +91,33 @@
     return Number.isFinite(numericWidth) && numericWidth > 0 && numericWidth < compactThreshold;
   };
 
+  // Call after every host palette/style publication: the final scrollbar style
+  // determines how much native space CSS deducts from the shared content inset.
+  const applyScrollbarMetrics = (doc) => {
+    if (!doc?.body || !doc?.documentElement || typeof doc.createElement !== "function") {
+      throw new Error("Portable UI shell requires a document to measure scrollbars.");
+    }
+    if (!doc.documentElement.style || typeof doc.documentElement.style.setProperty !== "function") {
+      throw new Error("Portable UI shell requires 'documentElement.style.setProperty' function.");
+    }
+    const probe = doc.createElement("div");
+    Object.assign(probe.style, {
+      position: "absolute",
+      visibility: "hidden",
+      overflow: "scroll",
+      // Measure the same reserved lane as the panes, even with hidden headless scrollbars.
+      scrollbarGutter: "stable",
+      width: "100px",
+      height: "100px",
+      inset: "-9999px auto auto -9999px"
+    });
+    doc.body.appendChild(probe);
+    const width = Math.max(0, Number(probe.offsetWidth) - Number(probe.clientWidth));
+    probe.remove?.();
+    doc.documentElement.style.setProperty("--ui-scrollbar-width", `${width}px`);
+    return Object.freeze({ width });
+  };
+
   const applyPaneState = (input) => {
     const args = asObject(input);
     const root = requireElement(args.root, "root");
@@ -226,6 +253,7 @@
     resolveResponsiveState,
     shouldAutoCollapseTools,
     applyPaneState,
+    applyScrollbarMetrics,
     createMenuController
   });
 }(typeof self !== "undefined" ? self : globalThis));
