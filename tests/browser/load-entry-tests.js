@@ -34,10 +34,15 @@
       fill('load-pressure','-3');fill('load-pressure-unit','psi');near(author.readLoad().pressurePa,-3e6);
       click('#load-form button[type="submit"]');near(app.document.loads[1].pressurePa,-3e6);
       click('[data-setup-kind="load"][data-item-id="'+app.document.loads[1].id+'"] [data-setup-row-trigger]');near(Number(doc.getElementById('load-pressure').value),-3e6/6894.757293168361);
-      var saved=JSON.parse(win.localStorage.getItem('spjutsim-fea.load-input-units'));assert(saved.forceN==='lbf'&&saved.pressurePa==='psi','Preferences not persisted');
-      var fresh=new api.AnalysisAuthoringUI(app);assert(fresh.loadUnits.forceN==='lbf'&&fresh.loadUnits.pressurePa==='psi','Preferences not loaded');
+      var saved=JSON.parse(win.localStorage.getItem('spjutsim-fea.unit-preferences')).units;assert(saved.forceN==='lbf'&&saved.pressurePa==='psi','Preferences not persisted');
+      var fresh=new api.UnitPreferences(win.localStorage);assert(fresh.units.forceN==='lbf'&&fresh.units.pressurePa==='psi','Preferences not loaded');
       var previous=doc.getElementById('load-fx').value;author.changeLoadUnit('forceN','psi');assert(doc.getElementById('load-fx').value===previous&&author.loadUnits.forceN==='lbf','Rejected change partially converted');
-      win.localStorage.removeItem('spjutsim-fea.load-input-units');
+      var reloaded=document.createElement('iframe');reloaded.src='../../web/index.html';document.body.append(reloaded);
+      await wait(function(){return reloaded.contentDocument && reloaded.contentDocument.getElementById('app-status') && reloaded.contentDocument.getElementById('app-status').textContent==='Local runtime ready';});
+      assert(reloaded.contentDocument.getElementById('load-force-unit').value==='lbf' && reloaded.contentDocument.getElementById('load-pressure-unit').value==='psi','App reload ignored preferences');
+      near(Number(reloaded.contentDocument.getElementById('load-magnitude').value),1/4.4482216152605);
+      reloaded.remove();
+      win.localStorage.removeItem('spjutsim-fea.unit-preferences');
       document.getElementById('test-status').textContent='Passed';
     }catch(e){document.getElementById('test-status').textContent='Failed: '+e.message;}
   });

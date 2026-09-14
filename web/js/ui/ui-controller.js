@@ -385,6 +385,7 @@
       var settingsKeys = ['controls'];
       var settingsTabs = [this.settingsTabControls];
       var settingsPanels = [this.settingsPanelControls];
+      if (document.getElementById('settings-tab-units')) { settingsKeys.push('units'); settingsTabs.push(document.getElementById('settings-tab-units')); settingsPanels.push(document.getElementById('settings-panel-units')); }
       if (this.settingsTabAppearance && this.settingsPanelAppearance) {
         settingsKeys.push('appearance'); settingsTabs.push(this.settingsTabAppearance); settingsPanels.push(this.settingsPanelAppearance);
       }
@@ -527,8 +528,8 @@
     var preset = this.meshPreset.value;
     var settings = { preset: preset, elementType: this.meshElementType ? this.meshElementType.value : 'tet10' };
     if (preset === 'custom') {
-      var minimum = Number(this.meshMinSize.value);
-      var maximum = Number(this.meshMaxSize.value);
+      var minimum = root.SpjutsimFEA.preferredToSI('lengthM',Number(this.meshMinSize.value));
+      var maximum = root.SpjutsimFEA.preferredToSI('lengthM',Number(this.meshMaxSize.value));
       if (!(minimum > 0) || !(maximum > 0)) {
         var defaults = this.customMeshSizes || root.SpjutsimFEA.resolveMeshSettings(
           this.controller.document.meshSettings,
@@ -560,8 +561,8 @@
     if (this.meshElementType) { this.meshElementType.value = settings.elementType; this.meshElementType.disabled = !hasGeometry || isGenerating || convergenceRunning; }
     if (this.meshPreset) { this.meshPreset.value = settings.preset; this.meshPreset.disabled = !hasGeometry || isGenerating || convergenceRunning; }
     if (this.meshCustomSizes) { this.meshCustomSizes.hidden = settings.preset !== 'custom'; }
-    if (this.meshMinSize) { this.meshMinSize.value = settings.preset === 'custom' ? settings.minSizeM : ''; this.meshMinSize.disabled = !hasGeometry || isGenerating || convergenceRunning; }
-    if (this.meshMaxSize) { this.meshMaxSize.value = settings.preset === 'custom' ? settings.maxSizeM : ''; this.meshMaxSize.disabled = !hasGeometry || isGenerating || convergenceRunning; }
+    if (this.meshMinSize) { this.meshMinSize.value = settings.preset === 'custom' ? root.SpjutsimFEA.preferredFromSI('lengthM',settings.minSizeM) : ''; this.meshMinSize.disabled = !hasGeometry || isGenerating || convergenceRunning; }
+    if (this.meshMaxSize) { this.meshMaxSize.value = settings.preset === 'custom' ? root.SpjutsimFEA.preferredFromSI('lengthM',settings.maxSizeM) : ''; this.meshMaxSize.disabled = !hasGeometry || isGenerating || convergenceRunning; }
     if (isGenerating) {
       message = (generation.progress && generation.progress.userMessage) || 'Generating ' + elementLabel + ' mesh…';
     } else if (generation.status === 'failed') {
@@ -995,9 +996,9 @@
       body.textContent = '';
       levels.forEach(function (level) {
         var row = body.insertRow();
-        [level.level, formatNumber(level.targetSizeM), level.degreeOfFreedomCount,
-          formatNumber(level.maximumDisplacementM), formatNumber(level.strainEnergyJ),
-          formatNumber(level.rawVonMisesMaxPa), formatBytes(level.estimatedPeakBytes)].forEach(function (value) {
+        [level.level, formatNumber(root.SpjutsimFEA.preferredFromSI('lengthM',level.targetSizeM)), level.degreeOfFreedomCount,
+          formatNumber(root.SpjutsimFEA.preferredFromSI('lengthM',level.maximumDisplacementM)), formatNumber(root.SpjutsimFEA.preferredFromSI('energyJ',level.strainEnergyJ)),
+          formatNumber(root.SpjutsimFEA.preferredFromSI('stressPa',level.rawVonMisesMaxPa)), formatBytes(level.estimatedPeakBytes)].forEach(function (value) {
           row.insertCell().textContent = String(value);
         });
         var action = row.insertCell();
@@ -1080,7 +1081,7 @@
     this.probeOutput.hidden = !probe;
     if (!probe) { return; }
     this.probeOutput.textContent = probe.fieldLabel + ': ' + formatNumber(probe.fieldValue / probe.unitScale,probe.unit) +
-      '\nUndeformed xyz: ' + probe.coordinatesM.map(function(v){return formatNumber(v,'m');}).join(', ') +
+      '\nUndeformed xyz: ' + probe.coordinatesM.map(function(v){return root.SpjutsimFEA.formatResultMagnitude(v,root.SpjutsimFEA.preferredUnit('lengthM'));}).join(', ') +
       (probe.displacementM ? '\nu: '+probe.displacementM.map(function(v){return root.SpjutsimFEA.formatResultMagnitude(v,(this.controller.document.viewportPresentation || {}).lengthUnit || 'mm');},this).join(', ') : '') +
       (probe.faceId ? '\nFace: '+probe.faceId : '\nInternal recovery sample; shown through the surface.') + '\nClick background or Escape to clear.';
 

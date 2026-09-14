@@ -4,16 +4,17 @@
   function byId(id) { return document.getElementById(id); }
 
   function itemDescription(item) {
-    var value;
+    var value, api=root.SpjutsimFEA;
+    function quantity(v,q){return api.preferredFromSI(q,v)+' '+api.preferredUnit(q);}
     if (item.kind === 'support') {
       value = Object.keys(item.original.componentsM).map(function (axis) {
-        return axis.toUpperCase() + ' = ' + root.SpjutsimFEA.siToDisplay('displacementM', item.original.componentsM[axis]) + ' mm';
+        return axis.toUpperCase() + ' = ' + quantity(item.original.componentsM[axis],'displacementM');
       }).join(', ');
       return 'Support · ' + value + ' · ' + item.oldFaceIds.length + (item.oldFaceIds.length === 1 ? ' current face' : ' current faces');
     }
     value = item.original.type === 'pressure'
-      ? root.SpjutsimFEA.siToDisplay('pressurePa', item.original.pressurePa) + ' MPa surface-normal pressure'
-      : item.original.direction === 'surface-normal' ? item.original.magnitudeN + ' N ' + item.original.sense + ' along local normals' : '[' + item.original.forceN.join(', ') + '] N global total force';
+      ? quantity(item.original.pressurePa,'pressurePa') + ' surface-normal pressure'
+      : item.original.direction === 'surface-normal' ? quantity(item.original.magnitudeN,'forceN') + ' ' + item.original.sense + ' along local normals' : '[' + item.original.forceN.map(function(v){return quantity(v,'forceN');}).join(', ') + '] global total force';
     return 'Load · ' + value + ' · ' + item.oldFaceIds.length + (item.oldFaceIds.length === 1 ? ' current face' : ' current faces');
   }
 

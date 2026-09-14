@@ -189,15 +189,17 @@
     if (!draft) { return ''; }
     if (draft.kind === 'gravity') { return 'Body acceleration applies throughout the model. Preview arrow shows direction.'; }
     var area = draft.faceIds.reduce(function (sum,id) { return sum + cachedFaceSamples(state,id).areaM2; },0);
-    var text = 'Area ≈ ' + area.toPrecision(4) + ' m². ';
+    var api=root.SpjutsimFEA, length=api.preferredUnit('lengthM');
+    function quantity(v,q){return (Number.isFinite(v) ? api.preferredFromSI(q,v).toPrecision(4) : '—')+' '+api.preferredUnit(q);}
+    var text = 'Area ≈ ' + (area / api.UNIT_SCALES[length] ** 2).toPrecision(4) + ' '+length+'². ';
     if (draft.definition.type === 'total-force' && draft.definition.direction === 'surface-normal') {
-      text += draft.definition.magnitudeN + ' N distributed by area, ' + draft.definition.sense + ' along each local normal. Opposing directions can cancel in the net force.';
+      text += quantity(draft.definition.magnitudeN,'forceN') + ' distributed by area, ' + draft.definition.sense + ' along each local normal. Opposing directions can cancel in the net force.';
     } else if (draft.definition.type === 'total-force' && draft.definition.forceN && draft.definition.forceN.every(Number.isFinite)) {
-      text += Math.hypot.apply(Math,draft.definition.forceN).toPrecision(4) + ' N total across selection; global [ ' + draft.definition.forceN.join(', ') + ' ] N. Adding faces redistributes this total.';
+      text += quantity(Math.hypot.apply(Math,draft.definition.forceN),'forceN') + ' total across selection; global [ ' + draft.definition.forceN.map(function(v){return quantity(v,'forceN');}).join(', ') + ' ]. Adding faces redistributes this total.';
     } else if (draft.definition.type === 'pressure' && Number.isFinite(draft.definition.pressurePa)) {
-      text += draft.definition.pressurePa + ' Pa constant inward pressure on every selected face.';
+      text += quantity(draft.definition.pressurePa,'pressurePa') + ' constant inward pressure on every selected face.';
     } else if (draft.kind === 'support') {
-      text += 'Prescribed global displacement: ' + Object.keys(draft.definition.componentsM || {}).map(function(axis){return axis.toUpperCase() + ' = ' + draft.definition.componentsM[axis] + ' m';}).join(', ') + '.';
+      text += 'Prescribed global displacement: ' + Object.keys(draft.definition.componentsM || {}).map(function(axis){return axis.toUpperCase() + ' = ' + quantity(draft.definition.componentsM[axis],'displacementM');}).join(', ') + '.';
     }
     return text + ' Preview arrows show direction, not magnitude.';
   }

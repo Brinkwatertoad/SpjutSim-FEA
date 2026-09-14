@@ -7,26 +7,30 @@
   /** @typedef {{id: string, name: string, type: 'pressure'|'total-force', faceIds: string[], pressurePa?: number, direction?: 'surface-normal', magnitudeN?: number, sense?: 'push'|'pull', forceN?: number[]}} SurfaceLoad */
   /** @typedef {{enabled: boolean, accelerationMS2: number[]}} GravityLoad */
 
-  var DISPLAY_UNITS = {
-    youngsModulusPa: { symbol: 'GPa', siPerDisplayUnit: 1e9 },
-    densityKgM3: { symbol: 'kg/m³', siPerDisplayUnit: 1 },
-    strengthPa: { symbol: 'MPa', siPerDisplayUnit: 1e6 },
-    displacementM: { symbol: 'mm', siPerDisplayUnit: 1e-3 },
-    pressurePa: { symbol: 'MPa', siPerDisplayUnit: 1e6 },
-    forceN: { symbol: 'N', siPerDisplayUnit: 1 }
-  };
-
   var poundForceN = 0.45359237 * 9.80665;
-  var LOAD_INPUT_UNITS = Object.freeze({
-    pressurePa: Object.freeze({ MPa: 1e6, Pa: 1, psi: poundForceN / (0.0254 * 0.0254), ksi: poundForceN * 1000 / (0.0254 * 0.0254) }),
-    forceN: Object.freeze({ N: 1, kN: 1000, lbf: poundForceN, kip: poundForceN * 1000 })
-  });
-
+  var UNIT_SCALES = Object.freeze({Pa:1,kPa:1e3,MPa:1e6,GPa:1e9,psi:poundForceN/0.0254**2,ksi:poundForceN*1000/0.0254**2,
+    m:1,mm:1e-3,'µm':1e-6,in:0.0254,ft:0.3048,N:1,kN:1e3,lbf:poundForceN,kip:poundForceN*1000,
+    'kg/m³':1,'lbm/in³':0.45359237/0.0254**3,'m/s²':1,'in/s²':0.0254,'ft/s²':0.3048,J:1,'in·lbf':poundForceN*0.0254});
+  var stressUnits = ['Pa','kPa','MPa','GPa','psi','ksi'], lengthUnits = ['m','mm','in'];
+  var UNIT_CHOICES = Object.freeze({youngsModulusPa:stressUnits,strengthPa:stressUnits,stressPa:stressUnits,
+    pressurePa:['MPa','Pa','psi','ksi'], forceN:['N','kN','lbf','kip'],densityKgM3:['kg/m³','lbm/in³'],
+    displacementM:lengthUnits,lengthM:lengthUnits,accelerationMS2:['m/s²','in/s²','ft/s²'],energyJ:['J','in·lbf']});
+  var SI_UNITS = Object.freeze({youngsModulusPa:'GPa',strengthPa:'MPa',stressPa:'MPa',pressurePa:'MPa',forceN:'N',
+    densityKgM3:'kg/m³',displacementM:'mm',lengthM:'m',accelerationMS2:'m/s²',energyJ:'J'});
+  var USCS_UNITS = Object.freeze({youngsModulusPa:'ksi',strengthPa:'ksi',stressPa:'psi',pressurePa:'psi',forceN:'lbf',
+    densityKgM3:'lbm/in³',displacementM:'in',lengthM:'in',accelerationMS2:'in/s²',energyJ:'in·lbf'});
+  var preferredUnits = SI_UNITS;
+  var DISPLAY_UNITS = Object.freeze(Object.fromEntries(Object.keys(SI_UNITS).map(function(key){return [key,Object.freeze({symbol:SI_UNITS[key],siPerDisplayUnit:UNIT_SCALES[SI_UNITS[key]]})];})));
+  var LOAD_INPUT_UNITS = Object.freeze(Object.fromEntries(['pressurePa','forceN'].map(function(key){return [key,Object.freeze(Object.fromEntries(UNIT_CHOICES[key].map(function(unit){return [unit,UNIT_SCALES[unit]];})))];})));
+  function validatePreferredUnits(units) {
+    if (!units || Object.keys(units).length !== Object.keys(SI_UNITS).length) { throw Error('Invalid preferred units.'); }
+    Object.keys(SI_UNITS).forEach(function(key){if(UNIT_CHOICES[key].indexOf(units[key])<0)throw Error('Unsupported unit for '+key+'.');});
+    return Object.freeze(Object.assign({},units));
+  }
   function displayUnit(quantity, symbol) {
     if (symbol === undefined) { return DISPLAY_UNITS[quantity]; }
-    var scale = LOAD_INPUT_UNITS[quantity] && LOAD_INPUT_UNITS[quantity][symbol];
-    if (!Number.isFinite(scale)) { throw new Error('Unsupported unit for ' + quantity + ': ' + symbol); }
-    return { symbol: symbol, siPerDisplayUnit: scale };
+    if (!UNIT_CHOICES[quantity] || UNIT_CHOICES[quantity].indexOf(symbol)<0) { throw new Error('Unsupported unit for ' + quantity + ': ' + symbol); }
+    return { symbol: symbol, siPerDisplayUnit: UNIT_SCALES[symbol] };
   }
 
   function issue(code, message, field) {
@@ -226,6 +230,16 @@
   }
 
   root.SpjutsimFEA = root.SpjutsimFEA || {};
+  root.SpjutsimFEA.UNIT_SCALES = UNIT_SCALES;
+  root.SpjutsimFEA.UNIT_CHOICES = UNIT_CHOICES;
+  root.SpjutsimFEA.SI_UNITS = SI_UNITS;
+  root.SpjutsimFEA.USCS_UNITS = USCS_UNITS;
+  root.SpjutsimFEA.validatePreferredUnits = validatePreferredUnits;
+  // Presentation-only preferences. Engineering conversions above always require an explicit unit or SI display default.
+  root.SpjutsimFEA.setPreferredUnits = function(units){preferredUnits=validatePreferredUnits(units);};
+  root.SpjutsimFEA.preferredUnit = function(quantity){if(!preferredUnits[quantity])throw Error('Unknown unit quantity '+quantity);return preferredUnits[quantity];};
+  root.SpjutsimFEA.preferredToSI = function(quantity,value){return displayToSI(quantity,value,preferredUnits[quantity]);};
+  root.SpjutsimFEA.preferredFromSI = function(quantity,value){return siToDisplay(quantity,value,preferredUnits[quantity]);};
   root.SpjutsimFEA.DISPLAY_UNITS = DISPLAY_UNITS;
   root.SpjutsimFEA.LOAD_INPUT_UNITS = LOAD_INPUT_UNITS;
   root.SpjutsimFEA.displayToSI = displayToSI;

@@ -61,14 +61,15 @@
   function cell(value) { return String(value == null ? '—' : value).replace(/[\t\r\n]+/g, ' '); }
   function rowsText(rows) { return rows.map(function (row) { return row.map(cell).join('\t'); }).join('\n'); }
   function createReportText(state, sourceName, autoScale, now, projection) {
+    var unit = api.preferredUnit;
     var number = api.formatResultNumber, magnitude = api.formatResultMagnitude, material = state.material;
     var summary = api.resultSummaryRows(state);
     var parameters = [['File', sourceName], ['Exported (UTC)', (now || new Date()).toISOString()], ['Analysis revision', state.analysisRevision],
       ['Model', state.geometry.sourceFormat], ['Material', material.name || 'Custom'],
-      ["Young's modulus", magnitude(material.youngsModulusPa, 'GPa')], ["Poisson's ratio", number(material.poissonsRatio)]];
+      ["Young's modulus", magnitude(material.youngsModulusPa, unit('youngsModulusPa'))], ["Poisson's ratio", number(material.poissonsRatio)]];
     [['densityKgM3','Density','kg/m³'],['tensileYieldPa','Tensile yield','MPa'],['compressiveYieldPa','Compressive yield','MPa'],
       ['ultimateTensilePa','Ultimate tensile','MPa'],['ultimateCompressivePa','Ultimate compressive','MPa']].forEach(function (entry) {
-      parameters.push([entry[1], material[entry[0]] == null ? 'Not supplied' : entry[2] === 'kg/m³' ? number(material[entry[0]]) + ' kg/m³' : magnitude(material[entry[0]], entry[2])]);
+      parameters.push([entry[1], material[entry[0]] == null ? 'Not supplied' : magnitude(material[entry[0]], unit(entry[2] === 'kg/m³' ? 'densityKgM3' : 'strengthPa'))]);
     });
     var catalog = api.FACTORY_MATERIALS.find(function (entry) { return JSON.stringify(entry.material) === JSON.stringify(material); });
     if (catalog) {
@@ -78,15 +79,15 @@
       });
     }
     state.boundaryConditions.forEach(function (support) {
-      parameters.push(['Support: ' + support.name, 'Faces: ' + support.faceIds.join(', ') + '; ' + Object.keys(support.componentsM).map(function (axis) { return axis + ' = ' + magnitude(support.componentsM[axis], 'm'); }).join(', ')]);
+      parameters.push(['Support: ' + support.name, 'Faces: ' + support.faceIds.join(', ') + '; ' + Object.keys(support.componentsM).map(function (axis) { return axis + ' = ' + magnitude(support.componentsM[axis], unit('displacementM')); }).join(', ')]);
     });
     state.loads.forEach(function (load) {
-      var value = load.type === 'pressure' ? magnitude(load.pressurePa, 'MPa') + ' (positive inward)' : load.direction === 'surface-normal'
-        ? magnitude(load.magnitudeN, 'N') + ' normal, ' + load.sense : load.forceN.map(function (v) { return magnitude(v, 'N'); }).join(', ') + ' (global X, Y, Z)';
+      var value = load.type === 'pressure' ? magnitude(load.pressurePa, unit('pressurePa')) + ' (positive inward)' : load.direction === 'surface-normal'
+        ? magnitude(load.magnitudeN, unit('forceN')) + ' normal, ' + load.sense : load.forceN.map(function (v) { return magnitude(v, unit('forceN')); }).join(', ') + ' (global X, Y, Z)';
       parameters.push(['Load: ' + load.name, value + '; Faces: ' + load.faceIds.join(', ')]);
     });
-    parameters.push(['Gravity', state.gravity.enabled ? state.gravity.accelerationMS2.map(number).join(', ') + ' m/s² (global X, Y, Z)' : 'Disabled']);
-    parameters.push(['Mesh settings', JSON.stringify(state.meshSettings)], ['Solver settings', JSON.stringify(state.solveSettings)],
+    parameters.push(['Gravity', state.gravity.enabled ? state.gravity.accelerationMS2.map(function(v){return magnitude(v,unit('accelerationMS2'));}).join(', ') + ' (global X, Y, Z)' : 'Disabled']);
+    parameters.push(['Mesh settings', Object.keys(state.meshSettings).map(function(k){return k+': '+(/SizeM$/.test(k) ? magnitude(state.meshSettings[k],unit('lengthM')) : state.meshSettings[k]);}).join('; ')], ['Solver settings', JSON.stringify(state.solveSettings)],
       ['Model orientation', JSON.stringify(state.geometry.orientation)], ['Import settings', JSON.stringify(state.geometry.importOptions || {})],
       ['Import metadata', JSON.stringify(state.geometry.sourceMetadata || {})],
       ['Image camera', 'Reset View then Fit Model; ' + (projection || 'current projection')],
@@ -98,8 +99,8 @@
       (state.results.factorOfSafety ? 'Yield FoS uses the lower available tensile/compressive yield divided by von Mises stress.\n' : 'Yield FoS unavailable: supply tensile or compressive yield strength.\n') +
       '\nResults\nParameter\tValue\n' + rowsText(summary.values) + '\n\nDiagnostics\nParameter\tValue\n' + rowsText(summary.diagnostics) + '\n';
     if (state.convergenceStudy && state.convergenceStudy.levels.length) {
-      text += '\nConvergence study\nLevel\tTarget size (m)\tDOF\tMax displacement (m)\tStrain energy (J)\tPeak von Mises (Pa)\tEstimated memory (bytes)\n' + rowsText(state.convergenceStudy.levels.map(function (level) {
-        return [level.level, number(level.targetSizeM), level.degreeOfFreedomCount, number(level.maximumDisplacementM), number(level.strainEnergyJ), number(level.rawVonMisesMaxPa), level.estimatedPeakBytes];
+      text += '\nConvergence study\nLevel\tTarget size ('+unit('lengthM')+')\tDOF\tMax displacement ('+unit('lengthM')+')\tStrain energy ('+unit('energyJ')+')\tPeak von Mises ('+unit('stressPa')+')\tEstimated memory (bytes)\n' + rowsText(state.convergenceStudy.levels.map(function (level) {
+        return [level.level, number(api.preferredFromSI('lengthM',level.targetSizeM)), level.degreeOfFreedomCount, number(api.preferredFromSI('lengthM',level.maximumDisplacementM)), number(api.preferredFromSI('energyJ',level.strainEnergyJ)), number(api.preferredFromSI('stressPa',level.rawVonMisesMaxPa)), level.estimatedPeakBytes];
       })) + '\n';
     }
     return text;

@@ -100,7 +100,7 @@
     if(!repair)return;
     var report=repair.report,changes=[];
     [['removedDuplicateTriangles','duplicate triangles removed'],['removedZeroAreaTriangles','zero-area triangles removed'],['removedLooseTriangles','stray triangles removed'],['flippedTriangles','triangle directions corrected'],['filledHoles','holes filled']].forEach(function(item){if(report[item[0]])changes.push(report[item[0]]+' '+item[1]);});
-    var scale={m:1,mm:.001,cm:.01,in:.0254,ft:.3048}[report.lengthUnit],displayUnit=this.unit.value||report.lengthUnit;
+    var displayUnit=root.SpjutsimFEA.preferredUnit('lengthM'),scale=root.SpjutsimFEA.UNIT_SCALES[displayUnit];
     if(report.filledHoles){changes.push('largest filled hole '+(report.maximumFilledHoleDiameterM/scale).toPrecision(4)+' '+displayUnit);}
     var before=report.originalBoundingBoxM.maxM.map(function(v,i){return v-report.originalBoundingBoxM.minM[i];});
     var after=report.repairedBoundingBoxM.maxM.map(function(v,i){return v-report.repairedBoundingBoxM.minM[i];});
@@ -138,10 +138,10 @@
     var self=this;
     geometry.faceIds.forEach(function(id,index){var button=document.createElement('button');button.type='button';var remeshing=geometry.sourceMetadata.remeshing,count=remeshing&&remeshing.surfaceCountsByPatch[index];button.textContent='Patch '+(index+1)+(geometry.sourceMetadata.reconstruction?' — '+geometry.sourceMetadata.reconstruction.surfaces[index].kind:remeshing?' — '+count+(count===1?' surface':' surfaces'):'');button.dataset.faceId=id;button.title=id;button.setAttribute('aria-pressed','false');button.onclick=function(){self.select(id);};self.list.appendChild(button);});
     var dimensions=geometry.boundingBoxM.maxM.map(function(value,axis){return value-geometry.boundingBoxM.minM[axis];});
-    var scale={m:1,mm:0.001,cm:0.01,in:0.0254,ft:0.3048}[geometry.importOptions.lengthUnit];
-    this.dimensions.textContent=dimensions.map(function(value){return (value/scale).toPrecision(6);}).join(' × ')+' '+geometry.importOptions.lengthUnit;
+    var displayUnit=root.SpjutsimFEA.preferredUnit('lengthM'),scale=root.SpjutsimFEA.UNIT_SCALES[displayUnit];
+    this.dimensions.textContent=dimensions.map(function(value){return (value/scale).toPrecision(6);}).join(' × ')+' '+displayUnit;
     this.status.textContent=geometry.sourceMetadata.triangleCount.toLocaleString('en-US')+' source triangles; '+geometry.faceIds.length+' selectable patches. '+
-      (geometry.sourceMetadata.reconstruction?'Recovered '+geometry.sourceMetadata.internalSurfaceCount+' surfaces. Maximum deviation bound: '+(geometry.sourceMetadata.reconstruction.maximumDeviationM/scale).toPrecision(4)+' '+geometry.importOptions.lengthUnit+'. Compare the surfaces before applying.':(review.source.repair?'Repaired STL triangles retained. ':'Original triangles retained. ')+'Groups help select faces; they do not simplify the geometry. Check the dimensions, then import.');
+      (geometry.sourceMetadata.reconstruction?'Recovered '+geometry.sourceMetadata.internalSurfaceCount+' surfaces. Maximum deviation bound: '+(geometry.sourceMetadata.reconstruction.maximumDeviationM/scale).toPrecision(4)+' '+displayUnit+'. Compare the surfaces before applying.':(review.source.repair?'Repaired STL triangles retained. ':'Original triangles retained. ')+'Groups help select faces; they do not simplify the geometry. Check the dimensions, then import.');
     if(geometry.sourceMetadata.remeshing)this.status.textContent=geometry.sourceMetadata.triangleCount.toLocaleString('en-US')+' source triangles; '+geometry.faceIds.length+' selectable groups. Experimental remeshing will generate new triangles for simulation; it does not recover smooth CAD curves. Refine the mesh to check small details.';
   };
   StlImportUI.prototype.showSurface=function(){if(!this.geometry||!this.viewport)return;var geometry=this.geometry;if(this.comparison.value==='original'&&geometry.originalPreview)geometry=Object.assign({},geometry,{preview:geometry.originalPreview});this.viewport.setGeometryPreview(geometry);this.viewport.setSelectedFaceIds(Array.from(this.selected));};

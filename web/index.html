@@ -99,15 +99,15 @@
               <select id="material-catalog-select" aria-describedby="material-catalog-details"><option value="custom" selected>Custom</option></select>
               <form id="material-form" novalidate>
                 <label for="material-name">Name</label><input id="material-name" autocomplete="off" placeholder="e.g. Structural steel">
-                <label for="material-youngs">Young's modulus (GPa)</label><input id="material-youngs" type="number" min="0" step="any" required>
+                <label for="material-youngs">Young's modulus (<span data-unit-label="youngsModulusPa">GPa</span>)</label><input data-unit-quantity="youngsModulusPa" id="material-youngs" type="number" min="0" step="any" required>
                 <label for="material-poisson">Poisson's ratio</label><input id="material-poisson" type="number" min="-0.999" max="0.499" step="any" required aria-describedby="material-poisson-help">
                 <small id="material-poisson-help">Valid between −1 and 0.5. Negative values are unusual for ordinary solids.</small>
-                <label for="material-density">Density (kg/m³, optional)</label><input id="material-density" type="number" min="0" step="any">
+                <label for="material-density">Density (<span data-unit-label="densityKgM3">kg/m³</span>, optional)</label><input data-unit-quantity="densityKgM3" id="material-density" type="number" min="0" step="any">
                 <details><summary><span class="fea-chevron" aria-hidden="true">▶</span> Optional strengths</summary>
-                  <label for="material-tensile-yield">Tensile yield (MPa)</label><input id="material-tensile-yield" type="number" min="0" step="any">
-                  <label for="material-compressive-yield">Compressive yield (MPa)</label><input id="material-compressive-yield" type="number" min="0" step="any">
-                  <label for="material-ultimate-tensile">Ultimate tensile (MPa)</label><input id="material-ultimate-tensile" type="number" min="0" step="any">
-                  <label for="material-ultimate-compressive">Ultimate compressive (MPa)</label><input id="material-ultimate-compressive" type="number" min="0" step="any">
+                  <label for="material-tensile-yield">Tensile yield (<span data-unit-label="strengthPa">MPa</span>)</label><input data-unit-quantity="strengthPa" id="material-tensile-yield" type="number" min="0" step="any">
+                  <label for="material-compressive-yield">Compressive yield (<span data-unit-label="strengthPa">MPa</span>)</label><input data-unit-quantity="strengthPa" id="material-compressive-yield" type="number" min="0" step="any">
+                  <label for="material-ultimate-tensile">Ultimate tensile (<span data-unit-label="strengthPa">MPa</span>)</label><input data-unit-quantity="strengthPa" id="material-ultimate-tensile" type="number" min="0" step="any">
+                  <label for="material-ultimate-compressive">Ultimate compressive (<span data-unit-label="strengthPa">MPa</span>)</label><input data-unit-quantity="strengthPa" id="material-ultimate-compressive" type="number" min="0" step="any">
                 </details>
                 <button class="ui-button-primary" type="submit">Save custom material</button>
                 <button id="replace-saved-material-button" type="button" hidden>Replace saved material</button>
@@ -123,10 +123,10 @@
                 <label for="support-name">Name</label><input id="support-name" type="text" maxlength="160" required>
                 <label for="support-type">Preset</label><select id="support-type"><option value="fixed">Fixed (X, Y, Z = 0)</option><option value="custom">Choose components</option></select>
                 <fieldset id="support-component-fields" hidden>
-                  <legend>Global constrained components (mm)</legend>
-                  <label class="fea-component"><input id="support-ux-enabled" type="checkbox"><span>Ux</span><input id="support-ux" type="number" step="any" aria-label="Ux displacement in millimeters"></label>
-                  <label class="fea-component"><input id="support-uy-enabled" type="checkbox"><span>Uy</span><input id="support-uy" type="number" step="any" aria-label="Uy displacement in millimeters"></label>
-                  <label class="fea-component"><input id="support-uz-enabled" type="checkbox"><span>Uz</span><input id="support-uz" type="number" step="any" aria-label="Uz displacement in millimeters"></label>
+                  <legend>Global constrained components (<span data-unit-label="displacementM">mm</span>)</legend>
+                  <label class="fea-component"><input id="support-ux-enabled" type="checkbox"><span>Ux</span><input data-unit-quantity="displacementM" id="support-ux" type="number" step="any" aria-label="Ux displacement in millimeters"></label>
+                  <label class="fea-component"><input id="support-uy-enabled" type="checkbox"><span>Uy</span><input data-unit-quantity="displacementM" id="support-uy" type="number" step="any" aria-label="Uy displacement in millimeters"></label>
+                  <label class="fea-component"><input id="support-uz-enabled" type="checkbox"><span>Uz</span><input data-unit-quantity="displacementM" id="support-uz" type="number" step="any" aria-label="Uz displacement in millimeters"></label>
                 </fieldset>
                 <button class="ui-button-primary" type="submit">Apply support</button><button id="cancel-support-edit" type="button" hidden>Cancel edit</button><button id="remove-support-item-button" type="button" data-action-intent="danger" hidden>Remove support</button>
               </form>
@@ -137,13 +137,13 @@
               <form id="load-form" novalidate>
                 <label for="load-name">Name</label><input id="load-name" type="text" maxlength="160" required>
                 <label for="load-type">Type</label><select id="load-type"><option value="total-force">Force</option><option value="pressure">Pressure</option></select>
-                <div id="pressure-fields" hidden><div class="fea-unit-label"><label for="load-pressure">Pressure</label> (<select id="load-pressure-unit" class="fea-inline-unit" data-load-unit="pressurePa" aria-label="Pressure input unit"><option>MPa</option><option>Pa</option><option>psi</option><option>ksi</option></select>)</div><input id="load-pressure" type="number" step="any" value="1"></div>
+                <div id="pressure-fields" hidden><div class="fea-unit-label"><label for="load-pressure">Pressure</label> (<select id="load-pressure-unit" class="fea-inline-unit" data-load-unit="pressurePa" aria-label="Pressure input unit"><option>MPa</option><option>Pa</option><option>psi</option><option>ksi</option></select>)</div><input data-unit-quantity="pressurePa" id="load-pressure" type="number" step="any" value="1"></div>
                 <div id="force-mode-fields"><label for="load-force-mode">Direction</label><select id="load-force-mode"><option value="normal">Surface normal</option><option value="components">Components</option></select></div>
-                <div id="normal-force-fields"><div class="fea-unit-label"><label for="load-magnitude">Magnitude</label> (<select id="load-force-unit" class="fea-inline-unit" data-load-unit="forceN" aria-label="Force input unit"><option>N</option><option>kN</option><option>lbf</option><option>kip</option></select>)</div><input id="load-magnitude" type="number" step="any" min="0" value="1"><label for="load-sense">Direction along normal</label><select id="load-sense"><option value="push">Push inward</option><option value="pull">Pull outward</option></select></div>
+                <div id="normal-force-fields"><div class="fea-unit-label"><label for="load-magnitude">Magnitude</label> (<select id="load-force-unit" class="fea-inline-unit" data-load-unit="forceN" aria-label="Force input unit"><option>N</option><option>kN</option><option>lbf</option><option>kip</option></select>)</div><input data-unit-quantity="forceN" id="load-magnitude" type="number" step="any" min="0" value="1"><label for="load-sense">Direction along normal</label><select id="load-sense"><option value="push">Push inward</option><option value="pull">Pull outward</option></select></div>
                 <fieldset id="force-fields" hidden><legend>Total force vector (<select id="load-vector-unit" class="fea-inline-unit" data-load-unit="forceN" aria-label="Force input unit"><option>N</option><option>kN</option><option>lbf</option><option>kip</option></select>)</legend>
-                  <label for="load-fx">Fx</label><input id="load-fx" type="number" step="any" value="0">
-                  <label for="load-fy">Fy</label><input id="load-fy" type="number" step="any" value="1">
-                  <label for="load-fz">Fz</label><input id="load-fz" type="number" step="any" value="0">
+                  <label for="load-fx">Fx</label><input data-unit-quantity="forceN" id="load-fx" type="number" step="any" value="0">
+                  <label for="load-fy">Fy</label><input data-unit-quantity="forceN" id="load-fy" type="number" step="any" value="1">
+                  <label for="load-fz">Fz</label><input data-unit-quantity="forceN" id="load-fz" type="number" step="any" value="0">
                 </fieldset>
                 <button class="ui-button-primary" type="submit">Apply load</button><button id="cancel-load-edit" type="button" hidden>Cancel edit</button><button id="remove-load-item-button" type="button" data-action-intent="danger" hidden>Remove load</button>
               </form>
@@ -153,10 +153,10 @@
               <form id="gravity-form" class="fea-gravity-form" novalidate>
                 <label for="gravity-direction">Direction</label><select id="gravity-direction"><option value="-z">−Z</option><option value="+z">+Z</option><option value="-y">−Y</option><option value="+y">+Y</option><option value="-x">−X</option><option value="+x">+X</option><option value="custom">Components</option></select>
                 <label class="fea-inline-check"><input id="gravity-visible" type="checkbox" checked><span>Show gravity arrow</span></label>
-                <fieldset><legend>Acceleration (m/s²)</legend>
-                  <label for="gravity-x">X</label><input id="gravity-x" type="number" step="any" value="0">
-                  <label for="gravity-y">Y</label><input id="gravity-y" type="number" step="any" value="0">
-                  <label for="gravity-z">Z</label><input id="gravity-z" type="number" step="any" value="-9.80665">
+                <fieldset><legend>Acceleration (<span data-unit-label="accelerationMS2">m/s²</span>)</legend>
+                  <label for="gravity-x">X</label><input data-unit-quantity="accelerationMS2" id="gravity-x" type="number" step="any" value="0">
+                  <label for="gravity-y">Y</label><input data-unit-quantity="accelerationMS2" id="gravity-y" type="number" step="any" value="0">
+                  <label for="gravity-z">Z</label><input data-unit-quantity="accelerationMS2" id="gravity-z" type="number" step="any" value="-9.80665">
                 </fieldset>
                 <button id="apply-gravity-button" type="submit">Apply gravity</button>
                 <button id="cancel-gravity-edit" type="button">Cancel edit</button>
@@ -176,8 +176,8 @@
                 <option value="fine">Fine</option><option value="custom">Custom</option>
               </select>
               <div id="mesh-custom-sizes" hidden>
-                <label for="mesh-min-size">Minimum size (m)</label><input id="mesh-min-size" type="number" min="0" step="any">
-                <label for="mesh-max-size">Maximum size (m)</label><input id="mesh-max-size" type="number" min="0" step="any">
+                <label for="mesh-min-size">Minimum size (<span data-unit-label="lengthM">m</span>)</label><input data-unit-quantity="lengthM" id="mesh-min-size" type="number" min="0" step="any">
+                <label for="mesh-max-size">Maximum size (<span data-unit-label="lengthM">m</span>)</label><input data-unit-quantity="lengthM" id="mesh-max-size" type="number" min="0" step="any">
               </div>
               <button id="generate-mesh-button" type="button" disabled>Generate mesh</button>
               <button id="cancel-mesh-button" type="button" hidden>Cancel</button>
@@ -203,7 +203,7 @@
           <label for="display-style">Style</label>
           <select id="display-style"><option value="shaded">Shaded</option><option value="shaded-edges" selected>Shaded with part edges</option><option value="wireframe">Wireframe</option></select>
           <label class="fea-overlay-check" for="mesh-overlay"><input id="mesh-overlay" type="checkbox" disabled> Mesh overlay</label>
-          <label for="stress-unit">Stress units</label><select id="stress-unit"><option>Pa</option><option>kPa</option><option selected>MPa</option><option>psi</option><option>ksi</option></select>
+          <label for="stress-unit">Stress units</label><select id="stress-unit"><option>Pa</option><option>kPa</option><option selected>MPa</option><option>GPa</option><option>psi</option><option>ksi</option></select>
           <label for="length-unit">Displacement units</label><select id="length-unit"><option>m</option><option selected>mm</option><option value="in">inch</option></select>
           <label><input id="show-supports" type="checkbox" checked> Show support arrows</label>
           <label><input id="show-loads" type="checkbox" checked> Show load arrows</label><label><input id="show-gravity" type="checkbox" checked> Show gravity arrow</label>
@@ -282,7 +282,7 @@
           <button id="cancel-convergence-button" type="button" hidden>Cancel study</button>
           <p id="convergence-status" role="status" aria-live="polite">Not studied.</p>
           <div class="fea-table-scroll"><table id="convergence-table"><caption>Mesh convergence levels</caption>
-            <thead><tr><th>Level</th><th>h (m)</th><th>DOF</th><th>Max u (m)</th><th>Energy (J)</th><th>Raw VM (Pa)</th><th>Memory</th><th>Viewport</th></tr></thead><tbody></tbody>
+            <thead><tr><th>Level</th><th>h (<span data-unit-label="lengthM">m</span>)</th><th>DOF</th><th>Max u (<span data-unit-label="lengthM">m</span>)</th><th>Energy (<span data-unit-label="energyJ">J</span>)</th><th>Raw VM (<span data-unit-label="stressPa">MPa</span>)</th><th>Memory</th><th>Viewport</th></tr></thead><tbody></tbody>
           </table></div>
           <svg id="convergence-plot" viewBox="0 0 320 120" role="img" aria-label="Normalized displacement, strain energy, and raw peak stress by convergence level"></svg>
         </section>
@@ -305,6 +305,7 @@
       <div class="ui-settings-hub">
         <div class="ui-settings-hub-nav" role="tablist" aria-label="Settings categories">
           <button id="settings-tab-controls" type="button" role="tab" aria-selected="true" aria-controls="settings-panel-controls" tabindex="0">Controls</button>
+          <button id="settings-tab-units" type="button" role="tab" aria-selected="false" aria-controls="settings-panel-units" tabindex="-1">Units</button>
           <button id="settings-tab-appearance" type="button" role="tab" aria-selected="false" aria-controls="settings-panel-appearance" tabindex="-1">Appearance</button>
         </div>
         <div class="ui-settings-hub-content">
@@ -318,6 +319,17 @@
               <label class="ui-settings-row" for="navigation-pan-sensitivity"><span>Pan sensitivity</span><input id="navigation-pan-sensitivity" type="number" min="0.1" max="4" step="0.1"></label>
               <label class="ui-settings-row" for="navigation-zoom-sensitivity"><span>Zoom sensitivity</span><input id="navigation-zoom-sensitivity" type="number" min="0.0001" max="0.01" step="0.0001"></label>
               <label class="ui-settings-row" for="navigation-arrow-step"><span>Arrow rotation step (radians)</span><input id="navigation-arrow-step" type="number" min="0.02" max="1" step="0.01"></label>
+            </section>
+          </div>
+          <div id="settings-panel-units" role="tabpanel" aria-labelledby="settings-tab-units" hidden>
+            <section class="ui-settings-section">
+              <p>Preferred units convert entered values and results. File import units specify the source file and are selected separately.</p>
+              <label class="ui-settings-row" for="settings-unit-system"><span>Unit set</span><select id="settings-unit-system"></select></label>
+              <label class="ui-settings-row" for="unit-preset-name"><span>Set name</span><input id="unit-preset-name" maxlength="80" autocomplete="off" aria-describedby="unit-set-help"></label>
+              <div class="fea-setup-actions"><button id="save-unit-preset" type="button">Save copy</button><button id="delete-unit-preset" type="button">Delete</button></div>
+              <p id="unit-set-help" class="fea-help">Edit the name to save or rename a set. Changes to a saved set are saved automatically in this browser.</p>
+              <div id="preferred-unit-fields"></div>
+              <p id="units-error" role="status" aria-live="polite"></p>
             </section>
           </div>
           <div id="settings-panel-appearance" role="tabpanel" aria-labelledby="settings-tab-appearance" hidden>
@@ -421,6 +433,8 @@
   <script src="js/ui/setup-inspector-summary.js"></script>
   <script src="js/ui/analysis-authoring-ui.js"></script>
   <script src="js/ui/result-formatting.js"></script>
+<script src="js/ui/unit-preferences.js"></script>
+<script src="js/ui/unit-settings-ui.js"></script>
   <script src="js/ui/result-summary.js"></script>
   <script src="js/ui/workspace-layout.js"></script>
   <script src="js/ui/result-legend.js"></script>

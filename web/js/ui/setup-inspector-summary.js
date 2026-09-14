@@ -6,6 +6,8 @@
     return String(rounded).replace('-', '−');
   }
 
+  function quantity(value, key) { return formatNumber(root.SpjutsimFEA.preferredFromSI(key,value)) + ' ' + root.SpjutsimFEA.preferredUnit(key); }
+
   function faceCountText(faceIds) {
     var count = Array.isArray(faceIds) ? faceIds.length : 0;
     return count + (count === 1 ? ' face' : ' faces');
@@ -38,8 +40,8 @@
     var material = documentState.material;
     if (!material) { return row('material', 'material', 'Add material…', '', 'No material'); }
     return row('material', 'material', material.name || 'Unnamed material',
-      'E: ' + formatNumber(material.youngsModulusPa / 1e9) + ' GPa',
-      material.densityKgM3 ? formatNumber(material.densityKgM3) + ' kg/m³' : 'Density not set');
+      'E: ' + quantity(material.youngsModulusPa,'youngsModulusPa'),
+      material.densityKgM3 ? quantity(material.densityKgM3,'densityKgM3') : 'Density not set');
   }
 
   function summarizeSupportRow(item) {
@@ -47,8 +49,7 @@
     var components = ['x', 'y', 'z'].filter(function (axis) {
       return item.componentsM[axis] !== undefined;
     }).map(function (axis) {
-      var valueMm = root.SpjutsimFEA.siToDisplay('displacementM', item.componentsM[axis]);
-      return axis.toUpperCase() + ' ' + formatNumber(valueMm) + ' mm';
+      return axis.toUpperCase() + ' ' + quantity(item.componentsM[axis],'displacementM');
     }).join(' · ');
     if (fixed) { components = 'Fixed · X, Y, Z'; }
     return row('support', item.id, item.name, components, faceCountText(item.faceIds));
@@ -57,17 +58,17 @@
   function summarizeLoadRow(item) {
     var summary;
     if (item.type === 'pressure') {
-      summary = 'Pressure · ' + formatNumber(root.SpjutsimFEA.siToDisplay('pressurePa', item.pressurePa)) + ' MPa';
+      summary = 'Pressure · ' + quantity(item.pressurePa,'pressurePa');
     } else if (item.direction === 'surface-normal') {
-      summary='Force · '+formatNumber(item.magnitudeN)+' N · '+item.sense+' normal';
+      summary='Force · '+quantity(item.magnitudeN,'forceN')+' · '+item.sense+' normal';
     } else {
-      summary = 'Force · [' + item.forceN.map(formatNumber).join(', ') + '] N';
+      summary = 'Force · [' + item.forceN.map(function(v){return formatNumber(root.SpjutsimFEA.preferredFromSI('forceN',v));}).join(', ') + '] ' + root.SpjutsimFEA.preferredUnit('forceN');
     }
     return row('load', item.id, item.name, summary, faceCountText(item.faceIds));
   }
 
   function summarizeGravityRow(gravity) {
-    return row('gravity', 'gravity', 'Gravity', '[' + gravity.accelerationMS2.map(formatNumber).join(', ') + '] m/s²', 'Body load');
+    return row('gravity', 'gravity', 'Gravity', '[' + gravity.accelerationMS2.map(function(v){return formatNumber(root.SpjutsimFEA.preferredFromSI('accelerationMS2',v));}).join(', ') + '] ' + root.SpjutsimFEA.preferredUnit('accelerationMS2'), 'Body load');
   }
 
   function summarizeMeshRow(documentState) {

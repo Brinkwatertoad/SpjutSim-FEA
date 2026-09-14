@@ -54,16 +54,7 @@
     this.lastSupportType = this.supportType ? this.supportType.value : 'fixed';
     this.lastLoadType = this.loadType ? this.loadType.value : 'total-force';
     try { storage = root.localStorage; } catch (error) { storage = null; }
-    this.loadUnitStorage = storage;
-    this.loadUnits = { pressurePa: 'MPa', forceN: 'N' };
-    try {
-      var savedUnits = JSON.parse(storage && storage.getItem('spjutsim-fea.load-input-units'));
-      Object.keys(this.loadUnits).forEach(function (quantity) {
-        if (savedUnits && Object.prototype.hasOwnProperty.call(root.SpjutsimFEA.LOAD_INPUT_UNITS[quantity], savedUnits[quantity])) {
-          this.loadUnits[quantity] = savedUnits[quantity];
-        }
-      }, this);
-    } catch (error) { /* Unavailable preferences use SI display defaults. */ }
+    this.loadUnits = { pressurePa: root.SpjutsimFEA.preferredUnit('pressurePa'), forceN: root.SpjutsimFEA.preferredUnit('forceN') };
     this.materialCatalog = root.SpjutsimFEA.MaterialCatalog ? new root.SpjutsimFEA.MaterialCatalog(storage) : null;
     this.renderedMaterial = undefined;
     this.materialFeedback = null;
@@ -84,7 +75,7 @@
   }
 
   function setOptionalDisplay(id, quantity, value) {
-    byId(id).value = value == null ? '' : String(root.SpjutsimFEA.siToDisplay(quantity, value));
+    byId(id).value = value == null ? '' : String(root.SpjutsimFEA.preferredFromSI(quantity, value));
   }
 
   function setFeedback(element, feedback, fallback) {
@@ -151,7 +142,7 @@
     if (byId('load-force-mode')) { byId('load-force-mode').addEventListener('change',function(){self.renderLoadType();}); }
     if (byId('setup-gravity-button')) { byId('setup-gravity-button').addEventListener('click',function(){self.openInspectorRow('gravity','gravity',this);}); }
     if (byId('gravity-direction')) { ['input','change'].forEach(function(eventName){byId('gravity-direction').addEventListener(eventName,function(){
-      if(this.value==='custom')return;var direction=this.value,magnitude=Math.hypot.apply(Math,['x','y','z'].map(function(a){return Number(byId('gravity-'+a).value);}))||9.80665;
+      if(this.value==='custom')return;var direction=this.value,magnitude=Math.hypot.apply(Math,['x','y','z'].map(function(a){return Number(byId('gravity-'+a).value);}))||root.SpjutsimFEA.preferredFromSI('accelerationMS2',9.80665);
       ['x','y','z'].forEach(function(a){byId('gravity-'+a).value=direction[1]===a ? (direction[0]==='-'?-1:1)*magnitude : 0;});
     });}); }
     byId('cancel-gravity-edit').addEventListener('click',function(){self.closeInspectorRow({restoreFocus:true,cancelEdit:true});});
@@ -263,19 +254,19 @@
 
   AnalysisAuthoringUI.prototype.readMaterial = function () {
     var material = {
-      youngsModulusPa: root.SpjutsimFEA.displayToSI('youngsModulusPa', readNumber('material-youngs', "Young's modulus")),
+      youngsModulusPa: root.SpjutsimFEA.preferredToSI('youngsModulusPa', readNumber('material-youngs', "Young's modulus")),
       poissonsRatio: readNumber('material-poisson', "Poisson's ratio")
     };
     var name = byId('material-name').value.trim();
     var density = readNumber('material-density', 'density', true);
     if (name) { material.name = name; }
-    if (density !== undefined) { material.densityKgM3 = root.SpjutsimFEA.displayToSI('densityKgM3', density); }
+    if (density !== undefined) { material.densityKgM3 = root.SpjutsimFEA.preferredToSI('densityKgM3', density); }
     [
       ['material-tensile-yield', 'tensileYieldPa'], ['material-compressive-yield', 'compressiveYieldPa'],
       ['material-ultimate-tensile', 'ultimateTensilePa'], ['material-ultimate-compressive', 'ultimateCompressivePa']
     ].forEach(function (entry) {
       var value = readNumber(entry[0], entry[1], true);
-      if (value !== undefined) { material[entry[1]] = root.SpjutsimFEA.displayToSI('strengthPa', value); }
+      if (value !== undefined) { material[entry[1]] = root.SpjutsimFEA.preferredToSI('strengthPa', value); }
     });
     return material;
   };
@@ -344,7 +335,7 @@
     }
     this.removeMaterialButton.disabled = !material;
     setFeedback(this.materialStatus, this.materialFeedback, material
-      ? (material.name || 'Unnamed material') + ' · ' + root.SpjutsimFEA.siToDisplay('youngsModulusPa', material.youngsModulusPa) + ' GPa'
+      ? (material.name || 'Unnamed material') + ' · ' + root.SpjutsimFEA.preferredFromSI('youngsModulusPa', material.youngsModulusPa) + ' ' + root.SpjutsimFEA.preferredUnit('youngsModulusPa')
       : 'No material defined.');
     this.renderMaterialCatalogSelection();
   };
@@ -373,7 +364,7 @@
     } else {
       ['ux', 'uy', 'uz'].forEach(function (axis) {
         if (byId('support-' + axis + '-enabled').checked) {
-          support.componentsM[axis.slice(1)] = root.SpjutsimFEA.displayToSI('displacementM', readNumber('support-' + axis, axis.toUpperCase() + ' displacement'));
+          support.componentsM[axis.slice(1)] = root.SpjutsimFEA.preferredToSI('displacementM', readNumber('support-' + axis, axis.toUpperCase() + ' displacement'));
         }
       });
     }
@@ -420,7 +411,7 @@
     ['ux', 'uy', 'uz'].forEach(function (axis) {
       var value = item.componentsM[axis.slice(1)];
       byId('support-' + axis + '-enabled').checked = value !== undefined;
-      byId('support-' + axis).value = value === undefined ? '' : String(root.SpjutsimFEA.siToDisplay('displacementM', value));
+      byId('support-' + axis).value = value === undefined ? '' : String(root.SpjutsimFEA.preferredFromSI('displacementM', value));
     });
     this.supportForm.querySelector('button[type="submit"]').textContent = 'Save changes';
     this.cancelSupportEdit.hidden = false;
@@ -484,24 +475,8 @@
   };
 
   AnalysisAuthoringUI.prototype.changeLoadUnit = function (quantity, symbol) {
-    var api = root.SpjutsimFEA, previous = this.loadUnits[quantity];
-    var ids = quantity === 'pressurePa' ? ['load-pressure'] : ['load-magnitude','load-fx','load-fy','load-fz'];
-    try {
-      // Compute first: one invalid field must not partially convert the other components.
-      var converted = ids.map(function (id) {
-        var input = byId(id);
-        if (input.validity && input.validity.badInput) { throw new Error('Complete the force or pressure value before changing its unit.'); }
-        return input.value.trim() === '' ? '' : String(api.siToDisplay(quantity, api.displayToSI(quantity, Number(input.value), previous), symbol));
-      });
-      ids.forEach(function (id, index) { byId(id).value = converted[index]; });
-      this.loadUnits[quantity] = symbol;
-      try { if (this.loadUnitStorage) { this.loadUnitStorage.setItem('spjutsim-fea.load-input-units', JSON.stringify(this.loadUnits)); } } catch (error) { /* Session preference still works. */ }
-      this.loadFeedback = null;
-    } catch (error) {
-      this.loadFeedback = { error: true, message: error.message };
-      setFeedback(this.loadStatus, this.loadFeedback, '');
-    }
-    this.syncLoadUnits();
+    if (typeof this.onLoadUnitChange !== 'function') { throw Error('Unit settings must be initialized before changing load units.'); }
+    this.onLoadUnitChange(quantity, symbol);
   };
 
   AnalysisAuthoringUI.prototype.renderLoadType = function () {
@@ -602,7 +577,7 @@
   };
 
   AnalysisAuthoringUI.prototype.readGravity = function () {
-    return {enabled:true,accelerationMS2:['x','y','z'].map(function (axis) { return readNumber('gravity-'+axis,'gravity '+axis.toUpperCase()); })};
+    return {enabled:true,accelerationMS2:['x','y','z'].map(function (axis) { return root.SpjutsimFEA.preferredToSI('accelerationMS2', readNumber('gravity-'+axis,'gravity '+axis.toUpperCase())); })};
   };
 
   AnalysisAuthoringUI.prototype.saveGravity = function () {
@@ -625,7 +600,7 @@
     if (!this.gravityForm.contains(document.activeElement) && gravity.accelerationMS2) {
       var nonzero = gravity.accelerationMS2.map(function(v,i){return v ? i : -1;}).filter(function(i){return i>=0;});
       byId('gravity-direction').value = nonzero.length===1 ? (gravity.accelerationMS2[nonzero[0]]<0?'-':'+')+'xyz'[nonzero[0]] : 'custom';
-      ['x','y','z'].forEach(function(axis,i){byId('gravity-'+axis).value=String(gravity.accelerationMS2[i]);});
+      ['x','y','z'].forEach(function(axis,i){byId('gravity-'+axis).value=String(root.SpjutsimFEA.preferredFromSI('accelerationMS2',gravity.accelerationMS2[i]));});
     }
     byId('apply-gravity-button').textContent = documentState.gravity.enabled ? 'Save changes' : 'Apply gravity';
     byId('remove-gravity-button').hidden = !documentState.gravity.enabled;

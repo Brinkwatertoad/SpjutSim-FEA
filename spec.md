@@ -3022,3 +3022,7 @@ Plan 31 implementation contracts:
   Auto shape with the existing scale calculation. Output uses current projection,
   result display units and viewport resolution. No PDF or project serialization
   is introduced. No new application dependencies or worker artifacts are needed.
+
+### Plan 32 — document reports and unit preferences
+
+- [ ] [Document reports and preferred units](docs/plans/32-document-report-and-unit-preferences.md): dependency-free DOCX alongside text/PNG ZIP, stable Settings size, SI/USCS and saved custom display/input units. Engineering state remains SI; preference changes preserve entered physical values and solved results.

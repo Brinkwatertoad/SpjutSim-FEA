@@ -283,3 +283,9 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 .fea-unit-label { display: flex; align-items: center; gap: 3px; }
 .fea-unit-label label { margin: 0; }
 #load-form select.fea-inline-unit { display: inline-block; width: auto; min-height: 24px; padding: 1px 3px; font: inherit; }
+
+/* FEA-owned Settings dimensions; keep the pinned portable UI foundation unchanged. */
+#settings-dialog { width: min(840px, calc(100vw - 32px)); height: min(720px, calc(100dvh - 32px)); }
+#settings-dialog .ui-settings-hub { flex: 1 1 auto; min-height: 0; }
+#settings-dialog .ui-settings-hub-content { min-height: 0; min-width: 0; overflow: hidden; }
+#settings-dialog [role="tabpanel"] { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-gutter: stable; }
