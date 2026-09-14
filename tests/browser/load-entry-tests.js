@@ -28,10 +28,12 @@
       fill('load-force-mode','components');fill('load-fx','-2');fill('load-fy','3');fill('load-fz','0.5');
       fill('load-vector-unit','lbf');near(Number(doc.getElementById('load-fx').value),-2000/4.4482216152605);
       click('#load-form button[type="submit"]');near(app.document.loads[0].forceN[0],-2000);near(app.document.loads[0].forceN[1],3000);near(app.document.loads[0].forceN[2],500);
-      click('#setup-add-load-button');fill('load-type','pressure');fill('load-pressure','2');fill('load-pressure-unit','psi');near(Number(doc.getElementById('load-pressure').value),2e6/6894.757293168361);
+      app.replaceSelectedFaces([app.document.geometry.faceIds[1]]);click('#setup-add-load-button');fill('load-type','pressure');fill('load-pressure','2');fill('load-pressure-unit','psi');near(Number(doc.getElementById('load-pressure').value),2e6/6894.757293168361);
       fill('load-pressure-unit','ksi');fill('load-pressure-unit','Pa');near(Number(doc.getElementById('load-pressure').value),2e6);
       fill('load-pressure','');fill('load-pressure-unit','MPa');assert(doc.getElementById('load-pressure').value==='','Blank became zero');
       fill('load-pressure','-3');fill('load-pressure-unit','psi');near(author.readLoad().pressurePa,-3e6);
+      click('#load-form button[type="submit"]');near(app.document.loads[1].pressurePa,-3e6);
+      click('[data-setup-kind="load"][data-item-id="'+app.document.loads[1].id+'"] [data-setup-row-trigger]');near(Number(doc.getElementById('load-pressure').value),-3e6/6894.757293168361);
       var saved=JSON.parse(win.localStorage.getItem('spjutsim-fea.load-input-units'));assert(saved.forceN==='lbf'&&saved.pressurePa==='psi','Preferences not persisted');
       var fresh=new api.AnalysisAuthoringUI(app);assert(fresh.loadUnits.forceN==='lbf'&&fresh.loadUnits.pressurePa==='psi','Preferences not loaded');
       var previous=doc.getElementById('load-fx').value;author.changeLoadUnit('forceN','psi');assert(doc.getElementById('load-fx').value===previous&&author.loadUnits.forceN==='lbf','Rejected change partially converted');

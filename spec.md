@@ -1786,7 +1786,7 @@ it. A drawer may temporarily cover these areas until dismissed.
 The menubar places File/Edit/View menus immediately after the app title and runtime
 status at the far right. Solve retains its accent background.
 A separate action bar immediately below the menubar contains Tools on the left,
-engineering Undo/Redo, disabled Save/Export placeholders, and Solve immediately left of
+engineering Undo/Redo, a disabled Save placeholder and solved-report Export, and Solve immediately left of
 Results on the right. Use Truss-style right/down disclosure triangles inside
 the Tools and Results panels. Solve opens Checks and runs preflight if no current
 prepared worker exists, then continues automatically when permitted. Execution
@@ -2978,7 +2978,7 @@ Fit model uses a brief, cancellable camera animation that preserves the viewing
 angle and honors reduced-motion preferences. Its Truss zoom-to-fit icon is below
 and left of the view gizmo, opposite Reset, with the same hover/focus styling.
 Undo, Redo, Save, Export, Setup, and Results reuse the Truss action icons; Setup
-and Results retain text labels, while Save/Export remain disabled placeholders.
+and Results retain text labels, while Save remains a disabled placeholder and Export downloads the solved report.
 The Setup toggle replaces the panel's duplicate title. Add material has no
 “required before solving” subtitle. Edit shows Ctrl+Z and Ctrl+Y beside its dynamic
 Undo/Redo descriptions.
@@ -2988,10 +2988,37 @@ workflow; M28 is accepted; M29 review, plan 30, and the final release audit rema
 
 ## Material, load-entry, and report follow-up
 
-- [ ] [Plan 31: material strengths, load units, and report export](docs/plans/31-material-units-and-report.md)
+- [x] [Plan 31: material strengths, load units, and report export](docs/plans/31-material-units-and-report.md)
   adds documented bulk PLA tensile/compressive yield and ABS compressive yield;
   persistent inline pressure (MPa default, Pa, psi, ksi) and force (N default,
   kN, lbf, kip) unit choices that convert draft values while preserving SI;
   Force as the initial load type; undeformed part dimensions in Results; and a
   local ZIP report with all Results information and reset/fitted scene PNGs for
   assignments, mesh, stress, optional FoS, and Auto deformation.
+
+
+Plan 31 implementation contracts:
+- PLA adds 62 MPa tensile yield and 70.8 MPa compressive yield; ABS adds 46.1 MPa
+  compressive yield. Existing fields retain their provenance. These are bulk
+  reference inputs with explicit mixed-source limitations; see
+  [material strength evidence](docs/material-strengths.md).
+- Load unit preferences belong to the authoring UI, under browser storage key
+  `spjutsim-fea.load-input-units`; analysis loads remain SI. Pressure defaults to
+  MPa and force to N. Changing a unit converts all associated values atomically;
+  blank inputs remain blank and invalid changes retain the previous preference.
+- Results/report summary rows share `web/js/ui/result-summary.js`. Original part
+  size is the undeformed geometry bounding box in study global axes, displayed
+  using the result length unit. It does not include deformation exaggeration.
+- `web/js/ui/report-export.js` owns report formatting, export eligibility and
+  dependency-free stored ZIP packaging. Current solved results are required;
+  drafts, running operations and stale revisions cannot export. `report.txt`
+  includes setup parameters, material provenance where matched, assumptions,
+  Results/diagnostics and the convergence table; tables use tabs between cells.
+- `web/js/render/report-capture.js` owns five preset scene PNGs (four without FoS).
+  Each capture applies Reset View then Fit Model and restores camera, selection,
+  probe, overlays, presentation and animation multiplier in `finally`. Main-scene
+  rendering omits grid/gizmo/chrome. Legends share the renderer's color function
+  with explicit linear-to-sRGB conversion. Result limits are Auto; deformation is
+  Auto shape with the existing scale calculation. Output uses current projection,
+  result display units and viewport resolution. No PDF or project serialization
+  is introduced. No new application dependencies or worker artifacts are needed.

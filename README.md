@@ -238,7 +238,7 @@ transferable result models with raw and smoothed stress fields, reactions,
 equilibrium and solver diagnostics. The workspace has persistent Setup/Results width preferences, visible pane
 toggles, and keyboard/pointer splitters. A separate action bar below the menubar
 places Tools and engineering Undo/Redo on the left and Solve beside Results on
-the right. Save/Export remain disabled placeholders. Disclosure triangles inside both panels match
+the right. Save remains a disabled placeholder; Export downloads the solved analysis report. Disclosure triangles inside both panels match
 Truss. Solve opens Checks, runs preflight, and continues to Results when the
 check passes. Large-memory confirmation and cancellation remain available. Empty Results starts collapsed. Below
 1000 CSS pixels one pane is active at a time; below 680 pixels panes become
@@ -461,3 +461,22 @@ undeformed part's X × Y × Z bounding dimensions in the study's global axes, us
 the selected result length unit. Check these dimensions for import-unit mistakes.
 The [polymer yield references](docs/material-strengths.md) document the bulk PLA
 and ABS defaults and their limits.
+
+
+After solving, use the **Export** icon in the action bar to download one ZIP.
+It contains UTF-8 `report.txt` (tab-delimited Results, diagnostics and convergence
+rows, plus material, support/load, import, mesh and solver parameters) and named
+PNGs of loads/supports, mesh, von Mises stress, yield FoS when available, and
+Auto deformation. Captures use Reset View then Fit Model, automatic color ranges,
+the current projection and result units, and the viewport's resolution. They omit
+controls, the grid, selection and probes; each relevant image includes a legend.
+Your view is restored after each capture. Export is unavailable during active
+operations or assignment previews and aborts if the analysis changes. PDF export
+and editable project saving remain future work.
+
+`tests/browser/material-strength-tests.html`, `load-unit-tests.html`,
+`load-entry-tests.html`, `report-tests.html`, and `report-workflow-tests.html`
+cover bulk-yield provenance, conversions and editing, ZIP structure/checksums,
+report text, actual solved captures, download, restoration and stale export.
+Open them in headless Chromium with local-file access or via the optional server,
+as with the other browser harnesses.

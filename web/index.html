@@ -58,7 +58,7 @@
         <button type="button" id="undo-button" data-history-action="undo" disabled title="Undo setup edit" aria-label="Undo"><svg class="fea-action-icon" data-action-icon="undo" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="10 6 5 11 10 16"/><path d="M6 11h8c3.5 0 5 2 5 5"/></svg></button>
         <button type="button" id="redo-button" data-history-action="redo" disabled title="Redo setup edit" aria-label="Redo"><svg class="fea-action-icon" data-action-icon="redo" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="14 6 19 11 14 16"/><path d="M18 11h-8c-3.5 0-5 2-5 5"/></svg></button>
         <button type="button" data-placeholder="save" disabled title="Save — not implemented yet" aria-label="Save — not implemented yet"><svg class="fea-action-icon" data-action-icon="save" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h9.5L18 7.5V19H6z"/><path d="M9 5v5h6V5"/><path d="M8.5 14h7M8.5 17h7"/></svg></button>
-        <button type="button" data-placeholder="export" disabled title="Export — not implemented yet" aria-label="Export — not implemented yet"><svg class="fea-action-icon" data-action-icon="export" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10"/><polyline points="8 10 12 14 16 10"/><rect x="5" y="16" width="14" height="4" rx="1"/></svg></button>
+        <button type="button" id="export-report-button" disabled title="Download analysis report ZIP" aria-label="Download analysis report ZIP"><svg class="fea-action-icon" data-action-icon="export" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10"/><polyline points="8 10 12 14 16 10"/><rect x="5" y="16" width="14" height="4" rx="1"/></svg></button>
       </div>
       <span id="solve-readiness" hidden></span>
       <button id="cancel-solve-button" type="button" hidden>Cancel</button>
@@ -260,6 +260,7 @@
         </div>
         <section id="results-panel" role="tabpanel" aria-labelledby="results-tab" data-output-panel="results">
           <p id="solve-output-status" role="status" aria-live="polite" hidden></p>
+          <p id="report-status" role="status" aria-live="polite"></p>
           <p id="results-empty">No analysis results.</p>
           <section id="results-summary" hidden><h2>Results</h2>
             <p id="peak-headline"></p><p id="yield-headline"></p><p id="trust-headline"></p>
@@ -425,6 +426,8 @@
   <script src="js/ui/result-legend.js"></script>
 <script src="js/ui/legend-layout.js"></script>
 <script src="js/ui/ui-controller.js"></script>
+<script src="js/render/report-capture.js"></script>
+<script src="js/ui/report-export.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source-part-001.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source-part-002.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source-part-003.js"></script>

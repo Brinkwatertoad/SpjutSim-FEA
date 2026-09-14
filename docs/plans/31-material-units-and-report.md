@@ -20,7 +20,7 @@ Execute directly in the current agent on `feat/material-load-units-report`.
   choices independently; reopening an SI load displays the selected units. Force
   is the initial load type. Show undeformed part bounding dimensions immediately
   before mesh/system rows in Results. Add browser regressions, then commit.
-- [ ] Report: enable the existing Export action only for current solved results
+- [x] Report: enable the existing Export action only for current solved results
   without pending edits or running operations. Download one ZIP containing UTF-8
   `report.txt` with parameters, Results/diagnostics and convergence rows (tab
   delimited), plus numbered PNGs: loads/supports, mesh, von Mises stress,
@@ -29,9 +29,11 @@ Execute directly in the current agent on `feat/material-load-units-report`.
   includes the appropriate result legend. Preserve the user's presentation and
   camera on success/failure. Use a dependency-free stored ZIP writer (PNGs are
   already compressed). Test ZIP interoperability and real headless captures.
-- [ ] Run full Python/native suites and applicable browser harnesses; review the
+- [x] Run full Python/native suites and applicable browser harnesses; review the
   complete diff, update documentation/checklists, and commit the report feature.
 
 Validation includes conversion round trips, signed forces, invalid/blank input,
 reopening/saving loads, preference persistence, unavailable FoS, snapshot/restoration
 on capture failure, ZIP CRC/readback, file:// loading, and solved numerical regression.
+
+Completed verification: [results and limitations](../reviews/31-material-units-and-report.md).

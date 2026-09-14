@@ -361,6 +361,7 @@
   ui.setConvergenceHandlers(startConvergence, cancelConvergence);
   viewport.setProbeHandler(function (probe) { ui.renderProbe(probe); });
   ui.start();
+  api.bindReportExport(app, viewport, ui);
 
   var repeatedMesherCheck = api.exerciseMesherRuntime().then(function (firstResult) {
     return api.exerciseMesherRuntime().then(function () { return firstResult; });

@@ -566,7 +566,7 @@
     if(byId('load-force-mode'))byId('load-force-mode').value=item.direction==='surface-normal' && item.type==='total-force' ? 'normal' : 'components';
     if(byId('load-magnitude'))byId('load-magnitude').value=root.SpjutsimFEA.siToDisplay('forceN', item.magnitudeN || 1, this.loadUnits.forceN);
     if(byId('load-sense'))byId('load-sense').value=item.sense || 'push';
-    byId('load-pressure').value = item.pressurePa === undefined ? '1' : String(root.SpjutsimFEA.siToDisplay('pressurePa', item.pressurePa, this.loadUnits.pressurePa));
+    byId('load-pressure').value = String(root.SpjutsimFEA.siToDisplay('pressurePa', item.pressurePa === undefined ? 1e6 : item.pressurePa, this.loadUnits.pressurePa));
     var unit = this.loadUnits.forceN;
     ['x', 'y', 'z'].forEach(function (axis, index) { byId('load-f' + axis).value = root.SpjutsimFEA.siToDisplay('forceN', item.forceN ? item.forceN[index] : (index===1?1:0), unit); });
     this.loadForm.querySelector('button[type="submit"]').textContent = 'Save changes';

@@ -967,9 +967,8 @@
     if (this.diagnosticsSummary) { this.diagnosticsSummary.hidden = !result; }
     if (!result) { if (this.peakLocationStatus) { this.peakLocationStatus.textContent = ''; } return; }
     var presentation = documentState.viewportPresentation || {};
-    var stressUnit = presentation.stressUnit || 'MPa', lengthUnit = presentation.lengthUnit || 'mm';
+    var stressUnit = presentation.stressUnit || 'MPa';
     function stress(value) { return root.SpjutsimFEA.formatResultMagnitude(value,stressUnit); }
-    function displacement(value) { return root.SpjutsimFEA.formatResultMagnitude(value,lengthUnit); }
     if (this.peakHeadline) { this.peakHeadline.textContent = 'Peak von Mises — unaveraged solver samples: ' + stress(result.extrema.rawVonMisesMax.valuePa); }
     if (this.yieldHeadline) { this.yieldHeadline.textContent = result.factorOfSafety ? 'Yield FoS — unaveraged solver samples: ' + formatNumber(result.factorOfSafety.rawMinimum.value) : 'Yield FoS unavailable — supply a tensile or compressive yield strength.'; }
     if (this.trustHeadline) { this.trustHeadline.textContent = 'Convergence: ' + convergenceStatusMessage(documentState.convergenceStudy) + ' Review support/load concentrations for possible singularities; one solve does not establish safety.'; }

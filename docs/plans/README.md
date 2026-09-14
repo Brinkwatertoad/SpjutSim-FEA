@@ -140,3 +140,11 @@ records remain historical evidence; changes to their inputs invalidate the
 corresponding candidate claim. Plan 30 repeats integrated acceptance, and Plan
 20 finally binds the complete audit to the exact accepted artifact. No early
 version-status change, v1 tag, or publication follows from a partial pass.
+
+
+## Additional owner-requested improvements
+
+31. [x] [Material strengths, load units, and report export](31-material-units-and-report.md)
+    — implemented with sourced bulk defaults, inline load conversion, original
+    dimensions and local ZIP reports; see [verification](../reviews/31-material-units-and-report.md).
+    This independent request does not change the outstanding M29/M30/v1 gates.

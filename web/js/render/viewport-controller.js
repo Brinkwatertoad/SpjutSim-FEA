@@ -1451,5 +1451,6 @@
   root.SpjutsimFEA = root.SpjutsimFEA || {};
   root.SpjutsimFEA.pointerToCanvasCoordinates = pointerToCanvasCoordinates;
   root.SpjutsimFEA.refreshViewportTheme = refreshViewportTheme;
+  root.SpjutsimFEA.resultColor = resultColor;
   root.SpjutsimFEA.ViewportController = ViewportController;
 }(globalThis));
