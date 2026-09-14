@@ -973,38 +973,9 @@
     if (this.peakHeadline) { this.peakHeadline.textContent = 'Peak von Mises — unaveraged solver samples: ' + stress(result.extrema.rawVonMisesMax.valuePa); }
     if (this.yieldHeadline) { this.yieldHeadline.textContent = result.factorOfSafety ? 'Yield FoS — unaveraged solver samples: ' + formatNumber(result.factorOfSafety.rawMinimum.value) : 'Yield FoS unavailable — supply a tensile or compressive yield strength.'; }
     if (this.trustHeadline) { this.trustHeadline.textContent = 'Convergence: ' + convergenceStatusMessage(documentState.convergenceStudy) + ' Review support/load concentrations for possible singularities; one solve does not establish safety.'; }
-    var entries = [
-      ['Element', result.elementType.toUpperCase()],
-      ['System', result.meshStatistics.nodeCount + ' nodes / ' + result.meshStatistics.elementCount + ' elements / ' + result.meshStatistics.nodeCount * 3 + ' DOF'],
-      ['Max displacement', displacement(result.extrema.maxDisplacement.valueM)],
-      ['Max displacement location', result.extrema.maxDisplacement.locationM.map(function (v) { return formatNumber(v, 'm'); }).join(', ')],
-      ['Peak von Mises — unaveraged solver samples', stress(result.extrema.rawVonMisesMax.valuePa)],
-      ['Interior solver sample location', result.extrema.rawVonMisesMax.locationM.map(function (v) { return formatNumber(v, 'm'); }).join(', ')],
-      ['Smoothed surface von Mises max', stress(result.extrema.displayedVonMisesMax.valuePa)],
-      ['Max principal', stress(result.extrema.rawMaxPrincipal.valuePa)],
-      ['Min principal', stress(result.extrema.rawMinPrincipal.valuePa)],
-      ['Applied force', result.equilibrium.totalAppliedForceN.map(function (v) { return formatNumber(v, 'N'); }).join(', ')],
-      ['Reaction', result.equilibrium.totalReactionN.map(function (v) { return formatNumber(v, 'N'); }).join(', ')],
-      ['Strain energy', formatNumber(result.solverStatistics.strainEnergyJ, 'J')],
-      ['Convergence', result.convergenceStatus === 'not-run' ? 'Not studied' : result.convergenceStatus],
-      ['Assumptions', result.assumptions.join(', ')]
-    ];
-    if (result.factorOfSafety) {
-      entries.splice(7, 0,
-        ['Yield FoS — unaveraged samples', formatNumber(result.factorOfSafety.rawMinimum.value)],
-        ['Smoothed surface minimum FoS (uncapped)', formatNumber(result.factorOfSafety.displayedMinimum)],
-        ['FoS criterion', 'von Mises yield · ' + stress(result.factorOfSafety.strength.valuePa)]);
-    }
-    replaceDefinitionList(this.resultsValues, entries);
-    replaceDefinitionList(this.diagnosticsValues, [
-      ['Iterations', String(result.solverStatistics.iterations)],
-      ['Solver residual', formatNumber(result.solverStatistics.finalRelativeResidual)],
-      ['Force balance', formatNumber(result.equilibrium.relativeResidual)],
-      ['Solve time', formatNumber(result.solverStatistics.solveDurationMs, 'ms')],
-      ['Mesh', result.meshStatistics.nodeCount + ' nodes / ' + result.meshStatistics.elementCount + ' ' + result.elementType.toUpperCase() + ' elements'],
-      ['WASM memory', formatBytes(result.solverStatistics.wasmMemoryBytes)],
-      ['Warnings', result.warnings.length ? result.warnings.join(' ') : 'None']
-    ]);
+    var summary = root.SpjutsimFEA.resultSummaryRows(documentState);
+    replaceDefinitionList(this.resultsValues, summary.values);
+    replaceDefinitionList(this.diagnosticsValues, summary.diagnostics);
   };
 
   UIController.prototype.renderConvergence = function (documentState) {

@@ -14,6 +14,11 @@
     factorOfSafety:{rawMinimum:{value:2},displayedMinimum:2.5,strength:{valuePa:10000}}
   };
   try {
+    var summaryState = {results:result,geometry:{boundingBoxM:{minM:[-0.01,0,0],maxM:[0.01,0.03,0.04]}},viewportPresentation:{lengthUnit:'mm'}};
+    var sizeRow = api.resultSummaryRows(summaryState).values[0];
+    assert(sizeRow[0] === 'Original part size (X × Y × Z)' && sizeRow[1] === '20 mm × 30 mm × 40 mm', 'Original part dimensions are missing or incorrectly scaled');
+    summaryState.viewportPresentation.lengthUnit = 'in';
+    assert(api.resultSummaryRows(summaryState).values[0][1].startsWith('0.7874 in'), 'Part dimensions do not follow result length units');
     var display = Object.create(api.ViewportController.prototype);
     display.presentation = {mode:'stress', displayStyle:'lines', meshOverlay:false};
     display.resultSurface = {material:{}};

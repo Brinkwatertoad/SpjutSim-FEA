@@ -136,11 +136,11 @@
               <p class="fea-help">Positive pressure pushes inward. Normal force is distributed by area along each local normal; components use global axes.</p>
               <form id="load-form" novalidate>
                 <label for="load-name">Name</label><input id="load-name" type="text" maxlength="160" required>
-                <label for="load-type">Type</label><select id="load-type"><option value="pressure">Pressure</option><option value="total-force">Total force</option></select>
-                <div id="pressure-fields"><label for="load-pressure">Pressure (MPa)</label><input id="load-pressure" type="number" step="any" value="1"></div>
-                <div id="force-mode-fields" hidden><label for="load-force-mode">Direction</label><select id="load-force-mode"><option value="normal">Surface normal</option><option value="components">Components</option></select></div>
-                <div id="normal-force-fields" hidden><label for="load-magnitude">Magnitude (N)</label><input id="load-magnitude" type="number" step="any" min="0" value="1"><label for="load-sense">Direction along normal</label><select id="load-sense"><option value="push">Push inward</option><option value="pull">Pull outward</option></select></div>
-                <fieldset id="force-fields" hidden><legend>Total force vector (N)</legend>
+                <label for="load-type">Type</label><select id="load-type"><option value="total-force">Force</option><option value="pressure">Pressure</option></select>
+                <div id="pressure-fields" hidden><div class="fea-unit-label"><label for="load-pressure">Pressure</label> (<select id="load-pressure-unit" class="fea-inline-unit" data-load-unit="pressurePa" aria-label="Pressure input unit"><option>MPa</option><option>Pa</option><option>psi</option><option>ksi</option></select>)</div><input id="load-pressure" type="number" step="any" value="1"></div>
+                <div id="force-mode-fields"><label for="load-force-mode">Direction</label><select id="load-force-mode"><option value="normal">Surface normal</option><option value="components">Components</option></select></div>
+                <div id="normal-force-fields"><div class="fea-unit-label"><label for="load-magnitude">Magnitude</label> (<select id="load-force-unit" class="fea-inline-unit" data-load-unit="forceN" aria-label="Force input unit"><option>N</option><option>kN</option><option>lbf</option><option>kip</option></select>)</div><input id="load-magnitude" type="number" step="any" min="0" value="1"><label for="load-sense">Direction along normal</label><select id="load-sense"><option value="push">Push inward</option><option value="pull">Pull outward</option></select></div>
+                <fieldset id="force-fields" hidden><legend>Total force vector (<select id="load-vector-unit" class="fea-inline-unit" data-load-unit="forceN" aria-label="Force input unit"><option>N</option><option>kN</option><option>lbf</option><option>kip</option></select>)</legend>
                   <label for="load-fx">Fx</label><input id="load-fx" type="number" step="any" value="0">
                   <label for="load-fy">Fy</label><input id="load-fy" type="number" step="any" value="1">
                   <label for="load-fz">Fz</label><input id="load-fz" type="number" step="any" value="0">
@@ -420,6 +420,7 @@
   <script src="js/ui/setup-inspector-summary.js"></script>
   <script src="js/ui/analysis-authoring-ui.js"></script>
   <script src="js/ui/result-formatting.js"></script>
+  <script src="js/ui/result-summary.js"></script>
   <script src="js/ui/workspace-layout.js"></script>
   <script src="js/ui/result-legend.js"></script>
 <script src="js/ui/legend-layout.js"></script>

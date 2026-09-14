@@ -15,7 +15,7 @@ Execute directly in the current agent on `feat/material-load-units-report`.
 - [x] Material defaults: add field provenance and bulk-material limitations in
   `web/js/analysis/material-catalog.js` and `docs/material-strengths.md`; verify
   yield selection and catalog snapshot behavior, then commit.
-- [ ] Load entry and size: support MPa/Pa/psi/ksi and N/kN/lbf/kip with transactional
+- [x] Load entry and size: support MPa/Pa/psi/ksi and N/kN/lbf/kip with transactional
   conversion of pressure, normal magnitude, and all force components. Persist
   choices independently; reopening an SI load displays the selected units. Force
   is the initial load type. Show undeformed part bounding dimensions immediately

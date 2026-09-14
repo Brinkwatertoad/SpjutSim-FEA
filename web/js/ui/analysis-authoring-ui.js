@@ -52,8 +52,18 @@
     this.editingSupportId = null;
     this.editingLoadId = null;
     this.lastSupportType = this.supportType ? this.supportType.value : 'fixed';
-    this.lastLoadType = this.loadType ? this.loadType.value : 'pressure';
+    this.lastLoadType = this.loadType ? this.loadType.value : 'total-force';
     try { storage = root.localStorage; } catch (error) { storage = null; }
+    this.loadUnitStorage = storage;
+    this.loadUnits = { pressurePa: 'MPa', forceN: 'N' };
+    try {
+      var savedUnits = JSON.parse(storage && storage.getItem('spjutsim-fea.load-input-units'));
+      Object.keys(this.loadUnits).forEach(function (quantity) {
+        if (savedUnits && Object.prototype.hasOwnProperty.call(root.SpjutsimFEA.LOAD_INPUT_UNITS[quantity], savedUnits[quantity])) {
+          this.loadUnits[quantity] = savedUnits[quantity];
+        }
+      }, this);
+    } catch (error) { /* Unavailable preferences use SI display defaults. */ }
     this.materialCatalog = root.SpjutsimFEA.MaterialCatalog ? new root.SpjutsimFEA.MaterialCatalog(storage) : null;
     this.renderedMaterial = undefined;
     this.materialFeedback = null;
@@ -122,6 +132,14 @@
     });
     [this.supportForm, this.loadForm, this.gravityForm].forEach(function (form) {
       ['input','change'].forEach(function (eventName) { form.addEventListener(eventName, function () { self.updateDraftFromForm(); }); });
+    });
+    this.resetLoadForm(false);
+    Array.from(this.loadForm.querySelectorAll('[data-load-unit]')).forEach(function (select) {
+      select.addEventListener('change', function (event) {
+        event.stopPropagation();
+        self.changeLoadUnit(select.dataset.loadUnit, select.value);
+      });
+      select.addEventListener('input', function (event) { event.stopPropagation(); });
     });
     this.loadForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveLoad(); });
     this.loadType.addEventListener('change', function () {
@@ -458,6 +476,34 @@
     this.constraintStabilitySummary.classList.toggle('fea-warning', stability.status !== 'fully-constrained');
   };
 
+  AnalysisAuthoringUI.prototype.syncLoadUnits = function () {
+    var self = this;
+    Array.from(this.loadForm.querySelectorAll('[data-load-unit]')).forEach(function (select) {
+      select.value = self.loadUnits[select.dataset.loadUnit];
+    });
+  };
+
+  AnalysisAuthoringUI.prototype.changeLoadUnit = function (quantity, symbol) {
+    var api = root.SpjutsimFEA, previous = this.loadUnits[quantity];
+    var ids = quantity === 'pressurePa' ? ['load-pressure'] : ['load-magnitude','load-fx','load-fy','load-fz'];
+    try {
+      // Compute first: one invalid field must not partially convert the other components.
+      var converted = ids.map(function (id) {
+        var input = byId(id);
+        if (input.validity && input.validity.badInput) { throw new Error('Complete the force or pressure value before changing its unit.'); }
+        return input.value.trim() === '' ? '' : String(api.siToDisplay(quantity, api.displayToSI(quantity, Number(input.value), previous), symbol));
+      });
+      ids.forEach(function (id, index) { byId(id).value = converted[index]; });
+      this.loadUnits[quantity] = symbol;
+      try { if (this.loadUnitStorage) { this.loadUnitStorage.setItem('spjutsim-fea.load-input-units', JSON.stringify(this.loadUnits)); } } catch (error) { /* Session preference still works. */ }
+      this.loadFeedback = null;
+    } catch (error) {
+      this.loadFeedback = { error: true, message: error.message };
+      setFeedback(this.loadStatus, this.loadFeedback, '');
+    }
+    this.syncLoadUnits();
+  };
+
   AnalysisAuthoringUI.prototype.renderLoadType = function () {
     var pressure = this.loadType.value === 'pressure';
     this.pressureFields.hidden = !pressure;
@@ -468,13 +514,14 @@
   };
 
   AnalysisAuthoringUI.prototype.readLoad = function () {
+    var forceUnit = this.loadUnits.forceN;
     var load = { type: this.loadType.value, faceIds: (this.controller.document.assignmentDraft ? this.controller.document.assignmentDraft.faceIds : this.controller.document.selectedFaceIds).slice() };
     if (load.type === 'pressure') {
-      load.pressurePa = root.SpjutsimFEA.displayToSI('pressurePa', readNumber('load-pressure', 'pressure'));
+      load.pressurePa = root.SpjutsimFEA.displayToSI('pressurePa', readNumber('load-pressure', 'pressure'), this.loadUnits.pressurePa);
     } else if (byId('load-force-mode') && byId('load-force-mode').value==='normal') {
-      load.direction='surface-normal';load.magnitudeN=root.SpjutsimFEA.displayToSI('forceN',readNumber('load-magnitude','force magnitude'));load.sense=byId('load-sense').value;
+      load.direction='surface-normal';load.magnitudeN=root.SpjutsimFEA.displayToSI('forceN',readNumber('load-magnitude','force magnitude'), this.loadUnits.forceN);load.sense=byId('load-sense').value;
     } else {
-      load.forceN = ['fx', 'fy', 'fz'].map(function (axis) { return root.SpjutsimFEA.displayToSI('forceN', readNumber('load-' + axis, axis.toUpperCase() + ' force')); });
+      load.forceN = ['fx', 'fy', 'fz'].map(function (axis) { return root.SpjutsimFEA.displayToSI('forceN', readNumber('load-' + axis, axis.toUpperCase() + ' force'), forceUnit); });
     }
     if (byId('load-name')) { load.name = byId('load-name').value; }
     return load;
@@ -517,10 +564,11 @@
     this.controller.selectLoad(id);
     this.loadType.value = item.type;
     if(byId('load-force-mode'))byId('load-force-mode').value=item.direction==='surface-normal' && item.type==='total-force' ? 'normal' : 'components';
-    if(byId('load-magnitude'))byId('load-magnitude').value=item.magnitudeN || 1;
+    if(byId('load-magnitude'))byId('load-magnitude').value=root.SpjutsimFEA.siToDisplay('forceN', item.magnitudeN || 1, this.loadUnits.forceN);
     if(byId('load-sense'))byId('load-sense').value=item.sense || 'push';
-    byId('load-pressure').value = item.pressurePa === undefined ? '1' : String(root.SpjutsimFEA.siToDisplay('pressurePa', item.pressurePa));
-    ['x', 'y', 'z'].forEach(function (axis, index) { byId('load-f' + axis).value = item.forceN ? String(item.forceN[index]) : (index===1?'1':'0'); });
+    byId('load-pressure').value = item.pressurePa === undefined ? '1' : String(root.SpjutsimFEA.siToDisplay('pressurePa', item.pressurePa, this.loadUnits.pressurePa));
+    var unit = this.loadUnits.forceN;
+    ['x', 'y', 'z'].forEach(function (axis, index) { byId('load-f' + axis).value = root.SpjutsimFEA.siToDisplay('forceN', item.forceN ? item.forceN[index] : (index===1?1:0), unit); });
     this.loadForm.querySelector('button[type="submit"]').textContent = 'Save changes';
     this.cancelLoadEdit.hidden = false;
     this.renderLoadType();
@@ -529,6 +577,9 @@
   AnalysisAuthoringUI.prototype.resetLoadForm = function (renderNow) {
     this.editingLoadId = null;
     this.loadForm.reset();
+    byId('load-pressure').value = root.SpjutsimFEA.siToDisplay('pressurePa', 1e6, this.loadUnits.pressurePa);
+    ['load-magnitude','load-fy'].forEach(function (id) { if (byId(id)) { byId(id).value = root.SpjutsimFEA.siToDisplay('forceN', 1, this.loadUnits.forceN); } }, this);
+    this.syncLoadUnits();
     if (byId('load-name')) { byId('load-name').value = 'Load ' + this.controller.nextLoadNameSequence; }
     this.loadType.value = this.lastLoadType;
     this.loadForm.querySelector('button[type="submit"]').textContent = 'Apply load';

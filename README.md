@@ -453,3 +453,11 @@ SI storage unchanged. Legends, manual limits, point details, and Results summari
 follow the selected units. Fit model is the icon below-left of the view gizmo;
 it animates to fit while preserving the viewing angle. Setup/Results and the
 history/save/export toolbar use the Truss icons, and Edit shows Ctrl+Z/Ctrl+Y.
+
+Load entry starts with **Force**. Unit dropdowns beside pressure and force labels
+convert the current values and remember MPa/Pa/psi/ksi and N/kN/lbf/kip choices in
+this browser. Analysis storage remains SI. Results starts with the original,
+undeformed part's X × Y × Z bounding dimensions in the study's global axes, using
+the selected result length unit. Check these dimensions for import-unit mistakes.
+The [polymer yield references](docs/material-strengths.md) document the bulk PLA
+and ABS defaults and their limits.

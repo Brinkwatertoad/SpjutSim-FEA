@@ -16,6 +16,19 @@
     forceN: { symbol: 'N', siPerDisplayUnit: 1 }
   };
 
+  var poundForceN = 0.45359237 * 9.80665;
+  var LOAD_INPUT_UNITS = Object.freeze({
+    pressurePa: Object.freeze({ MPa: 1e6, Pa: 1, psi: poundForceN / (0.0254 * 0.0254), ksi: poundForceN * 1000 / (0.0254 * 0.0254) }),
+    forceN: Object.freeze({ N: 1, kN: 1000, lbf: poundForceN, kip: poundForceN * 1000 })
+  });
+
+  function displayUnit(quantity, symbol) {
+    if (symbol === undefined) { return DISPLAY_UNITS[quantity]; }
+    var scale = LOAD_INPUT_UNITS[quantity] && LOAD_INPUT_UNITS[quantity][symbol];
+    if (!Number.isFinite(scale)) { throw new Error('Unsupported unit for ' + quantity + ': ' + symbol); }
+    return { symbol: symbol, siPerDisplayUnit: scale };
+  }
+
   function issue(code, message, field) {
     return { code: code, message: message, field: field || null };
   }
@@ -24,15 +37,17 @@
     return { valid: errors.length === 0, value: errors.length === 0 ? value : null, errors: errors, warnings: warnings || [] };
   }
 
-  function displayToSI(quantity, displayValue) {
-    var unit = DISPLAY_UNITS[quantity];
+  function displayToSI(quantity, displayValue, symbol) {
+    var unit = displayUnit(quantity, symbol);
     var numeric = typeof displayValue === 'number' ? displayValue : Number(String(displayValue).trim());
     if (!unit || !Number.isFinite(numeric)) { throw new Error('Enter a finite value for ' + quantity + '.'); }
-    return numeric * unit.siPerDisplayUnit;
+    var converted = numeric * unit.siPerDisplayUnit;
+    if (!Number.isFinite(converted)) { throw new Error('Value is too large for ' + quantity + '.'); }
+    return converted;
   }
 
-  function siToDisplay(quantity, siValue) {
-    var unit = DISPLAY_UNITS[quantity];
+  function siToDisplay(quantity, siValue, symbol) {
+    var unit = displayUnit(quantity, symbol);
     if (!unit || !Number.isFinite(siValue)) { throw new Error('A finite SI value is required for ' + quantity + '.'); }
     return siValue / unit.siPerDisplayUnit;
   }
@@ -212,6 +227,7 @@
 
   root.SpjutsimFEA = root.SpjutsimFEA || {};
   root.SpjutsimFEA.DISPLAY_UNITS = DISPLAY_UNITS;
+  root.SpjutsimFEA.LOAD_INPUT_UNITS = LOAD_INPUT_UNITS;
   root.SpjutsimFEA.displayToSI = displayToSI;
   root.SpjutsimFEA.siToDisplay = siToDisplay;
   root.SpjutsimFEA.validateIsotropicMaterial = validateIsotropicMaterial;
