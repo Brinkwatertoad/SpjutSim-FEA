@@ -3025,4 +3025,4 @@ Plan 31 implementation contracts:
 
 ### Plan 32 — document reports and unit preferences
 
-- [ ] [Document reports and preferred units](docs/plans/32-document-report-and-unit-preferences.md): dependency-free DOCX alongside text/PNG ZIP, stable Settings size, SI/USCS and saved custom display/input units. Engineering state remains SI; preference changes preserve entered physical values and solved results.
+- [x] [Document reports and preferred units](docs/plans/32-document-report-and-unit-preferences.md): dependency-free DOCX alongside text/PNG ZIP, stable Settings size, SI/USCS and saved custom display/input units. Engineering state remains SI; preference changes preserve entered physical values and solved results.

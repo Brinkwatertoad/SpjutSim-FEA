@@ -12,8 +12,10 @@ Spec tracking: required
 
 ## Work
 
-- [ ] DOCX packaging, report format control, shared report content and package validation.
-- [ ] Central unit definitions, persisted presets/custom sets, fixed Settings size.
-- [ ] Convert authoring fields and all engineering displays; retain explicit source-file units.
-- [ ] Browser integration and regression coverage, full applicable suites, final diff review.
-- [ ] Commit coherent chunks and push `feat/material-load-units-report` (no merge/deploy).
+- [x] DOCX packaging, report format control, shared report content and package validation.
+- [x] Central unit definitions, persisted presets/custom sets, fixed Settings size.
+- [x] Convert authoring fields and all engineering displays; retain explicit source-file units.
+- [x] Browser integration and regression coverage, full applicable suites, final diff review.
+Delivery: commit coherent chunks and push `feat/material-load-units-report` (no merge/deploy).
+
+Verification and final review: [Plan 32 review](../reviews/32-document-report-and-unit-preferences.md).

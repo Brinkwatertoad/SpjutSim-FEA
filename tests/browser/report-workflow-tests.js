@@ -122,6 +122,8 @@
       assert(text.includes('Source: tensileYieldPa')&&text.includes('62 MPa')&&text.includes('1000 N'),'Material/load report missing');
       assert(text.includes('39.37 in × 39.37 in × 39.37 in'),'Part size report unit incorrect');
       window.analysisReport=await api.buildAnalysisReport(app,viewport,autoScale);restored();
+      window.analysisDocx=await api.buildAnalysisReport(app,viewport,autoScale,'docx');restored();
+      assert(window.analysisDocx.filename.endsWith('.docx'),'DOCX filename missing');
       var noFosController={document:Object.assign({},app.document,{results:Object.assign({},result,{factorOfSafety:null})}),geometrySource:app.geometrySource};
       window.noFosReport=await api.buildAnalysisReport(noFosController,viewport,autoScale);restored();
       // Invalidate between PNG encodes; stale snapshots must never download.

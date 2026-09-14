@@ -463,8 +463,11 @@ The [polymer yield references](docs/material-strengths.md) document the bulk PLA
 and ABS defaults and their limits.
 
 
-After solving, use the **Export** icon in the action bar to download one ZIP.
-It contains UTF-8 `report.txt` (tab-delimited Results, diagnostics and convergence
+After solving, choose **Word report** and use the **Export** icon for a single
+`.docx` with editable tables and embedded images. Open it in Word or Google Docs
+to edit or copy formatted content. No additional libraries, Node modules, or
+runtime downloads are needed; FEA writes the Office Open XML package directly.
+Choose **Text + images ZIP** for the original archive option. It contains UTF-8 `report.txt` (tab-delimited Results, diagnostics and convergence
 rows, plus material, support/load, import, mesh and solver parameters) and named
 PNGs of loads/supports, mesh, von Mises stress, yield FoS when available, and
 Auto deformation. Captures use Reset View then Fit Model, automatic color ranges,
@@ -475,8 +478,26 @@ operations or assignment previews and aborts if the analysis changes. PDF export
 and editable project saving remain future work.
 
 `tests/browser/material-strength-tests.html`, `load-unit-tests.html`,
-`load-entry-tests.html`, `report-tests.html`, and `report-workflow-tests.html`
+`load-entry-tests.html`, `unit-preferences-tests.html`, `docx-tests.html`,
+`report-tests.html`, and `report-workflow-tests.html`
 cover bulk-yield provenance, conversions and editing, ZIP structure/checksums,
 report text, actual solved captures, download, restoration and stale export.
 Open them in headless Chromium with local-file access or via the optional server,
 as with the other browser harnesses.
+
+
+Settings uses a preferred 840 × 720 px size, capped only to fit smaller screens.
+The **Units** tab offers **SI** (default), **USCS**, and named custom sets. USCS
+uses ksi for materials, psi for stress/pressure, in for dimensions, and lbf for
+force. The remaining roles use lbm/in³, in/s², and in·lbf. Edit any role to make a
+custom set; edit its name to save or rename it, use **Save copy** to duplicate it,
+or **Delete** to retain its values as Custom. Edits to a selected saved set update
+that set automatically. This follows SpjutMath's Milestone-4 preset workflow.
+Inline load and result unit controls use the same browser-local preferences.
+Changing units converts current entries while preserving the mesh and results.
+STL **File units** and explicitly labeled file-unit reconstruction tolerance
+continue to describe the source file, independently of display preferences.
+
+For a generated report, validate ZIP checksums, XML, package relationships,
+editable tables, embedded PNGs and image proportions without additional tools:
+`python3 tests/validate_report_docx.py path/to/report.docx`.

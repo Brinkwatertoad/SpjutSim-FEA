@@ -17,7 +17,7 @@
     if (!files.length || files.length > 65535) { throw Error('Invalid report file count.'); }
     var encoder = new TextEncoder(), parts = [], directory = [], offset = 0, directorySize = 0, names = new Set();
     for (var file of files) {
-      if (!/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(file.name) || names.has(file.name)) { throw Error('Invalid or duplicate report filename.'); }
+      if ((typeof file.name !== 'string' || !/^[a-zA-Z0-9_./\[\]-]+$/.test(file.name) || file.name.split('/').some(function (part) { return !part || part === '.' || part === '..'; })) || names.has(file.name)) { throw Error('Invalid or duplicate report filename.'); }
       names.add(file.name);
       var name = encoder.encode(file.name);
       var bytes = typeof file.data === 'string' ? encoder.encode(file.data) : file.data instanceof Uint8Array ? file.data : new Uint8Array(await file.data.arrayBuffer());
@@ -105,7 +105,7 @@
     }
     return text;
   }
-  async function buildAnalysisReport(controller, viewport, autoScale) {
+  async function buildAnalysisReport(controller, viewport, autoScale, format) {
     var state = controller.document, result = state.results, revision = state.analysisRevision;
     function assertCurrent() {
       if (!canExportReport(controller.document) || controller.document.results !== result || controller.document.analysisRevision !== revision) {
@@ -124,9 +124,9 @@
       canvas.width = 0; canvas.height = 0;
     }
     assertCurrent();
-    var archive = await createStoredZip(files);
+    var archive = format === 'docx' ? await api.createReportDocx(files[0].data, files.slice(1)) : await createStoredZip(files);
     assertCurrent();
-    return { blob: archive, filename: sourceName.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]+/g, '-') + '-fea-report.zip' };
+    return { blob: archive, filename: sourceName.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]+/g, '-') + '-fea-report.' + (format === 'docx' ? 'docx' : 'zip') };
   }
   function bindReportExport(controller, viewport, ui) {
     var button = document.getElementById('export-report-button'), status = document.getElementById('report-status'), busy = false;
@@ -136,7 +136,7 @@
       if (busy || !canExportReport(controller.document)) { return; }
       busy = true; render(); status.textContent = 'Preparing report…';
       try {
-        var report = await buildAnalysisReport(controller, viewport, ui.resolveDeformationScale('auto'));
+        var report = await buildAnalysisReport(controller, viewport, ui.resolveDeformationScale('auto'), document.getElementById('report-format').value);
         var url = URL.createObjectURL(report.blob), anchor = document.createElement('a');
         anchor.href = url; anchor.download = report.filename; document.body.appendChild(anchor); anchor.click(); anchor.remove();
         setTimeout(function () { URL.revokeObjectURL(url); }, 1000);

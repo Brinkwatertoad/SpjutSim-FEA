@@ -289,3 +289,4 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 #settings-dialog .ui-settings-hub { flex: 1 1 auto; min-height: 0; }
 #settings-dialog .ui-settings-hub-content { min-height: 0; min-width: 0; overflow: hidden; }
 #settings-dialog [role="tabpanel"] { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-gutter: stable; }
+#report-format { max-width: 150px; }
