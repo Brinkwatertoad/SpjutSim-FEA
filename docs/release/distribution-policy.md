@@ -3,10 +3,10 @@
 SpjutSim FEA's first-party code, including the copied UI foundation files, is
 licensed under **GPL-2.0-or-later**. The copyright holder approved this license
 on 2026-09-06 and the final policy and artifact list on 2026-09-07.
-The owner renewed artifact-manifest approval on 2026-09-10 for publication
-of the current version. Changes since the prior approval are limited to hashes
-for the solver worker, its generated wrapper, and `UI_FOUNDATION.md`;
-dependencies and licenses are unchanged.
+The owner renewed publication approval on 2026-09-13 after accepting the stable
+pane gutter correction and requesting deployment of the current FEA revision.
+The updated manifest changes hashes for the copied scrollbar helper, UI tokens,
+and UI foundation provenance. Dependencies and licenses are unchanged.
 
 Releases include the corresponding application and upstream source, build
 instructions, and license notices. Third-party materials retain their own
@@ -30,9 +30,9 @@ The distribution audit reads this approval record:
   "final_review": {
     "status": "approved",
     "approver": "Brinkwatertoad",
-    "date": "2026-09-10",
-    "reference": "Owner approval of the updated artifact manifest and publication: i approve, record it and publish, 2026-09-10",
-    "artifact_manifest_sha256": "a224b4a889b0cf25d89405da4159c4512aa3a7a30c2d42167b9f2ba3acff6482"
+    "date": "2026-09-13",
+    "reference": "Owner accepted the FEA correction (looks good) and requested website deployment of Circuits, Truss, and FEA in this session, 2026-09-13",
+    "artifact_manifest_sha256": "012c8315cfa018e06dcc88f6131574d3e8c8cc412012661b4209d6edf8d8b92d"
   }
 }
 ```
