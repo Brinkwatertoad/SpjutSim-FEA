@@ -2985,3 +2985,13 @@ Undo/Redo descriptions.
 
 The owner approved M24–M27 with these adjustments. Acceptance covers this grouped
 workflow; M28 is accepted; M29 review, plan 30, and the final release audit remain separate gates.
+
+## Material, load-entry, and report follow-up
+
+- [ ] [Plan 31: material strengths, load units, and report export](docs/plans/31-material-units-and-report.md)
+  adds documented bulk PLA tensile/compressive yield and ABS compressive yield;
+  persistent inline pressure (MPa default, Pa, psi, ksi) and force (N default,
+  kN, lbf, kip) unit choices that convert draft values while preserving SI;
+  Force as the initial load type; undeformed part dimensions in Results; and a
+  local ZIP report with all Results information and reset/fitted scene PNGs for
+  assignments, mesh, stress, optional FoS, and Auto deformation.

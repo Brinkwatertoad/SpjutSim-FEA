@@ -23,6 +23,18 @@
     label: 'iJOE 2025, numerical study material inputs for ABS, PLA, and PETG',
     url: 'https://online-journals.org/index.php/i-joe/article/download/54635/16271/174987'
   };
+  var PLA_TENSILE_SOURCE = {
+    label: 'NatureWorks Ingeo 3052D injection-molding datasheet, ASTM D638 tensile yield (62 MPa)',
+    url: 'https://www.natureworksllc.com/~/media/files/natureworks/technical-documents/technical-data-sheets/technicaldatasheet_3052d_injection-molding_pdf.pdf'
+  };
+  var PLA_COMPRESSION_SOURCE = {
+    label: 'Song et al., Materials & Design 123 (2017), table 4, moulded PLA at 1.25e-5 /s (70.80 MPa yield)',
+    url: 'https://spiral.imperial.ac.uk/server/api/core/bitstreams/c34d2e00-a3ba-486b-8d40-77599a169575/content'
+  };
+  var ABS_COMPRESSION_SOURCE = {
+    label: 'Dundar et al., Polymers and Polymer Composites (2021), table 2, ABS at 1e-4 /s (46.1 MPa compressive yield)',
+    url: 'https://doi.org/10.1177/0967391120916619'
+  };
   var TPU_SOURCE = {
     label: 'Materials Horizons 2024 supplementary information, TPU FEA material characterization',
     url: 'https://www.rsc.org/suppdata/d4/mh/d4mh01173b/d4mh01173b1.pdf'
@@ -93,14 +105,17 @@
       sourceFields(NASA_POISSON_SOURCE, ['poissonsRatio'])
     ), 'Generic 6061-T6 starting point. Confirm temper, product form, direction, and certification.'),
     factoryRecord('factory.material.polymer.pla', {
-      name: 'PLA', youngsModulusPa: 3.425e9, poissonsRatio: 0.33, densityKgM3: 1240, ultimateTensilePa: 63.9e6
-    }, sourceFields(COEXTRUSION_SOURCE, ['youngsModulusPa', 'poissonsRatio', 'densityKgM3', 'ultimateTensilePa']), PRINT_VARIABILITY),
+      name: 'PLA', youngsModulusPa: 3.425e9, poissonsRatio: 0.33, densityKgM3: 1240, ultimateTensilePa: 63.9e6, tensileYieldPa: 62e6, compressiveYieldPa: 70.8e6
+    }, mergeFields(
+      sourceFields(COEXTRUSION_SOURCE, ['youngsModulusPa', 'poissonsRatio', 'densityKgM3', 'ultimateTensilePa']),
+      sourceFields(PLA_TENSILE_SOURCE, ['tensileYieldPa']), sourceFields(PLA_COMPRESSION_SOURCE, ['compressiveYieldPa'])
+    ), 'Yield defaults are bulk/injection-moulded reference values from different grades/tests, not printed-part allowables. Other properties retain their individual sources. ' + PRINT_VARIABILITY),
     factoryRecord('factory.material.polymer.abs', {
-      name: 'ABS', youngsModulusPa: 2.4e9, poissonsRatio: 0.37, densityKgM3: 1050, tensileYieldPa: 26.84e6
+      name: 'ABS', youngsModulusPa: 2.4e9, poissonsRatio: 0.37, densityKgM3: 1050, tensileYieldPa: 26.84e6, compressiveYieldPa: 46.1e6
     }, mergeFields(
       sourceFields(ABS_SOURCE, ['youngsModulusPa', 'poissonsRatio', 'tensileYieldPa']),
-      sourceFields(POLYMER_FEA_SOURCE, ['densityKgM3'])
-    ), PRINT_VARIABILITY),
+      sourceFields(POLYMER_FEA_SOURCE, ['densityKgM3']), sourceFields(ABS_COMPRESSION_SOURCE, ['compressiveYieldPa'])
+    ), 'Compressive yield is a bulk ABS reference; existing tensile yield and elastic properties retain their printed-material sources. This mixed-source starting point is not a certified grade. ' + PRINT_VARIABILITY),
     factoryRecord('factory.material.polymer.asa', {
       name: 'ASA', youngsModulusPa: 1.812e9, poissonsRatio: 0.38, densityKgM3: 1070, ultimateTensilePa: 35.7e6
     }, sourceFields(COEXTRUSION_SOURCE, ['youngsModulusPa', 'poissonsRatio', 'densityKgM3', 'ultimateTensilePa']), PRINT_VARIABILITY),
