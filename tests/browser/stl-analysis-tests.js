@@ -5,6 +5,19 @@
  document.getElementById('application-frame').addEventListener('load',async function(){
   var win=this.contentWindow,api=win.SpjutsimFEA,client,evidence=[];
   try {
+   var distanceIndex=new StlSpatial.Index(new Float64Array([0,0,0,1,0,0,0,1,0]),new Uint32Array([0,1,2]));
+   [[[.2,.3,2],2],[[.5,-1,0],1],[[-1,-1,0],Math.sqrt(2)],[[1,1,0],Math.SQRT1_2]].forEach(function(test){assert(Math.abs(distanceIndex.distance(test[0])-test[1])<1e-12,'Surface distance lost a face, edge or vertex closest point');});
+   if(new URLSearchParams(location.search).get('fixture')==='gargoyle'){
+    var raw=await(await win.fetch('../tests/fixtures/stl/cathedral_gargoyle.stl')).arrayBuffer();
+    client=new api.StlPreparationClient();var repaired=await client.prepare({sessionId:'gargoyle-mesh',generation:0,geometryId:'gargoyle-mesh',sourceName:'cathedral_gargoyle.stl',sourceBytes:raw,lengthUnit:'mm',patchAngleDegrees:40,maxHoleDiameterRatio:.01});client.dispose();
+    assert(repaired.state==='needs-review'&&repaired.solidRepair.unchangedTriangleCount>50000,'Detailed gargoyle repair failed');
+    var started=performance.now(),progress=[];window.__stlSurfaceEvidence={progress:progress};
+    client=new api.MesherClient({onProgress:function(p){progress.push({ms:performance.now()-started,stage:p.stage,message:p.userMessage,detail:p.detail});console.log(p.userMessage);}});
+    var gargoyle=await client.generateMesh({geometry:repaired.geometryCandidate,sourceBytes:repaired.preparedSourceBytes,settings:{preset:'coarse',elementType:'tet4',stlSurface:api.defaultStlSurface()}});client.dispose();
+    assert(gargoyle.quality.stlAnalysis.method==='discrete-boundary','Complex surface still depends on parametrization charts');
+    assert(!gargoyle.quality.invertedElementCount&&!gargoyle.quality.nearZeroJacobianCount,'Gargoyle tetrahedra failed Jacobian checks');
+    window.__stlSurfaceEvidence={cases:[{fixture:'cathedral_gargoyle',repair:repaired.solidRepair,statistics:gargoyle.statistics,quality:gargoyle.quality,ms:performance.now()-started,progress:progress}]};status.textContent='Passed';status.dataset.result='passed';return;
+   }
    assert(api.defaultStlSurface().method==='analysis','STL defaults to freezing source triangles');
    // Twelve deliberately elongated source triangles, both aligned and rotated.
    for(var rotated of [false,true]) {
@@ -25,7 +38,7 @@
     assert(mesh.quality.stlAnalysis.relativeVolumeError<1e-8,'Thin-part volume changed');
     assert(mesh.boundaryFaces.faceRanges.length===geometry.faceIds.length && geometry.faceIds.length===1,'Internal planes changed engineering groups');
     assert(mesh.quality.stlBoundaryAreas.meshM2.every(function(a,i){return Math.abs(a/mesh.quality.stlBoundaryAreas.sourceM2[i]-1)<1e-8;}),'Pressure boundary area changed');
-    for(var bad of [null,Object.assign({},mesh.quality.stlAnalysis,{relativeVolumeError:.02}),Object.assign({},mesh.quality.stlAnalysis,{sampledDeviationM:1})])assert(!api.validateVolumeMeshResult(Object.assign({},mesh,{quality:Object.assign({},mesh.quality,{stlAnalysis:bad})}),geometry.faceIds).valid,'Invalid fidelity report crossed the mesh boundary');
+    for(var bad of [null,Object.assign({},mesh.quality.stlAnalysis,{relativeVolumeError:.02}),Object.assign({},mesh.quality.stlAnalysis,{sampledDeviationM:1}),Object.assign({},mesh.quality.stlAnalysis,{maximumDeviationRatio:1.01}),Object.assign({},mesh.quality.stlAnalysis,{estimatedElementCount:Infinity}),Object.assign({},mesh.quality.stlAnalysis,{gradation:0})])assert(!api.validateVolumeMeshResult(Object.assign({},mesh,{quality:Object.assign({},mesh.quality,{stlAnalysis:bad})}),geometry.faceIds).valid,'Invalid fidelity report crossed the mesh boundary');
     evidence.push({rotated:rotated,statistics:mesh.statistics,quality:mesh.quality});
    }
    // A thin appendage can be much smaller than every whole-part extent.
@@ -43,7 +56,14 @@
    var ascii='solid appendage\n'+facets.map(function(f){return 'facet normal 0 0 0\nouter loop\n'+f.map(function(p){return 'vertex '+p.join(' ');}).join('\n')+'\nendloop\nendfacet';}).join('\n')+'\nendsolid appendage';
    var parsed=StlImport.parse(new TextEncoder().encode(ascii).buffer,{version:3,lengthUnit:'m',patchAngleDegrees:40});
    var analysis={parsed:parsed,index:new StlSpatial.Index(parsed.positions,parsed.triangles)},sizes=StlAnalysis.sizing(analysis,{minSizeM:.1,maxSizeM:1});
-   assert(Math.abs(analysis.thicknessM-.1)<1e-10 && sizes.maxSizeM<.034,'Local thin appendage escaped thickness sizing');
+   assert(Math.abs(analysis.thicknessM-.1)<1e-10 && analysis.field.at(3,.05,.05)<.052,'Local thin appendage escaped thickness sizing');
+   assert(analysis.field.at(.5,.5,.5)>.12&&sizes.maxSizeM===1,'Tiny appendage forced global refinement');
+   assert(Math.abs(analysis.field.at(3,.05,.05)-analysis.field.at(3.1,.05,.05))<=.035+1e-12,'Local field exceeds its grading bound');
+   var invalid=p=>{var caught;try{StlImport.validateMesh(p,{version:3,lengthUnit:'m',patchAngleDegrees:40});}catch(e){caught=e;}return caught;};
+   var badIndices=parsed.triangles.slice();badIndices[0]=parsed.positions.length/3;
+   assert(invalid({positions:parsed.positions,triangles:badIndices}).code==='STL_INVALID_INDEX','Native connectivity bypassed indexed validation');
+   var badPositions=parsed.positions.slice();badPositions[0]=NaN;
+   assert(invalid({positions:badPositions,triangles:parsed.triangles}).code==='STL_INVALID_COORDINATE','Native coordinates bypassed indexed validation');
    // Equal area and volume do not imply geometric fidelity: translate a cube.
    parsed=StlImport.parse(StlTestShapes.subdividedCube(1),{version:3,lengthUnit:'m',patchAngleDegrees:100});
    analysis={parsed:parsed,index:new StlSpatial.Index(parsed.positions,parsed.triangles),method:'planar-boundaries'};StlAnalysis.sizing(analysis,{minSizeM:.1,maxSizeM:1});

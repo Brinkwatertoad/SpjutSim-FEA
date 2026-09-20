@@ -19,6 +19,7 @@ WORKERS = {
     'solver': 'solver-worker.js',
     'stl-preparation': 'stl-preparation-worker.js',
     'stl-solid-repair': 'stl-preparation-worker.js',
+    'stl-surface': 'stl-surface-worker.js',
 }
 PROTOCOL_PATTERN = re.compile(r'\bWORKER_PROTOCOL_VERSION\s*=\s*(\d+)\s*;')
 GMSH_RUNTIME_EXPORT = 'export function buildApi'
@@ -47,6 +48,9 @@ def read_worker_source(source_root: Path, kind: str, filename: str) -> tuple[str
             helpers.append(source_root / 'stl-solid-repair.js')
             source = source.replace("STL_PREPARATION_WORKER_KIND = 'stl-preparation'", "STL_PREPARATION_WORKER_KIND = 'stl-solid-repair'")
         source = '\n'.join(path.read_text(encoding='utf-8') for path in helpers) + '\n' + source
+    if kind == 'stl-surface':
+        helpers=[ROOT / 'web/js/geometry/stl-preparation.js', source_root / 'stl-import.js', source_root / 'stl-spatial.js', source_root / 'stl-remesh.js', source_root / 'stl-analysis.js']
+        source='\n'.join(path.read_text(encoding='utf-8') for path in helpers)+'\n'+source
     if kind == 'mesher':
         helper = source_root / 'stl-import.js'
         if not helper.is_file():
@@ -60,7 +64,7 @@ def read_worker_source(source_root: Path, kind: str, filename: str) -> tuple[str
         repair = source_root / 'stl-repair.js'
         if not repair.is_file():
             raise ValueError(f'STL repair helper is unavailable: {repair}')
-        source = '\n'.join(path.read_text(encoding='utf-8') for path in (ROOT / 'web/js/geometry/stl-preparation.js', helper, reconstruction, remesh, source_root / 'stl-spatial.js', source_root / 'stl-analysis.js')) + '\n' + source
+        source = '\n'.join(path.read_text(encoding='utf-8') for path in (ROOT / 'web/js/geometry/stl-preparation.js', ROOT / 'web/js/geometry/stl-surface.js', helper, reconstruction, remesh, source_root / 'stl-spatial.js', source_root / 'stl-analysis.js')) + '\n' + source
     return source, hashlib.sha256(source.encode('utf-8')).hexdigest()
 
 

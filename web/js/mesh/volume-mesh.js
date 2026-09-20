@@ -153,10 +153,10 @@
       return validation(false, 'incomplete-boundary-mapping');
     }
     var fidelity=result.quality.stlAnalysis;
-    if(fidelity!==undefined && (!fidelity || fidelity.version!==1 || !['planar-boundaries','discrete-charts'].includes(fidelity.method) ||
-      !['thicknessM','maxSizeM','deviationLimitM'].every(function(k){return Number.isFinite(fidelity[k])&&fidelity[k]>0;}) ||
-      !['relativeVolumeError','maximumRelativeAreaError','sampledDeviationM'].every(function(k){return Number.isFinite(fidelity[k])&&fidelity[k]>=0;}) ||
-      fidelity.maxSizeM>fidelity.thicknessM/3 || fidelity.relativeVolumeError>.01 || fidelity.maximumRelativeAreaError>.01 || fidelity.sampledDeviationM>fidelity.deviationLimitM ||
+    if(fidelity!==undefined && (!fidelity || fidelity.version!==2 || !['planar-boundaries','discrete-boundary'].includes(fidelity.method) ||
+      !['thicknessM','minSizeM','maxSizeM','deviationLimitM'].every(function(k){return Number.isFinite(fidelity[k])&&fidelity[k]>0;}) ||
+      !['relativeVolumeError','maximumRelativeAreaError','sampledDeviationM','maximumDeviationRatio'].every(function(k){return Number.isFinite(fidelity[k])&&fidelity[k]>=0;}) ||
+      fidelity.minSizeM>fidelity.thicknessM/3 || fidelity.minSizeM>fidelity.maxSizeM || fidelity.gradation!==.35 || !Number.isSafeInteger(fidelity.estimatedElementCount)||fidelity.estimatedElementCount<1||fidelity.estimatedElementCount>1000000 || fidelity.maximumDeviationRatio>1 || fidelity.relativeVolumeError>.01 || fidelity.maximumRelativeAreaError>.01 || fidelity.sampledDeviationM>fidelity.deviationLimitM ||
       !Number.isSafeInteger(fidelity.sampleCount)||fidelity.sampleCount<1 || !result.quality.stlBoundaryAreas))return validation(false,'invalid-stl-fidelity');
     var areas = result.quality.stlBoundaryAreas;
     if (areas !== undefined && (!areas || areas.version !== 1 || !Array.isArray(areas.sourceM2) || !Array.isArray(areas.meshM2) ||

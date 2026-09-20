@@ -1,6 +1,6 @@
 # Replaceable solid-repair adapter
 
-Only `repair.cpp` knows CGAL types. ABI version 2 accepts bounded normalized
+Only the native adapter files know CGAL types. ABI version 2 accepts bounded normalized
 Float64 vertices, Uint32 triangle indices and a local fill-width ratio. It returns
 an indexed candidate, original vertex/face provenance and changed-face flags.
 Codes: 0 candidate, 1 invalid input, 2 resource limit, 3 construction failure,
@@ -17,6 +17,15 @@ presents localized material changes for explicit acceptance.
 The adapter has no filesystem, network, Gmsh, solver, rendering, STL-format or UI
 dependency. A future kernel can replace it behind the indexed-array interface.
 No CGAL objects or entity identifiers cross the boundary.
+
+`surface.cpp` exposes independent surface ABI version 1: normalized indexed
+triangles, engineering-group IDs and per-source-facet size targets in; indexed
+boundary and group ownership out. Its graded BVH field matches the JavaScript
+volume field. CGAL isotropic remeshing uses split/collapse/flip/projection, protects
+selection seams and 40° ridges, forbids constrained-edge collapse and disables
+relaxation (which introduced folds in a gargoyle probe). The worker enforces strict
+checks and bounded local fidelity refinement before returning a boundary. This
+worker terminates before Gmsh starts; no two meshing WASM heaps coexist.
 
 Build with `python3 tools/build-stl-repair.py`, using pinned Emscripten 3.1.74.
 The recipe verifies CGAL/Boost archive hashes and embeds a serial worker runtime.
@@ -48,3 +57,8 @@ build/stl-solid-repair/adapter-test
 
 Keep assertions enabled for this regression. Browser tests independently check
 strict topology/intersections, worker cancellation and explicit material consent.
+
+The surface regression uses the same compiler flags, replacing the two source
+arguments with `native/stl-repair/surface.cpp native/stl-repair/surface-test.cpp`.
+It checks an elongated closed box, preserved volume/groups, refined long edges,
+and invalid input. The combined embedded runtime is 1,479,354 bytes (480,772 gzip).

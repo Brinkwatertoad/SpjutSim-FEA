@@ -109,7 +109,7 @@
         },
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "0b69941411195245fece88c23f800c8bbe034b074a9709a8889348c1050761d0"
+          "sha256": "ae0ac53aa4b70f2fc3c70fd96821f2d7a340e1f1c7a4cecbdec2c2d4bc3f0d71"
         }
       ],
       "build_recipe": {
@@ -142,16 +142,16 @@
     },
     "workers": {
       "project": "workers",
-      "version": "protocol 3; candidate source hashes",
+      "version": "protocol 4; candidate source hashes",
       "license": "GPL-2.0-or-later",
       "source": {
         "url": "https://github.com/Brinkwatertoad/SpjutSim-FEA",
-        "revision": "protocol 3; candidate source hashes"
+        "revision": "protocol 4; candidate source hashes"
       },
       "source_files": [
         {
           "path": "workers/mesher-worker.js",
-          "sha256": "529ee755120a5384ae4f31ee9a7b86ed15c7fb9688bd4dd06710f63081dc5838"
+          "sha256": "c99f0f403f1808817dcb05adc05d1ed9fafbba2a8c00b91fab00e959661b6539"
         },
         {
           "path": "workers/solver-worker.js",
@@ -159,7 +159,7 @@
         },
         {
           "path": "workers/stl-import.js",
-          "sha256": "46b64e643d3e4b22a8a24340329b5672aaceda66ad82896d07a9de473cb7c9d6"
+          "sha256": "4b9843696e5568884a08d27b20d0b656fd669708e65bb171d42f20a282955da8"
         },
         {
           "path": "workers/stl-reconstruction.js",
@@ -187,20 +187,28 @@
         },
         {
           "path": "workers/stl-spatial.js",
-          "sha256": "55f795679d8ba9c0efa62f30b01af834bd3e0de25ae36d824e6b26829a4c3b09"
+          "sha256": "6f7f2a04ee2c68794be9afed5c38d26c68386c8b6ebc4e0bac5ba71d30876546"
         },
         {
           "path": "workers/stl-analysis.js",
-          "sha256": "49421f8a8b6d158ced0409660155b83198808bd4bcd2049466223b03b9e03244"
+          "sha256": "efd03e7848d8191815c5b759f8228e611391e5c3b9b8ea6669bc9aa90357b836"
         },
         {
           "path": "workers/stl-solid-repair.js",
           "sha256": "7b64c71a47c75ac38134787de1cde5e03b610db6781eddc92e9e0dd11d029226"
+        },
+        {
+          "path": "workers/stl-surface-worker.js",
+          "sha256": "2e43989ae3ce2893d303259b5daf902bc1bd2e7aefd03759bec8cd5aa6d8f454"
+        },
+        {
+          "path": "web/js/geometry/stl-surface.js",
+          "sha256": "00016fb4dfa8f1623fbc1706382189cfa89c603d4c536a90e60ac8727b2c7fdb"
         }
       ],
       "build_recipe": {
         "path": "tools/build-local-runtime.py",
-        "sha256": "0b69941411195245fece88c23f800c8bbe034b074a9709a8889348c1050761d0"
+        "sha256": "ae0ac53aa4b70f2fc3c70fd96821f2d7a340e1f1c7a4cecbdec2c2d4bc3f0d71"
       },
       "modifications": "First-party workers packaged as classic JavaScript source strings.",
       "notices": [
@@ -378,7 +386,7 @@
       "source_files": [
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "0b69941411195245fece88c23f800c8bbe034b074a9709a8889348c1050761d0"
+          "sha256": "ae0ac53aa4b70f2fc3c70fd96821f2d7a340e1f1c7a4cecbdec2c2d4bc3f0d71"
         }
       ],
       "build_recipe": {
@@ -694,9 +702,9 @@
       },
       "build_recipe": {
         "path": "tools/build-stl-repair.py",
-        "sha256": "d1261fc1247687d2f385091beed8621f1658724b4a31abffea55f1d743afc0db"
+        "sha256": "94b0edce700195a087cd6575a7f3900e4f93be24cf540dcac31814eef55c5687"
       },
-      "modifications": "Upstream sources unmodified; a first-party bounded typed-array C ABI selects Alpha_wrap_3 with MP_Float and round-to-nearest-safe intervals. No GMP or MPFR.",
+      "modifications": "Upstream sources unmodified; first-party bounded array ABIs select exact-construction intersection refinement and constrained isotropic surface remeshing. CGAL rational MP_Float and round-to-nearest-safe intervals; no GMP or MPFR.",
       "notices": [
         {
           "path": "web/licenses/cgal/LICENSE",
@@ -740,7 +748,7 @@
       },
       "build_recipe": {
         "path": "tools/build-stl-repair.py",
-        "sha256": "d1261fc1247687d2f385091beed8621f1658724b4a31abffea55f1d743afc0db"
+        "sha256": "94b0edce700195a087cd6575a7f3900e4f93be24cf540dcac31814eef55c5687"
       },
       "modifications": "Unmodified headers only. No Boost runtime library linked.",
       "notices": [
@@ -753,7 +761,7 @@
     },
     "solid-repair": {
       "project": "SpjutSim solid-repair adapter",
-      "version": "ABI 1",
+      "version": "repair ABI 2; surface ABI 1",
       "license": "GPL-2.0-or-later",
       "source": {
         "url": "https://github.com/Brinkwatertoad/SpjutSim-FEA",
@@ -766,7 +774,7 @@
         },
         {
           "path": "native/stl-repair/README.md",
-          "sha256": "55e297a2d8b837b367dc50915b7668dc4b12d7d182c0f7245809004c8653d628"
+          "sha256": "73007ad78926cbea7e092b865e4074ef0a391685ef0682e6d5d950814e2685fe"
         },
         {
           "path": "workers/stl-solid-repair.js",
@@ -775,11 +783,19 @@
         {
           "path": "native/stl-repair/test.cpp",
           "sha256": "523c345c178e797e7c17faf787e8b61ada570648422c50dee6733a870a7b3b8a"
+        },
+        {
+          "path": "native/stl-repair/surface.cpp",
+          "sha256": "7377e150fbd710248808d85345f93dbcb92d94fdde9521b8d8329e277479bb63"
+        },
+        {
+          "path": "native/stl-repair/surface-test.cpp",
+          "sha256": "83212799e9c4b4de43fa7a05ed0cf82c6a84b334ec7f0f21f88139f503b91f89"
         }
       ],
       "build_recipe": {
         "path": "tools/build-stl-repair.py",
-        "sha256": "d1261fc1247687d2f385091beed8621f1658724b4a31abffea55f1d743afc0db"
+        "sha256": "94b0edce700195a087cd6575a7f3900e4f93be24cf540dcac31814eef55c5687"
       },
       "modifications": "First-party CGAL-isolating adapter. Linked artifact uses GPL-3.0-or-later distribution terms.",
       "notices": [
@@ -982,7 +998,7 @@
     },
     {
       "path": "web/generated/local-runtime/mesher-worker-source.js",
-      "sha256": "77aad08ebca1abb4ff958c8cb5680ad57ee563fc1a31ac6778d9052af27fe3fb",
+      "sha256": "5e7466df183a01cf8781b8322433128d0c2d4e841e706144e61a42af52e90ea8",
       "components": [
         "workers"
       ]
@@ -1394,7 +1410,7 @@
     },
     {
       "path": "web/generated/local-runtime/stl-preparation-worker-source.js",
-      "sha256": "25a1016cfdfa180d09dbe8fb6c8c619f2fa9a27d4fb8a16d29a92a9fe9bcf72e",
+      "sha256": "371e11d7347b5a96534e6239fd823d64e9e681999617b69cf41a48fd0c9f4c7c",
       "components": [
         "workers"
       ]
@@ -1443,7 +1459,7 @@
     },
     {
       "path": "web/generated/local-runtime/solid-repair-runtime-source.js",
-      "sha256": "2731ff38954605c5593f985d9435a9056bf844e387ffac693b3cad1e60a643d3",
+      "sha256": "54d1e5361439be8f6852778d2bd6ab81622cfad418194848f492ca5cd8f81fcf",
       "components": [
         "solid-repair",
         "cgal",
@@ -1453,7 +1469,14 @@
     },
     {
       "path": "web/generated/local-runtime/stl-solid-repair-worker-source.js",
-      "sha256": "8e1eb7f2827e006a982eaf2f4773f2f4257fd3ccfe80120dd624105fa42afc44",
+      "sha256": "a2ae35776cb891b0d62cf3ca5ada761c84119eeffb8a1c3201df3a5641a76b00",
+      "components": [
+        "workers"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/stl-surface-worker-source.js",
+      "sha256": "2a9db6106a204f32c38059e8041dec4a838f44c27a88944369364ee38bdf0ef0",
       "components": [
         "workers"
       ]

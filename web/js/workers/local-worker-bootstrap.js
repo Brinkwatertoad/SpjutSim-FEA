@@ -48,7 +48,7 @@
       }
       return runtime.gmshParts.concat(['\n', runtime[kind]]);
     }
-    if(kind==='stl-solid-repair'){
+    if(kind==='stl-solid-repair'||kind==='stl-surface'){
       if(typeof runtime.solidRepair!=='string')throw startupFailure('STL_SOLID_REPAIR_MISSING','The local solid-repair runtime is unavailable.',{worker:kind});
       return [runtime.solidRepair,'\n',runtime[kind]];
     }

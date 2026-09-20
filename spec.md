@@ -764,30 +764,60 @@ WebAssembly availability; Gmsh/FEM engine checks execute only on demand or in te
   consent and installation; cancellation/stale replies preserve the prior analysis.
   Rendering/UI consume application contracts. The native solver stays format-neutral.
 - Generate selectable groups automatically (40° default; adjustable 1–179° near
-  selection). Default to `analysis`: rebuild planar regions from their boundaries,
-  independently of engineering groups; use discrete charts when planar subdivision
-  would exceed 512 surfaces. Never silently fall back to frozen triangles on failure.
-  Keep original/reconstruct/experimental-remesh choices in Mesh Advanced.
-  For analysis, cast inward rays from every source-facet centroid using a BVH.
-  Cap global mesh size at one third of the minimum measured thickness; use the
-  smaller requested size when present. This conservative cap is not local adaptive
-  refinement or a proof of thickness resolution everywhere. Reject a workload
-  estimate `sourceVolume / size^3 > 250000` before volume generation.
-  Check each group area and total boundary volume against source (1% maximum),
-  plus bidirectional source/mesh vertices, edge midpoints and facet centroids
-  against `min(0.001 * diagonal, 0.05 * measuredThickness)` in meters. Sampling
-  is not a Hausdorff bound. Cap each spatial index at 20 million traversal/primitive
-  operations. Fail with stable fidelity/work-limit errors and no silent fallback.
-  Return checked `quality.stlAnalysis` version 1 (construction method, measured
-  thickness, effective maximum size, volume/area errors, sampled deviation and
-  its limit, sample count), plus per-group source/mesh areas. Validate these at the
-  worker/client boundary; show effective size and fidelity evidence with mesh status.
+  selection). Default to `analysis`: rebuild exact planar boundaries when the source
+  needs at most 512 coplanar regions, independently of engineering groups. Otherwise
+  use chart-free isotropic remeshing directly on the triangle surface. Constrain
+  selection seams and ridges at 40°; do not collapse constrained edges or apply
+  tangential smoothing. Split/collapse/flip with projection, three native iterations.
+  Validate every candidate with the same strict indexed topology/intersection checks.
+  Rejected surface candidates can refine offending source neighborhoods, reducing
+  local targets by 0.4, for at most five attempts of this same construction method.
+  Never silently switch to frozen triangles. Keep original/reconstruct/experimental
+  parametrized-remesh choices in Mesh Advanced.
+- For analysis, measure inward rays at every source-facet centroid. Each source
+  triangle receives a size target no larger than requested maximum or thickness/3.
+  Smooth curvature (neighbor normal angle below 40°) additionally limits targets
+  using the chord estimate `sqrt(8*tolerance*radius)`, with radius estimated from
+  shared edge length and normal angle; tolerance is `min(diagonal*.001,thickness*.05)`.
+  These estimates guide construction; final fidelity checks decide acceptance.
+  Use the same graded field for surface and volume meshing:
+  `h(x)=min(requestedMax,min_i(target_i+0.35*distance(x,sourceTriangle_i)))`.
+  Targets apply across whole triangles, not only centroids. Gmsh's serial size
+  callback evaluates this field; remove the callback after the operation.
+  Estimate element work with 8×8×8 midpoint integration of `6/h(x)^3` over the
+  bounding box and reject estimates above one million. This is not a guaranteed
+  element count or memory bound; retain native facet/memory ceilings, deadlines
+  and the solver's separate preflight based on the actual mesh.
+- A disposable `stl-surface` worker parses and identifies the accepted source,
+  computes the field and, for complex surfaces, instantiates the native remesher.
+  Terminate it (and any retained import Gmsh worker) before starting volume Gmsh.
+  Transfer a version-1 `surface-result`: source hash/group IDs, method, Float64
+  source-triangle targets, thickness/min/max sizes, workload estimate, and optional
+  Float64 positions/Uint32 triangles/Uint32 group ownership. Bind this to the mesh
+  request; validate its envelope on the main thread and geometry in the mesher.
+  Surface preparation, worker handoff and volume meshing share one 120-second
+  deadline. Cancellation rejects late startup/results and releases either worker.
+  The improved discrete boundary uses `MeshOnlyEmpty`; no parametrization charts.
+- Accept analysis boundaries only when every selection-group area and total volume
+  differ from source by at most 1%. Sample both directions at every unique vertex,
+  edge midpoint and facet centroid, requiring distance at most
+  `min(diagonal*.001,0.15*h(sample))`. This local limit replaces the former global
+  minimum-thickness tolerance and does not certify a Hausdorff bound or stress
+  convergence. Each thickness or fidelity pass has a 100-million traversal/primitive budget
+  per distance/ray BVH;
+  a graded field has a 200-million visited-node budget across its worker operation.
+  Return checked `quality.stlAnalysis` version 2: construction method
+  (`planar-boundaries` or `discrete-boundary`), measured thickness, local minimum and
+  requested maximum size, gradation 0.35, estimated element count, volume/area errors,
+  sampled deviation, global ceiling, maximum ratio to the local limit, and sample
+  count. Also return per-group areas. Show local size range and fidelity evidence
+  with mesh status; preserve explicit poor-element warnings.
 - Group identity depends on prepared source, units and grouping/membership, not
   simulation-surface method, tolerance, feature angle, mesh resolution or rigid
   orientation. Verify exact ownership before preserving assignments. Method edits
   invalidate mesh/results; source/group changes use explicit assignment transfer.
-- Retain limits of 16 MiB per source/candidate, 200,000 triangles, 512 internal
-  surfaces, 2 million intersection candidate pairs and 120 seconds per worker
+- Retain limits of 16 MiB per source/candidate, 200,000 source or prepared-boundary triangles, 512 selectable
+  groups (and 512 surfaces for the advanced chart/reconstruction methods), 2 million intersection candidate pairs and 120 seconds per worker
   operation. Retain SI diagonal `[1e-9,1e6]` m and scale-relative degeneracy checks,
   bounded planar convex local filling, exact indexed meshing, positive Jacobians,
   >1% remeshed patch-area warnings and solver memory preflight. Detailed numerical

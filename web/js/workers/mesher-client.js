@@ -132,6 +132,37 @@
     });
   };
 
+  MesherClient.prototype.prepareSurface = function(request,settings,deadline) {
+    var self=this;
+    // An import worker may still own Gmsh. Release it before surface WASM starts.
+    if(this.worker){this.worker.terminate();this.worker=null;}
+    return new Promise(function(resolve,reject){
+      var worker=null,settled=false,id=self.requestId();
+      var timer=root.setTimeout(function(){finish(clientFailure('MESHER_TIMEOUT','Surface preparation exceeded the 120-second meshing deadline.',null,'mesh'));},Math.max(0,deadline-Date.now()));
+      function finish(error,result){
+        if(settled)return;settled=true;root.clearTimeout(timer);
+        if(worker){worker.onmessage=null;worker.onerror=null;worker.onmessageerror=null;worker.terminate();}
+        self.cancelPending=null;if(error)reject(error);else resolve(result);
+      }
+      self.cancelPending=function(){finish(clientFailure('MESH_CANCELLED','Mesh generation was cancelled.',null,'mesh'));};
+      root.SpjutsimFEA.startLocalWorker('stl-surface').then(function(started){
+        worker=started;if(settled||self.disposed){worker.terminate();if(!settled)finish(clientFailure('MESH_CANCELLED','Mesh generation was cancelled.',null,'mesh'));return;}
+        worker.onmessage=function(event){if(settled)return;var m=event.data;if(!m||m.requestId!==id)return;
+          if(m.type==='progress'){if(root.SpjutsimFEA.validateWorkerProgress(m,id).valid)self.onProgress(m.progress);return;}
+          var response=root.SpjutsimFEA.validateWorkerResponse(m,id,'surface-result');
+          if(!response.valid){finish(clientFailure('INVALID_MESHER_RESPONSE','The surface engine returned an invalid response.',response.reason,'mesh'));return;}
+          if(response.error){self.onError(m.error);finish(Object.assign(new Error(m.error.userMessage),{diagnostic:m.error}));return;}
+          var g=request.geometry;
+          if(!root.SpjutsimFEA.validateStlSurfaceResult(m.result,g.sourceMetadata.sha256,g.faceIds,g.sourceMetadata.triangleCount,settings.maxSizeM)){finish(clientFailure('INVALID_MESHER_RESPONSE','The surface engine returned invalid boundary data.',null,'mesh'));return;}
+          finish(null,m.result);
+        };
+        worker.onerror=function(e){finish(clientFailure('STL_SURFACE_FAILED','The surface engine stopped while preparing the boundary.',e.message,'mesh'));};
+        worker.onmessageerror=function(){finish(clientFailure('MESHER_MESSAGE_FAILED','The surface engine could not return its boundary.',null,'mesh'));};
+        try{var bytes=request.sourceBytes.slice(0);worker.postMessage({protocol:root.SpjutsimFEA.WORKER_PROTOCOL_VERSION,type:'prepare-surface',requestId:id,sourceBytes:bytes,sourceHash:request.geometry.sourceMetadata.sha256,faceIds:request.geometry.faceIds,stlSource:request.geometry.stlSource,settings:settings},[bytes]);}catch(e){finish(e);}
+      },function(error){finish(error);});
+    });
+  };
+
   /** Generate a solver-ready tetrahedral mesh without exposing Gmsh data to the caller. */
   MesherClient.prototype.generateMesh = function (request) {
     var self = this;
@@ -153,14 +184,29 @@
       return Promise.reject(clientFailure('INVALID_MESH_SETTINGS', 'Choose valid tetrahedral mesh settings.', settingsValidation.reason, 'mesh'));
     }
     resolvedSettings = root.SpjutsimFEA.resolveMeshSettings(request.settings, request.geometry.boundingBoxM);
-    return this.ensureWorker().then(function (worker) {
+    if(this.disposed)return Promise.reject(clientFailure('MESH_CANCELLED','Mesh generation was cancelled.',null,'mesh'));
+    var deadline=Date.now()+120000,preparedSurface=null;
+    var preparation=request.geometry.sourceFormat==='stl'&&(request.settings.stlSurface||root.SpjutsimFEA.defaultStlSurface()).method==='analysis'
+      ?this.prepareSurface(request,resolvedSettings,deadline):Promise.resolve(null);
+    return preparation.then(function(result){
+      preparedSurface=result;
+      return new Promise(function(resolve,reject){
+        var settled=false,timer=request.geometry.sourceFormat==='stl'?root.setTimeout(function(){finish(clientFailure('MESHER_TIMEOUT','The geometry operation exceeded 120 seconds. Try a simpler tessellation or coarser mesh.',null,'mesh'));},Math.max(0,deadline-Date.now())):null;
+        function finish(error,worker){
+          if(settled){if(worker){worker.terminate();if(self.worker===worker)self.worker=null;}return;}
+          settled=true;root.clearTimeout(timer);self.cancelPending=null;if(error)reject(error);else resolve(worker);
+        }
+        self.cancelPending=function(){finish(clientFailure('MESH_CANCELLED','Mesh generation was cancelled.',null,'mesh'));};
+        self.ensureWorker().then(function(worker){finish(null,worker);},function(error){finish(error);});
+      });
+    }).then(function (worker) {
       return new Promise(function (resolve, reject) {
         var requestId = self.requestId();
         var settled = false;
         var transferBytes = request.sourceBytes.slice(0);
         var timeout = request.geometry.sourceFormat === 'stl' ? root.setTimeout(function () {
           finish(clientFailure('MESHER_TIMEOUT', 'The geometry operation exceeded 120 seconds. Try a simpler tessellation or coarser mesh.', null, 'mesh'));
-        }, 120000) : null;
+        }, Math.max(0,deadline-Date.now())) : null;
 
         function finish(error, result) {
           if (settled) { return; }
@@ -217,8 +263,8 @@
             stlSource: request.geometry.stlSource, stlSurface: request.settings.stlSurface || root.SpjutsimFEA.defaultStlSurface(), sourceHash: request.geometry.sourceMetadata && request.geometry.sourceMetadata.sha256,
             faceIds: request.geometry.faceIds.slice(), settings: resolvedSettings,
             orientation: { rotation: request.geometry.orientation.rotation.slice(), operations: request.geometry.orientation.operations.slice() },
-            sourceBytes: transferBytes
-          }, [transferBytes]);
+            sourceBytes: transferBytes,stlPreparedSurface:preparedSurface
+          }, [transferBytes].concat(preparedSurface?[preparedSurface.targets.buffer].concat(preparedSurface.boundary?[preparedSurface.boundary.positions.buffer,preparedSurface.boundary.triangles.buffer,preparedSurface.boundary.patchByTriangle.buffer]:[]):[]));
         } catch (error) {
           finish(clientFailure('MESHER_MESSAGE_FAILED', 'The geometry engine could not receive the mesh request.', error && error.message, 'mesh'));
         }

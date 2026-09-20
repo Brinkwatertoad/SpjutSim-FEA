@@ -425,7 +425,8 @@ function restoreStlGeometry(gmsh,message,parsed){
   gmsh.clear();gmsh.option.restoreDefaults();gmsh.model.add(message.geometryId);
   if(settings.method==='analysis'){
     progress(message.requestId,'stl-analysis','Rebuilding surfaces for analysis…');
-    return StlAnalysis.build(gmsh,parsed);
+    if(!SpjutsimFEA.validateStlSurfaceResult(message.stlPreparedSurface,message.sourceHash,message.faceIds,parsed.triangles.length/3,message.settings.maxSizeM))throw knownMeshError('STL_SURFACE_FAILED','The prepared boundary does not match this mesh request.');
+    return StlAnalysis.build(gmsh,parsed,message.stlPreparedSurface,function(boundary){return restoreOriginalStlGeometry(gmsh,message,boundary);});
   }
   if(settings.method==='remesh'){
     progress(message.requestId,'stl-remesh','Preparing experimental remeshed surfaces…');
@@ -825,6 +826,7 @@ async function generateMesh(gmsh, message) {
     box = boundingBoxM(gmsh, restored.solidTag);
     diagonalM = Math.sqrt(Math.pow(box.maxM[0] - box.minM[0], 2) + Math.pow(box.maxM[1] - box.minM[1], 2) + Math.pow(box.maxM[2] - box.minM[2], 2));
     var effectiveSizes=restored.analysis?StlAnalysis.sizing(restored.analysis,message.settings):message.settings;
+    if(restored.analysis){gmsh.model.mesh.setSizeCallback(function(dim,tag,x,y,z){return restored.analysis.field.at(x,y,z);});}
     gmsh.option.setNumber('Mesh.ElementOrder', 1);
     gmsh.option.setNumber('Mesh.MeshSizeMin', effectiveSizes.minSizeM);
     gmsh.option.setNumber('Mesh.MeshSizeMax', effectiveSizes.maxSizeM);
@@ -899,6 +901,7 @@ async function generateMesh(gmsh, message) {
     if (error && error.code && error.code.indexOf('STL_') === 0) { throw knownMeshError(error.code, error.message); }
     throw knownMeshError('MESH_GENERATION_FAILED', 'The volume mesh could not be generated.', error && error.message);
   } finally {
+    if(restored&&restored.analysis){try{gmsh.model.mesh.removeSizeCallback();}catch(ignoreCallback){}}
     try { gmsh.FS.unlink(temporaryPath); } catch (ignore) {}
     try { gmsh.clear(); if (restored && restored.remeshing) { gmsh.option.restoreDefaults(); } } catch (ignoreClear) {}
   }

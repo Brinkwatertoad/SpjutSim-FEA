@@ -13,7 +13,7 @@ controller owns the pending transaction; rendering/UI consume its contracts.
 Gmsh surface preparation moves to meshing and keeps source-group ownership.
 
 **Tech Stack:** Existing classic JavaScript, typed arrays, file-safe workers,
-local Three.js, pinned Gmsh/WASM, Python/CMake/CTest. No new dependencies.
+local Three.js, pinned Gmsh/WASM, approved replaceable CGAL adapter, Python/CMake/CTest.
 
 **Spec:** `spec.md` §§6.1, 15.11, 16, 18–21, 26 and
 [STL workflow design](../designs/stl-import-workflow.md).
@@ -31,7 +31,8 @@ the resource smoke profile and STL-specific 50k/200k bounds passed.
   fixtures together. No aliases, migration functions or dual implementations.
 - Preview is not a validated solid. No analysis operation can consume it.
 - Keep original bytes, installed analyses and numerical validation intact.
-- Preserve 16 MiB/200,000-triangle limits, 512 internal surfaces, 2 million
+- Preserve 16 MiB/200,000-triangle limits, 512 selection groups (and internal
+  surfaces in advanced parametrized methods), 2 million
   intersection candidates, 120-second per-operation deadlines and solver preflight.
 - Cap diagnostic details at 1,000 records / 200,000 referenced primitives; state
   explicitly when checks or locations are incomplete.
@@ -345,11 +346,8 @@ This is the continuation of M29, not a second STL plan. No compatibility layer.
 - [x] Verify focused and complete applicable tests, update the current walkthrough
   and specification, and commit tested checkpoints. M29 acceptance remains open.
 
-Known remaining limitation: gargoyle now passes strict preparation after reviewed
-solid reconstruction, but default meshing hits the 512-chart bound. A wider-chart
-experiment then hits the conservative global thickness workload cap. Local adaptive
-sizing/more capable chart construction remain future work; no gargoyle solve is
-claimed. See the current M29 review for the measured limits and dependency tradeoffs.
+The prior enclosing-surface repair and chart/global-size failures are historical
+results superseded by the approved follow-up below.
 
 ## 8. Approved detail-preserving repair and chart-free complex STL meshing
 
@@ -363,14 +361,14 @@ approved the following replacement. Keep one design/plan and no compatibility pa
 - [x] Integrate the proven repair behind the replaceable native interface, with
   bounded work/memory, provenance, localized changes and explicit material consent.
   Measure the new WASM size and preserve corresponding-source/license auditing.
-- [ ] For complex surfaces, generate a quality boundary mesh directly on the
+- [x] For complex surfaces, generate a quality boundary mesh directly on the
   repaired surface with constrained features/selection seams and bounded deviation;
   feed this discrete boundary to Gmsh without creating parametrization charts.
   Preserve existing exact planar-boundary meshing for suitable mechanical parts.
-- [ ] Replace global minimum-thickness sizing with a graded local field used by
+- [x] Replace global minimum-thickness sizing with a graded local field used by
   both surface and volume meshing. Estimate element/memory workload locally and
   retain explicit resource and fidelity rejection.
-- [ ] Verify gargoyle detail and successful volume meshing, elongated/rotated and
+- [x] Verify gargoyle detail and successful volume meshing, elongated/rotated and
   thin-appendage cases, grouping/loads, cancel/stale results, native/browser numerical
   suites, file startup, packaging and complete diff. Commit tested checkpoints.
 
@@ -382,3 +380,11 @@ The original gargoyle yields 61,448 strict-valid facets, including 57,030 unchan
 source facets, identical exterior bounds and one explicitly proposed tiny enclosed
 void fill. Runtime: 1,004,422 bytes / 336,902 gzip; no added dependency. Meshing
 items above remain in progress.
+
+Meshing checkpoint: chart-free gargoyle boundary has 129,256 triangles and produces
+517,043 Tet4 elements. Chromium and Firefox pass the complete path within the
+120-second deadline. Volume error 0.063%, worst group-area error 0.870%; all local
+sampled deviation limits pass. No inverted/near-zero elements; 1,002 poor elements
+remain explicitly warned. Local sizing, lifecycle, numerical and corpus checks pass.
+The combined runtime is 1,479,354 bytes / 480,772 gzip, with reproducible builds.
+See the single current M29 review/evidence for checks, packaging and limitations.

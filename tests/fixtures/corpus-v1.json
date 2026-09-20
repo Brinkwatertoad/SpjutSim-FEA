@@ -2545,7 +2545,7 @@
         "patchAngleDegrees": 40
       },
       "preparation": {
-        "state": "needs-review",
+        "state": "blocked",
         "preview": true
       }
     },

@@ -134,7 +134,8 @@ Put simulation-surface settings under **Mesh → Advanced**:
 
 - Default: **Rebuild for analysis**. Reconstruct planar boundaries without retaining
   skinny source facets. Internal planes can share one engineering group. If the
-  source requires more than 512 planar regions, use the discrete chart method;
+  source requires more than 512 planar regions, rebuild its triangular boundary
+  directly, then generate volume tetrahedra without parametrization charts;
   failures are explicit, without trying frozen triangles as a fallback.
 - **Keep original surface** is an advanced option preserving source triangles.
 - Optional **Reconstruct simple surfaces** with a positive deviation bound and
@@ -142,14 +143,22 @@ Put simulation-surface settings under **Mesh → Advanced**:
 - Optional **Remesh STL surfaces (experimental)** with feature angle and clear
   geometry/pressure-fidelity diagnostics.
 
-The default uses a fixed geometric construction rule, not repeated strategy search.
-Measure inward thickness at every facet centroid and conservatively cap global size
-at one third of the smallest measurement. This can be expensive for fine appendages;
-reject excessive estimated work rather than silently overlooking those features.
-Accept an analysis mesh only with group-area and volume errors at most 1% and
-bidirectional sampled surface distances within the documented scale/thickness limit.
-Sampling does not certify maximum deviation or engineering accuracy; convergence
-and inspection remain necessary. See spec §6.1 for numerical/work limits.
+The default uses one construction rule with bounded refinement of failing regions.
+Measure thickness at every source facet and combine it with a curvature target.
+A graded distance field retains small elements around thin features and permits
+larger elements farther away. Use this field in both surface and volume meshing;
+estimate workload locally instead of imposing the thinnest feature everywhere.
+The native boundary worker terminates before Gmsh starts. Both phases share one
+120-second meshing deadline and cancellation; no CGAL types cross the array API.
+
+Constrain engineering seams and sharp edges. Reject invalid or intersecting remesh
+candidates; refine their affected source neighborhoods, without accepting a changed
+solid. Accept a boundary only with group-area and volume errors at most 1% and
+bidirectional sampled distances within `min(.001*diagonal,.15*localSize)`.
+Sample every unique vertex, edge midpoint and facet centroid. These checks do not
+certify maximum deviation or engineering accuracy; convergence and inspection remain
+necessary. Retain explicit warnings for poor tetrahedra. See spec §6.1 for contracts,
+local sizing, refinement and resource limits.
 On a meshing failure, keep the installed model and explain the relevant next
 action. Surface-method changes invalidate mesh/results but preserve selection
 identities when exact ownership is verified. Ambiguous ownership fails; an actual
@@ -212,7 +221,8 @@ fresh-worker meshing. Normal result rendering consumes accepted geometry only.
 
 These are explicit support limits, not capacity or performance guarantees:
 
-- 16 MiB per source/candidate, 200,000 triangles, 512 internal geometric surfaces,
+- 16 MiB per source/candidate, 200,000 source/prepared-boundary triangles, 512 selection groups
+  (advanced parametrization/reconstruction still cap internal surfaces at 512),
   2,000,000 intersection candidate pairs, 120 seconds per STL worker operation.
   The preparation deadline covers its whole request, not each automatic stage.
   The mesher retains its separate operation deadline and solver memory preflight.

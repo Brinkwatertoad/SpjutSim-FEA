@@ -199,9 +199,9 @@ on each host.
 Rebuild the optional solid-repair runtime with `python3 tools/build-stl-repair.py`.
 It uses `EMXX`, or Emscripten 3.1.74 under `SPJUTSIM_EMSDK_ROOT` (default
 `build/emsdk`), and downloads SHA-256-pinned CGAL/Boost source archives. The
-checked-in embedded runtime is about 1.00 MB (337 KB gzip); compilation and
-instantiation happen only in the separate worker when local cleanup leaves
-intersections. See [the adapter](native/stl-repair/README.md) for native tests,
+checked-in embedded runtime is about 1.48 MB (481 KB gzip); compilation and
+instantiation happen only in disposable workers for unresolved intersections or
+complex analysis boundaries. These workers terminate before volume Gmsh starts. See [the adapter](native/stl-repair/README.md) for native tests,
 limits and replacement boundaries. `tests/browser/stl-solid-repair-tests.html`
 checks reconstruction, strict validation, explicit consent, cancellation and
 original retention. Optional `?fixture=gargoyle` uses the private supplied fixture.
@@ -321,17 +321,27 @@ defaults to 5°; mesh/checks warnings flag patch-area changes above 1%. There is
 automatic method fallback. Original triangles can retain slivers and dense boundaries;
 start with Coarse and compare refinement.
 
-Limits remain 16 MiB per source/candidate, 200,000 triangles, 512 internal surfaces,
+Limits remain 16 MiB per source/candidate, 200,000 source/boundary triangles,
+512 selection groups (512 internal surfaces in advanced parametrized methods),
 2 million intersection candidates, and 120 seconds per preparation/meshing operation.
 Diagnostic details are capped at 1,000 records / 200,000 primitive references and
 clearly labeled when incomplete. Installation requires a closed, connected,
 consistently outward manifold with positive usable volume and no intersections.
 Filling defaults to 1% of the remaining part diagonal (0 disables filling; maximum
-5%). Unresolved intersections trigger a separate CGAL 6.1.1 enclosing-surface
-repair worker. It may join overlaps, fill gaps and round details; the candidate
-must pass all strict checks and requires explicit acceptance. Plain disconnected
+5%). Unresolved intersections trigger a separate exact-construction repair worker
+that splits intersections, extracts the boundary and preserves unaffected exterior
+coordinates. Joining overlaps or filling small enclosed voids requires explicit
+acceptance after all strict checks pass; automatic whole-model wrapping is removed. Plain disconnected
 bodies are not automatically joined. Tolerance welding, manual vertex edits,
 shell analysis and multibody analysis remain unsupported.
+
+Default analysis meshing rebuilds planar parts from exact boundaries. Complex parts
+use a constrained triangle-surface remesher and Gmsh's discrete volume boundary,
+without parametrization charts. Local thickness/curvature sizing grades away from
+thin features. Area/volume and bidirectional local-deviation checks reject excessive
+changes. `stl-analysis-tests.html?fixture=gargoyle` verifies the complete repair and
+volume-meshing path; `stl-surface-tests.html` checks worker handoff, cancellation,
+deadlines and malformed replies. Poor-element warnings remain visible.
 
 `stl-preparation-tests.html` checks decoding, diagnostics, cancellation, deadlines and
 worker boundaries. `stl-repair-tests.html` retains exact-predicate/precision cases;

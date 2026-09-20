@@ -98,7 +98,19 @@
       return mesh;
     }
     function parse(bytes, options) {
-      var decoded = readUnvalidated(bytes, options), positions = decoded.positions, triangles = decoded.triangles;
+      return validateMesh(readUnvalidated(bytes, options),options);
+    }
+    // Native boundary output is already indexed Float64 data. Validate it using
+    // exactly the source topology/intersection checks, without an STL round trip.
+    function validateMesh(decoded,options) {
+      if(!root.SpjutsimFEA.validateStlSourceOptions(options))fail('STL_INVALID_OPTIONS','Choose valid STL source units and grouping.');
+      var positions=decoded.positions,triangles=decoded.triangles;
+      if(!(positions instanceof Float64Array)||positions.length<12||positions.length%3||positions.length>1800000||!(triangles instanceof Uint32Array)||triangles.length<12||triangles.length%3||triangles.length>600000)fail('STL_INPUT_LIMIT','The indexed surface exceeds its geometry limits.');
+      var lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];
+      for(var i=0;i<positions.length;i++){var v=positions[i],a=i%3;if(!Number.isFinite(v))fail('STL_INVALID_COORDINATE','A surface coordinate is not finite.');lo[a]=Math.min(lo[a],v);hi[a]=Math.max(hi[a],v);}
+      for(i=0;i<triangles.length;i++)if(triangles[i]>=positions.length/3)fail('STL_INVALID_INDEX','Surface connectivity is invalid.');
+      decoded=Object.assign({},decoded,{minimum:lo,maximum:hi,diagonal:Math.hypot(hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2])});
+      if(!(decoded.diagonal>=1e-9&&decoded.diagonal<=1e6))fail('STL_SCALE_LIMIT','Surface extent is outside the supported range.');
       var minimum = decoded.minimum, maximum = decoded.maximum, diagonal = decoded.diagonal;
       var count = triangles.length / 3, vertices = positions.length / 3, index, key;
       var normals = new Float64Array(count * 3);
@@ -350,7 +362,7 @@
       parsed.sourceHash = sourceHash;
       return parsed;
     }
-    return { decode: decode, validateIntersections: validateSolid, parse: parse, identify: identify, readUnvalidated: readUnvalidated, isZeroArea: isZeroArea };
+    return { decode: decode, validateMesh:validateMesh, validateIntersections: validateSolid, parse: parse, identify: identify, readUnvalidated: readUnvalidated, isZeroArea: isZeroArea };
   }
   root.createStlImport = createStlImport;
   root.StlImport = createStlImport();
