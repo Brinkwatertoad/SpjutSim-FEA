@@ -58,21 +58,8 @@
     stl: Object.freeze({ format: 'stl', extensions: Object.freeze(['stl']), label: 'STL' })
   });
 
-  function validateStlOptions(options) {
-    return Boolean(options && (options.version === 1 || options.version === 2 &&
-      (options.surfaceMode === 'original' && options.reconstructionToleranceM === null ||
-       options.surfaceMode === 'remesh' && options.reconstructionToleranceM === null && Number.isFinite(options.remeshFeatureAngleDegrees) && options.remeshFeatureAngleDegrees >= 1 && options.remeshFeatureAngleDegrees <= 40 ||
-       options.surfaceMode === 'reconstruct' && Number.isFinite(options.reconstructionToleranceM) && options.reconstructionToleranceM > 0)) && options.normalization === 'none' &&
-      ['m','mm','cm','in','ft'].includes(options.lengthUnit) && Number.isFinite(options.patchAngleDegrees) &&
-      options.patchAngleDegrees >= 1 && options.patchAngleDegrees <= 179);
-  }
-
-  function sameStlOptions(left, right) {
-    return validateStlOptions(left) && validateStlOptions(right) &&
-      left.version === right.version && left.lengthUnit === right.lengthUnit && left.patchAngleDegrees === right.patchAngleDegrees &&
-      (left.version === 1 || left.surfaceMode === right.surfaceMode && left.reconstructionToleranceM === right.reconstructionToleranceM &&
-        (left.surfaceMode !== 'remesh' || left.remeshFeatureAngleDegrees === right.remeshFeatureAngleDegrees));
-  }
+  function validateStlSourceOptions(options){return root.SpjutsimFEA.validateStlSourceOptions(options);}
+  function sameStlSourceOptions(left,right){return validateStlSourceOptions(left)&&validateStlSourceOptions(right)&&left.lengthUnit===right.lengthUnit&&left.patchAngleDegrees===right.patchAngleDegrees;}
 
   function sourceFormatForFilename(name) {
     var match;
@@ -101,7 +88,7 @@
     if (!(request.sourceBytes instanceof ArrayBuffer) || request.sourceBytes.byteLength === 0) {
       return validation(false, 'invalid-source-bytes');
     }
-    if (request.sourceFormat === 'stl' && !validateStlOptions(request.importOptions)) {
+    if (request.sourceFormat === 'stl' && !validateStlSourceOptions(request.stlSource)) {
       return validation(false, 'invalid-stl-options');
     }
     if (request.geometryId !== undefined && (typeof request.geometryId !== 'string' || request.geometryId.length === 0)) {
@@ -181,16 +168,16 @@
   }
 
   function validateStlSurfaceMetadata(model) {
-    var metadata=model.sourceMetadata,options=model.importOptions,original=model.originalPreview||model.preview;
+    var metadata=model.sourceMetadata,options=model.stlSurface,original=model.originalPreview||model.preview;
     if (!original || !(original.indices instanceof Uint32Array) || original.indices.length !== metadata.triangleCount*3) { return false; }
-    if (options.version===1) { return !model.originalPreview && !metadata.remeshing; }
-    if (metadata.surfaceMode!==options.surfaceMode) { return false; }
-    if (options.surfaceMode!=='remesh' && metadata.remeshing) { return false; }
-    if (options.surfaceMode==='original') { return metadata.reconstruction===null && !model.originalPreview; }
-    if (options.surfaceMode==='remesh') {
+    if(!root.SpjutsimFEA.validateStlSurfaceSettings(options))return false;
+    if (metadata.surfaceMode!==options.method) { return false; }
+    if (options.method!=='remesh' && metadata.remeshing) { return false; }
+    if (options.method==='original') { return metadata.reconstruction===null && !model.originalPreview; }
+    if (options.method==='remesh') {
       var remeshing=metadata.remeshing;
       return Boolean(metadata.reconstruction===null && !model.originalPreview && remeshing && remeshing.version===1 &&
-        remeshing.method==='stl-parametrization' && remeshing.featureAngleDegrees===Math.min(options.remeshFeatureAngleDegrees,options.patchAngleDegrees) &&
+        remeshing.method==='stl-parametrization' && remeshing.featureAngleDegrees===Math.min(options.remeshFeatureAngleDegrees,model.stlSource.patchAngleDegrees) &&
         Array.isArray(remeshing.surfaceCountsByPatch) &&
         remeshing.surfaceCountsByPatch.length===model.faceIds.length &&
         !remeshing.surfaceCountsByPatch.includes(undefined) &&
@@ -218,8 +205,8 @@
         new Set(model.faceIds).size !== model.faceIds.length) {
       return validation(false, 'invalid-geometry-model');
     }
-    if (model.sourceFormat === 'stl' && (!validateStlOptions(model.importOptions) || model.surfaceKind !== 'stl-patch' ||
-        !model.sourceMetadata || model.sourceMetadata.version !== model.importOptions.version || !/^[a-f0-9]{64}$/.test(model.sourceMetadata.sha256) ||
+    if (model.sourceFormat === 'stl' && (!validateStlSourceOptions(model.stlSource) || model.surfaceKind !== 'stl-patch' ||
+        !model.sourceMetadata || model.sourceMetadata.version !== model.stlSource.version || !/^[a-f0-9]{64}$/.test(model.sourceMetadata.sha256) ||
         !Number.isInteger(model.sourceMetadata.triangleCount) || model.sourceMetadata.triangleCount < 1 || model.sourceMetadata.triangleCount > 200000 ||
         !Number.isInteger(model.sourceMetadata.internalSurfaceCount) || model.sourceMetadata.internalSurfaceCount < 1 || model.sourceMetadata.internalSurfaceCount > 512 ||
         !model.sourceMetadata.validation || model.sourceMetadata.validation.status !== 'valid' || model.sourceMetadata.validation.version !== 1 ||
@@ -240,44 +227,13 @@
     return preview.valid ? validation(true) : preview;
   }
 
-  function validateStlRepairOptions(options) {
-    return Boolean(options && options.version===1 && Number.isFinite(options.maxHoleDiameterRatio) &&
-      options.maxHoleDiameterRatio>=0 && options.maxHoleDiameterRatio<=.05);
+  function validateStlSourceProvenance(source,geometry) {
+    if(!source||source.sourceFormat!=='stl')return true;
+    if(source.originalSourceBytes!==undefined&&(!(source.originalSourceBytes instanceof ArrayBuffer)||!source.originalSourceBytes.byteLength||source.originalSourceBytes.byteLength>16*1024*1024))return false;
+    var p=source.preparation;if(!p)return true;
+    return p.version===1&&/^[a-f0-9]{64}$/.test(p.originalDigest)&&/^[a-f0-9]{64}$/.test(p.sourceDigest)&&p.preparedDigest===geometry.sourceMetadata.sha256&&
+      p.lengthUnit===geometry.stlSource.lengthUnit&&typeof p.shapeChanged==='boolean'&&(!p.shapeChanged||p.shapeChangesAccepted===true);
   }
-  function validateStlRepairReport(report) {
-    if(!report||report.version!==1||report.method!=='local-stl-repair'||
-      !['m','mm','cm','in','ft'].includes(report.lengthUnit)||!validateStlRepairOptions(report)||
-      !/^[a-f0-9]{64}$/.test(report.originalSha256||'')||!/^[a-f0-9]{64}$/.test(report.repairedSha256||''))return false;
-    var counts=['originalTriangleCount','repairedTriangleCount','removedDuplicateTriangles','removedZeroAreaTriangles','removedLooseTriangles','flippedTriangles','filledHoles','addedTriangles'];
-    if(counts.some(function(key){return !Number.isInteger(report[key])||report[key]<0||report[key]>200000;}))return false;
-    var retained=report.originalTriangleCount-report.removedDuplicateTriangles-report.removedZeroAreaTriangles-report.removedLooseTriangles;
-    return report.originalTriangleCount>0&&report.repairedTriangleCount>0&&retained>0&&
-      validateBoundingBoxM(report.originalBoundingBoxM).valid&&validateBoundingBoxM(report.repairedBoundingBoxM).valid&&
-      retained+report.addedTriangles===report.repairedTriangleCount&&report.flippedTriangles<=retained&&
-      report.filledHoles<=128&&report.addedTriangles>=report.filledHoles&&report.addedTriangles<=30*report.filledHoles&&
-      Number.isFinite(report.sourceDiagonalM)&&report.sourceDiagonalM>=1e-9&&report.sourceDiagonalM<=1e6&&
-      Number.isFinite(report.maximumFilledHoleDiameterM)&&report.maximumFilledHoleDiameterM>=0&&
-      Number.isFinite(report.holeLimitDiagonalM)&&report.holeLimitDiagonalM>=1e-9&&report.holeLimitDiagonalM<=report.sourceDiagonalM&&
-      report.maximumFilledHoleDiameterM<=report.holeLimitDiagonalM*report.maxHoleDiameterRatio&&
-      (report.filledHoles>0?report.maximumFilledHoleDiameterM>0&&report.maxHoleDiameterRatio>0:report.maximumFilledHoleDiameterM===0)&&
-      report.validation&&report.validation.version===1&&report.validation.status==='valid'&&
-      report.validation.triangleCount===report.repairedTriangleCount&&Number.isInteger(report.validation.intersectionCandidates)&&
-      report.validation.intersectionCandidates>=0&&report.validation.intersectionCandidates<=2000000;
-  }
-  function validateStlRepairResult(result) {
-    return Boolean(result&&result.version===1&&result.sourceBytes instanceof ArrayBuffer&&
-      result.sourceBytes.byteLength>0&&result.sourceBytes.byteLength<=16*1024*1024&&validateStlRepairReport(result.report));
-  }
-  function validateStlRepairSource(source,geometry) {
-    if(!source||typeof source!=='object'||Array.isArray(source))return false;
-    if(source.repair===undefined)return true;
-    var repair=source.repair;
-    return Boolean(source.sourceFormat==='stl'&&repair&&repair.version===1&&repair.originalSourceBytes instanceof ArrayBuffer&&
-      repair.originalSourceBytes.byteLength>0&&repair.originalSourceBytes.byteLength<=16*1024*1024&&
-      validateStlRepairReport(repair.report)&&(!geometry||geometry.sourceMetadata&&geometry.sourceMetadata.sha256===repair.report.repairedSha256&&
-      geometry.sourceMetadata.triangleCount===repair.report.repairedTriangleCount));
-  }
-
   function createGeometryId() {
     return 'geometry-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
   }
@@ -286,14 +242,10 @@
   root.SpjutsimFEA.SUPPORTED_CAD_FORMATS = SUPPORTED_CAD_FORMATS;
   root.SpjutsimFEA.sourceFormatForFilename = sourceFormatForFilename;
   root.SpjutsimFEA.validateImportRequest = validateImportRequest;
-  root.SpjutsimFEA.validateStlOptions = validateStlOptions;
-  root.SpjutsimFEA.sameStlOptions = sameStlOptions;
+  root.SpjutsimFEA.sameStlSourceOptions = sameStlSourceOptions;
   root.SpjutsimFEA.validateBoundingBoxM = validateBoundingBoxM;
   root.SpjutsimFEA.validatePreview = validatePreview;
   root.SpjutsimFEA.validateGeometryModel = validateGeometryModel;
   root.SpjutsimFEA.createGeometryId = createGeometryId;
-  root.SpjutsimFEA.validateStlRepairOptions = validateStlRepairOptions;
-  root.SpjutsimFEA.validateStlRepairReport = validateStlRepairReport;
-  root.SpjutsimFEA.validateStlRepairResult = validateStlRepairResult;
-  root.SpjutsimFEA.validateStlRepairSource = validateStlRepairSource;
+  root.SpjutsimFEA.validateStlSourceProvenance = validateStlSourceProvenance;
 }(globalThis));

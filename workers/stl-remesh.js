@@ -34,7 +34,7 @@
       '% from the source; pressure forces can change. Refine and compare results.' : null;
     return { areas: { version: 1, sourceM2: sourceAreas, meshM2: meshAreas }, warning: warning };
   }
-  function build(gmsh, parsed) {
+  function build(gmsh, parsed, settings) {
     if (parsed.patches.length > 512) {
       fail('STL_PATCH_LIMIT', 'Experimental remeshing supports at most 512 selection groups. Review a larger grouping angle.');
     }
@@ -60,7 +60,7 @@
     // that admit a single parametrization without changing user assignments.
     // The default 5-degree feature angle retains a 64-sided cylinder's creases;
     // broader angles allow fewer constraints on complex curved input.
-    var featureAngle = Math.min(parsed.options.remeshFeatureAngleDegrees, parsed.options.patchAngleDegrees);
+    var featureAngle = Math.min(settings.remeshFeatureAngleDegrees, parsed.options.patchAngleDegrees);
     mesh.classifySurfaces(featureAngle * Math.PI / 180, true, true, Math.PI, true);
     var entities = gmsh.model.getEntities(2).dimTags, surfaces = [];
     for (i = 1; i < entities.length; i += 2) { surfaces.push(entities[i]); }

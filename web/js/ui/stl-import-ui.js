@@ -1,164 +1,62 @@
-(function (root) {
-  'use strict';
-  function stlMeshingAdvice(triangleCount, mode) {
-    if (!(triangleCount >= 25000)) return '';
-    return 'Detailed STL: meshing may take minutes. Start with Coarse, then refine and compare results. ' +
-      (mode === 'original' ? 'Keeping source triangles can still produce a dense mesh; advanced remeshing can reduce it. ' : '') +
-      'Each STL operation stops after 2 minutes; Cancel stops it sooner. Time also depends on shape, mesh settings and your computer.';
+(function(root){
+ 'use strict';
+ var api=root.SpjutsimFEA;
+ function download(source){if(!source)return;var bytes=source.originalSourceBytes||source.sourceBytes,url=URL.createObjectURL(new Blob([bytes],{type:'application/octet-stream'}));var a=document.createElement('a');a.href=url;a.download=source.sourceName;a.click();setTimeout(function(){URL.revokeObjectURL(url);},1000);}
+ function StlImportUI(controller,viewport,handlers){
+  this.controller=controller;this.viewport=viewport;this.handlers=handlers;this.panel=document.getElementById('stl-import-panel');this.unit=document.getElementById('stl-length-unit');this.list=document.getElementById('stl-issues');this.accept=document.getElementById('stl-accept-button');this.comparison=document.getElementById('stl-preview-surface');
+  var self=this;
+  this.unit.onchange=function(){handlers.change({lengthUnit:self.unit.value});};
+  document.getElementById('stl-repair-hole-limit').onchange=function(){var value=this.value;if(value==='')return;handlers.change({maxHoleDiameterRatio:Number(value)/100});};
+  document.getElementById('stl-retry-button').onclick=function(){handlers.change({});};
+  document.getElementById('stl-cancel-button').onclick=handlers.cancel;
+  document.getElementById('stl-choose-file').onclick=function(){document.getElementById('import-step-input').click();};
+  this.accept.onclick=function(){var s=controller.stlImportSession;handlers.accept({acceptShapeChanges:s&&s.state==='needs-review'});};
+  this.comparison.onchange=function(){if(self.display)self.display.showRevision(self.comparison.value);};
+  document.getElementById('stl-show-all').onclick=function(){if(self.display)self.display.showAll();};
+  document.getElementById('stl-download-original-button').onclick=function(){download(controller.stlImportSession&&controller.stlImportSession.source);};
+  document.getElementById('stl-download-installed-original').onclick=function(){download(controller.geometrySource);};
+  this.escape=function(event){if(event.key==='Escape'&&controller.stlImportSession){event.preventDefault();handlers.cancel();}};root.addEventListener('keydown',this.escape);
+  controller.subscribe(function(){self.render();});
+ }
+ StlImportUI.prototype.render=function(){
+  var s=this.controller.stlImportSession,state=this.controller.document;
+  var model=document.getElementById('stl-model-settings'),surface=document.getElementById('mesh-stl-surface-settings');
+  model.hidden=surface.hidden=!state.geometry||state.geometry.sourceFormat!=='stl';
+  if(!model.hidden&&document.activeElement!==document.getElementById('stl-group-angle'))document.getElementById('stl-group-angle').value=state.geometry.stlSource.patchAngleDegrees;
+  this.panel.hidden=!s;document.getElementById('setup-inspector').hidden=!!s;
+  if(!s){this.close();return;}
+  if(this.session!==s){this.close();this.session=s;this.display=new api.StlDiagnosticsDisplay(this.viewport);this.list.replaceChildren();this.previousResult=null;this.focusBefore=document.activeElement;document.getElementById('toggle-setup-pane').getAttribute('aria-expanded')==='false'&&document.getElementById('toggle-setup-pane').click();this.unit.focus();}
+  this.unit.value=s.settings.lengthUnit;
+  document.getElementById('stl-repair-hole-limit').value=s.settings.maxHoleDiameterRatio*100;
+  document.getElementById('stl-source-summary').textContent=s.source.sourceName+' · Pending model';
+  document.getElementById('stl-unit-assumption').textContent='Assumed '+this.unit.options[this.unit.selectedIndex].text.toLowerCase()+' — confirm the dimensions.';
+  document.getElementById('stl-import-status').textContent=s.message;
+  this.accept.disabled=!['ready','needs-review'].includes(s.state);this.accept.textContent=s.state==='needs-review'?'Use repaired model':'Use model';
+  document.getElementById('stl-repair-consent').hidden=s.state!=='needs-review';
+  document.getElementById('stl-retry-button').disabled=s.state==='reading'||s.state==='checking';
+  document.getElementById('stl-error-details').textContent=s.result&&s.result.error?s.result.error.code:s.error&&s.error.code||'';
+  if(s.preview){
+   var d=s.preview.bounds;document.getElementById('stl-dimensions').textContent=d.max.map(function(v,i){return(v-d.min[i]).toPrecision(5);}).join(' × ')+' '+s.settings.lengthUnit;
+   if(this.sourcePreview!==s.preview){this.sourcePreview=s.preview;this.display.setPreview(s.preview);}
   }
-  function StlImportUI(controller, handlers) {
-    var self=this;
-    this.controller=controller;this.handlers=handlers;this.dialog=document.getElementById('stl-import-dialog');
-    this.unit=document.getElementById('stl-length-unit');this.angle=document.getElementById('stl-patch-angle');
-    this.mode=document.getElementById('stl-surface-mode');this.tolerance=document.getElementById('stl-reconstruction-tolerance');
-    this.featureAngle=document.getElementById('stl-remesh-angle');
-    this.canvas=document.getElementById('stl-review-viewport');
-    this.reviewButton=document.getElementById('stl-review-button');this.busy=false;this.sourceTriangleCount=0;
-    this.comparison=document.getElementById('stl-preview-surface');
-    this.comparison.onchange=function(){self.showSurface();};
-    this.status=document.getElementById('stl-import-status');this.dimensions=document.getElementById('stl-dimensions');
-    this.accept=document.getElementById('stl-accept-button');this.list=document.getElementById('stl-patch-list');
-    this.selected=new Set();this.viewport=null;this.geometry=null;
-    this.reviewButton.onclick=function(){self.review();};
-    document.getElementById('stl-use-original-button').onclick=function(){handlers.change();self.mode.value='original';self.updateControls();self.review();};
-    document.getElementById('stl-repair-button').onclick=function(){
-      var value=document.getElementById('stl-repair-hole-limit').value,ratio=Number(value)/100;
-      if(value===''||!root.SpjutsimFEA.validateStlRepairOptions({version:1,maxHoleDiameterRatio:ratio})){self.report('Choose a maximum hole width from 0% through 5%.');return;}
-      self.clearError();self.busy=true;self.accept.disabled=true;self.updateControls();self.report('Trying local surface repair… You can cancel at any time.');
-      handlers.repair(self.options(),ratio);
-    };
-    document.getElementById('stl-discard-repair-button').onclick=function(){handlers.discardRepair();};
-    document.getElementById('stl-download-original-button').onclick=function(){
-      var review=controller.geometryReview;if(!review||!review.source.repair)return;
-      var url=URL.createObjectURL(new Blob([review.source.repair.originalSourceBytes],{type:'application/octet-stream'}));
-      var link=document.createElement('a');link.href=url;link.download=review.source.sourceName;link.click();setTimeout(function(){URL.revokeObjectURL(url);},1000);
-    };
-    document.getElementById('stl-cancel-button').onclick=function(){handlers.cancel();};
-    this.accept.onclick=function(){handlers.accept();};
-    this.dialog.addEventListener('cancel',function(event){event.preventDefault();handlers.cancel();});
-    [this.unit,this.angle,this.mode,this.tolerance,this.featureAngle].forEach(function(control){control.onchange=function(){handlers.change();self.busy=false;self.clearError();self.updateControls();self.accept.disabled=true;self.status.textContent='Settings changed. Update the preview before importing.';if(control===self.unit&&self.unit.value)self.review();};});
-    controller.subscribe(function(){self.render();});
+  var result=s.result;document.getElementById('stl-comparison-label').hidden=!(result&&result.candidatePreview);
+  if(result!==this.previousResult){this.previousResult=result;this.list.replaceChildren();
+   if(result){
+    var issues=result.changes.automatic.concat(result.changes.proposed,result.diagnostics.issues),self=this;
+    var previews={source:s.preview,candidate:result.candidatePreview||s.preview};this.display.setDiagnostics(issues,previews);
+    if(result.candidatePreview){this.comparison.value='candidate';this.display.showRevision('candidate');}
+    [['fixed','Fixed automatically'],['proposed','Proposed changes'],['unresolved','Still needs attention']].forEach(function(group){
+     var selected=issues.map(function(issue,index){return{issue:issue,index:index};}).filter(function(item){return item.issue.status===group[0];});if(!selected.length)return;
+     var section=document.createElement(group[0]==='fixed'?'details':'section'),title=document.createElement(group[0]==='fixed'?'summary':'h3');title.textContent=group[1]+' ('+selected.length+')';section.appendChild(title);
+     selected.forEach(function(item){var issue=item.issue,button=document.createElement('button');button.type='button';button.textContent=issue.kind.replaceAll('-',' ')+' · '+issue.count+(issue.status==='proposed'?' · extent '+issue.bounds.max.map(function(v,i){return(v-issue.bounds.min[i]).toPrecision(3);}).join(' × ')+' '+s.settings.lengthUnit:'');button.setAttribute('aria-pressed','false');button.onclick=function(){self.list.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed','false');});button.setAttribute('aria-pressed','true');self.display.focusIssue(item.index);};section.appendChild(button);});self.list.appendChild(section);
+    });
+    var incomplete=result.diagnostics.locationsTruncated||result.changesTruncated||Object.values(result.diagnostics.coverage).some(function(value){return value==='skipped'||value==='limit';});
+    if(incomplete){var note=document.createElement('p');note.textContent='Some checks or locations are incomplete. This view does not certify unchecked regions.';this.list.appendChild(note);}
+    this.display.showIssues(issues.filter(function(issue){return issue.status!=='fixed';}));
+   }else if(this.display){this.display.setDiagnostics([],{source:s.preview});this.display.showIssues([]);}
   }
-  StlImportUI.prototype.clearError=function(){
-    document.getElementById('stl-repair-panel').hidden=true;
-    document.getElementById('stl-use-original-button').hidden=true;
-    document.getElementById('stl-error-details').hidden=true;
-    document.getElementById('stl-error-code').textContent='';
-  };
-  StlImportUI.prototype.updateControls=function(){
-    this.tolerance.disabled=this.mode.value!=='reconstruct';this.featureAngle.disabled=this.mode.value!=='remesh';
-    document.getElementById('stl-remesh-angle-label').hidden=this.featureAngle.disabled;
-    document.getElementById('stl-reconstruction-tolerance-label').hidden=this.tolerance.disabled;
-    this.reviewButton.disabled=this.busy||!this.unit.value;
-    document.getElementById('stl-repair-button').disabled=this.busy||!this.unit.value;
-    document.getElementById('stl-repair-hole-limit').disabled=this.busy;
-    this.reviewButton.textContent=this.busy?'Preparing preview…':'Update preview';
-    var advice=document.getElementById('stl-meshing-advice');
-    advice.textContent=stlMeshingAdvice(this.sourceTriangleCount,this.mode.value);advice.hidden=!advice.textContent;
-  };
-  StlImportUI.prototype.review=function(){
-    var options=this.options();this.clearError();
-    if(!root.SpjutsimFEA.validateStlOptions(options)){
-      this.reportFailure(new Error('Choose file units and valid angles. Reconstruction also needs a positive maximum deviation.'));return;
-    }
-    this.busy=true;this.accept.disabled=true;this.updateControls();this.report('Checking the STL and preparing its preview… You can cancel at any time.');
-    this.handlers.review(options);
-  };
-  StlImportUI.prototype.options=function(){var scale={m:1,mm:.001,cm:.01,in:.0254,ft:.3048}[this.unit.value];var options={version:2,lengthUnit:this.unit.value,patchAngleDegrees:Number(this.angle.value),normalization:'none',surfaceMode:this.mode.value,reconstructionToleranceM:this.mode.value==='reconstruct'?Number(this.tolerance.value)*scale:null};if(this.mode.value==='remesh')options.remeshFeatureAngleDegrees=Number(this.featureAngle.value);return options;};
-  StlImportUI.prototype.open=function(options){
-    this.unit.value=options?options.lengthUnit:'';this.angle.value=options?options.patchAngleDegrees:40;
-    this.mode.value=options?(options.surfaceMode||'original'):'original';
-    this.busy=false;this.clearError();this.sourceTriangleCount=0;this.canvas.hidden=true;
-    this.updateSourceSummary();
-    document.getElementById('stl-repair-hole-limit').value=1;
-    document.getElementById('stl-advanced-options').open=Boolean(options&&options.surfaceMode&&options.surfaceMode!=='original');
-    document.getElementById('stl-selection-details').open=false;
-    this.tolerance.value=options&&options.reconstructionToleranceM?options.reconstructionToleranceM/{m:1,mm:.001,cm:.01,in:.0254,ft:.3048}[options.lengthUnit]:.01;
-    this.featureAngle.value=options&&options.remeshFeatureAngleDegrees!==undefined?options.remeshFeatureAngleDegrees:5;
-    this.updateControls();this.comparison.value='simulation';
-    document.getElementById('stl-preview-surface-label').hidden=true;
-    this.accept.disabled=true;this.geometry=null;this.list.replaceChildren();this.dimensions.textContent='';
-    this.status.textContent='Select file units to preview the model. STL files do not store units.';
-    document.getElementById('stl-remap-consequence').hidden=!this.controller.document.geometry;
-    this.renderRepair();
-    this.dialog.showModal();
-    this.viewport=new root.SpjutsimFEA.ViewportController(this.canvas);
-    var self=this;this.viewport.setFacePickHandler(function(id){if(id)self.select(id);});
-    if(options)this.review();else this.unit.focus();
-  };
-  StlImportUI.prototype.updateSourceSummary=function(){
-    var review=this.controller.geometryReview;if(!review)return;
-    var source=review.source,bytes=source.sourceBytes;this.reviewSource=source;this.sourceTriangleCount=0;
-    if(bytes.byteLength>=84){var count=new DataView(bytes).getUint32(80,true);if(count>0&&84+50*count===bytes.byteLength)this.sourceTriangleCount=count;}
-    document.getElementById('stl-source-summary').textContent=source.sourceName+' · '+(bytes.byteLength/1000000).toPrecision(3)+' MB'+(this.sourceTriangleCount?' · '+this.sourceTriangleCount.toLocaleString('en-US')+' triangles':'');
-  };
-  StlImportUI.prototype.renderRepair=function(){
-    var review=this.controller.geometryReview,repair=review&&review.source.repair,summary=document.getElementById('stl-repair-summary');
-    summary.hidden=!repair;document.getElementById('stl-discard-repair-button').hidden=!repair;document.getElementById('stl-download-original-button').hidden=!repair;
-    this.comparison.querySelector('[value="original"]').textContent=repair?'Repaired STL surface':'Original STL surface';
-    document.getElementById('stl-use-original-button').textContent=repair?'Use repaired STL triangles instead':'Use original triangles instead';
-    if(!repair)return;
-    var report=repair.report,changes=[];
-    [['removedDuplicateTriangles','duplicate triangles removed'],['removedZeroAreaTriangles','zero-area triangles removed'],['removedLooseTriangles','stray triangles removed'],['flippedTriangles','triangle directions corrected'],['filledHoles','holes filled']].forEach(function(item){if(report[item[0]])changes.push(report[item[0]]+' '+item[1]);});
-    var displayUnit=root.SpjutsimFEA.preferredUnit('lengthM'),scale=root.SpjutsimFEA.UNIT_SCALES[displayUnit];
-    if(report.filledHoles){changes.push('largest filled hole '+(report.maximumFilledHoleDiameterM/scale).toPrecision(4)+' '+displayUnit);}
-    var before=report.originalBoundingBoxM.maxM.map(function(v,i){return v-report.originalBoundingBoxM.minM[i];});
-    var after=report.repairedBoundingBoxM.maxM.map(function(v,i){return v-report.repairedBoundingBoxM.minM[i];});
-    if(before.some(function(v,i){return Math.abs(v-after[i])>report.sourceDiagonalM*1e-10;})){
-      function dimensions(values){return values.map(function(v){return(v/scale).toPrecision(4);}).join(' × ')+' '+displayUnit;}
-      changes.push('overall dimensions changed from '+dimensions(before)+' to '+dimensions(after));
-    }
-    summary.textContent='Repaired STL: '+(changes.length?changes.join('; '):'no surface changes needed')+'. The repaired source passes all solid checks. Review its shape before importing.'+
-      (this.mode.value==='reconstruct'?' Reconstruction deviation is measured from this repaired STL.':'');
-  };
-  StlImportUI.prototype.select=function(id){
-    if(this.selected.has(id))this.selected.delete(id);else this.selected.add(id);
-    this.viewport.setSelectedFaceIds(Array.from(this.selected));
-    Array.from(this.list.children).forEach(function(button){button.setAttribute('aria-pressed',String(this.selected.has(button.dataset.faceId)));},this);
-  };
-  StlImportUI.prototype.render=function(){
-    var documentState=this.controller.document,regroup=document.getElementById('regroup-stl-button');
-    regroup.hidden=!documentState.geometry||documentState.geometry.sourceFormat!=='stl';
-    regroup.disabled=Boolean(documentState.assignmentDraft)||root.SpjutsimFEA.engineeringBusy(documentState);
-    if(!this.dialog.open)return;
-    var review=this.controller.geometryReview,geometry=review&&review.geometry;
-    if(review&&review.source!==this.reviewSource){this.updateSourceSummary();this.updateControls();}
-    this.renderRepair();
-    this.accept.disabled=!geometry;this.canvas.hidden=!geometry;
-    if(!geometry) {
-      document.getElementById('stl-preview-surface-label').hidden=true;
-      if(this.geometry){this.viewport.clearGeometryPreview();this.geometry=null;this.selected.clear();this.list.replaceChildren();this.dimensions.textContent='';}
-      return;
-    }
-    if(geometry===this.geometry)return;
-    this.viewport.resize();
-    this.busy=false;this.sourceTriangleCount=geometry.sourceMetadata.triangleCount;this.updateControls();this.clearError();
-    this.geometry=geometry;this.selected.clear();this.comparison.value='simulation';this.showSurface();this.list.replaceChildren();
-    document.getElementById('stl-preview-surface-label').hidden=!geometry.originalPreview;
-    var self=this;
-    geometry.faceIds.forEach(function(id,index){var button=document.createElement('button');button.type='button';var remeshing=geometry.sourceMetadata.remeshing,count=remeshing&&remeshing.surfaceCountsByPatch[index];button.textContent='Patch '+(index+1)+(geometry.sourceMetadata.reconstruction?' — '+geometry.sourceMetadata.reconstruction.surfaces[index].kind:remeshing?' — '+count+(count===1?' surface':' surfaces'):'');button.dataset.faceId=id;button.title=id;button.setAttribute('aria-pressed','false');button.onclick=function(){self.select(id);};self.list.appendChild(button);});
-    var dimensions=geometry.boundingBoxM.maxM.map(function(value,axis){return value-geometry.boundingBoxM.minM[axis];});
-    var displayUnit=root.SpjutsimFEA.preferredUnit('lengthM'),scale=root.SpjutsimFEA.UNIT_SCALES[displayUnit];
-    this.dimensions.textContent=dimensions.map(function(value){return (value/scale).toPrecision(6);}).join(' × ')+' '+displayUnit;
-    this.status.textContent=geometry.sourceMetadata.triangleCount.toLocaleString('en-US')+' source triangles; '+geometry.faceIds.length+' selectable patches. '+
-      (geometry.sourceMetadata.reconstruction?'Recovered '+geometry.sourceMetadata.internalSurfaceCount+' surfaces. Maximum deviation bound: '+(geometry.sourceMetadata.reconstruction.maximumDeviationM/scale).toPrecision(4)+' '+displayUnit+'. Compare the surfaces before applying.':(review.source.repair?'Repaired STL triangles retained. ':'Original triangles retained. ')+'Groups help select faces; they do not simplify the geometry. Check the dimensions, then import.');
-    if(geometry.sourceMetadata.remeshing)this.status.textContent=geometry.sourceMetadata.triangleCount.toLocaleString('en-US')+' source triangles; '+geometry.faceIds.length+' selectable groups. Experimental remeshing will generate new triangles for simulation; it does not recover smooth CAD curves. Refine the mesh to check small details.';
-  };
-  StlImportUI.prototype.showSurface=function(){if(!this.geometry||!this.viewport)return;var geometry=this.geometry;if(this.comparison.value==='original'&&geometry.originalPreview)geometry=Object.assign({},geometry,{preview:geometry.originalPreview});this.viewport.setGeometryPreview(geometry);this.viewport.setSelectedFaceIds(Array.from(this.selected));};
-  StlImportUI.prototype.report=function(message){this.status.textContent=message;};
-  StlImportUI.prototype.reportFailure=function(error){
-    this.busy=false;this.updateControls();this.clearError();
-    var code=error.diagnostic&&error.diagnostic.code;
-    var review=this.controller.geometryReview;
-    document.getElementById('stl-repair-panel').hidden=!(review&&!review.source.repair&&['STL_NONMANIFOLD','STL_OPEN_SURFACE','STL_DEGENERATE_TRIANGLE','STL_INCONSISTENT_WINDING','STL_INWARD_WINDING','STL_REPAIR_UNSUPPORTED'].includes(code));
-    this.report(error.message);
-    document.getElementById('stl-error-details').hidden=!code;
-    document.getElementById('stl-error-details').open=false;
-    document.getElementById('stl-error-code').textContent=code||'';
-    document.getElementById('stl-use-original-button').hidden=!(code&&
-      (code.indexOf('STL_RECONSTRUCTION_')===0||code==='STL_REMESH_FAILED'||code==='STL_PATCH_LIMIT'||code==='MESHER_TIMEOUT')&&this.mode.value!=='original');
-  };
-  root.SpjutsimFEA.stlMeshingAdvice=stlMeshingAdvice;
-  StlImportUI.prototype.close=function(){if(this.viewport){this.viewport.dispose();this.viewport=null;}this.geometry=null;this.selected.clear();this.dialog.close();};
-  root.SpjutsimFEA.StlImportUI=StlImportUI;
+ };
+ StlImportUI.prototype.close=function(){if(this.display){this.display.dispose();this.display=null;}this.session=null;this.sourcePreview=null;if(this.focusBefore&&this.focusBefore.isConnected){this.focusBefore.focus();this.focusBefore=null;}};
+ api.StlImportUI=StlImportUI;
+ api.stlMeshingAdvice=function(count,mode){return count>=25000?'Detailed STL: start with Coarse and compare refinement. '+(mode==='original'?'Original triangles can retain a dense or low-quality surface. ':'')+'Meshing can take minutes; Cancel remains available.':'';};
 }(globalThis));

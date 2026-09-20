@@ -332,7 +332,7 @@
     var self = this;
     this.pointerClickListener = function (event) {
       var faceId;
-      if (event.button !== 0) { return; }
+      if (event.button !== 0 || self.stlDiagnosticsDisplay) { return; }
       if (self.suppressNextClick) {
         self.suppressNextClick = false;
         return;
@@ -1410,6 +1410,7 @@
       this.peakMarker.visible=this.presentation.mode==='stress' || this.presentation.mode==='deformation';
       if(this.probePositionHandler){var point=this.peakMarker.position.clone().project(this.camera);this.probePositionHandler({x:(point.x+1)*this.canvas.clientWidth/2,y:(1-point.y)*this.canvas.clientHeight/2,visible:this.peakMarker.visible && point.z>=-1 && point.z<=1});}
     }
+    if(this.stlDiagnosticsDisplay)this.stlDiagnosticsDisplay.hideInstalled();
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
     this.renderer.clearDepth();

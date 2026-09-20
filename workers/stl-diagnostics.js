@@ -63,11 +63,19 @@
         }
       }
     }
-    var manifold = true, closed = true;
+    var manifold = true, closed = true, boundaries=[],byVertex=new Map();
     edges.forEach(function (edge) {
-      if (edge.count === 1) { add('open-boundary', [], [edge.a,edge.b]); closed = false; }
+      if (edge.count === 1) { var id=boundaries.length;boundaries.push(edge);[edge.a,edge.b].forEach(function(v){if(!byVertex.has(v))byVertex.set(v,[]);byVertex.get(v).push(id);});closed = false; }
       else if (edge.count > 2) { add('nonmanifold-edge', [], [edge.a,edge.b]); manifold = false; }
       else if (edge.inconsistent) add('winding', [], [edge.a,edge.b]);
+    });
+    var visited=new Uint8Array(boundaries.length);
+    boundaries.forEach(function(edge,index){
+      if(visited[index])return;
+      var queue=[index],locations=[],head=0;visited[index]=1;
+      while(head<queue.length){var current=boundaries[queue[head++]];locations.push(current.a,current.b);
+        [current.a,current.b].forEach(function(v){byVertex.get(v).forEach(function(next){if(!visited[next]){visited[next]=1;queue.push(next);}});});}
+      add('open-boundary',[],locations,[],'unresolved',queue.length);
     });
     // Vertex fans are independent of winding, but require paired manifold edges.
     if (manifold && closed) {

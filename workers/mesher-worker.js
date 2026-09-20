@@ -14,17 +14,10 @@ function validCadSource(message) {
   return message && CAD_FORMAT_EXTENSIONS[message.sourceFormat] &&
     typeof message.sourceName === 'string' && CAD_FORMAT_EXTENSIONS[message.sourceFormat].test(message.sourceName) &&
     message.sourceBytes instanceof ArrayBuffer && message.sourceBytes.byteLength > 0 &&
-    (message.sourceFormat !== 'stl' || validStlOptions(message.importOptions));
+    (message.sourceFormat !== 'stl' || validStlSourceOptions(message.stlSource));
 }
 
-function validStlOptions(options) {
-  return options && (options.version === 1 || options.version === 2 &&
-      (options.surfaceMode === 'original' && options.reconstructionToleranceM === null ||
-       options.surfaceMode === 'remesh' && options.reconstructionToleranceM === null && Number.isFinite(options.remeshFeatureAngleDegrees) && options.remeshFeatureAngleDegrees >= 1 && options.remeshFeatureAngleDegrees <= 40 ||
-       options.surfaceMode === 'reconstruct' && Number.isFinite(options.reconstructionToleranceM) && options.reconstructionToleranceM > 0)) && options.normalization === 'none' &&
-    ['m','mm','cm','in','ft'].includes(options.lengthUnit) && Number.isFinite(options.patchAngleDegrees) &&
-    options.patchAngleDegrees >= 1 && options.patchAngleDegrees <= 179;
-}
+function validStlSourceOptions(options){return SpjutsimFEA.validateStlSourceOptions(options);}
 
 function validOrientation(orientation) {
   var matrix = orientation && orientation.rotation;
@@ -80,7 +73,7 @@ function validateRequest(message) {
       false
     );
   }
-  if (message.type !== 'initialize' && message.type !== 'diagnostics' && message.type !== 'box-smoke' && message.type !== 'import' && message.type !== 'mesh' && message.type !== 'stl-repair') {
+  if (message.type !== 'initialize' && message.type !== 'diagnostics' && message.type !== 'box-smoke' && message.type !== 'import' && message.type !== 'mesh') {
     return workerError(
       'UNKNOWN_MESHER_REQUEST',
       'worker',
@@ -88,18 +81,13 @@ function validateRequest(message) {
       'Unsupported request type: ' + message.type + '.'
     );
   }
-  if ((message.type === 'import' || message.type === 'mesh' || message.type === 'stl-repair') && message.sourceFormat === 'stl') {
-    if (message.sourceFormat === 'stl' && !validStlOptions(message.importOptions)) {
+  if ((message.type === 'import' || message.type === 'mesh') && message.sourceFormat === 'stl') {
+    if (message.sourceFormat === 'stl' && !validStlSourceOptions(message.stlSource)) {
       return workerError('STL_INVALID_OPTIONS', message.type, 'Choose explicit STL units and a grouping angle from 1 to 179 degrees. Reconstruction needs a positive deviation; experimental remeshing needs a feature angle from 1 to 40 degrees.');
     }
     if (message.sourceFormat === 'stl' && (!(message.sourceBytes instanceof ArrayBuffer) || !message.sourceBytes.byteLength || message.sourceBytes.byteLength > 16 * 1024 * 1024)) {
       return workerError('STL_INPUT_LIMIT', message.type, 'Choose a nonempty STL file no larger than 16 MiB.');
     }
-  }
-  if (message.type === 'stl-repair' && (message.version !== 1 || message.sourceFormat !== 'stl' || !validCadSource(message) ||
-      !message.repairOptions || message.repairOptions.version !== 1 || !Number.isFinite(message.repairOptions.maxHoleDiameterRatio) ||
-      message.repairOptions.maxHoleDiameterRatio < 0 || message.repairOptions.maxHoleDiameterRatio > .05)) {
-    return workerError('STL_INVALID_REPAIR_OPTIONS', 'import', 'Choose an STL and a hole width from 0% through 5% of the part diagonal.');
   }
   if (message.type === 'import') {
     if (!validCadSource(message) || typeof message.geometryId !== 'string' || message.geometryId.length === 0) {
@@ -430,83 +418,23 @@ function restoreOriginalStlGeometry(gmsh, message, parsed) {
   return { solidTag: solid, surfaceTags: tags.map(function (tag) { return [tag]; }), internalSurfaceCount: tags.length };
 }
 
-function restoreStlGeometry(gmsh, message, parsed) {
-  if (message.importOptions.version === 2) {
-    if (message.importOptions.surfaceMode === 'original') { return restoreOriginalStlGeometry(gmsh, message, parsed); }
-    if (message.importOptions.surfaceMode === 'remesh') {
-      progress(message.requestId, 'stl-remesh', 'Creating parametrized STL surfaces for a fresh mesh…');
-      gmsh.clear(); gmsh.option.restoreDefaults(); gmsh.model.add(message.geometryId);
-      try { return StlRemesh.build(gmsh, parsed); }
-      catch (error) {
-        if (error && error.code) { throw error; }
-        throw knownImportError('STL_REMESH_FAILED', 'The STL could not be parametrized for remeshing. Keep the original triangles or review different grouping.', String(error));
-      }
-    }
-    progress(message.requestId, 'stl-reconstruct', 'Recovering simulation surfaces within the selected deviation…');
-    gmsh.clear(); gmsh.option.restoreDefaults(); gmsh.model.add(message.geometryId);
-    try { return StlReconstruction.build(gmsh, parsed, message.importOptions.reconstructionToleranceM); }
-    catch(error) { if(error && error.code)throw error; throw knownImportError('STL_RECONSTRUCTION_FAILED', 'The fitted surfaces could not form a usable solid. Use the original STL surface or review different grouping/deviation.', String(error)); }
+function restoreStlGeometry(gmsh,message,parsed){
+  var settings=message.stlSurface||SpjutsimFEA.defaultStlSurface();
+  if(!SpjutsimFEA.validateStlSurfaceSettings(settings))throw knownImportError('STL_INVALID_SURFACE_SETTINGS','Choose valid simulation surface settings.');
+  if(settings.method==='original')return restoreOriginalStlGeometry(gmsh,message,parsed);
+  gmsh.clear();gmsh.option.restoreDefaults();gmsh.model.add(message.geometryId);
+  if(settings.method==='remesh'){
+    progress(message.requestId,'stl-remesh','Preparing experimental remeshed surfaces…');
+    try{return StlRemesh.build(gmsh,parsed,settings);}catch(error){if(error.code)throw error;throw knownImportError('STL_REMESH_FAILED','The STL could not be parametrized. Review the Mesh surface settings.',String(error));}
   }
-  // Cap planar components before Gmsh allocates discrete parametrizations.
-  var visited = new Uint8Array(parsed.triangles.length / 3), queue = new Uint32Array(visited.length), regions = 0;
-  for (var triangle = 0; triangle < visited.length; triangle += 1) {
-    if (visited[triangle]) { continue; }
-    if (++regions > 512) { throw knownImportError('STL_PATCH_LIMIT', 'The STL has more than 512 geometric surface regions. Export a simpler tessellation.'); }
-    var head = 0, tail = 1; queue[0] = triangle; visited[triangle] = 1;
-    while (head < tail) {
-      var current = queue[head++], n = parsed.normals;
-      for (var edge = 0; edge < 3; edge += 1) {
-        var other = parsed.neighbors[current * 3 + edge];
-        var a = current * 3, b = other * 3;
-        var cross = Math.hypot(n[a+1]*n[b+2]-n[a+2]*n[b+1], n[a+2]*n[b]-n[a]*n[b+2], n[a]*n[b+1]-n[a+1]*n[b]);
-        if (!visited[other] && cross <= 1e-8 && n[a]*n[b]+n[a+1]*n[b+1]+n[a+2]*n[b+2] > 0) { visited[other] = 1; queue[tail++] = other; }
-      }
-    }
-  }
-  gmsh.clear(); gmsh.option.restoreDefaults(); gmsh.model.add(message.geometryId);
-  var discrete = gmsh.model.addDiscreteEntity(2);
-  var nodeTags = new Uint32Array(parsed.positions.length / 3), connectivity = new Uint32Array(parsed.triangles.length);
-  for (var index = 0; index < nodeTags.length; index += 1) { nodeTags[index] = index + 1; }
-  for (index = 0; index < connectivity.length; index += 1) { connectivity[index] = parsed.triangles[index] + 1; }
-  gmsh.model.mesh.addNodes(2, discrete, nodeTags, parsed.positions);
-  gmsh.model.mesh.addElementsByType(discrete, 2, [], connectivity);
-  progress(message.requestId, 'stl-classify', 'Creating geometry while preserving STL facets…');
-  gmsh.model.mesh.classifySurfaces(1e-8, true, true, Math.PI);
-  var surfaces = entityTags(gmsh.model.getEntities(2));
-  if (surfaces.length > 512) { throw knownImportError('STL_PATCH_LIMIT', 'This STL requires more than 512 internal surface regions. Export a simpler tessellation.', 'Classified internal surfaces: ' + surfaces.length); }
-  gmsh.model.mesh.createGeometry();
-  function key(positions, ids, start) {
-    var vertices = [];
-    for (var i = 0; i < 3; i += 1) { var offset = ids[start + i] * 3; vertices.push(positions[offset] + ',' + positions[offset+1] + ',' + positions[offset+2]); }
-    return vertices.sort().join(';');
-  }
-  var sourcePatches = new Map();
-  for (index = 0; index < parsed.triangles.length; index += 3) { sourcePatches.set(key(parsed.positions, parsed.triangles, index), parsed.patchByTriangle[index / 3]); }
-  var nodes = denseNodeMap(gmsh), groups = parsed.patchIds.map(function () { return []; }), matched = 0;
-  surfaces.forEach(function (tag) {
-    var triangles = extractElementConnectivity(gmsh.model.mesh.getElements(2, tag), 2, 3, nodes.indexByNodeTag, 'STL_PATCH_MAPPING_FAILED').connectivity;
-    var owner;
-    for (var offset = 0; offset < triangles.length; offset += 3) {
-      var triangleKey = key(nodes.positions, triangles, offset);
-      var candidate = sourcePatches.get(triangleKey);
-      sourcePatches.delete(triangleKey);
-      if (candidate === undefined || (owner !== undefined && owner !== candidate)) { throw knownImportError('STL_PATCH_MAPPING_FAILED', 'Geometry reconstruction changed the patch boundaries. Re-export the STL or review grouping.'); }
-      owner = candidate; matched += 1;
-    }
-    groups[owner].push(tag);
-  });
-  if (matched !== parsed.triangles.length / 3 || groups.some(function (tags) { return !tags.length; })) {
-    throw knownImportError('STL_PATCH_MAPPING_FAILED', 'Geometry reconstruction lost source triangles or patches. Re-export the STL.');
-  }
-  var loop = gmsh.model.geo.addSurfaceLoop(surfaces), solid = gmsh.model.geo.addVolume([loop]);
-  gmsh.model.geo.synchronize();
-  return { solidTag: solid, surfaceTags: groups, internalSurfaceCount: surfaces.length };
+  progress(message.requestId,'stl-reconstruct','Recovering simple surfaces within the selected deviation…');
+  try{return StlReconstruction.build(gmsh,parsed,settings.reconstructionToleranceM);}catch(error){if(error.code)throw error;throw knownImportError('STL_RECONSTRUCTION_FAILED','The fitted surfaces could not form a usable solid.',String(error));}
 }
 
 async function importStlGeometry(gmsh, message) {
   try {
     progress(message.requestId, 'stl-validate', 'Checking STL topology and surface intersections…');
-    var parsed = await StlImport.identify(StlImport.parse(message.sourceBytes, message.importOptions), message.sourceBytes);
+    var parsed = await StlImport.identify(StlImport.parse(message.sourceBytes, message.stlSource), message.sourceBytes);
     var restored = restoreStlGeometry(gmsh, message, parsed);
     var positions = new Float64Array(parsed.triangles.length * 3), normals = new Float32Array(positions.length);
     var indices = new Uint32Array(parsed.triangles.length), offsets = new Uint32Array(parsed.patches.length);
@@ -527,15 +455,15 @@ async function importStlGeometry(gmsh, message) {
       }
     }
     var geometry = { geometryId: message.geometryId, sourceName: message.sourceName, sourceFormat: 'stl', surfaceKind: 'stl-patch',
-      importOptions: Object.assign({}, message.importOptions),
-      sourceMetadata: { version: 1, sha256: parsed.sourceHash, triangleCount: parsed.triangles.length / 3, internalSurfaceCount: restored.internalSurfaceCount, validation: parsed.validation },
+      stlSource: Object.assign({}, message.stlSource), stlSurface: message.stlSurface || SpjutsimFEA.defaultStlSurface(),
+      sourceMetadata: { version: 3, sha256: parsed.sourceHash, triangleCount: parsed.triangles.length / 3, internalSurfaceCount: restored.internalSurfaceCount, validation: parsed.validation },
       orientation: { rotation: [1,0,0,0,1,0,0,0,1], operations: [] }, faceIds: parsed.patchIds,
       boundingBoxM: { minM: parsed.minimum, maxM: parsed.maximum }, volumeM3: parsed.volume,
       preview: { positionsM: positions, normals: normals, indices: indices, faceRanges: ranges,
         featureEdges: { positionsM: parsed.positions, indices: new Uint32Array(edgeIndices) } } };
-    if (message.importOptions.version === 2) {
-      geometry.sourceMetadata.version = 2;
-      geometry.sourceMetadata.surfaceMode = message.importOptions.surfaceMode;
+    {
+      geometry.sourceMetadata.version = 3;
+      geometry.sourceMetadata.surfaceMode = geometry.stlSurface.method;
       geometry.sourceMetadata.reconstruction = restored.reconstruction || null;
       if (restored.remeshing) { geometry.sourceMetadata.remeshing = restored.remeshing; }
       if (restored.analytic) {
@@ -617,7 +545,7 @@ var MESH_NEAR_ZERO_JACOBIAN_RELATIVE = 1e-12;
 
 async function restoreMeshGeometry(gmsh, message, temporaryPath) {
   if (message.sourceFormat === 'stl') {
-    var parsed = await StlImport.identify(StlImport.parse(message.sourceBytes, message.importOptions), message.sourceBytes);
+    var parsed = await StlImport.identify(StlImport.parse(message.sourceBytes, message.stlSource), message.sourceBytes);
     if (parsed.sourceHash !== message.sourceHash || parsed.patchIds.length !== message.faceIds.length ||
         parsed.patchIds.some(function(id, index) { return id !== message.faceIds[index]; })) {
       throw knownMeshError('STL_PATCH_MAPPING_FAILED', 'The source or import settings no longer match the assigned patches. Review the import again.');
@@ -1041,13 +969,6 @@ async function handleRequest(message) {
   }
 
   try {
-    if (message.type === 'stl-repair') {
-      progress(message.requestId, 'stl-repair', 'Trying local surface repairs and checking the resulting solid…');
-      result = await StlRepair.repair(message.sourceBytes, message.importOptions, message.repairOptions);
-      self.postMessage({ protocol: WORKER_PROTOCOL_VERSION, requestId: message.requestId,
-        type: 'stl-repair-result', result: result }, [result.sourceBytes]);
-      return;
-    }
     if (message.type === 'import') {
       result = await importGeometry(gmsh, message);
       var previews = result.originalPreview ? [result.preview, result.originalPreview] : [result.preview];

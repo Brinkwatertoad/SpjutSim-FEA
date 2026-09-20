@@ -3,19 +3,20 @@
  function assert(value,message){if(!value)throw new Error(message);}
  document.getElementById('application-frame').addEventListener('load',async function(){
   var win=this.contentWindow,api=win.SpjutsimFEA,evidence=[];
-  function options(mode,tolerance){return {version:2,lengthUnit:'m',patchAngleDegrees:40,normalization:'none',surfaceMode:mode,reconstructionToleranceM:tolerance};}
+  var sourceOptions={version:3,lengthUnit:'m',patchAngleDegrees:40};
+  function options(mode,tolerance){return {version:1,method:mode,reconstructionToleranceM:tolerance,remeshFeatureAngleDegrees:null};}
   async function run(name,mode,tolerance,supplied){
    var source=supplied?new win.Uint8Array(new Uint8Array(supplied)).buffer:await(await win.fetch('../tests/fixtures/stl/'+name)).arrayBuffer(),client=new api.MesherClient(),geometry,mesh;
-   try{geometry=await client.importGeometry({sourceName:name,sourceFormat:'stl',sourceBytes:source,importOptions:options(mode,tolerance)});}catch(error){error.message=name+': '+error.message;throw error;}finally{client.dispose();}
-   client=new api.MesherClient();try{mesh=await client.generateMesh({geometry:geometry,sourceBytes:source,settings:{preset:'coarse',elementType:'tet10'}});}finally{client.dispose();}
+   try{geometry=await client.importGeometry({sourceName:name,sourceFormat:'stl',sourceBytes:source,stlSource:sourceOptions,stlSurface:options(mode,tolerance)});}catch(error){error.message=name+': '+error.message;throw error;}finally{client.dispose();}
+   client=new api.MesherClient();try{mesh=await client.generateMesh({geometry:geometry,sourceBytes:source,settings:{preset:'coarse',elementType:'tet10',stlSurface:geometry.stlSurface}});}finally{client.dispose();}
    evidence.push({name:name,mode:mode,sourceTriangles:geometry.sourceMetadata.triangleCount,surfaces:geometry.sourceMetadata.internalSurfaceCount,volumeM3:geometry.volumeM3,maximumDeviationM:geometry.sourceMetadata.reconstruction?geometry.sourceMetadata.reconstruction.maximumDeviationM:null,statistics:mesh.statistics,quality:mesh.quality});
    return {geometry:geometry,mesh:mesh,source:source};
   }
   try{
-   assert(api.validateStlOptions(options('original',null)),'Original-surface options are unavailable');
-   assert(api.validateStlOptions(options('reconstruct',.003)),'Reconstruction options are unavailable');
-   assert(!api.validateStlOptions(options('reconstruct',0)),'Zero reconstruction tolerance accepted');
-   assert(!api.sameStlOptions(options('reconstruct',.003),options('reconstruct',.004)),'Tolerance changes do not invalidate geometry');
+   assert(api.validateStlSurfaceSettings(options('original',null)),'Original-surface options are unavailable');
+   assert(api.validateStlSurfaceSettings(options('reconstruct',.003)),'Reconstruction options are unavailable');
+   assert(!api.validateStlSurfaceSettings(options('reconstruct',0)),'Zero reconstruction tolerance accepted');
+   assert(!api.validateStlSourceOptions(Object.assign({},sourceOptions,{version:2})),'Legacy source contract accepted');
    var cube=await run('cube-binary.stl','reconstruct',.00001);
    assert(cube.geometry.faceIds.length===6&&Math.abs(cube.geometry.volumeM3-1)<1e-8,'Reconstructed cube lost planes or volume');
    var denseCube=await run('subdivided-cube.stl','reconstruct',1e-5,StlTestShapes.subdividedCube(16));
@@ -39,15 +40,16 @@
    assert(original.geometry.volumeM3<cylinder.geometry.volumeM3,'Original and recovered surfaces were conflated');
    assert(!api.validateGeometryModel(Object.assign({},cylinder.geometry,{sourceMetadata:Object.assign({},cylinder.geometry.sourceMetadata,{reconstruction:Object.assign({},cylinder.geometry.sourceMetadata.reconstruction,{maximumDeviationM:.004})})})).valid,'An exceeded geometric deviation passed the data boundary');
    var cancelled=false,client=new api.MesherClient({onProgress:function(progress){if(!cancelled&&progress.stage==='stl-reconstruct'){cancelled=true;client.cancel();}}}),failed;
-   try{await client.importGeometry({sourceName:'cylinder-32.stl',sourceFormat:'stl',sourceBytes:cylinder.source,importOptions:options('reconstruct',.003)});}catch(error){failed=error.diagnostic;}
+   try{await client.importGeometry({sourceName:'cylinder-32.stl',sourceFormat:'stl',sourceBytes:cylinder.source,stlSource:sourceOptions,stlSurface:options('reconstruct',.003)});}catch(error){failed=error.diagnostic;}
    assert(cancelled&&failed&&failed.code==='IMPORT_CANCELLED','Reconstruction cancellation did not terminate the review');
    client=new api.MesherClient();
-   try{var recovered=await client.importGeometry({sourceName:'cylinder-32.stl',sourceFormat:'stl',sourceBytes:cylinder.source,importOptions:options('reconstruct',.003)});assert(recovered.faceIds.join()===cylinder.geometry.faceIds.join(),'Fresh-worker reconstruction changed source identity after cancellation');}finally{client.dispose();}
+   try{var recovered=await client.importGeometry({sourceName:'cylinder-32.stl',sourceFormat:'stl',sourceBytes:cylinder.source,stlSource:sourceOptions,stlSurface:options('reconstruct',.003)});assert(recovered.faceIds.join()===cylinder.geometry.faceIds.join(),'Fresh-worker reconstruction changed source identity after cancellation');}finally{client.dispose();}
    client=new api.MesherClient();failed=null;
-   try{await client.generateMesh({geometry:Object.assign({},cylinder.geometry,{importOptions:options('reconstruct',.004),sourceMetadata:Object.assign({},cylinder.geometry.sourceMetadata,{reconstruction:Object.assign({},cylinder.geometry.sourceMetadata.reconstruction,{toleranceM:.004})})}),sourceBytes:cylinder.source,settings:{preset:'coarse',elementType:'tet10'}});}catch(error){failed=error.diagnostic;}finally{client.dispose();}
-   assert(failed&&failed.code==='STL_PATCH_MAPPING_FAILED','Changed reconstruction tolerance reused old assignments');
+   try{await client.generateMesh({geometry:Object.assign({},cylinder.geometry,{stlSource:Object.assign({},sourceOptions,{patchAngleDegrees:30})}),sourceBytes:cylinder.source,settings:{preset:'coarse',elementType:'tet10',stlSurface:options('reconstruct',.004)}});}catch(error){failed=error.diagnostic;}finally{client.dispose();}
+   assert(failed&&failed.code==='STL_PATCH_MAPPING_FAILED','Changed grouping reused old assignments');
+   assert(original.geometry.faceIds.join()===cylinder.geometry.faceIds.join(),'Surface method changed source identities');
    client=new api.MesherClient();failed=null;
-   try{await client.importGeometry({sourceName:'cylinder-32.stl',sourceFormat:'stl',sourceBytes:cylinder.source,importOptions:options('reconstruct',1e-6)});}catch(error){failed=error.diagnostic;}finally{client.dispose();}
+   try{await client.importGeometry({sourceName:'cylinder-32.stl',sourceFormat:'stl',sourceBytes:cylinder.source,stlSource:sourceOptions,stlSurface:options('reconstruct',1e-6)});}catch(error){failed=error.diagnostic;}finally{client.dispose();}
    assert(failed&&failed.code==='STL_RECONSTRUCTION_UNSUPPORTED','Unfittable reconstruction did not give an actionable error');
    window.__stlSurfaceEvidence={cases:evidence,cancellationVerified:cancelled,staleIdentityRejected:true};
    status.textContent='Passed';status.dataset.result='passed';

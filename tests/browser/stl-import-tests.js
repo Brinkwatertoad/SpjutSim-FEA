@@ -2,7 +2,7 @@
   'use strict';
   var status = document.getElementById('test-status');
   function assert(value, message) { if (!value) { throw new Error(message); } }
-  var options = { version:1, lengthUnit:'m', patchAngleDegrees:40, normalization:'none' };
+  var options = { version:3,lengthUnit:'m',patchAngleDegrees:40 };
   function reject(bytes, expected, opts) {
     var code;
     try { StlImport.parse(bytes, opts || options); } catch (error) { code = error.code; }
@@ -27,10 +27,8 @@
       }
     }
     var cube = await (await fetch('../fixtures/stl/cube-binary.stl')).arrayBuffer();
-    var legacy = await StlImport.identify(StlImport.parse(cube, options), cube);
-    var extraFields = await StlImport.identify(StlImport.parse(cube, Object.assign({}, options,
-      { surfaceMode: 'remesh', remeshFeatureAngleDegrees: 40 })), cube);
-    assert(legacy.patchIds.join() === extraFields.patchIds.join(), 'Ignored version-2 fields changed legacy patch identity');
+    reject(cube,'STL_INVALID_OPTIONS',Object.assign({},options,{version:1}));
+    reject(cube,'STL_INVALID_OPTIONS',Object.assign({},options,{surfaceMode:'original'}));
     var ascii = await (await fetch('../fixtures/stl/cube-ascii.stl')).text();
     reject(new TextEncoder().encode(ascii.replace(/facet normal [^\r\n]+/, 'facet normal bad normal tokens')).buffer, 'STL_MALFORMED');
     assert(StlImport.parse(new TextEncoder().encode(ascii.replace(/facet normal [^\r\n]+/, 'facet normal NaN Infinity -Infinity')).buffer, options).volume === 1,

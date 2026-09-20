@@ -88,13 +88,7 @@
         minimum: minimum, maximum: maximum, diagonal: diagonal };
     }
     function readUnvalidated(bytes, options) {
-      if (!options || !(options.version === 1 || options.version === 2 &&
-          (options.surfaceMode === 'original' && options.reconstructionToleranceM === null ||
-           options.surfaceMode === 'remesh' && options.reconstructionToleranceM === null && Number.isFinite(options.remeshFeatureAngleDegrees) && options.remeshFeatureAngleDegrees >= 1 && options.remeshFeatureAngleDegrees <= 40 ||
-           options.surfaceMode === 'reconstruct' && Number.isFinite(options.reconstructionToleranceM) && options.reconstructionToleranceM > 0)) || options.normalization !== 'none' || !Object.prototype.hasOwnProperty.call(scales, options.lengthUnit) ||
-          !Number.isFinite(options.patchAngleDegrees) || options.patchAngleDegrees < 1 || options.patchAngleDegrees > 179) {
-        fail('STL_INVALID_OPTIONS', 'Choose length units and a grouping angle from 1 through 179 degrees. Reconstruction needs a positive deviation; experimental remeshing needs a feature angle from 1 through 40 degrees.');
-      }
+      if(!root.SpjutsimFEA.validateStlSourceOptions(options))fail('STL_INVALID_OPTIONS','Choose valid STL source units and grouping.');
       var mesh = decode(bytes), scale = scales[options.lengthUnit];
       for (var i = 0; i < mesh.positions.length; i++) mesh.positions[i] *= scale;
       mesh.minimum = mesh.minimum.map(function (v) { return v * scale; });
@@ -349,9 +343,7 @@
         }
         members[parsed.patchByTriangle[i/3]].push(vertices.sort().join(';'));
       }
-      var prefix = 'stl-patch-v1|' + sourceHash + '|' + parsed.unit + '|' + parsed.angleDegrees + '|';
-      if (parsed.options.version === 2) { prefix += 'surface-v2|' + parsed.options.surfaceMode + '|' + parsed.options.reconstructionToleranceM + '|'; }
-      if (parsed.options.version === 2 && parsed.options.surfaceMode === 'remesh') { prefix += 'remesh-v1|' + parsed.options.remeshFeatureAngleDegrees + '|'; }
+      var prefix = 'stl-patch-v3|' + sourceHash + '|' + parsed.unit + '|' + parsed.angleDegrees + '|';
       parsed.patchIds = await Promise.all(members.map(async function (triangles) {
         return 'stl:' + await digest(new TextEncoder().encode(prefix + triangles.sort().join('\n')));
       }));

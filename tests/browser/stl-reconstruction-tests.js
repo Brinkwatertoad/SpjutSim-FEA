@@ -3,7 +3,7 @@
  function assert(value,message){if(!value)throw new Error(message);}
  try {
   assert(typeof StlReconstruction!=='undefined','Surface reconstruction adapter is unavailable');
-  var options={version:1,lengthUnit:'m',patchAngleDegrees:40,normalization:'none'};
+  var options={version:3,lengthUnit:'m',patchAngleDegrees:40};
   var cube=StlImport.parse(await(await fetch('../fixtures/stl/cube-binary.stl')).arrayBuffer(),options);
   var surfaces=StlReconstruction.fit(cube,1e-6);
   assert(surfaces.length===6 && surfaces.every(function(s){return s.kind==='plane' && s.maximumDeviationM<1e-12;}),'Cube did not recover six exact planes');

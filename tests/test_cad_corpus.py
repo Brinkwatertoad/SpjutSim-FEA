@@ -53,13 +53,13 @@ class CadCorpusTests(unittest.TestCase):
     def test_stl_manifest_requires_valid_explicit_options(self):
         manifest = self.module.read_manifest(ROOT / "tests/fixtures/corpus-v1.json")
         entry = next(entry for entry in manifest["entries"] if entry["format"] == "stl")
-        options = entry["importOptions"]
+        options = entry["stlSource"]
         for invalid in (None, {}, dict(options, lengthUnit="auto"), dict(options, version=True),
                         dict(options, patchAngleDegrees=True), dict(options, patchAngleDegrees=180)):
             with self.subTest(options=invalid):
-                entry["importOptions"] = invalid
+                entry["stlSource"] = invalid
                 errors = self.module.validate_manifest(manifest, ROOT)
-                self.assertTrue(any("importOptions is invalid" in error for error in errors))
+                self.assertTrue(any("stlSource is invalid" in error for error in errors))
 
     def test_manifest_cli_passes(self):
         result = subprocess.run(

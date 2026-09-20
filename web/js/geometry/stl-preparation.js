@@ -2,6 +2,12 @@
 (function (root) {
   'use strict';
   var scales = Object.freeze({ m:1, mm:.001, cm:.01, in:.0254, ft:.3048 });
+  function validSource(s){return !!(s&&s.version===3&&Object.prototype.hasOwnProperty.call(scales,s.lengthUnit)&&Number.isFinite(s.patchAngleDegrees)&&s.patchAngleDegrees>=1&&s.patchAngleDegrees<=179&&
+    !['normalization','surfaceMode','reconstructionToleranceM','remeshFeatureAngleDegrees'].some(function(k){return k in s;}));}
+  function validSurface(s){return !!(s&&s.version===1&&(
+    s.method==='original'&&s.reconstructionToleranceM===null&&s.remeshFeatureAngleDegrees===null ||
+    s.method==='reconstruct'&&Number.isFinite(s.reconstructionToleranceM)&&s.reconstructionToleranceM>0&&s.remeshFeatureAngleDegrees===null ||
+    s.method==='remesh'&&s.reconstructionToleranceM===null&&Number.isFinite(s.remeshFeatureAngleDegrees)&&s.remeshFeatureAngleDegrees>=1&&s.remeshFeatureAngleDegrees<=40));}
   function validRequest(r) {
     return !!(r && typeof r.sessionId === 'string' && r.sessionId && Number.isSafeInteger(r.generation) && r.generation >= 0 &&
       typeof r.sourceName === 'string' && /\.stl$/i.test(r.sourceName) && typeof r.geometryId === 'string' && r.geometryId &&
@@ -40,14 +46,17 @@
   function validResult(r,sourcePreview) {
     if(!r || !['ready','needs-review','blocked'].includes(r.state)|| !/^[a-f0-9]{64}$/.test(r.sourceDigest)||!/^[a-f0-9]{64}$/.test(r.preparedDigest))return false;
     if(r.preparedSourceBytes!==null && (!(r.preparedSourceBytes instanceof ArrayBuffer)||!r.preparedSourceBytes.byteLength||r.preparedSourceBytes.byteLength>16*1024*1024))return false;
-    if(r.candidatePreview!==null && !validPreview(r.candidatePreview))return false;
+    if(r.candidatePreview!==null && (!validPreview(r.candidatePreview)||r.candidatePreview.revision!=='candidate'))return false;
+    if(!sourcePreview||sourcePreview.revision!=='source'||typeof r.shapeChanged!=='boolean'||typeof r.changesTruncated!=='boolean'||!Object.prototype.hasOwnProperty.call(scales,r.lengthUnit))return false;
+    if((r.preparedSourceBytes===null)!==(r.candidatePreview===null)||r.preparedSourceBytes===null&&r.sourceDigest!==r.preparedDigest)return false;
     var previews={source:sourcePreview,candidate:r.candidatePreview||sourcePreview};
     if(!validDiagnostics(r.diagnostics,previews)||!r.changes||!Array.isArray(r.changes.automatic)||!Array.isArray(r.changes.proposed)||!validIssues(r.changes.automatic.concat(r.changes.proposed),previews))return false;
     if(r.state==='blocked')return r.geometryCandidate===null;
-    return !!(r.geometryCandidate && r.geometryCandidate.sourceMetadata.sha256===r.preparedDigest && r.validation && r.validation.status==='valid' &&
-      (r.state==='needs-review')===r.shapeChanged);
+    return !!(r.geometryCandidate && r.geometryCandidate.sourceMetadata && r.geometryCandidate.sourceMetadata.sha256===r.preparedDigest && r.validation && r.validation.status==='valid' &&
+      r.validation.version===1 && (r.state==='needs-review')===r.shapeChanged && (r.shapeChanged ? r.changes.proposed.length>0||r.changesTruncated : r.changes.proposed.length===0));
   }
   root.SpjutsimFEA=root.SpjutsimFEA||{};
-  Object.assign(root.SpjutsimFEA,{STL_UNIT_SCALES:scales,validateStlPreparationRequest:validRequest,
+  Object.assign(root.SpjutsimFEA,{STL_UNIT_SCALES:scales,validateStlSourceOptions:validSource,validateStlSurfaceSettings:validSurface,
+    defaultStlSurface:function(){return{version:1,method:'original',reconstructionToleranceM:null,remeshFeatureAngleDegrees:null};},validateStlPreparationRequest:validRequest,
     validateStlPreview:validPreview,validateStlDiagnostics:validDiagnostics,validateStlPreparationResult:validResult});
 }(globalThis));

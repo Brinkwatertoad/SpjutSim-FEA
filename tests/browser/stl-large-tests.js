@@ -23,7 +23,7 @@
       for(var mode of ['original','reconstruct','remesh']){
         client=new api.MesherClient();var code=null;
         try{await client.importGeometry({sourceName:'cathedral_gargoyle.stl',sourceFormat:'stl',sourceBytes:supplied,
-          importOptions:{version:2,lengthUnit:'mm',patchAngleDegrees:40,normalization:'none',surfaceMode:mode,reconstructionToleranceM:mode==='reconstruct'?.01e-3:null,remeshFeatureAngleDegrees:40}});}
+          stlSource:{version:3,lengthUnit:'mm',patchAngleDegrees:40},stlSurface:{version:1,method:mode,reconstructionToleranceM:mode==='reconstruct'?.01e-3:null,remeshFeatureAngleDegrees:mode==='remesh'?40:null}});}
         catch(error){code=error.diagnostic&&error.diagnostic.code;assert(error.message.includes('Repair'),'Topology failure lacks an actionable next step');}
         finally{client.dispose();}
         assert(code==='STL_NONMANIFOLD','Gargoyle should reach topology validation in '+mode+', received '+code);
@@ -31,20 +31,22 @@
       globalThis.__stlResourceEvidence={fixture:'cathedral_gargoyle.stl',triangles:66174,bytes:supplied.byteLength,rejection:'STL_NONMANIFOLD',modes:['original','reconstruct','remesh']};
       status.textContent='Passed';status.dataset.result='passed';return;
     }
-    var source=denseCube(),options={version:2,lengthUnit:'m',patchAngleDegrees:40,normalization:'none',surfaceMode:'original',reconstructionToleranceM:null};
+    var source=denseCube(),options={version:3,lengthUnit:'m',patchAngleDegrees:40};
     var evidence=[];
     if(new URLSearchParams(location.search).get('repair')==='1'){
       var view=new DataView(source);for(var axis=0;axis<3;axis++){var value=view.getFloat32(108+axis*4,true);view.setFloat32(108+axis*4,view.getFloat32(120+axis*4,true),true);view.setFloat32(120+axis*4,value,true);}
-      client=new api.MesherClient();var repairStarted=performance.now();
-      var repaired=await client.repairStl({sourceName:'dense.stl',sourceFormat:'stl',sourceBytes:source,importOptions:options,repairOptions:{version:1,maxHoleDiameterRatio:.01}});
-      assert(repaired.report.flippedTriangles===1&&repaired.report.repairedTriangleCount===200000,'Large-source repair changed triangle count or lost its winding correction');
-      evidence.push({operation:'repair',repairMs:performance.now()-repairStarted,report:repaired.report});source=repaired.sourceBytes;client.dispose();
+      var firstPreview=null,repairStarted=performance.now();
+      client=new api.StlPreparationClient({onEvent:function(e){if(e.type==='stl-preview')firstPreview=performance.now()-repairStarted;}});
+      var repaired=await client.prepare({sourceName:'dense.stl',sourceBytes:source,sessionId:'large',geometryId:'large',generation:0,lengthUnit:'m',patchAngleDegrees:40,maxHoleDiameterRatio:.01});
+      assert(repaired.state==='ready'&&repaired.changes.automatic.some(function(i){return i.kind==='winding'&&i.count===1;})&&repaired.geometryCandidate.sourceMetadata.triangleCount===200000,'Large preparation lost winding correction or triangle count');
+      evidence.push({operation:'prepare',firstPreviewMs:firstPreview,preparationMs:performance.now()-repairStarted});source=repaired.preparedSourceBytes;client.dispose();
+
     }
 
     for(var mode of ['original','reconstruct']){
-      options.surfaceMode=mode;options.reconstructionToleranceM=mode==='reconstruct'?.001:null;
+      var surface={version:1,method:mode,reconstructionToleranceM:mode==='reconstruct'?.001:null,remeshFeatureAngleDegrees:null};
       client=new api.MesherClient();var started=performance.now();
-      var geometry=await client.importGeometry({sourceName:'dense.stl',sourceFormat:'stl',sourceBytes:source,importOptions:options});
+      var geometry=await client.importGeometry({sourceName:'dense.stl',sourceFormat:'stl',sourceBytes:source,stlSource:options,stlSurface:surface});
       assert(geometry.sourceMetadata.triangleCount===200000&&geometry.faceIds.length===6,'Large source lost triangles or selection groups');
       assert(Math.abs(geometry.volumeM3-1)<1e-12,'Large source changed volume');
       var importMs=performance.now()-started;
@@ -54,7 +56,7 @@
       client.dispose();
     }
     client=new api.MesherClient();started=performance.now();
-    var mesh=await client.generateMesh({geometry:geometry,sourceBytes:source,settings:{preset:'coarse',elementType:'tet10'}});
+    var mesh=await client.generateMesh({geometry:geometry,sourceBytes:source,settings:{preset:'coarse',elementType:'tet10',stlSurface:surface}});
     assert(mesh.quality.minimumJacobian>0&&Object.keys(mesh.geometryFaceMap).length===6,'Large-source reconstructed mesh lost valid boundaries');
     assert(mesh.statistics.nodeCount<10000,'Reconstruction retained the dense source tessellation');
     evidence.push({meshMs:performance.now()-started,nodes:mesh.statistics.nodeCount,elements:mesh.statistics.elementCount,minimumJacobian:mesh.quality.minimumJacobian});

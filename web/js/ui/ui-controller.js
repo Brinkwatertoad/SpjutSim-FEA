@@ -526,7 +526,7 @@
   };
   UIController.prototype.updateMeshSettingsFromControls = function () {
     var preset = this.meshPreset.value;
-    var settings = { preset: preset, elementType: this.meshElementType ? this.meshElementType.value : 'tet10' };
+    var settings = Object.assign({},this.controller.document.meshSettings,{ preset: preset, elementType: this.meshElementType ? this.meshElementType.value : 'tet10' });
     if (preset === 'custom') {
       var minimum = root.SpjutsimFEA.preferredToSI('lengthM',Number(this.meshMinSize.value));
       var maximum = root.SpjutsimFEA.preferredToSI('lengthM',Number(this.meshMaxSize.value));
@@ -554,7 +554,7 @@
     var settings = documentState.meshSettings || { preset: 'normal', elementType: 'tet10' };
     var generation = documentState.meshGeneration || { status: 'idle' };
     var hasGeometry = Boolean(documentState.geometry);
-    var isGenerating = generation.status === 'generating';
+    var isGenerating = generation.status === 'generating' || Boolean(this.controller.stlImportSession||this.controller.stlSurfaceReview);
     var convergenceRunning = Boolean(documentState.convergenceStudy && documentState.convergenceStudy.status === 'running');
     var message = 'Import geometry to generate a mesh.';
     var elementLabel = settings.elementType === 'tet10' ? 'Tet10' : 'Tet4';
@@ -576,7 +576,7 @@
     var stlAdvice=document.getElementById('mesh-stl-advice'),geometry=documentState.geometry;
     if(stlAdvice){
       stlAdvice.textContent=geometry&&geometry.sourceFormat==='stl'&&root.SpjutsimFEA.stlMeshingAdvice?
-        root.SpjutsimFEA.stlMeshingAdvice(geometry.sourceMetadata.triangleCount,geometry.importOptions.surfaceMode||'original'):'';
+        root.SpjutsimFEA.stlMeshingAdvice(geometry.sourceMetadata.triangleCount,(settings.stlSurface||{method:'original'}).method):'';
       stlAdvice.hidden=!stlAdvice.textContent;
     }
     if (this.meshStatus) { this.meshStatus.textContent = message; }

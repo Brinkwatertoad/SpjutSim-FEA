@@ -25,9 +25,9 @@
   var seedMesher = new api.MesherClient();
   fetch('../fixtures/stl/cube-binary.stl').then(function (response) { return response.arrayBuffer(); }).then(function (bytes) {
     sourceBytes = bytes; controller.beginGeometryImport('stl/cube-binary.stl');
-    return seedMesher.importGeometry({ geometryId: 'convergence-cube', sourceName: 'cube-binary.stl', sourceFormat: 'stl', importOptions:{version:1,lengthUnit:'m',patchAngleDegrees:40,normalization:'none'}, sourceBytes: bytes });
+    return seedMesher.importGeometry({ geometryId: 'convergence-cube', sourceName: 'cube-binary.stl', sourceFormat: 'stl', stlSource:{version:3,lengthUnit:'m',patchAngleDegrees:40}, sourceBytes: bytes });
   }).then(function (geometry) {
-    controller.replaceGeometry(geometry, { sourceName: geometry.sourceName, sourceFormat: geometry.sourceFormat, importOptions:geometry.importOptions, sourceBytes: sourceBytes });
+    controller.replaceGeometry(geometry, { sourceName: geometry.sourceName, sourceFormat: geometry.sourceFormat, stlSource:geometry.stlSource, sourceBytes: sourceBytes });
     controller.replaceMaterial({ name: 'Analytical cube', youngsModulusPa: 1e9, poissonsRatio: .25, densityKgM3: 1000, tensileYieldPa: 250e6 });
     return seedMesher.generateMesh({ geometry: geometry, settings: { preset: 'coarse', elementType: 'tet10' }, sourceBytes: sourceBytes });
   }).then(function (seed) {

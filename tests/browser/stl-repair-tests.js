@@ -1,10 +1,15 @@
 (async function(){
  'use strict';
- var status=document.getElementById('test-status'),options={version:2,lengthUnit:'m',patchAngleDegrees:40,normalization:'none',surfaceMode:'original',reconstructionToleranceM:null};
+ var status=document.getElementById('test-status'),options={version:3,lengthUnit:'m',patchAngleDegrees:40};
  function assert(v,m){if(!v)throw new Error(m);}
  function binary(ts){var b=new ArrayBuffer(84+ts.length*50),d=new DataView(b);d.setUint32(80,ts.length,true);ts.forEach(function(t,i){t.forEach(function(p,j){p.forEach(function(v,k){d.setFloat32(84+i*50+12+j*12+k*4,v,true);});});});return b;}
  function facets(b){var d=new DataView(b),ts=[];for(var i=0;i<d.getUint32(80,true);i++){var t=[];for(var j=0;j<3;j++)t.push([0,1,2].map(function(k){return d.getFloat32(84+i*50+12+j*12+k*4,true);}));ts.push(t);}return ts;}
- async function repair(b,ratio){return StlRepair.repair(b,options,{version:1,maxHoleDiameterRatio:ratio===undefined?.01:ratio});}
+ async function repair(b,ratio){
+  var result=StlRepair.prepare(StlImport.decode(b),{maxHoleDiameterRatio:ratio===undefined?.01:ratio});
+  if(result.error)throw Object.assign(new Error(result.error.message),{code:'STL_REPAIR_UNSUPPORTED'});
+  try{StlImport.parse(result.sourceBytes,options);}catch(e){throw Object.assign(new Error('Local repair did not produce a valid solid: '+e.message),{code:'STL_REPAIR_UNSUPPORTED'});}
+  return result;
+ }
  async function reject(b,fragment,ratio){var error;try{await repair(b,ratio);}catch(e){error=e;}assert(error&&error.code==='STL_REPAIR_UNSUPPORTED'&&error.message.includes(fragment),'Expected refusal: '+fragment+', received '+(error&&error.message));}
  try{
   assert(typeof StlRepair!=='undefined','Production repair module is unavailable');

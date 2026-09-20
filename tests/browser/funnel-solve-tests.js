@@ -14,20 +14,18 @@
     var response = await fetch('../fixtures/stl/' + encodeURIComponent(name));
     assert(response.ok, 'Place the supplied funnel in tests/fixtures/stl before running this optional diagnostic.');
     var bytes = await response.arrayBuffer();
-    var options = { version: 2, lengthUnit: 'mm', patchAngleDegrees: 40,
-      normalization: 'none', surfaceMode: remesh ? 'remesh' : 'original', reconstructionToleranceM: null };
-    if (remesh) { options.remeshFeatureAngleDegrees = 40; }
+    var options={version:3,lengthUnit:'mm',patchAngleDegrees:40},surface={version:1,method:remesh?'remesh':'original',reconstructionToleranceM:null,remeshFeatureAngleDegrees:remesh?40:null};
     var preset = query.get('preset') || 'coarse';
     mesher = new api.MesherClient({ onProgress: progress });
-    var geometry = await mesher.importGeometry({ sourceName: name, sourceFormat: 'stl', sourceBytes: bytes, importOptions: options });
+    var geometry = await mesher.importGeometry({ sourceName: name, sourceFormat: 'stl', sourceBytes: bytes, stlSource: options,stlSurface:surface });
     mesher.dispose();
     mesher = new api.MesherClient({ onProgress: progress });
     var meshStarted = performance.now();
-    var mesh = await mesher.generateMesh({ geometry: geometry, sourceBytes: bytes, settings: { preset: preset, elementType: 'tet10' } });
+    var mesh = await mesher.generateMesh({ geometry: geometry, sourceBytes: bytes, settings: { preset: preset, elementType: 'tet10',stlSurface:surface } });
     var meshDurationMs = performance.now() - meshStarted;
     mesher.dispose();
     var app = new api.AppController({ document: api.createAnalysisDocument() });
-    app.replaceGeometry(geometry, { sourceName: name, sourceFormat: 'stl', sourceBytes: bytes, importOptions: options });
+    app.replaceGeometry(geometry, { sourceName: name, sourceFormat: 'stl', sourceBytes: bytes, stlSource: options });
     app.replaceMaterial({ name: 'ABS', youngsModulusPa: 2.4e9, poissonsRatio: 0.37, densityKgM3: 1050 });
     app.completeMeshGeneration(mesh);
     var faces = mesh.boundaryFaces.faceRanges.map(function (range) {
@@ -77,7 +75,7 @@
       var w = [0, 1, 2].map(function (axis) { return positions[d + axis] - positions[a + axis]; });
       volume += (u[0] * (v[1]*w[2]-v[2]*w[1]) - u[1] * (v[0]*w[2]-v[2]*w[0]) + u[2] * (v[0]*w[1]-v[1]*w[0])) / 6;
     }
-    var evidence = { importOptions: options, supportFace: faces[0], pressureFace: faces[faces.length - 1],
+    var evidence = { stlSource: options, supportFace: faces[0], pressureFace: faces[faces.length - 1],
       material: app.document.material, pressurePa: 1e6, preflight: preflight, quality: mesh.quality,
       preset: preset, meshDurationMs: meshDurationMs, statistics: mesh.statistics, sourceMetadata: geometry.sourceMetadata,
       sourceVolumeM3: geometry.volumeM3, meshVolumeM3: volume, relativeVolumeError: Math.abs(volume/geometry.volumeM3-1),

@@ -87,8 +87,8 @@
       parameters.push(['Load: ' + load.name, value + '; Faces: ' + load.faceIds.join(', ')]);
     });
     parameters.push(['Gravity', state.gravity.enabled ? state.gravity.accelerationMS2.map(function(v){return magnitude(v,unit('accelerationMS2'));}).join(', ') + ' (global X, Y, Z)' : 'Disabled']);
-    parameters.push(['Mesh settings', Object.keys(state.meshSettings).map(function(k){return k+': '+(/SizeM$/.test(k) ? magnitude(state.meshSettings[k],unit('lengthM')) : state.meshSettings[k]);}).join('; ')], ['Solver settings', JSON.stringify(state.solveSettings)],
-      ['Model orientation', JSON.stringify(state.geometry.orientation)], ['Import settings', JSON.stringify(state.geometry.importOptions || {})],
+    parameters.push(['Mesh settings', Object.keys(state.meshSettings).map(function(k){return k+': '+(/SizeM$/.test(k) ? magnitude(state.meshSettings[k],unit('lengthM')) : typeof state.meshSettings[k]==='object'?JSON.stringify(state.meshSettings[k]):state.meshSettings[k]);}).join('; ')], ['Solver settings', JSON.stringify(state.solveSettings)],
+      ['Model orientation', JSON.stringify(state.geometry.orientation)], ['Import settings', JSON.stringify(state.geometry.stlSource || {})],
       ['Import metadata', JSON.stringify(state.geometry.sourceMetadata || {})],
       ['Image camera', 'Reset View then Fit Model; ' + (projection || 'current projection')],
       ['Deformation image shape', 'Auto ×' + number(autoScale)], ['Image color limits', 'Automatic for each field']);
@@ -108,7 +108,7 @@
   async function buildAnalysisReport(controller, viewport, autoScale, format) {
     var state = controller.document, result = state.results, revision = state.analysisRevision;
     function assertCurrent() {
-      if (!canExportReport(controller.document) || controller.document.results !== result || controller.document.analysisRevision !== revision) {
+      if ((controller.stlImportSession||controller.stlSurfaceReview||!canExportReport(controller.document)) || controller.document.results !== result || controller.document.analysisRevision !== revision) {
         throw Error('The analysis changed during export. Solve the current setup and export again.');
       }
     }
@@ -130,10 +130,10 @@
   }
   function bindReportExport(controller, viewport, ui) {
     var button = document.getElementById('export-report-button'), status = document.getElementById('report-status'), busy = false;
-    function render() { button.disabled = busy || !canExportReport(controller.document); }
+    function render() { button.disabled = busy || (controller.stlImportSession||controller.stlSurfaceReview||!canExportReport(controller.document)); }
     controller.subscribe(render); render();
     button.addEventListener('click', async function () {
-      if (busy || !canExportReport(controller.document)) { return; }
+      if (busy || (controller.stlImportSession||controller.stlSurfaceReview||!canExportReport(controller.document))) { return; }
       busy = true; render(); status.textContent = 'Preparing report…';
       try {
         var report = await buildAnalysisReport(controller, viewport, ui.resolveDeformationScale('auto'), document.getElementById('report-format').value);

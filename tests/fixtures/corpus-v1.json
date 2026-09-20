@@ -2191,12 +2191,6 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "basic",
       "expected": {
         "classification": "accepted",
@@ -2244,7 +2238,12 @@
           3.1436920384327305
         ]
       },
-      "remeshFaceIds": true
+      "remeshFaceIds": true,
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
+      }
     },
     {
       "id": "stl-cube-binary",
@@ -2254,12 +2253,6 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "basic",
       "expected": {
         "classification": "accepted",
@@ -2307,7 +2300,12 @@
           3.1436920384327305
         ]
       },
-      "remeshFaceIds": true
+      "remeshFaceIds": true,
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
+      }
     },
     {
       "id": "stl-thin-plate",
@@ -2317,12 +2315,6 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "thin",
       "expected": {
         "classification": "accepted",
@@ -2370,7 +2362,12 @@
           26.63409528090177
         ]
       },
-      "remeshFaceIds": true
+      "remeshFaceIds": true,
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
+      }
     },
     {
       "id": "stl-disconnected",
@@ -2380,17 +2377,16 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "basic",
       "expected": {
         "classification": "rejected",
         "stage": "import",
         "code": "STL_DISCONNECTED"
+      },
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
       }
     },
     {
@@ -2401,17 +2397,16 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "basic",
       "expected": {
         "classification": "rejected",
         "stage": "import",
         "code": "STL_OPEN_SURFACE"
+      },
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
       }
     },
     {
@@ -2422,17 +2417,16 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "basic",
       "expected": {
         "classification": "rejected",
         "stage": "import",
         "code": "STL_NONMANIFOLD"
+      },
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
       }
     },
     {
@@ -2443,17 +2437,16 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "basic",
       "expected": {
         "classification": "rejected",
         "stage": "import",
         "code": "STL_INWARD_WINDING"
+      },
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
       }
     },
     {
@@ -2464,17 +2457,16 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "basic",
       "expected": {
         "classification": "rejected",
         "stage": "import",
         "code": "STL_INCONSISTENT_WINDING"
+      },
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
       }
     },
     {
@@ -2485,17 +2477,16 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "basic",
       "expected": {
         "classification": "rejected",
         "stage": "import",
         "code": "STL_DEGENERATE_TRIANGLE"
+      },
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
       }
     },
     {
@@ -2506,17 +2497,16 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "basic",
       "expected": {
         "classification": "rejected",
         "stage": "import",
         "code": "STL_SELF_INTERSECTION"
+      },
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
       }
     },
     {
@@ -2527,17 +2517,16 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "basic",
       "expected": {
         "classification": "rejected",
         "stage": "import",
         "code": "STL_NONMANIFOLD"
+      },
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
       }
     },
     {
@@ -2548,17 +2537,16 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "basic",
       "expected": {
         "classification": "rejected",
         "stage": "import",
         "code": "STL_NONFINITE"
+      },
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
       }
     },
     {
@@ -2569,12 +2557,6 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "curved",
       "expected": {
         "classification": "accepted",
@@ -2622,7 +2604,12 @@
           4.529392702121425
         ]
       },
-      "remeshFaceIds": true
+      "remeshFaceIds": true,
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
+      }
     },
     {
       "id": "stl-cylinder-32",
@@ -2632,12 +2619,6 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "curved",
       "expected": {
         "classification": "accepted",
@@ -2685,7 +2666,12 @@
           8.395340244513173
         ]
       },
-      "remeshFaceIds": true
+      "remeshFaceIds": true,
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
+      }
     },
     {
       "id": "stl-cylinder-64",
@@ -2695,12 +2681,6 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "curved",
       "expected": {
         "classification": "accepted",
@@ -2748,7 +2728,12 @@
           14.765395820320952
         ]
       },
-      "remeshFaceIds": true
+      "remeshFaceIds": true,
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
+      }
     },
     {
       "id": "stl-truncated",
@@ -2758,17 +2743,16 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "basic",
       "expected": {
         "classification": "rejected",
         "stage": "import",
         "code": "STL_MALFORMED"
+      },
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
       }
     },
     {
@@ -2779,17 +2763,16 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "basic",
       "expected": {
         "classification": "rejected",
         "stage": "import",
         "code": "STL_MALFORMED"
+      },
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
       }
     },
     {
@@ -2800,17 +2783,16 @@
       "license": "CC0-1.0",
       "provenance": "Project-authored by tools/cad-fixtures/generate-stl-fixtures.py; standard-library binary/ASCII export",
       "sourceUnits": "m",
-      "importOptions": {
-        "version": 1,
-        "lengthUnit": "m",
-        "patchAngleDegrees": 40,
-        "normalization": "none"
-      },
       "category": "basic",
       "expected": {
         "classification": "rejected",
         "stage": "import",
         "code": "STL_MALFORMED"
+      },
+      "stlSource": {
+        "version": 3,
+        "lengthUnit": "m",
+        "patchAngleDegrees": 40
       }
     }
   ]

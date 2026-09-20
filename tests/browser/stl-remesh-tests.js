@@ -4,13 +4,13 @@
   function assert(value, message) { if (!value) { throw new Error(message); } }
   document.getElementById('application-frame').addEventListener('load', async function () {
     var win = this.contentWindow, api = win.SpjutsimFEA, client, evidence = [];
-    var options = { version: 2, lengthUnit: 'm', patchAngleDegrees: 40,
-      normalization: 'none', surfaceMode: 'remesh', reconstructionToleranceM: null, remeshFeatureAngleDegrees: 5 };
+    var options={version:3,lengthUnit:'m',patchAngleDegrees:40};
+    var surface={version:1,method:'remesh',reconstructionToleranceM:null,remeshFeatureAngleDegrees:5};
     async function run(name, bytes, angle) {
       var source = new win.Uint8Array(new Uint8Array(bytes)).buffer;
       var settings = Object.assign({}, options, { patchAngleDegrees: angle || 40 });
       client = new api.MesherClient();
-      var geometry = await client.importGeometry({ sourceName: name, sourceFormat: 'stl', sourceBytes: source, importOptions: settings });
+      var geometry = await client.importGeometry({ sourceName: name, sourceFormat: 'stl', sourceBytes: source, stlSource: settings, stlSurface:surface });
       client.dispose();
       assert(api.validateGeometryModel(geometry).valid, 'Remeshed geometry contract rejected');
       assert(geometry.sourceMetadata.reconstruction === null && !geometry.originalPreview,
@@ -19,7 +19,7 @@
       assert(report && report.version === 1 && report.surfaceCountsByPatch.length === geometry.faceIds.length,
         'Source ownership report is missing');
       client = new api.MesherClient();
-      var mesh = await client.generateMesh({ geometry: geometry, sourceBytes: source, settings: { preset: 'coarse', elementType: 'tet10' } });
+      var mesh = await client.generateMesh({ geometry: geometry, sourceBytes: source, settings: { preset: 'coarse', elementType: 'tet10',stlSurface:surface } });
       client.dispose();
       assert(mesh.boundaryFaces.faceRanges.map(function (r) { return r.faceId; }).join() === geometry.faceIds.join(),
         'Fresh-worker remeshing changed selection ownership');
@@ -28,13 +28,9 @@
       return { geometry: geometry, mesh: mesh, source: source };
     }
     try {
-      assert(api.validateStlOptions(options), 'Experimental remeshing options are unavailable');
-      assert(!api.validateStlOptions(Object.assign({}, options, { reconstructionToleranceM: .01 })), 'Remeshing advertised a CAD deviation bound');
-      assert(!api.sameStlOptions(options, Object.assign({}, options, { surfaceMode: 'original' })), 'Remeshing reused original-mode identity');
-      assert(!api.sameStlOptions(options, Object.assign({}, options, { remeshFeatureAngleDegrees: 40 })), 'Feature angle did not invalidate identity');
-      for (var angle of [0, 41, NaN, Infinity, undefined]) {
-        assert(!api.validateStlOptions(Object.assign({}, options, { remeshFeatureAngleDegrees: angle })), 'Invalid remesh feature angle accepted');
-      }
+      assert(api.validateStlSourceOptions(options), 'Experimental remeshing options are unavailable');
+      assert(!api.validateStlSurfaceSettings(Object.assign({},surface,{reconstructionToleranceM:.01})),'Remesh claimed a deviation bound');
+      for(var angle of [0,41,NaN,Infinity,undefined])assert(!api.validateStlSurfaceSettings(Object.assign({},surface,{remeshFeatureAngleDegrees:angle})),'Invalid feature angle accepted');
       var cube = await run('dense-cube.stl', StlTestShapes.subdividedCube(16));
       assert(cube.mesh.statistics.boundaryElementCount < cube.geometry.sourceMetadata.triangleCount / 2,
         'Remeshing retained the dense input triangulation');
@@ -70,16 +66,9 @@
         'A selection group could not own multiple geometric surfaces');
       client = new api.MesherClient();
       var changed = await client.importGeometry({ sourceName: 'grouped-cube.stl', sourceFormat: 'stl', sourceBytes: grouped.source,
-        importOptions: Object.assign({}, grouped.geometry.importOptions, { remeshFeatureAngleDegrees: 40 }) });
+        stlSource:grouped.geometry.stlSource,stlSurface:Object.assign({},surface,{remeshFeatureAngleDegrees:40}) });
       client.dispose();
-      assert(changed.faceIds.join() !== grouped.geometry.faceIds.join(), 'Feature angle reused source assignment identities');
-      var mismatch;
-      client = new api.MesherClient();
-      try { await client.generateMesh({ geometry: Object.assign({}, changed, { faceIds: grouped.geometry.faceIds, preview: grouped.geometry.preview }),
-        sourceBytes: grouped.source, settings: { preset: 'coarse', elementType: 'tet10' } }); }
-      catch (failure) { mismatch = failure.diagnostic; }
-      finally { client.dispose(); }
-      assert(mismatch && mismatch.code === 'STL_PATCH_MAPPING_FAILED', 'Fresh worker accepted assignments from a different feature angle');
+      assert(changed.faceIds.join()===grouped.geometry.faceIds.join(),'Feature angle changed source assignment identities');
       var tube = await run('square-tube.stl', StlTestShapes.squareTube());
       assert(Math.abs(tube.geometry.volumeM3 - 3) < 1e-10, 'Remeshing lost the through-hole');
       var bad = Object.assign({}, grouped.geometry, { sourceMetadata: Object.assign({}, grouped.geometry.sourceMetadata,
@@ -91,7 +80,7 @@
       client = new api.MesherClient({ onProgress: function (item) {
         if (item.stage === 'stl-remesh') { cancelled = true; client.cancel(); }
       } });
-      try { await client.importGeometry({ sourceName: 'dense-cube.stl', sourceFormat: 'stl', sourceBytes: cube.source, importOptions: options }); }
+      try { await client.importGeometry({ sourceName: 'dense-cube.stl', sourceFormat: 'stl', sourceBytes: cube.source, stlSource: options, stlSurface:surface }); }
       catch (failure) { error = failure.diagnostic; }
       assert(cancelled && error && error.code === 'IMPORT_CANCELLED', 'Experimental remeshing could not be cancelled');
       window.__stlSurfaceEvidence = { cases: evidence, cancellationVerified: true };

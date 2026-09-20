@@ -28,6 +28,7 @@
 
   var prototype=api.AppController.prototype;
   prototype.recordEngineeringEdit = function (kind,before,after,label,index) {
+    if(this.stlImportSession||this.stlSurfaceReview)throw new Error('Finish or cancel the geometry review before editing.');
     if (this.historyReplaying) { return; }
     this.history.record({kind:kind,before:before,after:after,label:label,index:index === undefined ? null : index,geometryId:this.document.geometry && this.document.geometry.geometryId});
     this.historyNotice=label + '.';
@@ -36,7 +37,7 @@
     this.history.clear(); this.historyNotice='History cleared for the imported model. Import, replacement, and removal start a new history.';
   };
   prototype.historyState = function () {
-    var enabled=!api.engineeringBusy(this.document) && !this.document.assignmentDraft;
+    var enabled=!this.stlImportSession&&!this.stlSurfaceReview&&!api.engineeringBusy(this.document) && !this.document.assignmentDraft;
     var undo=this.history.entries[this.history.cursor-1], redo=this.history.entries[this.history.cursor];
     return {canUndo:Boolean(enabled && undo),canRedo:Boolean(enabled && redo),undoLabel:undo ? undo.label : '',redoLabel:redo ? redo.label : '',
       message:this.document.assignmentDraft ? 'Apply or Cancel the preview before Undo/Redo.' : api.engineeringBusy(this.document) ? 'Undo/Redo is unavailable during worker execution.' : ((this.document.results || api.solveReadiness(this.document).canSolve) ? this.historyNotice.split('. ')[0] + '.' : this.historyNotice)};

@@ -140,66 +140,75 @@
     this.notify();
   };
 
-  AppController.prototype.beginGeometryReview = function (source) {
-    if (!source || source.sourceFormat !== 'stl' || !(source.sourceBytes instanceof ArrayBuffer) ||
-        !source.sourceBytes.byteLength || source.sourceBytes.byteLength > 16 * 1024 * 1024) { throw new Error('Choose a nonempty STL file no larger than 16 MiB.'); }
-    if(!root.SpjutsimFEA.validateStlRepairSource(source))throw new Error('The retained STL repair history is invalid.');
-    this.geometryReview = { source: source, geometry: null, generation: 0, options: null };
-    this.beginGeometryImport(source.sourceName);
-    return this.geometryReview;
+  AppController.prototype.beginStlImport = function(source, settings) {
+    var api=root.SpjutsimFEA, unit='mm';
+    try { var saved=root.localStorage.getItem('spjutsim-fea-stl-source-unit'); if(api.STL_UNIT_SCALES[saved])unit=saved; } catch(e) {}
+    settings=Object.assign({lengthUnit:unit,patchAngleDegrees:40,maxHoleDiameterRatio:.01},settings);
+    var id=api.createGeometryId(),request=Object.assign({},settings,source,{sessionId:id,generation:0,geometryId:id});
+    if(!api.validateStlPreparationRequest(request))throw new Error('Choose a readable STL source and valid units.');
+    this.stlImportSession={sessionId:id,generation:0,geometryId:id,source:source,settings:settings,state:'reading',preview:null,result:null,message:'Reading triangles…'};
+    this.beginGeometryImport(source.sourceName);return this.stlImportSession;
   };
-
-  AppController.prototype.setGeometryReviewOptions = function (options) {
-    if (!this.geometryReview || !root.SpjutsimFEA.validateStlOptions(options)) { throw new Error('Choose explicit STL units and a grouping angle from 1 to 179 degrees.'); }
-    this.geometryReview.options = Object.assign({}, options);
-    this.geometryReview.geometry = null;
-    this.geometryReview.generation += 1;
-    this.notify();
-    return this.geometryReview.generation;
+  AppController.prototype.updateStlImportSettings = function(settings) {
+    var s=this.stlImportSession;if(!s)return;
+    var next=Object.assign({},s.settings,settings);
+    if(!root.SpjutsimFEA.validateStlPreparationRequest(Object.assign({},s.source,next,{sessionId:s.sessionId,generation:s.generation,geometryId:s.geometryId})))throw new Error('Choose valid source units and repair limits.');
+    s.settings=next;s.generation++;s.result=null;s.state=s.preview?'checking':'reading';s.message='Checking model…';this.notify();return s.generation;
   };
-
-  AppController.prototype.invalidateGeometryReview = function () {
-    if (!this.geometryReview) { return; }
-    this.geometryReview.generation += 1;
-    this.geometryReview.geometry = null;
-    this.notify();
+  AppController.prototype.applyStlPreparationEvent = function(event) {
+    var s=this.stlImportSession,api=root.SpjutsimFEA;
+    if(!s||event.sessionId!==s.sessionId||event.generation!==s.generation)return false;
+    if(event.type==='stl-preview'){
+      if(!api.validateStlPreview(event.preview)||event.preview.revision!=='source')throw new Error('Invalid STL preview.');
+      s.preview=event.preview;s.state='checking';
+    }else if(event.type==='stl-progress')s.message=event.message;
+    else if(event.type==='stl-prepared'){
+      var r=event.result;
+      if(!api.validateStlPreparationResult(r,s.preview)||r.lengthUnit!==s.settings.lengthUnit||s.source.preparation&&r.sourceDigest!==s.source.preparation.preparedDigest)throw new Error('The STL result does not match this review.');
+      if(r.geometryCandidate&&(!api.validateGeometryModel(r.geometryCandidate).valid||r.geometryCandidate.geometryId!==s.geometryId||r.geometryCandidate.sourceName!==s.source.sourceName||r.geometryCandidate.stlSource.lengthUnit!==s.settings.lengthUnit||r.geometryCandidate.stlSource.patchAngleDegrees!==s.settings.patchAngleDegrees))throw new Error('The prepared solid has an invalid geometry contract.');
+      s.result=r;s.state=r.state;s.message=r.state==='ready'?'Ready — confirm the dimensions, then use this model.':r.state==='needs-review'?'Review the highlighted additions or removals before using this repaired model.':r.error&&r.error.message||'This surface still needs repair before analysis.';
+    }else return false;
+    this.notify();return true;
   };
-
-  AppController.prototype.completeGeometryReview = function (review, generation, geometry) {
-    if (this.geometryReview !== review || review.generation !== generation) { return false; }
-    var valid = root.SpjutsimFEA.validateGeometryModel(geometry);
-    if (!valid.valid || !root.SpjutsimFEA.sameStlOptions(geometry.importOptions, review.options)) { throw new Error('The STL preview does not match the reviewed import options.'); }
-    if(!root.SpjutsimFEA.validateStlRepairSource(review.source,geometry))throw new Error('The preview does not match the repaired source.');
-    review.geometry = geometry;
-    this.document.geometryImport.progress = { stage: 'stl-review', userMessage: 'Review STL dimensions and patches.' };
-    this.notify();
-    return true;
+  AppController.prototype.failStlImport = function(session,generation,error) {
+    var s=this.stlImportSession;if(s!==session||s.generation!==generation)return;
+    s.state='blocked';s.result=null;s.message=error.message;s.error=error.diagnostic;this.notify();
   };
-
-  AppController.prototype.completeGeometryRepair = function(review,generation,result) {
-    if(this.geometryReview!==review||review.generation!==generation)return false;
-    if(review.source.repair||!root.SpjutsimFEA.validateStlRepairResult(result))throw new Error('The repair candidate or its source history is invalid.');
-    review.source=Object.assign({},review.source,{sourceBytes:result.sourceBytes,
-      repair:{version:1,originalSourceBytes:review.source.sourceBytes,report:result.report}});
-    review.geometry=null;review.generation+=1;this.notify();return true;
+  AppController.prototype.cancelStlImport = function() {this.stlImportSession=null;this.restoreGeometryImportStatus();};
+  AppController.prototype.acceptStlImport = function(consent) {
+    var s=this.stlImportSession,r=s&&s.result,api=root.SpjutsimFEA;
+    if(!r||!['ready','needs-review'].includes(s.state)||!r.geometryCandidate||r.lengthUnit!==s.settings.lengthUnit||
+      (r.shapeChanged&&(!consent||consent.acceptShapeChanges!==true))||!api.validateGeometryModel(r.geometryCandidate).valid)throw new Error('Confirm a fully checked model and any proposed shape changes.');
+    var source=Object.assign({},s.source,{sourceBytes:r.preparedSourceBytes||s.source.sourceBytes,
+      originalSourceBytes:s.source.originalSourceBytes||s.source.sourceBytes,stlSource:r.geometryCandidate.stlSource,
+      preparation:{version:1,originalDigest:s.source.preparation?s.source.preparation.originalDigest:r.sourceDigest,
+        sourceDigest:r.sourceDigest,preparedDigest:r.preparedDigest,shapeChanged:r.shapeChanged,shapeChangesAccepted:r.shapeChanged,
+        lengthUnit:s.settings.lengthUnit}});
+    return {geometry:r.geometryCandidate,source:source};
   };
-  AppController.prototype.discardGeometryRepair = function() {
-    var review=this.geometryReview;if(!review||!review.source.repair)return false;
-    review.source=Object.assign({},review.source,{sourceBytes:review.source.repair.originalSourceBytes});delete review.source.repair;
-    this.invalidateGeometryReview();return true;
+  AppController.prototype.beginStlSurfaceReview = function(settings) {
+    var api=root.SpjutsimFEA,g=this.document.geometry;
+    if(this.stlImportSession||!g||g.sourceFormat!=='stl'||!api.validateStlSurfaceSettings(settings))throw new Error('Choose valid STL surface settings.');
+    this.stlSurfaceReview={geometry:g,revision:this.document.analysisRevision,settings:Object.assign({},settings),candidate:null};
+    this.notify();return this.stlSurfaceReview;
   };
-
-  AppController.prototype.cancelGeometryReview = function () {
-    this.geometryReview = null;
-    this.restoreGeometryImportStatus();
+  AppController.prototype.completeStlSurfaceReview = function(review,candidate) {
+    var g=this.document.geometry,api=root.SpjutsimFEA;
+    if(review!==this.stlSurfaceReview||review.geometry!==g||review.revision!==this.document.analysisRevision)return false;
+    if(!api.validateGeometryModel(candidate).valid||candidate.sourceMetadata.sha256!==g.sourceMetadata.sha256||
+      !api.sameStlSourceOptions(candidate.stlSource,g.stlSource)||candidate.faceIds.join()!==g.faceIds.join()||
+      !api.sameEngineeringDefinition(candidate.stlSurface,review.settings))throw new Error('The candidate does not preserve source group ownership.');
+    review.candidate=api.restoreGeometryOrientation(candidate,g.orientation);this.notify();return true;
   };
-
-  AppController.prototype.acceptGeometryReview = function () {
-    var review = this.geometryReview;
-    if (!review || !review.geometry) { throw new Error('Review valid STL dimensions and patches before accepting.'); }
-    var result = { geometry: review.geometry, source: Object.assign({}, review.source, { importOptions: Object.assign({}, review.options) }) };
-    this.cancelGeometryReview();
-    return result;
+  AppController.prototype.cancelStlSurfaceReview = function(){this.stlSurfaceReview=null;this.notify();};
+  AppController.prototype.applyStlSurfaceReview = function(){
+    var r=this.stlSurfaceReview;
+    if(!r||!r.candidate||r.geometry!==this.document.geometry||r.revision!==this.document.analysisRevision)throw new Error('Review the current surface candidate first.');
+    this.stlSurfaceReview=null;
+    this.replaceMeshSettings(Object.assign({},this.document.meshSettings,{stlSurface:r.settings}));
+  };
+  AppController.prototype.rememberStlUnit = function(source) {
+    if(source.sourceFormat==='stl')try{root.localStorage.setItem('spjutsim-fea-stl-source-unit',source.stlSource.lengthUnit);}catch(e){}
   };
 
   /** Replace engineering state that depends on the imported geometry. */
@@ -213,14 +222,15 @@
         !(source.sourceBytes instanceof ArrayBuffer) || source.sourceBytes.byteLength === 0) {
       throw new Error('A non-empty canonical CAD source matching the geometry format is required.');
     }
-    if (geometry.sourceFormat === 'stl' && !root.SpjutsimFEA.sameStlOptions(source.importOptions, geometry.importOptions)) {
+    if (geometry.sourceFormat === 'stl' && !root.SpjutsimFEA.sameStlSourceOptions(source.stlSource, geometry.stlSource)) {
       throw new Error('The retained STL source must match the reviewed import options.');
     }
-    if(!root.SpjutsimFEA.validateStlRepairSource(source,geometry))throw new Error('The repaired source history does not match the geometry.');
+    if(!root.SpjutsimFEA.validateStlSourceProvenance(source,geometry))throw new Error('The prepared source does not match the geometry.');
     this.clearEngineeringHistory();
     this.geometrySource = { sourceName: source.sourceName, sourceFormat: source.sourceFormat, sourceBytes: source.sourceBytes,
-      importOptions: source.importOptions ? Object.assign({}, source.importOptions) : undefined,
-      repair: source.repair };
+      stlSource: source.stlSource ? Object.assign({}, source.stlSource) : undefined,
+      originalSourceBytes: source.originalSourceBytes, preparation: source.preparation };
+    this.rememberStlUnit(source);
     this.document.geometry = geometry;
     this.document.selectedFaceIds = [];
     this.document.boundaryConditions = [];
@@ -250,7 +260,7 @@
         !(source.sourceBytes instanceof ArrayBuffer) || !source.sourceBytes.byteLength) {
       throw new Error('A non-empty canonical CAD source matching the replacement geometry is required.');
     }
-    if (geometry.sourceFormat === 'stl' && !root.SpjutsimFEA.sameStlOptions(source.importOptions, geometry.importOptions)) {
+    if (geometry.sourceFormat === 'stl' && !root.SpjutsimFEA.sameStlSourceOptions(source.stlSource, geometry.stlSource)) {
       throw new Error('The retained STL source must match the reviewed import options.');
     }
     if (!transfer || !Array.isArray(transfer.boundaryConditions) || !Array.isArray(transfer.loads)) {
@@ -282,11 +292,12 @@
     }
     viewportPreferences = transfer.viewportPreferences || {};
 
-    if(!root.SpjutsimFEA.validateStlRepairSource(source,geometry))throw new Error('The repaired source history does not match the geometry.');
+    if(!root.SpjutsimFEA.validateStlSourceProvenance(source,geometry))throw new Error('The prepared source does not match the geometry.');
     this.clearEngineeringHistory();
     this.geometrySource = { sourceName: source.sourceName, sourceFormat: source.sourceFormat, sourceBytes: source.sourceBytes,
-      importOptions: source.importOptions ? Object.assign({}, source.importOptions) : undefined,
-      repair: source.repair };
+      stlSource: source.stlSource ? Object.assign({}, source.stlSource) : undefined,
+      originalSourceBytes: source.originalSourceBytes, preparation: source.preparation };
+    this.rememberStlUnit(source);
     this.document.geometry = geometry;
     this.document.material = materialValidation.value;
     this.document.boundaryConditions = supports;
@@ -568,6 +579,7 @@
   };
 
   AppController.prototype.beginMeshGeneration = function () {
+    if(this.stlImportSession||this.stlSurfaceReview)throw new Error('Finish or cancel STL preparation first.');
     if (!this.document.geometry || !this.geometrySource) { throw new Error('Import geometry before generating a mesh.'); }
     this.document.meshGeneration = { status: 'generating', error: null, progress: null };
     this.notify();
@@ -613,6 +625,7 @@
   };
 
   AppController.prototype.beginSolvePreflight = function () {
+    if(this.stlImportSession||this.stlSurfaceReview)throw new Error('Finish or cancel STL preparation first.');
     if (!root.SpjutsimFEA.solveReadiness(this.document).canCheck) { throw new Error(root.SpjutsimFEA.solveReadiness(this.document).message); }
     if (!this.document.mesh) { throw new Error('Generate a mesh before preflight.'); }
     this.document.solvePreflight = { status: 'running', result: null, error: null, progress: null,
@@ -661,6 +674,7 @@
   };
 
   AppController.prototype.beginSolve = function () {
+    if(this.stlImportSession||this.stlSurfaceReview)throw new Error('Finish or cancel STL preparation first.');
     var preflight = this.document.solvePreflight;
     if (!root.SpjutsimFEA.solveReadiness(this.document).canSolve) {
       throw new Error('Complete a valid solve preflight before solving.');
@@ -716,6 +730,7 @@
   };
 
   AppController.prototype.beginConvergenceStudy = function (settings) {
+    if(this.stlImportSession||this.stlSurfaceReview)throw new Error('Finish the geometry review first.');
     if (this.document.assignmentDraft) { throw new Error('Apply or Cancel the assignment draft before starting convergence.'); }
     if (!this.document.geometry || !this.document.material || !this.geometrySource) {
       throw new Error('Import geometry and define a material before starting convergence.');

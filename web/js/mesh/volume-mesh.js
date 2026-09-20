@@ -48,6 +48,7 @@
         !meshElementDescriptor(settings.elementType)) {
       return validation(false, 'invalid-mesh-settings');
     }
+    if(settings.stlSurface!==undefined&&!root.SpjutsimFEA.validateStlSurfaceSettings(settings.stlSurface))return validation(false,'invalid-stl-surface-settings');
     if (!Number.isFinite(diagonal) || diagonal <= 0) { return validation(false, 'invalid-bounding-box'); }
     if (settings.preset === 'custom') {
       if (!Number.isFinite(settings.minSizeM) || !Number.isFinite(settings.maxSizeM) ||
@@ -64,12 +65,12 @@
     if (!valid.valid) { throw new Error('Invalid mesh settings: ' + valid.reason); }
     if (settings.preset === 'custom') {
       return {
-        preset: 'custom', elementType: settings.elementType, minSizeM: settings.minSizeM, maxSizeM: settings.maxSizeM
+        preset: 'custom', elementType: settings.elementType, stlSurface:settings.stlSurface, minSizeM: settings.minSizeM, maxSizeM: settings.maxSizeM
       };
     }
     maxSizeM = boundingBoxDiagonalM(boundingBoxM) / PRESET_DIVISORS[settings.preset];
     return {
-      preset: settings.preset, elementType: settings.elementType, minSizeM: maxSizeM / 4, maxSizeM: maxSizeM
+      preset: settings.preset, elementType: settings.elementType, stlSurface:settings.stlSurface, minSizeM: maxSizeM / 4, maxSizeM: maxSizeM
     };
   }
 

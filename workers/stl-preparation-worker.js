@@ -9,8 +9,8 @@ function geometryFromParsed(parsed,message,options){
   for(var i=0;i<parsed.triangles.length;i+=3){var patch=parsed.patchByTriangle[i/3];
     for(var j=0;j<3;j++){var source=parsed.triangles[i+j],target=offsets[patch]++;positions.set(parsed.positions.subarray(source*3,source*3+3),target*3);normals.set(parsed.normals.subarray(i,i+3),target*3);indices[target]=target;
       var next=parsed.neighbors[i+j];if(next>i/3&&parsed.patchByTriangle[next]!==patch)edges.push(source,parsed.triangles[i+(j+1)%3]);}}
-  return{geometryId:message.geometryId,sourceName:message.sourceName,sourceFormat:'stl',surfaceKind:'stl-patch',importOptions:options,
-    sourceMetadata:{version:2,sha256:parsed.sourceHash,triangleCount:parsed.triangles.length/3,internalSurfaceCount:parsed.patches.length,validation:parsed.validation,surfaceMode:'original',reconstruction:null},
+  return{geometryId:message.geometryId,sourceName:message.sourceName,sourceFormat:'stl',surfaceKind:'stl-patch',stlSource:options,stlSurface:SpjutsimFEA.defaultStlSurface(),
+    sourceMetadata:{version:3,sha256:parsed.sourceHash,triangleCount:parsed.triangles.length/3,internalSurfaceCount:parsed.patches.length,validation:parsed.validation,surfaceMode:'original',reconstruction:null},
     orientation:{rotation:[1,0,0,0,1,0,0,0,1],operations:[]},faceIds:parsed.patchIds,boundingBoxM:{minM:parsed.minimum,maxM:parsed.maximum},volumeM3:parsed.volume,
     preview:{positionsM:positions,normals:normals,indices:indices,faceRanges:ranges,featureEdges:{positionsM:parsed.positions,indices:new Uint32Array(edges)}}};
 }
@@ -29,7 +29,7 @@ self.onmessage=async function(event){
     var candidate=changed&&prepared.sourceBytes?StlImport.decode(bytes):null;
     var diagnostics=candidate?StlDiagnostics.inspect(candidate,null,'candidate'):rawDiagnostics;
     var sourceHash=await sourceDigest(m.sourceBytes),preparedHash=changed?await sourceDigest(bytes):sourceHash;
-    var options={version:2,lengthUnit:m.lengthUnit,patchAngleDegrees:m.patchAngleDegrees,normalization:'none',surfaceMode:'original',reconstructionToleranceM:null};
+    var options={version:3,lengthUnit:m.lengthUnit,patchAngleDegrees:m.patchAngleDegrees};
     var geometry=null,validation=null,error=prepared.error;
     send('stl-progress',{message:changed?'Checking the prepared model…':'Checking solid geometry…'});
     try{var parsed=await StlImport.identify(StlImport.parse(bytes,options),bytes);geometry=geometryFromParsed(parsed,m,options);validation=parsed.validation;error=null;}

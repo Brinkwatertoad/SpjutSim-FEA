@@ -1,7 +1,7 @@
 (async function () {
   'use strict';
   var api = globalThis.SpjutsimFEA, status = document.getElementById('test-status');
-  var options = { version: 1, lengthUnit: 'm', patchAngleDegrees: 40, normalization: 'none' };
+  var options = { version:3,lengthUnit:'m',patchAngleDegrees:40 };
   var evidence = [];
   function assert(value, message) { if (!value) { throw new Error(message); } }
   function binary(triangles) {
@@ -24,7 +24,7 @@
   }
   async function rejected(bytes, code) {
     var client = new api.MesherClient(), actual;
-    try { await client.importGeometry({ sourceName:'limit.stl', sourceFormat:'stl', sourceBytes:bytes, importOptions:options }); }
+    try { await client.importGeometry({ sourceName:'limit.stl', sourceFormat:'stl', sourceBytes:bytes, stlSource:options }); }
     catch (error) { actual = error.diagnostic && error.diagnostic.code; }
     finally { client.dispose(); }
     assert(actual === code, 'Expected ' + code + ', received ' + actual);
@@ -34,16 +34,15 @@
     await rejected(new ArrayBuffer(16*1024*1024+1), 'STL_INPUT_LIMIT');
     var tooMany = new ArrayBuffer(84+200001*50);new DataView(tooMany).setUint32(80,200001,true);
     await rejected(tooMany, 'STL_INPUT_LIMIT');
-    await rejected(cylinder(512), 'STL_PATCH_LIMIT');
     await rejected(cylinder(2048), 'STL_VALIDATION_LIMIT');
     var boundaryClient = new api.MesherClient(), boundaryStart = performance.now();
-    var boundary = await boundaryClient.importGeometry({sourceName:'surface-limit.stl',sourceFormat:'stl',sourceBytes:cylinder(507),importOptions:options});
-    assert(boundary.sourceMetadata.internalSurfaceCount===512,'Internal surface boundary was not exercised: '+boundary.sourceMetadata.internalSurfaceCount);
+    var boundary = await boundaryClient.importGeometry({sourceName:'surface-limit.stl',sourceFormat:'stl',sourceBytes:cylinder(507),stlSource:options});
+    assert(boundary.sourceMetadata.internalSurfaceCount===3,'Original mode unnecessarily split curved selection groups: '+boundary.sourceMetadata.internalSurfaceCount);
     evidence.push({internalSurfaceCount:boundary.sourceMetadata.internalSurfaceCount,importMs:performance.now()-boundaryStart});boundaryClient.dispose();
     var ascii = await (await fetch('../fixtures/stl/cube-ascii.stl')).text();
     var padded = new TextEncoder().encode(ascii+' '.repeat(16*1024*1024-ascii.length)).buffer;
     boundaryClient=new api.MesherClient();
-    boundary=await boundaryClient.importGeometry({sourceName:'byte-limit.stl',sourceFormat:'stl',sourceBytes:padded,importOptions:options});
+    boundary=await boundaryClient.importGeometry({sourceName:'byte-limit.stl',sourceFormat:'stl',sourceBytes:padded,stlSource:options});
     assert(boundary.faceIds.length===6,'Exact byte limit rejected a valid solid');
     evidence.push({sourceBytes:padded.byteLength,patches:boundary.faceIds.length});boundaryClient.dispose();padded=null;
     var source = await (await fetch('../fixtures/stl/cube-binary.stl')).arrayBuffer(), view = new DataView(source), triangles = [];
@@ -67,7 +66,7 @@
     var dense=binary(triangles.concat(extra));triangles=null;extra=null;
     var client=new api.MesherClient(), started=performance.now();
     status.textContent='Validating 50,000 triangles…';
-    var geometry=await client.importGeometry({sourceName:'dense.stl',sourceFormat:'stl',sourceBytes:dense,importOptions:options});
+    var geometry=await client.importGeometry({sourceName:'dense.stl',sourceFormat:'stl',sourceBytes:dense,stlSource:options});
     var importMs=performance.now()-started;
     assert(geometry.faceIds.length===6 && geometry.sourceMetadata.triangleCount===50000,'Dense source lost patches or triangles');
     assert(Math.abs(geometry.volumeM3-1)<1e-12,'Dense source changed volume');
@@ -76,25 +75,25 @@
     evidence.push({triangles:50000,sourceBytes:dense.byteLength,importMs:importMs,mesherWasmBytes:memory.wasmMemoryBytes,metadata:geometry.sourceMetadata,
       previewBytes:geometry.preview.positionsM.byteLength+geometry.preview.normals.byteLength+geometry.preview.indices.byteLength+geometry.preview.featureEdges.positionsM.byteLength+geometry.preview.featureEdges.indices.byteLength});
     client=new api.MesherClient();started=performance.now();
-    var denseMesh=await client.generateMesh({geometry:geometry,sourceBytes:dense,settings:{preset:'coarse',elementType:'tet10'}});
+    var denseMesh=await client.generateMesh({geometry:geometry,sourceBytes:dense,settings:{preset:'coarse',elementType:'tet10',stlSurface:{version:1,method:'reconstruct',reconstructionToleranceM:1e-5,remeshFeatureAngleDegrees:null}}});
     assert(denseMesh.quality.minimumJacobian>0 && Object.keys(denseMesh.geometryFaceMap).length===6,'Dense-source Tet10 reconstruction failed');
     evidence.push({denseMeshMs:performance.now()-started,nodes:denseMesh.statistics.nodeCount,elements:denseMesh.statistics.elementCount,
       minimumJacobian:denseMesh.quality.minimumJacobian,meshBytes:denseMesh.nodePositionsM.byteLength+denseMesh.elementConnectivity.byteLength+denseMesh.boundaryFaces.solverConnectivity.byteLength+denseMesh.boundaryFaces.triangleConnectivity.byteLength});
     client.dispose();denseMesh=null;
     var cancelStart, cancelled = new api.MesherClient({onProgress:function(progress){if(progress.stage==='stl-validate'){cancelStart=performance.now();cancelled.cancel();}}}), code;
-    try {await cancelled.importGeometry({sourceName:'cancel.stl',sourceFormat:'stl',sourceBytes:dense,importOptions:options});}catch(error){code=error.diagnostic&&error.diagnostic.code;}
+    try {await cancelled.importGeometry({sourceName:'cancel.stl',sourceFormat:'stl',sourceBytes:dense,stlSource:options});}catch(error){code=error.diagnostic&&error.diagnostic.code;}
     assert(code==='IMPORT_CANCELLED' && cancelled.worker===null,'Validation cancellation failed');
     evidence.push({cancellationMs:performance.now()-cancelStart,code:code});
     var realTimeout=globalThis.setTimeout, timed=new api.MesherClient(), timedCode;
     // Exercise the deadline path without making the harness idle for two minutes.
     globalThis.setTimeout=function(callback,delay){return realTimeout(callback,delay===120000?100:delay);};
-    try {await timed.importGeometry({sourceName:'timeout.stl',sourceFormat:'stl',sourceBytes:dense,importOptions:options});}
+    try {await timed.importGeometry({sourceName:'timeout.stl',sourceFormat:'stl',sourceBytes:dense,stlSource:options});}
     catch(error){timedCode=error.diagnostic&&error.diagnostic.code;}
     finally {globalThis.setTimeout=realTimeout;timed.dispose();}
     assert(timedCode==='MESHER_TIMEOUT' && timed.worker===null,'Timed-out worker was not terminated');
     evidence.push({timeoutCode:timedCode,simulatedDeadlineMs:100,productionDeadlineMs:120000});
     client=new api.MesherClient();
-    var recovered=await client.importGeometry({sourceName:'recovery.stl',sourceFormat:'stl',sourceBytes:source,importOptions:options});
+    var recovered=await client.importGeometry({sourceName:'recovery.stl',sourceFormat:'stl',sourceBytes:source,stlSource:options});
     var mesh=await client.generateMesh({geometry:recovered,sourceBytes:source,settings:{preset:'coarse',elementType:'tet10'}});
     assert(mesh.quality.minimumJacobian>0,'Fresh worker did not recover after cancellation');client.dispose();
     globalThis.__stlResourceEvidence=evidence;

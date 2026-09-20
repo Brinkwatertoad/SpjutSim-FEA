@@ -39,7 +39,7 @@
   /** Begin one transient transaction. kind is support/load/gravity; itemId null adds; definition is SI data. */
   prototype.beginAssignmentDraft = function (kind, itemId, definition) {
     if (['support','load','gravity'].indexOf(kind) < 0) { throw new Error('Choose a support or load editor.'); }
-    if (api.engineeringBusy(this.document)) { throw new Error('Wait for the current operation or cancel it before editing.'); }
+    if (this.stlImportSession||this.stlSurfaceReview||api.engineeringBusy(this.document)) { throw new Error('Wait for the current operation or cancel it before editing.'); }
     if (!this.document.geometry) { throw new Error('Import geometry before adding assignments.'); }
     if (this.document.assignmentDraft) {
       if (this.document.assignmentDraft.dirty) { throw new Error('Apply or Cancel the current preview before opening another editor.'); }

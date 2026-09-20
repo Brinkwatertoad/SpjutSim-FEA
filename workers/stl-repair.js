@@ -1,4 +1,4 @@
-/* Opt-in local STL repair. Decoding is not validation; serialized candidates
+/* Routine cleanup and reviewable local STL repair proposals. Decoding is not validation; serialized candidates
  * must pass the unchanged solid validator before leaving this worker. */
 (function(root){
   'use strict';
@@ -98,7 +98,6 @@
     lines.push('endsolid repaired');var result=new TextEncoder().encode(lines.join('\n')).buffer;
     if(result.byteLength>16*1024*1024)fail('The repaired STL exceeds the 16 MiB output limit.');return result;
   }
-  async function digest(bytes){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),function(v){return v.toString(16).padStart(2,'0');}).join('');}
   function prepare(mesh,settings){
     if(!settings||!Number.isFinite(settings.maxHoleDiameterRatio)||settings.maxHoleDiameterRatio<0||settings.maxHoleDiameterRatio>.05){var error=new Error('Choose a maximum hole width from 0% through 5% of the part diagonal.');error.code='STL_INVALID_REPAIR_OPTIONS';throw error;}
     var triangles=mesh.triangles.slice(),positions=mesh.positions,count=triangles.length/3;
@@ -173,15 +172,5 @@
     return {sourceBytes:sourceBytes,report:report,changes:changes,error:issueError,
       changesTruncated:locations.report.locationsTruncated,shapeChanged:removed.length>0||report.addedTriangles>0};
   }
-  async function repair(bytes,options,settings){
-    var result=prepare(root.StlImport.readUnvalidated(bytes,options),settings);
-    if(result.error)fail(result.error.message);
-    var parsed;
-    try{parsed=root.StlImport.parse(result.sourceBytes,options);}catch(error){if(error.code&&error.code.indexOf('STL_')===0)fail('Local repair did not produce a valid solid: '+error.message);throw error;}
-    result.report.lengthUnit=options.lengthUnit;result.report.validation=parsed.validation;
-    result.report.repairedBoundingBoxM={minM:parsed.minimum,maxM:parsed.maximum};
-    result.report.originalSha256=await digest(bytes);result.report.repairedSha256=await digest(result.sourceBytes);
-    return {version:1,sourceBytes:result.sourceBytes,report:result.report};
-  }
-  root.StlRepair={prepare:prepare,repair:repair};
+  root.StlRepair={prepare:prepare};
 }(globalThis));

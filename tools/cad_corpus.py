@@ -85,12 +85,12 @@ def validate_manifest(manifest: Any, root: pathlib.Path) -> list[str]:
         if entry.get("sourceUnits") not in {"m", "mm", "cm", "in", "ft"}:
             errors.append(f"{prefix}.sourceUnits is unknown")
         if fmt == "stl":
-            options = entry.get("importOptions", {})
-            if (not isinstance(options, dict) or type(options.get("version")) is not int or options.get("version") != 1 or options.get("normalization") != "none" or
+            options = entry.get("stlSource", {})
+            if (not isinstance(options, dict) or type(options.get("version")) is not int or options.get("version") != 3 or any(key in options for key in ("normalization", "surfaceMode", "reconstructionToleranceM", "remeshFeatureAngleDegrees")) or
                     options.get("lengthUnit") != entry.get("sourceUnits") or
                     type(options.get("patchAngleDegrees")) not in (int, float) or
                     not 1 <= options.get("patchAngleDegrees", 0) <= 179):
-                errors.append(f"{prefix}.importOptions is invalid")
+                errors.append(f"{prefix}.stlSource is invalid")
         expected = entry.get("expected")
         classification = expected.get("classification") if isinstance(expected, dict) else None
         if classification not in CLASSIFICATIONS:

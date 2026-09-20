@@ -3,8 +3,8 @@
   var api = root.SpjutsimFEA;
   var status = document.getElementById('test-status');
   var mode=new URLSearchParams(location.search).get('surfaceMode');
-  var importOptions=mode?{version:2,lengthUnit:'m',patchAngleDegrees:40,normalization:'none',surfaceMode:mode,reconstructionToleranceM:mode==='reconstruct'?.02:null}:{version:1,lengthUnit:'m',patchAngleDegrees:40,normalization:'none'};
-  if(mode==='remesh')importOptions.remeshFeatureAngleDegrees=5;
+  var stlSource={version:3,lengthUnit:'m',patchAngleDegrees:40};
+  var stlSurface={version:1,method:mode||'original',reconstructionToleranceM:mode==='reconstruct'?.02:null,remeshFeatureAngleDegrees:mode==='remesh'?5:null};
   var controller = new api.AppController({ document: api.createAnalysisDocument() });
   var mesher = new api.MesherClient();
   var solver;
@@ -58,25 +58,27 @@
     if(new URLSearchParams(location.search).get('repair')==='1'){
       var view=new DataView(bytes);
       for(var axis=0;axis<3;axis++){var value=view.getFloat32(108+axis*4,true);view.setFloat32(108+axis*4,view.getFloat32(120+axis*4,true),true);view.setFloat32(120+axis*4,value,true);}
-      var repaired=await mesher.repairStl({sourceName:'cube-binary.stl',sourceFormat:'stl',sourceBytes:bytes,importOptions:importOptions,repairOptions:{version:1,maxHoleDiameterRatio:.01}});
-      assert(repaired.report.flippedTriangles===1,'Analytical cube repair did not correct the inverted face');bytes=repaired.sourceBytes;
+      var preparer=new api.StlPreparationClient();
+      var repaired=await preparer.prepare({sourceName:'cube-binary.stl',sourceBytes:bytes,geometryId:'repair-cube',sessionId:'repair-cube',generation:0,lengthUnit:'m',patchAngleDegrees:40,maxHoleDiameterRatio:.01});
+      repaired={sourceBytes:repaired.preparedSourceBytes,report:repaired.changes};
+      assert(repaired.report.automatic.some(function(i){return i.kind==='winding'&&i.count===1;}),'Analytical cube repair did not correct the inverted face');bytes=repaired.sourceBytes;
     }
     sourceBytes = bytes;
     controller.beginGeometryImport('stl/cube-binary.stl');
-    return mesher.importGeometry({ geometryId: 'cube-wasm-slice', sourceName: 'cube-binary.stl', sourceFormat: 'stl', importOptions:importOptions, sourceBytes: bytes });
+    return mesher.importGeometry({ geometryId: 'cube-wasm-slice', sourceName: 'cube-binary.stl', sourceFormat: 'stl', stlSource:stlSource, stlSurface:stlSurface, sourceBytes: bytes });
   }).then(async function (geometry) {
     var altered=sourceBytes.slice(0);new Uint8Array(altered)[0]^=1;
     var mismatch=new api.MesherClient(), diagnostic;
-    try {await mismatch.generateMesh({geometry:geometry,sourceBytes:altered,settings:{preset:'coarse',elementType:'tet10'}});}
+    try {await mismatch.generateMesh({geometry:geometry,sourceBytes:altered,settings:{preset:'coarse',elementType:'tet10',stlSurface:stlSurface}});}
     catch(error){diagnostic=error.diagnostic;}
     finally {mismatch.dispose();}
     assert(diagnostic && diagnostic.code==='STL_PATCH_MAPPING_FAILED' && diagnostic.stage==='mesh','Changed source bytes were silently remeshed under old patch IDs');
     assert(!api.validateGeometryModel(Object.assign({},geometry,{preview:null})).valid,'Missing STL preview escaped contract validation');
     assert(!api.validateGeometryModel(Object.assign({},geometry,{sourceMetadata:Object.assign({},geometry.sourceMetadata,{internalSurfaceCount:513})})).valid,'Out-of-bound STL metadata escaped validation');
-    controller.replaceGeometry(geometry, { sourceName: geometry.sourceName, sourceFormat: geometry.sourceFormat, importOptions:geometry.importOptions, sourceBytes: sourceBytes });
+    controller.replaceGeometry(geometry, { sourceName: geometry.sourceName, sourceFormat: geometry.sourceFormat, stlSource:geometry.stlSource, sourceBytes: sourceBytes });
     controller.replaceMaterial({ name: 'Patch material', youngsModulusPa: 1e9, poissonsRatio: 0.25, densityKgM3: 1000, tensileYieldPa: 250e6 });
     controller.beginMeshGeneration();
-    return mesher.generateMesh({ geometry: geometry, settings: { preset: 'coarse', elementType: 'tet10' }, sourceBytes: sourceBytes });
+    return mesher.generateMesh({ geometry: geometry, settings: { preset: 'coarse', elementType: 'tet10', stlSurface:stlSurface }, sourceBytes: sourceBytes });
   }).then(function (mesh) {
     solvedMesh = mesh;
     controller.completeMeshGeneration(mesh);
@@ -135,20 +137,16 @@
     controller.cancelAssignmentDraft();
     assert(controller.document.results===trustedResult, 'Cancelling an STL assignment preview discarded results');
     var originalGeometry=controller.document.geometry, originalSource=controller.geometrySource;
-    var review=controller.beginGeometryReview(originalSource);
-    var reviewedOptions={normalization:'none',patchAngleDegrees:40,lengthUnit:'m',version:importOptions.version};
-    if(mode){reviewedOptions.surfaceMode=mode;reviewedOptions.reconstructionToleranceM=importOptions.reconstructionToleranceM;}
-    if(mode==='remesh')reviewedOptions.remeshFeatureAngleDegrees=importOptions.remeshFeatureAngleDegrees;
-    var reviewGeneration=controller.setGeometryReviewOptions(reviewedOptions);
-    assert(controller.completeGeometryReview(review,reviewGeneration,originalGeometry),'Equivalent options with a different property order were rejected');
-    controller.invalidateGeometryReview();
-    assert(!controller.completeGeometryReview(review,reviewGeneration,originalGeometry),'Stale preview was installed after options changed');
-    controller.cancelGeometryReview();
+    var review=controller.beginStlImport(originalSource,{lengthUnit:'m'});
+    var reviewGeneration=review.generation;
+    controller.updateStlImportSettings({lengthUnit:'mm'});
+    assert(!controller.applyStlPreparationEvent({type:'stl-prepared',sessionId:review.sessionId,generation:reviewGeneration,result:{}}),'Stale preview accepted after settings changed');
+    controller.cancelStlImport();
     assert(controller.document.results===trustedResult && controller.document.geometry===originalGeometry,'Cancelled source review changed engineering state');
     controller.rotateGeometryAroundGlobalAxis('z',90);
     assert(!controller.document.mesh && !controller.document.results, 'STL rotation retained stale analysis');
     var rotated=controller.document.geometry, fresh=new api.MesherClient();
-    var rotatedMesh=await fresh.generateMesh({geometry:rotated,settings:{preset:'coarse',elementType:'tet10'},sourceBytes:sourceBytes});fresh.dispose();
+    var rotatedMesh=await fresh.generateMesh({geometry:rotated,settings:{preset:'coarse',elementType:'tet10',stlSurface:stlSurface},sourceBytes:sourceBytes});fresh.dispose();
     assert(JSON.stringify(rotated.faceIds)===JSON.stringify(originalGeometry.faceIds), 'Rotation changed patch identity');
     assert(rotatedMesh.quality.minimumJacobian>0 && Math.min.apply(null,Array.from(rotatedMesh.nodePositionsM).filter(function(v,i){return i%3===0;})) < -0.99,'Fresh STL reconstruction lost rotation');
     controller.undoEngineeringEdit();
@@ -164,7 +162,7 @@
     draft=api.createReplacementMigrationDraft(controller.document,originalGeometry,originalSource);
     draft.items.forEach(function(item,index){api.mapReplacementMigrationItem(draft,index,[originalGeometry.faceIds[index]]);});
     controller.replaceGeometryWithSetup(draft.newGeometry,draft.newSource,api.buildReplacementMigrationTransfer(draft));
-    assert(controller.document.geometry.sourceFormat==='stl' && controller.geometrySource.importOptions.lengthUnit==='m','CAD to STL transfer lost source options');
+    assert(controller.document.geometry.sourceFormat==='stl' && controller.geometrySource.stlSource.lengthUnit==='m','CAD to STL transfer lost source options');
     assert(!controller.historyState().canUndo,'Replacement retained engineering history');
     root.__stlSolveEvidence={cube:{displacementM:maximumLoadedUx,stressPa:result.extrema.rawVonMisesMax.valuePa,equilibrium:result.equilibrium.relativeResidual},curved:[]};
     var cases=[{segments:16,preset:'coarse'},{segments:32,preset:'coarse'},{segments:64,preset:'coarse'}];
@@ -172,10 +170,10 @@
     for(var caseDefinition of cases) {
       var segments=caseDefinition.segments;
       var name='cylinder-'+segments+'.stl',bytes=await(await fetch('../fixtures/stl/'+name)).arrayBuffer(),client=new api.MesherClient();
-      var geometry=await client.importGeometry({sourceName:name,sourceFormat:'stl',sourceBytes:bytes,importOptions:originalGeometry.importOptions});client.dispose();
-      client=new api.MesherClient();var curvedMesh=await client.generateMesh({geometry:geometry,sourceBytes:bytes,settings:{preset:caseDefinition.preset,elementType:'tet10'}});client.dispose();
+      var geometry=await client.importGeometry({sourceName:name,sourceFormat:'stl',sourceBytes:bytes,stlSource:originalGeometry.stlSource,stlSurface:stlSurface});client.dispose();
+      client=new api.MesherClient();var curvedMesh=await client.generateMesh({geometry:geometry,sourceBytes:bytes,settings:{preset:caseDefinition.preset,elementType:'tet10',stlSurface:stlSurface}});client.dispose();
       var analysis=new api.AppController({document:api.createAnalysisDocument()});
-      analysis.replaceGeometry(geometry,{sourceName:name,sourceFormat:'stl',sourceBytes:bytes,importOptions:geometry.importOptions});
+      analysis.replaceGeometry(geometry,{sourceName:name,sourceFormat:'stl',sourceBytes:bytes,stlSource:geometry.stlSource});
       analysis.replaceMaterial({name:'Axial nu=0',youngsModulusPa:1e9,poissonsRatio:0,densityKgM3:1000,tensileYieldPa:250e6});
       analysis.completeMeshGeneration(curvedMesh);
       analysis.replaceSelectedFaces([axisFace(curvedMesh,2,false)]);analysis.createBoundaryCondition({type:'support',componentsM:{x:0,y:0,z:0}});
@@ -190,7 +188,7 @@
         // Affine/faceted meshes retain their stronger constant-strain checks.
         assert(near(maximum,expected,mode==='reconstruct'?.01:2e-5,1e-11)&&near(solved.extrema.rawVonMisesMax.valuePa,1000/area,mode==='reconstruct'?.01:2e-4,1e-3),'Cylinder axial solution differs from its analytical geometry: '+JSON.stringify({segments:segments,displacement:maximum,expected:expected,stress:solved.extrema.rawVonMisesMax.valuePa,expectedStress:1000/area}));
         assert(solved.equilibrium.relativeResidual<1e-6 && near(solved.equilibrium.totalReactionN[2],-1000,mode==='reconstruct'?.001:1e-6,1e-5),'Curved STL force integration/equilibrium failed');
-        root.__stlSolveEvidence.curved.push({segments:segments,preset:caseDefinition.preset,surfaceMode:mode||'legacy',elementCount:curvedMesh.statistics.elementCount,displacementRelativeError:Math.abs(maximum/expected-1),stressRelativeError:Math.abs(solved.extrema.rawVonMisesMax.valuePa/(1000/area)-1),facetedArea:area,displacementM:maximum,expectedM:expected,sourceAreaDeficit:1-area/(Math.PI/4),equilibrium:solved.equilibrium.relativeResidual});
+        root.__stlSolveEvidence.curved.push({segments:segments,preset:caseDefinition.preset,surfaceMode:mode||'original',elementCount:curvedMesh.statistics.elementCount,displacementRelativeError:Math.abs(maximum/expected-1),stressRelativeError:Math.abs(solved.extrema.rawVonMisesMax.valuePa/(1000/area)-1),facetedArea:area,displacementM:maximum,expectedM:expected,sourceAreaDeficit:1-area/(Math.PI/4),equilibrium:solved.equilibrium.relativeResidual});
       } finally {curvedSolver.dispose();}
     }
     if(mode==='reconstruct'){var coarse=root.__stlSolveEvidence.curved[1],fine=root.__stlSolveEvidence.curved[3];assert(fine.elementCount>coarse.elementCount&&fine.displacementRelativeError<coarse.displacementRelativeError&&fine.stressRelativeError<coarse.stressRelativeError,'Recovered cylinder refinement did not reduce analytical error');}
