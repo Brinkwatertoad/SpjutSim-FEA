@@ -350,3 +350,35 @@ solid reconstruction, but default meshing hits the 512-chart bound. A wider-char
 experiment then hits the conservative global thickness workload cap. Local adaptive
 sizing/more capable chart construction remain future work; no gargoyle solve is
 claimed. See the current M29 review for the measured limits and dependency tradeoffs.
+
+## 8. Approved detail-preserving repair and chart-free complex STL meshing
+
+The owner rejected whole-model wrapping because it erased gargoyle detail and
+approved the following replacement. Keep one design/plan and no compatibility path.
+
+- [x] Prove intersection subdivision and solid-boundary extraction on the original
+  gargoyle, preserving unaffected exterior triangles. Add regression evidence for
+  coordinates, exterior detail, topology, orientation and Float64 serialization.
+  Replace automatic wrapping; never silently approximate the whole source.
+- [x] Integrate the proven repair behind the replaceable native interface, with
+  bounded work/memory, provenance, localized changes and explicit material consent.
+  Measure the new WASM size and preserve corresponding-source/license auditing.
+- [ ] For complex surfaces, generate a quality boundary mesh directly on the
+  repaired surface with constrained features/selection seams and bounded deviation;
+  feed this discrete boundary to Gmsh without creating parametrization charts.
+  Preserve existing exact planar-boundary meshing for suitable mechanical parts.
+- [ ] Replace global minimum-thickness sizing with a graded local field used by
+  both surface and volume meshing. Estimate element/memory workload locally and
+  retain explicit resource and fidelity rejection.
+- [ ] Verify gargoyle detail and successful volume meshing, elongated/rotated and
+  thin-appendage cases, grouping/loads, cancel/stale results, native/browser numerical
+  suites, file startup, packaging and complete diff. Commit tested checkpoints.
+
+M29 acceptance remains pending. Prior wrap results and failures are historical
+evidence, not acceptance criteria for this revision.
+
+Repair checkpoint: native ABI and five Chromium file-mode browser suites pass.
+The original gargoyle yields 61,448 strict-valid facets, including 57,030 unchanged
+source facets, identical exterior bounds and one explicitly proposed tiny enclosed
+void fill. Runtime: 1,004,422 bytes / 336,902 gzip; no added dependency. Meshing
+items above remain in progress.

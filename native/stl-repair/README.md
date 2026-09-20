@@ -1,29 +1,31 @@
 # Replaceable solid-repair adapter
 
-Only `repair.cpp` knows CGAL types. It exposes ABI version 1: bounded normalized
-Float64 vertices and Uint32 triangle indices in; a candidate indexed surface out.
-Return codes are 0 (candidate), 1 (invalid input), 2 (resource/work bound), and 3
-(construction failure). The worker owns serialization, strict STL validation,
-provenance and user review. An adapter success is never an acceptance certificate.
+Only `repair.cpp` knows CGAL types. ABI version 2 accepts bounded normalized
+Float64 vertices, Uint32 triangle indices and a local fill-width ratio. It returns
+an indexed candidate, original vertex/face provenance and changed-face flags.
+Codes: 0 candidate, 1 invalid input, 2 resource limit, 3 construction failure,
+4 unsupported boundary or component arrangement. Adapter success is never acceptance.
 
-CGAL 6.1.1 Alpha_wrap_3 constructs an enclosing surface directly from triangle
-soup, including intersecting input. This avoids an additional intersection-splitting
-or Boolean dependency. Wrapping may join components, fill gaps, and round details;
-construction parameters are not an application-certified maximum deviation.
+CGAL 6.1.1 exact-construction intersection refinement subdivides intersecting
+facets and extracts the solid boundary. Unaffected exterior facets retain their
+original coordinates. A pinched vertex may be duplicated without displacement.
+Only enclosed inward voids within the explicit local fill-width limit may be
+filled; separate exterior bodies are never discarded. The worker restores exact
+source vertices, serializes Float64 coordinates, runs every strict check, and
+presents localized material changes for explicit acceptance.
 
 The adapter has no filesystem, network, Gmsh, solver, rendering, STL-format or UI
-dependency. A future kernel can replace it while preserving the candidate protocol.
-No CGAL objects or entity identifiers cross the boundary. Output facet ownership
-is new; source assignments must use the normal replacement workflow.
+dependency. A future kernel can replace it behind the indexed-array interface.
+No CGAL objects or entity identifiers cross the boundary.
 
 Build with `python3 tools/build-stl-repair.py`, using pinned Emscripten 3.1.74.
 The recipe verifies CGAL/Boost archive hashes and embeds a serial worker runtime.
 CGAL's `CGAL_ALWAYS_ROUND_TO_NEAREST` expands interval results with `nextafter`,
 without relying on unsupported WASM hardware rounding-mode changes. Exact
-predicate fallback uses CGAL MP_Float. GMP and MPFR are not linked.
+constructions use CGAL's rational MP_Float fallback. GMP and MPFR are not linked.
 
-Limits: 200k input/output facets, 600k vertices, 100k Steiner insertions, 2 million
-flood-fill steps, 512 MiB WASM ceiling. The client applies one 120-second deadline
+Limits: 200k input/output facets, 600k vertices, 2 million
+intersection events, 512 MiB WASM ceiling. The client applies one 120-second deadline
 across cleanup and reconstruction and terminates workers on cancellation.
 Packaging is capped at 2 MiB raw / 768 KiB gzip for the embedded runtime.
 

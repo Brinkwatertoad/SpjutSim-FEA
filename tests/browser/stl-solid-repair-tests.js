@@ -17,12 +17,23 @@
    assert(result.state==='needs-review','Intersecting surfaces did not produce a reviewable solid: '+JSON.stringify(result.error));
    assert(workers.join(',')==='stl-preparation,stl-solid-repair','Solid reconstruction must run separately and only after lightweight cleanup');
    assert(result.geometryCandidate.sourceMetadata.validation.status==='valid'&&result.diagnostics.coverage.intersections==='passed','Rebuilt candidate bypassed strict validation');
-   assert(result.shapeChanged&&result.solidRepair&&result.changes.proposed.some(function(i){return i.kind==='rebuilt-surface';}),'Material-changing repair lacks proposal/provenance');
-   assert(result.sourceTriangleByCandidate.every(function(i){return i===-1;}),'Reconstructed faces falsely claim original facet identity');
+   assert(result.shapeChanged&&result.solidRepair&&result.changes.proposed.some(function(i){return i.kind==='intersection-repair';}),'Material-changing repair lacks proposal/provenance');
+   assert(result.solidRepair.method==='intersection-refinement'&&result.sourceTriangleByCandidate.some(function(i){return i>=0;}),'Detailed repair lost source-face provenance');
+   if(query.get('fixture')==='gargoyle'){
+    assert(result.solidRepair.unchangedTriangleCount>50000,'Repair erased unaffected gargoyle detail');
+    var raw=events.find(function(e){return e.type==='stl-preview';}).preview,candidate=result.candidatePreview,exact=0;
+    function signature(preview,face){return Array.from(preview.triangles.subarray(face*3,face*3+3),function(id){return Array.from(preview.positions.subarray(id*3,id*3+3)).join(',');}).sort().join(';');}
+    result.sourceTriangleByCandidate.forEach(function(parent,i){if(parent>=0&&signature(raw,parent)===signature(candidate,i))exact++;});
+    assert(exact>50000&&exact>=result.solidRepair.unchangedTriangleCount,'Retained-face count was not supported by exact original coordinates');
+    var original=events.find(function(e){return e.type==='stl-preview';}).preview;
+    assert(result.candidatePreview.bounds.min.every(function(v,i){return v===original.bounds.min[i];})&&result.candidatePreview.bounds.max.every(function(v,i){return v===original.bounds.max[i];}),'Repair offset the original exterior');
+   }else{
+    assert(Math.abs(result.geometryCandidate.volumeM3/1e-9-1.664)<1e-9,'Overlap repair changed the exact union volume');
+   }
    assert(events[0].type==='stl-preview'&&events.filter(function(e){return e.type==='stl-prepared';}).length===1,'Intermediate failed cleanup was presented as final');
    assert(source.byteLength===request.sourceBytes.byteLength,'Repair transferred away the retained original');
    // Fresh request: cancellation at the phase transition must prevent a result.
-   client=new api.StlPreparationClient({onEvent:function(e){if(e.type==='stl-progress'&&e.message.includes('Rebuilding a solid'))client.cancel();}});
+   client=new api.StlPreparationClient({onEvent:function(e){if(e.type==='stl-progress'&&e.message.includes('Resolving intersections'))client.cancel();}});
    var error;try{await client.prepare(request);}catch(e){error=e;}
    assert(error&&error.diagnostic.code==='STL_PREPARATION_CANCELLED'&&!client.worker,'Cancellation leaked the solid-repair worker');
    api.startLocalWorker=start;
@@ -34,10 +45,10 @@
     importFile(source,name);await wait(function(){return app&&app.stlImportSession&&app.stlImportSession.state==='needs-review';});
     assert(doc.getElementById('stl-accept-button').textContent==='Use repaired model','Solid reconstruction lacks explicit UI acceptance');
     assert(doc.getElementById('stl-show-all').hidden,'A valid repair proposal still offers to highlight unrepaired regions');
-    assert(doc.getElementById('stl-repair-consent').textContent.includes('round small details'),'Solid reconstruction hides material-change explanation');
+    assert(doc.getElementById('stl-repair-consent').textContent.includes('overlapping surfaces'),'Solid reconstruction hides material-change explanation');
     var refused=false;try{app.acceptStlImport({acceptShapeChanges:false});}catch(e){refused=true;}assert(refused,'Rebuilt solid was installed without consent');
     doc.getElementById('stl-accept-button').click();
-    assert(app.document.geometry&&app.geometrySource.preparation.solidRepair.method==='enclosing-surface','Accepted solid lost its repair provenance');
+    assert(app.document.geometry&&app.geometrySource.preparation.solidRepair.method==='intersection-refinement','Accepted solid lost its repair provenance');
     assert(new win.Uint8Array(app.geometrySource.originalSourceBytes).every(function(v,i){return v===new win.Uint8Array(source)[i];}),'Solid reconstruction changed original download bytes');
     var installed=app.document.geometry,revision=app.document.analysisRevision;
     importFile(source,'replacement.stl');await wait(function(){return app.stlImportSession&&app.stlImportSession.state==='needs-review';});

@@ -50,15 +50,15 @@
     if(!sourcePreview||sourcePreview.revision!=='source'||typeof r.shapeChanged!=='boolean'||typeof r.changesTruncated!=='boolean'||!Object.prototype.hasOwnProperty.call(scales,r.lengthUnit))return false;
     if((r.preparedSourceBytes===null)!==(r.candidatePreview===null)||r.preparedSourceBytes===null&&r.sourceDigest!==r.preparedDigest)return false;
     var solid=r.solidRepair;
-    if(solid!==null && solid!==undefined && (solid.version!==1 || solid.method!=='enclosing-surface' || !r.shapeChanged || !r.candidatePreview ||
-      !['alpha','offset'].every(function(k){return Number.isFinite(solid[k])&&solid[k]>0;}) ||
+    if(solid!==null && solid!==undefined && (solid.version!==2 || solid.method!=='intersection-refinement' || !r.shapeChanged || !r.candidatePreview ||
+      !Number.isFinite(solid.maximumFillDiameter)||solid.maximumFillDiameter<0 || !['unchangedTriangleCount','affectedSourceTriangleCount','filledVoidCount'].every(function(k){return Number.isSafeInteger(solid[k])&&solid[k]>=0;}) || solid.unchangedTriangleCount>solid.candidateTriangleCount || solid.affectedSourceTriangleCount>solid.sourceTriangleCount ||
       !Number.isSafeInteger(solid.sourceTriangleCount)||solid.sourceTriangleCount<1||solid.sourceTriangleCount>sourcePreview.triangles.length/3 ||
       solid.candidateTriangleCount!==r.candidatePreview.triangles.length/3 ||
       !Number.isSafeInteger(solid.wasmMemoryBytes)||solid.wasmMemoryBytes<16777216||solid.wasmMemoryBytes>536870912))return false;
     var map=r.sourceTriangleByCandidate;
     if(r.candidatePreview){
       if(!(map instanceof Int32Array)||map.length!==r.candidatePreview.triangles.length/3)return false;
-      for(var i=0;i<map.length;i++)if(solid&&map[i]!==-1||map[i]<-1||map[i]>=sourcePreview.triangles.length/3)return false;
+      for(var i=0;i<map.length;i++)if(map[i]<-1||map[i]>=sourcePreview.triangles.length/3)return false;
     }else if(map!==null)return false;
     var previews={source:sourcePreview,candidate:r.candidatePreview||sourcePreview};
     if(!validDiagnostics(r.diagnostics,previews)||!r.changes||!Array.isArray(r.changes.automatic)||!Array.isArray(r.changes.proposed)||!validIssues(r.diagnostics.issues.concat(r.changes.automatic,r.changes.proposed),previews))return false;

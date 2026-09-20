@@ -179,11 +179,11 @@
         },
         {
           "path": "workers/stl-preparation-worker.js",
-          "sha256": "ea0ed6d5d94ea5d6e9523de70f5679ad2a1fcc8658eea2e775785d6da0193ed7"
+          "sha256": "9a9c7d5710a90395d6a3d4ff940f343c550be4902091ecc8b5e94c74c5ec170e"
         },
         {
           "path": "web/js/geometry/stl-preparation.js",
-          "sha256": "a43c02c2b91732a7161bf1ba5eb9962158719049dac764e500022459d26be497"
+          "sha256": "cade8420fd80a343b1d87e9e8a032efd97ea05f8c203dc6dc3d079d9dbc3e0b8"
         },
         {
           "path": "workers/stl-spatial.js",
@@ -195,7 +195,7 @@
         },
         {
           "path": "workers/stl-solid-repair.js",
-          "sha256": "eb607bd1670d2cc752e282cea82002243b0c3c0eaa5a93a4af4bb19298100ed4"
+          "sha256": "7b64c71a47c75ac38134787de1cde5e03b610db6781eddc92e9e0dd11d029226"
         }
       ],
       "build_recipe": {
@@ -694,7 +694,7 @@
       },
       "build_recipe": {
         "path": "tools/build-stl-repair.py",
-        "sha256": "292bbd25dddb76b43bcb4d7a35415897166251370fd905671a2e05b8d86a915d"
+        "sha256": "d1261fc1247687d2f385091beed8621f1658724b4a31abffea55f1d743afc0db"
       },
       "modifications": "Upstream sources unmodified; a first-party bounded typed-array C ABI selects Alpha_wrap_3 with MP_Float and round-to-nearest-safe intervals. No GMP or MPFR.",
       "notices": [
@@ -740,7 +740,7 @@
       },
       "build_recipe": {
         "path": "tools/build-stl-repair.py",
-        "sha256": "292bbd25dddb76b43bcb4d7a35415897166251370fd905671a2e05b8d86a915d"
+        "sha256": "d1261fc1247687d2f385091beed8621f1658724b4a31abffea55f1d743afc0db"
       },
       "modifications": "Unmodified headers only. No Boost runtime library linked.",
       "notices": [
@@ -762,24 +762,24 @@
       "source_files": [
         {
           "path": "native/stl-repair/repair.cpp",
-          "sha256": "28bc5b265bc1cab0a0f953335f3039fc16cdb95db04663f11a967b2b4c3e0c4e"
+          "sha256": "a6d493d3b9ab0b4f33e6c25040cae6a228e0183b3a629f1a9f7bedd45c5dff72"
         },
         {
           "path": "native/stl-repair/README.md",
-          "sha256": "dd3820bf4c359d1d7040882de1d69f5035a4b9f2970cc4c797029dc1fbda07e7"
+          "sha256": "55e297a2d8b837b367dc50915b7668dc4b12d7d182c0f7245809004c8653d628"
         },
         {
           "path": "workers/stl-solid-repair.js",
-          "sha256": "eb607bd1670d2cc752e282cea82002243b0c3c0eaa5a93a4af4bb19298100ed4"
+          "sha256": "7b64c71a47c75ac38134787de1cde5e03b610db6781eddc92e9e0dd11d029226"
         },
         {
           "path": "native/stl-repair/test.cpp",
-          "sha256": "d87d5238f701660b4186fadcb1f220a2d9dcd5459c4cf43736b0ecf917792e65"
+          "sha256": "523c345c178e797e7c17faf787e8b61ada570648422c50dee6733a870a7b3b8a"
         }
       ],
       "build_recipe": {
         "path": "tools/build-stl-repair.py",
-        "sha256": "292bbd25dddb76b43bcb4d7a35415897166251370fd905671a2e05b8d86a915d"
+        "sha256": "d1261fc1247687d2f385091beed8621f1658724b4a31abffea55f1d743afc0db"
       },
       "modifications": "First-party CGAL-isolating adapter. Linked artifact uses GPL-3.0-or-later distribution terms.",
       "notices": [
@@ -982,7 +982,7 @@
     },
     {
       "path": "web/generated/local-runtime/mesher-worker-source.js",
-      "sha256": "777e58c1187cbfe7f42931cbe1bb85928eb86e73d3ef6b897816b6b44864b217",
+      "sha256": "77aad08ebca1abb4ff958c8cb5680ad57ee563fc1a31ac6778d9052af27fe3fb",
       "components": [
         "workers"
       ]
@@ -1394,7 +1394,7 @@
     },
     {
       "path": "web/generated/local-runtime/stl-preparation-worker-source.js",
-      "sha256": "ebc7b0e4b2dd3748b22be342e991fa214c15e2edaad418420b9ee5e3b26b6225",
+      "sha256": "25a1016cfdfa180d09dbe8fb6c8c619f2fa9a27d4fb8a16d29a92a9fe9bcf72e",
       "components": [
         "workers"
       ]
@@ -1443,7 +1443,7 @@
     },
     {
       "path": "web/generated/local-runtime/solid-repair-runtime-source.js",
-      "sha256": "31127b185ab2fa9f455e6b582808d986e7b0e4422d26d4d4e690bf3f54778795",
+      "sha256": "2731ff38954605c5593f985d9435a9056bf844e387ffac693b3cad1e60a643d3",
       "components": [
         "solid-repair",
         "cgal",
@@ -1453,7 +1453,7 @@
     },
     {
       "path": "web/generated/local-runtime/stl-solid-repair-worker-source.js",
-      "sha256": "c85f2b3caa9c1fac0e13563eb4d87f28918713659a9507f603bbf91c5d6e53c9",
+      "sha256": "8e1eb7f2827e006a982eaf2f4773f2f4257fd3ccfe80120dd624105fa42afc44",
       "components": [
         "workers"
       ]

@@ -744,21 +744,22 @@ WebAssembly availability; Gmsh/FEM engine checks execute only on demand or in te
   gates. Original input remains byte-identical and downloadable.
 - Source/group preparation runs in a small disposable JavaScript worker without
   Gmsh/WASM. Unresolved intersections can start a separate disposable CGAL 6.1.1
-  Alpha_wrap_3 worker after terminating the lightweight worker. Normalize Float64
-  coordinates and use alpha = diagonal/80, offset = diagonal/1000; these are
-  construction parameters, not certified maximum deviations. Revalidate the
-  serialized candidate using all strict checks. Output faces have new identity
-  (`sourceTriangleByCandidate = -1`). Preserve a version-1 `solidRepair` record:
-  method `enclosing-surface`, alpha/offset in source units, source/candidate facet
-  counts and observed WASM heap bytes. Joining overlaps/filling gaps/rounding details
-  must be explained next to Use repaired model. Failure retains the useful local
-  candidate and diagnostics. Plain disjoint bodies do not trigger this stage.
+  exact-construction intersection-refinement worker after terminating the lightweight
+  worker. Split intersections and extract the boundary without offsetting or wrapping
+  the exterior. Preserve exact coordinates of retained source vertices. Only fill
+  enclosed inward voids within the explicit local hole-width limit; never discard
+  a disconnected exterior body. Revalidate the serialized candidate using all strict
+  checks. Preserve source-facet provenance through subdivision and highlight changed
+  source regions. `solidRepair` version 2 records method `intersection-refinement`,
+  source/candidate/unchanged/affected facet counts, filled void count, maximum local
+  fill diameter in source units and observed WASM heap bytes. Explain material
+  changes beside Use repaired model. Failure retains useful local diagnostics.
   Both phases share one 120-second deadline; cancellation terminates the current
-  worker and rejects late phase/session replies. The replaceable native ABI takes
-  only indexed arrays and returns a candidate; CGAL types never enter UI, model,
-  mesher or solver contracts. Cap native memory at 512 MiB, 100k inserted vertices,
-  2 million wrapping steps and 200k output facets. Runtime packaging is bounded
-  at 2 MiB raw / 768 KiB gzip; preserve notices and exact corresponding source.
+  worker and rejects late phase/session replies. Replaceable native ABI version 2
+  takes indexed arrays and returns candidate arrays and provenance; CGAL types never
+  enter UI, model, mesher or solver contracts. Cap native memory at 512 MiB,
+  intersection events at 2 million and output facets at 200k. Runtime packaging is
+  bounded at 2 MiB raw / 768 KiB gzip; preserve notices and corresponding source.
   Terminate preparation before meshing. The controller owns pending generations,
   consent and installation; cancellation/stale replies preserve the prior analysis.
   Rendering/UI consume application contracts. The native solver stays format-neutral.

@@ -79,12 +79,13 @@ Prepared without moving the camera, or reject the proposal and keep inspecting.
 No second generic approval dialog follows. Replacement assignment transfer is
 still required when existing supports/loads would be affected.
 
-For unresolved intersections, try the replaceable CGAL Alpha_wrap_3 stage. It
-may join overlapping components, fill gaps and round small features. Present the
-whole rebuilt surface as one proposal and explain these changes beside acceptance.
-Its alpha/offset are not certified maximum deviations. Plain disconnected bodies
-are not joined automatically. Both workers share one deadline and terminate before
-meshing; the application retains no CGAL types.
+For unresolved intersections, use the replaceable exact-construction refinement
+stage: split intersecting facets, extract the solid boundary, and retain unaffected
+exterior coordinates. Highlight changed source regions and explain material changes
+beside acceptance. Only enclosed inward voids within the explicit small-hole width
+limit may be filled. Separate exterior bodies are never removed. No automatic
+whole-model wrapping is permitted. Both workers share one deadline and terminate
+before meshing; the application retains no CGAL types.
 
 If preparation cannot produce a valid solid, retain original/cleaned previews,
 fixed-issue information, and remaining diagnostics. Do not install a partial

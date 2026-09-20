@@ -199,7 +199,7 @@ on each host.
 Rebuild the optional solid-repair runtime with `python3 tools/build-stl-repair.py`.
 It uses `EMXX`, or Emscripten 3.1.74 under `SPJUTSIM_EMSDK_ROOT` (default
 `build/emsdk`), and downloads SHA-256-pinned CGAL/Boost source archives. The
-checked-in embedded runtime is about 905 KB (305 KB gzip); compilation and
+checked-in embedded runtime is about 1.00 MB (337 KB gzip); compilation and
 instantiation happen only in the separate worker when local cleanup leaves
 intersections. See [the adapter](native/stl-repair/README.md) for native tests,
 limits and replacement boundaries. `tests/browser/stl-solid-repair-tests.html`

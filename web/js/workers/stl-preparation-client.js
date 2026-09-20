@@ -44,7 +44,7 @@
             if(!solidPhase && m.result.state==='blocked' && m.result.diagnostics.counts && m.result.diagnostics.counts.intersection>0 &&
                 ['STL_SELF_INTERSECTION','STL_NONMANIFOLD','STL_DISCONNECTED','STL_OPEN_SURFACE'].includes(m.result.error&&m.result.error.code)){
               solidPhase=true;worker.terminate();worker=null;self.worker=null;sourcePreview=null;id+='-solid';
-              self.onEvent(Object.assign({},m,{type:'stl-progress',result:undefined,message:'Rebuilding a solid for review…'}));
+              self.onEvent(Object.assign({},m,{type:'stl-progress',result:undefined,message:'Resolving intersections while preserving surface detail…'}));
               if(settled||self.disposed)return;
               api.startLocalWorker('stl-solid-repair').then(function(next){if(settled||self.disposed){next.terminate();return;}worker=next;self.worker=next;try{bind();}catch(error){finish(error);}},finish);
               return;

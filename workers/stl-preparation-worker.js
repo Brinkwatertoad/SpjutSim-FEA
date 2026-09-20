@@ -27,8 +27,8 @@ self.onmessage=async function(event){
     var prepared=StlRepair.prepare(mesh,{maxHoleDiameterRatio:m.maxHoleDiameterRatio});
     var solidError=null;
     if(STL_PREPARATION_WORKER_KIND==='stl-solid-repair'){
-      send('stl-progress',{message:'Rebuilding a solid for review…'});
-      try{prepared=await StlSolidRepair.prepare(prepared.sourceBytes?StlImport.decode(prepared.sourceBytes):mesh);}catch(e){solidError=e;}
+      send('stl-progress',{message:'Resolving intersections while preserving surface detail…'});
+      try{prepared=await StlSolidRepair.prepare(mesh,prepared,{maxHoleDiameterRatio:m.maxHoleDiameterRatio});}catch(e){solidError=e;}
     }
     var changed=!!prepared.solidRepair||prepared.report.removedDuplicateTriangles+prepared.report.removedZeroAreaTriangles+prepared.report.removedLooseTriangles+prepared.report.flippedTriangles+prepared.report.addedTriangles>0;
     var bytes=changed&&prepared.sourceBytes?prepared.sourceBytes:m.sourceBytes;
