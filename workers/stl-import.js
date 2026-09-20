@@ -4,14 +4,7 @@
   function createStlImport() {
     var scales = { m: 1, mm: 0.001, cm: 0.01, in: 0.0254, ft: 0.3048 };
     function fail(code, message) { var error = new Error(message); error.code = code; throw error; }
-    function readUnvalidated(bytes, options) {
-      if (!options || !(options.version === 1 || options.version === 2 &&
-          (options.surfaceMode === 'original' && options.reconstructionToleranceM === null ||
-           options.surfaceMode === 'remesh' && options.reconstructionToleranceM === null && Number.isFinite(options.remeshFeatureAngleDegrees) && options.remeshFeatureAngleDegrees >= 1 && options.remeshFeatureAngleDegrees <= 40 ||
-           options.surfaceMode === 'reconstruct' && Number.isFinite(options.reconstructionToleranceM) && options.reconstructionToleranceM > 0)) || options.normalization !== 'none' || !Object.prototype.hasOwnProperty.call(scales, options.lengthUnit) ||
-          !Number.isFinite(options.patchAngleDegrees) || options.patchAngleDegrees < 1 || options.patchAngleDegrees > 179) {
-        fail('STL_INVALID_OPTIONS', 'Choose length units and a grouping angle from 1 through 179 degrees. Reconstruction needs a positive deviation; experimental remeshing needs a feature angle from 1 through 40 degrees.');
-      }
+    function decode(bytes) {
       if (!(bytes instanceof ArrayBuffer) || !bytes.byteLength || bytes.byteLength > 16 * 1024 * 1024) {
         fail('STL_INPUT_LIMIT', 'Choose a nonempty STL file no larger than 16 MiB.');
       }
@@ -64,7 +57,7 @@
           }
         }
       }
-      var scale = scales[options.lengthUnit];
+      var scale = 1;
       var minimum = [Infinity, Infinity, Infinity];
       var maximum = [-Infinity, -Infinity, -Infinity];
       var vertexMap = new Map();
@@ -91,9 +84,24 @@
       }
       var positions = unique.slice(0, vertices * 3);
       var diagonal = Math.hypot(maximum[0]-minimum[0], maximum[1]-minimum[1], maximum[2]-minimum[2]);
-      if (!(diagonal >= 1e-9 && diagonal <= 1e6)) { fail('STL_SCALE_LIMIT', 'Choose units giving a model diagonal between 1 nm and 1,000 km.'); }
       return { positions: positions, triangles: triangles, coordinates: coordinates,
         minimum: minimum, maximum: maximum, diagonal: diagonal };
+    }
+    function readUnvalidated(bytes, options) {
+      if (!options || !(options.version === 1 || options.version === 2 &&
+          (options.surfaceMode === 'original' && options.reconstructionToleranceM === null ||
+           options.surfaceMode === 'remesh' && options.reconstructionToleranceM === null && Number.isFinite(options.remeshFeatureAngleDegrees) && options.remeshFeatureAngleDegrees >= 1 && options.remeshFeatureAngleDegrees <= 40 ||
+           options.surfaceMode === 'reconstruct' && Number.isFinite(options.reconstructionToleranceM) && options.reconstructionToleranceM > 0)) || options.normalization !== 'none' || !Object.prototype.hasOwnProperty.call(scales, options.lengthUnit) ||
+          !Number.isFinite(options.patchAngleDegrees) || options.patchAngleDegrees < 1 || options.patchAngleDegrees > 179) {
+        fail('STL_INVALID_OPTIONS', 'Choose length units and a grouping angle from 1 through 179 degrees. Reconstruction needs a positive deviation; experimental remeshing needs a feature angle from 1 through 40 degrees.');
+      }
+      var mesh = decode(bytes), scale = scales[options.lengthUnit];
+      for (var i = 0; i < mesh.positions.length; i++) mesh.positions[i] *= scale;
+      mesh.minimum = mesh.minimum.map(function (v) { return v * scale; });
+      mesh.maximum = mesh.maximum.map(function (v) { return v * scale; });
+      mesh.diagonal *= scale;
+      if (!(mesh.diagonal >= 1e-9 && mesh.diagonal <= 1e6)) fail('STL_SCALE_LIMIT', 'Choose units giving a model diagonal between 1 nm and 1,000 km.');
+      return mesh;
     }
     function parse(bytes, options) {
       var decoded = readUnvalidated(bytes, options), positions = decoded.positions, triangles = decoded.triangles;
@@ -146,7 +154,7 @@
       if (tail !== count) { fail('STL_DISCONNECTED', 'The STL contains disconnected shells. Export one connected solid.'); }
       if (volume < 0) { fail('STL_INWARD_WINDING', 'The closed surface points inward. Reverse winding in the source and export again.'); }
       if (!(volume > diagonal*diagonal*diagonal*1e-14)) { fail('STL_ZERO_VOLUME', 'The surface does not enclose a numerically usable positive volume.'); }
-      var validationReport = validateSolid(positions, triangles, neighbors, diagonal);
+      var validationReport = validateSolid(positions, triangles);
       var patchByTriangle = new Uint32Array(count); patchByTriangle.fill(0xffffffff);
       var patches = [], cosine = Math.cos(options.patchAngleDegrees * Math.PI / 180);
       for (index = 0; index < count; index += 1) {
@@ -278,7 +286,7 @@
       }
       return edgeHits(first,a,second,b)||edgeHits(second,b,first,a);
     }
-    function validateSolid(positions,triangles) {
+    function validateSolid(positions,triangles,onIntersection) {
       var count=triangles.length/3,boxes=new Float64Array(count*6),order=new Uint32Array(count);
       for(var i=0;i<count;i++) {
         order[i]=i;
@@ -318,7 +326,8 @@
             var other=order[j];if(other<=i||!overlaps(i,boxes.subarray(other*6,other*6+6)))continue;
             if(++candidates>2000000)fail('STL_VALIDATION_LIMIT','Surface intersection checks exceed the supported work limit. Export a simpler tessellation.');
             if(invalidIntersection(Array.from(triangles.subarray(i*3,i*3+3)),Array.from(triangles.subarray(other*3,other*3+3)),positions)) {
-              fail('STL_SELF_INTERSECTION','Triangles intersect or touch beyond their shared edges or vertices. Repair the solid in the source application and export again.');
+              if (onIntersection) onIntersection(i, other);
+              else fail('STL_SELF_INTERSECTION','Triangles intersect or touch beyond their shared edges or vertices. Repair the solid in the source application and export again.');
             }
           }
         }
@@ -349,7 +358,7 @@
       parsed.sourceHash = sourceHash;
       return parsed;
     }
-    return { parse: parse, identify: identify, readUnvalidated: readUnvalidated, isZeroArea: isZeroArea };
+    return { decode: decode, validateIntersections: validateSolid, parse: parse, identify: identify, readUnvalidated: readUnvalidated, isZeroArea: isZeroArea };
   }
   root.createStlImport = createStlImport;
   root.StlImport = createStlImport();

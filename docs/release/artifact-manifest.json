@@ -159,7 +159,7 @@
         },
         {
           "path": "workers/stl-import.js",
-          "sha256": "55af32c0906c5bc9169c906d0c29c70c8025ff36a4e73698bf3ec25ebd6b08d7"
+          "sha256": "c0b59bc6d68fd6041aeea72ff52fe00d2548de1c60d399aa90501e585014ea57"
         },
         {
           "path": "workers/stl-reconstruction.js",
@@ -838,7 +838,7 @@
     },
     {
       "path": "web/generated/local-runtime/mesher-worker-source.js",
-      "sha256": "5f9d9149256bc72db680e2e4adf4d65ccf2d49480dda7cf277f08b4d19a75950",
+      "sha256": "a528f83d1bbe99d8579fb877ef10b56b7caad260d048002b3cf6f0044ed66772",
       "components": [
         "workers"
       ]
