@@ -1,4 +1,10 @@
-# SpjutSim FEA
+# SpjutSim FEA — STL feature branch
+
+**STL development is paused.** This branch preserves the complete implementation,
+experiments and development history. The main application is returning to CAD-only
+import. Read the [STL resume guide](docs/STL-DEVELOPMENT.md) for the decision, known
+problems, dependencies and reproduction instructions. The implementation status
+below records the last tested checkpoint, not a current release commitment.
 
 SpjutSim FEA is a local-first browser application for simple static finite element analysis of a single STEP, IGES, OpenCASCADE BREP, or validated STL solid. The browser application has no runtime network or server dependency; geometry and analysis execute on the user's machine.
 
