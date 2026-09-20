@@ -23,11 +23,13 @@ self.onmessage=async function(event){
     var mesh=StlImport.decode(m.sourceBytes);
     send('stl-preview',{preview:preview(mesh,'source')});
     send('stl-progress',{message:'Checking surfaces and preparing repairs…'});
-    var rawDiagnostics=StlDiagnostics.inspect(mesh),prepared=StlRepair.prepare(mesh,{maxHoleDiameterRatio:m.maxHoleDiameterRatio});
+    var prepared=StlRepair.prepare(mesh,{maxHoleDiameterRatio:m.maxHoleDiameterRatio});
     var changed=prepared.report.removedDuplicateTriangles+prepared.report.removedZeroAreaTriangles+prepared.report.removedLooseTriangles+prepared.report.flippedTriangles+prepared.report.addedTriangles>0;
     var bytes=changed&&prepared.sourceBytes?prepared.sourceBytes:m.sourceBytes;
     var candidate=changed&&prepared.sourceBytes?StlImport.decode(bytes):null;
-    var diagnostics=candidate?StlDiagnostics.inspect(candidate,null,'candidate'):rawDiagnostics;
+    var changes=prepared.changes.automatic.concat(prepared.changes.proposed);
+    var usedReferences=changes.reduce(function(sum,issue){return sum+issue.triangleIds.length+issue.edgeVertexIds.length+issue.vertexIds.length;},0);
+    var diagnostics=StlDiagnostics.inspect(candidate||mesh,{maxRecords:1000-changes.length,maxReferences:200000-usedReferences},candidate?'candidate':'source');
     var sourceHash=await sourceDigest(m.sourceBytes),preparedHash=changed?await sourceDigest(bytes):sourceHash;
     var options={version:3,lengthUnit:m.lengthUnit,patchAngleDegrees:m.patchAngleDegrees};
     var geometry=null,validation=null,error=prepared.error;

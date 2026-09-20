@@ -55,7 +55,7 @@
       for(var i=0;i<map.length;i++)if(map[i]<-1||map[i]>=sourcePreview.triangles.length/3)return false;
     }else if(map!==null)return false;
     var previews={source:sourcePreview,candidate:r.candidatePreview||sourcePreview};
-    if(!validDiagnostics(r.diagnostics,previews)||!r.changes||!Array.isArray(r.changes.automatic)||!Array.isArray(r.changes.proposed)||!validIssues(r.changes.automatic.concat(r.changes.proposed),previews))return false;
+    if(!validDiagnostics(r.diagnostics,previews)||!r.changes||!Array.isArray(r.changes.automatic)||!Array.isArray(r.changes.proposed)||!validIssues(r.diagnostics.issues.concat(r.changes.automatic,r.changes.proposed),previews))return false;
     if(r.state==='blocked')return r.geometryCandidate===null;
     return !!(r.geometryCandidate && r.geometryCandidate.sourceMetadata && r.geometryCandidate.sourceMetadata.sha256===r.preparedDigest && r.validation && r.validation.status==='valid' &&
       r.validation.version===1 && (r.state==='needs-review')===r.shapeChanged && (r.shapeChanged ? r.changes.proposed.length>0||r.changesTruncated : r.changes.proposed.length===0));

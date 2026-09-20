@@ -43,6 +43,7 @@
 
     }
 
+    if(new URLSearchParams(location.search).get('prepareOnly')==='1'){globalThis.__stlResourceEvidence=evidence;status.textContent='Passed';status.dataset.result='passed';return;}
     for(var mode of ['original','reconstruct']){
       var surface={version:1,method:mode,reconstructionToleranceM:mode==='reconstruct'?.001:null,remeshFeatureAngleDegrees:null};
       client=new api.MesherClient();var started=performance.now();

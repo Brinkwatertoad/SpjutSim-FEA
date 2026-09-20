@@ -33,6 +33,9 @@
     assert(events[0].type === 'stl-preview', 'Solid checks delayed the first preview');
     assert(result.state === 'ready' && result.geometryCandidate.volumeM3 === 1, 'Valid cube did not become ready');
     assert(result.geometryCandidate.faceIds.length === 6, 'Prepared groups are not the six cube faces');
+    var issue={kind:'winding',status:'fixed',revision:'source',count:1,bounds:events[0].preview.bounds,triangleIds:new Uint32Array(100001),edgeVertexIds:new Uint32Array(),vertexIds:new Uint32Array()};
+    var excessive=Object.assign({},result,{diagnostics:Object.assign({},result.diagnostics,{issues:[issue]}),changes:{automatic:[issue],proposed:[]}});
+    assert(!SpjutsimFEA.validateStlPreparationResult(excessive,events[0].preview),'Combined finding/change locations exceeded the per-result budget');
     client.dispose(); events=[];
     client = new SpjutsimFEA.StlPreparationClient({onEvent:function(event){events.push(event);}});
     result=await client.prepare({sessionId:'invalid',generation:1,sourceName:'open.stl',geometryId:'test-open',sourceBytes:await fixture('open'),lengthUnit:'m',patchAngleDegrees:40,maxHoleDiameterRatio:0});
