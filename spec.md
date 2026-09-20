@@ -723,8 +723,10 @@ WebAssembly availability; Gmsh/FEM engine checks execute only on demand or in te
 - Automatically remove exact duplicate/zero-area facets and correct orientable
   winding. Automatically prepare bounded hole-fill/stray-removal proposals, but
   require Use repaired model after highlighting added/removed surfaces. Preserve
-  the original bytes. No automatic component deletion/joining, vertex movement,
-  tolerance welding, smoothing or general shape reconstruction is introduced.
+  the original bytes. If strict local repair is blocked with detected intersections,
+  automatically start the separate enclosing-surface repair stage described below.
+  Its material-changing candidate always requires explicit review/acceptance.
+  No tolerance welding or silent component deletion is introduced.
 - Show the selected filename before asynchronous byte reading, with explicit reading,
   checking/repairing, ready, review-required and unsuccessful-repair states. Explain
   retention of the installed analysis during replacement. Cancel rejects late reads.
@@ -741,7 +743,23 @@ WebAssembly availability; Gmsh/FEM engine checks execute only on demand or in te
   precision, strict serialized-candidate revalidation and all existing numerical
   gates. Original input remains byte-identical and downloadable.
 - Source/group preparation runs in a small disposable JavaScript worker without
-  Gmsh/WASM. Terminate it before meshing. The controller owns pending generations,
+  Gmsh/WASM. Unresolved intersections can start a separate disposable CGAL 6.1.1
+  Alpha_wrap_3 worker after terminating the lightweight worker. Normalize Float64
+  coordinates and use alpha = diagonal/80, offset = diagonal/1000; these are
+  construction parameters, not certified maximum deviations. Revalidate the
+  serialized candidate using all strict checks. Output faces have new identity
+  (`sourceTriangleByCandidate = -1`). Preserve a version-1 `solidRepair` record:
+  method `enclosing-surface`, alpha/offset in source units, source/candidate facet
+  counts and observed WASM heap bytes. Joining overlaps/filling gaps/rounding details
+  must be explained next to Use repaired model. Failure retains the useful local
+  candidate and diagnostics. Plain disjoint bodies do not trigger this stage.
+  Both phases share one 120-second deadline; cancellation terminates the current
+  worker and rejects late phase/session replies. The replaceable native ABI takes
+  only indexed arrays and returns a candidate; CGAL types never enter UI, model,
+  mesher or solver contracts. Cap native memory at 512 MiB, 100k inserted vertices,
+  2 million wrapping steps and 200k output facets. Runtime packaging is bounded
+  at 2 MiB raw / 768 KiB gzip; preserve notices and exact corresponding source.
+  Terminate preparation before meshing. The controller owns pending generations,
   consent and installation; cancellation/stale replies preserve the prior analysis.
   Rendering/UI consume application contracts. The native solver stays format-neutral.
 - Generate selectable groups automatically (40° default; adjustable 1–179° near
@@ -784,7 +802,7 @@ WebAssembly availability; Gmsh/FEM engine checks execute only on demand or in te
   Int32 source-facet mapping (`-1` for added triangles). Only strictly validated SI
   GeometryModels can be installed. Surface review records mesh settings and retains
   the installed source geometry; previewing/cancelling changes no engineering state.
-- General repair, shells, multibody and OBJ remain outside this scope.
+- Arbitrary geometry repair, shells, multibody and OBJ remain outside this scope.
 
 ### 6.2 Geometry validation
 
@@ -2787,7 +2805,7 @@ Reference documentation consulted while preparing this specification:
 | Frontend | Plain JavaScript, classic-script-compatible baseline; no bundler/transpiler requirement |
 | UI foundation | SpjutSim UI source copied into project and adapted directly |
 | Visualization | Vendored Three.js |
-| Third-party runtime code | Gmsh/OpenCASCADE + Three.js only by default |
+| Third-party runtime code | Gmsh/OpenCASCADE, Three.js, and lazy CGAL/Boost solid repair |
 | Memory | Mandatory pre-solve estimate; Device Memory API advisory only |
 | High-memory warning | Explicit warning at >= 8 GiB estimate plus device-relative heuristics |
 | Convergence | Global remeshing study required for v1 trust workflow |

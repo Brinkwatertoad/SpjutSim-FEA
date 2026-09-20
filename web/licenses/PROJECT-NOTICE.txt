@@ -9,7 +9,12 @@ including the CC0 CAD fixtures, retain those terms.
 This application includes Three.js (MIT), GMSH-JS (GPL-2.0-or-later), Gmsh
 (GPL-2.0-or-later with its upstream exception), and Open CASCADE Technology
 (LGPL-2.1 with its upstream exception). It makes use of facilities provided by
-Open CASCADE Technology. The generated runtimes also contain Emscripten runtime
+Open CASCADE Technology. The optional solid-repair adapter includes CGAL 6.1.1 (GPL-3.0-or-later /
+LGPL-3.0-or-later, with per-file exceptions) and Boost 1.83.0 (BSL-1.0).
+The combined application containing that adapter is distributed under
+GPL-3.0-or-later, exercising the later-version permission of first-party and
+other GPL-2.0-or-later source. Their source license grants remain unchanged.
+No commercial CGAL license is claimed. The generated runtimes also contain Emscripten runtime
 and system-library code under the licenses preserved in web/licenses/.
 
 Upstream authors retain their copyrights. Complete upstream notices, including

@@ -233,7 +233,7 @@ contract and an independent mesh-settings field:
 ```js
 stlSource = { version: 3, lengthUnit, patchAngleDegrees,
   sourceDigest, preparedDigest }; // original/prepared buffers owned by controller
-meshSettings.stlSurface = { version: 1, method: 'original',
+meshSettings.stlSurface = { version: 1, method: 'analysis',
   reconstructionToleranceM: null, remeshFeatureAngleDegrees: null };
 // reconstruct: positive reconstructionToleranceM, null remesh angle
 // remesh: null tolerance, angle in [1,40]; defaults to 5 on explicit selection
@@ -248,7 +248,7 @@ source digest and exact group ownership before applying supports/loads.
   refinement and rigid orientation; changed source/units/grouping invokes explicit
   assignment transfer. Reject missing, overlapping or ambiguous surface ownership.
 - [x] Move grouping controls into Model selection and surface-method controls into
-  Mesh Advanced. Default to original; present optional reconstruction candidate
+  Mesh Advanced. Default to rebuilt analysis boundaries; present optional reconstruction candidate
   comparison before Apply. Applying a method/tolerance/angle invalidates mesh and
   results, retains verified source groups and authored assignments, and is an
   engineering edit subject to normal history rules. Failed/cancelled preparation
@@ -308,8 +308,9 @@ source digest and exact group ownership before applying supports/loads.
    optional changes, and continue without a separate repair command.
 3. Open a small-hole example. Focus the highlighted opening, compare the proposed
    fill, reject it once, then explicitly accept it. Download the unchanged original.
-4. Open an intersecting/disconnected example. Inspect each localized issue and the
-   explanation of what remains unsupported. No analysis-ready claim is shown.
+4. Open an intersecting example (including the optional gargoyle). Compare the
+   rebuilt solid, reject once, then accept its stated material changes. Open a
+   disconnected example and inspect grouped blockers; unsupported input stays visible.
 5. Cancel replacement of an already solved model and verify its view/setup/results
    return. Retry, then complete an explicit assignment transfer where needed.
 6. On an accepted STL, author supports/load, mesh, check and solve. Find advanced
@@ -331,7 +332,7 @@ This is the continuation of M29, not a second STL plan. No compatibility layer.
   counts. Count components as components. Put locations in expandable diagnostics;
   explain unavailable repairs without inventing a manual task list. Hide issue
   controls for clean imports and separate highlighting from viewport Fit.
-- [ ] Independently audit gargoyle intersections and document a stronger solid
+- [x] Independently audit gargoyle intersections and implement a stronger solid
   repair path. Joining components or changing material requires a validated preview
   and explicit acceptance. Do not describe cleanup as general solid repair.
 - [x] Make rebuilt surfaces the analysis default. Recover exact planar boundaries
@@ -341,5 +342,11 @@ This is the continuation of M29, not a second STL plan. No compatibility layer.
 - [x] Add thickness-aware size control, source/mesh boundary-area and volume checks,
   geometric deviation evidence and quality regression cases for elongated and
   rotated parts. Report practical limitations and resource limits explicitly.
-- [ ] Verify focused and complete applicable tests, update the current walkthrough
+- [x] Verify focused and complete applicable tests, update the current walkthrough
   and specification, and commit tested checkpoints. M29 acceptance remains open.
+
+Known remaining limitation: gargoyle now passes strict preparation after reviewed
+solid reconstruction, but default meshing hits the 512-chart bound. A wider-chart
+experiment then hits the conservative global thickness workload cap. Local adaptive
+sizing/more capable chart construction remain future work; no gargoyle solve is
+claimed. See the current M29 review for the measured limits and dependency tradeoffs.

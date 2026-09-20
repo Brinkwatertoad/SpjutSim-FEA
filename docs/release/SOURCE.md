@@ -1,8 +1,8 @@
 # Corresponding source and release procedure
 
 Each release accompanies its executable browser assets with the exact
-corresponding source under GPLv2 section 3(a) and equivalent access for network
-downloads. We do not substitute a promise to supply source later. Keep the
+corresponding source under the combined GPL-3.0-or-later terms, including
+equivalent source access for network downloads (GPLv3 section 6(d)). We do not substitute a promise to supply source later. Keep the
 source downloads available alongside every retained executable release.
 
 ## Prepare the candidate
@@ -12,6 +12,8 @@ Run from the repository root with Python 3 and the pinned build toolchains:
 ```sh
 tools/build-wasm.sh
 tools/build-gmsh-local-runtime.sh
+python3 tools/build-stl-repair.py
+python3 tools/build-local-runtime.py
 python3 -m unittest discover -s tests
 python3 tools/audit-distribution.py
 python3 tools/package-distribution.py --fetch-sources
@@ -26,10 +28,12 @@ directory to avoid overwriting a candidate. Move the old candidate aside or use
 
 The stage contains the original `web/` tree, local notices, and a `sources/`
 directory containing the application source snapshot plus GMSH-JS, Gmsh, OCCT,
-Three.js, Emscripten, and emsdk source archives. The Gmsh archive includes its
+Three.js, CGAL, Boost, Emscripten, and emsdk source archives. The Gmsh archive includes its
 bundled dependencies and their source notices. The application snapshot includes
 new/modified files in this candidate, not just the last Git commit. Build caches,
-VCS data, and Python caches are excluded. Inspect the tree for unintended files
+VCS data, Python caches, and the two optional supplied gargoyle/funnel STL
+diagnostics are excluded (their redistribution rights are not part of the CC0
+fixture corpus). Inspect the tree for unintended files
 before packaging. No files are uploaded by the packager.
 
 Archives are split into ordered 20 MiB parts so that every hosted asset fits
@@ -74,7 +78,14 @@ embedded the operator's date, hostname, and source paths, so a fresh build of
 those same sources differed. The normalized candidate replaces that artifact;
 see `reproducibility.md` for measured hashes and verification limits.
 
-With network available, run the two build commands above; they obtain and
+The repair recipe uses CGAL 6.1.1 and Boost 1.83.0, verified by archive hashes.
+For an offline rebuild, put the accompanied archives into
+`build/stl-solid-repair/downloads/` with the filenames listed in
+`tools/build-stl-repair.py`; set `EMXX` or `SPJUTSIM_EMSDK_ROOT` to a local SDK.
+It reextracts pinned headers and compiles the first-party adapter without modifying
+upstream code. `native/stl-repair/README.md` documents its ABI and limits.
+
+With network available, run the build commands above; they obtain and
 verify the pinned inputs. To use the accompanied source archives or modified
 OCCT sources, follow the same CMake and Emscripten commands in
 `tools/build-gmsh-local-runtime.sh` with your extracted directories. The Git-HEAD

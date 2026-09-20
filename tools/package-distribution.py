@@ -33,7 +33,7 @@ def split_archive(path, name, output):
     parts = []
     with path.open('rb') as stream:
         while block := stream.read(PART_BYTES):
-            part = output / 'sources' / f'{name}.tar.gz.part-{len(parts) + 1:03d}'
+            part = output / 'sources' / f'{name}{"".join(path.suffixes)}.part-{len(parts) + 1:03d}'
             part.write_bytes(block)
             parts.append(record(output, part))
     return {'sha256': audit.sha256(path), 'parts': parts}
@@ -55,7 +55,7 @@ def stage(root, output, fetch_sources=False):
             continue
         if not name.replace('-', '').isalnum():
             raise ValueError('unsafe source component name')
-        path = cache / f'{name}.tar.gz'
+        path = cache / (name + '.' + archive.get('format', 'tar.gz'))
         if not path.exists() and fetch_sources:
             temporary = path.with_suffix('.partial')
             try:
@@ -103,9 +103,9 @@ def stage(root, output, fetch_sources=False):
                          '<meta name="viewport" content="width=device-width, initial-scale=1">'
                          '<title>SpjutSim FEA corresponding source</title><h1>Corresponding source</h1>'
                          '<p>These sources accompany this exact application build. Download every part for each archive, '
-                         'concatenate parts in numeric order, and extract the resulting tar.gz file. '
+                         'concatenate parts in numeric order, and extract the resulting tar archive (gzip, xz, or bzip2 as named). '
                          'Build instructions are in SpjutSim-FEA/docs/release/SOURCE.md inside the application archive.</p>'
-                         '<pre>cat application.tar.gz.part-* &gt; application.tar.gz\ntar -xzf application.tar.gz</pre>'
+                         '<pre>cat application.tar.gz.part-* &gt; application.tar.gz\ntar -xf application.tar.gz</pre>'
                          '<ul>' + ''.join(items) + '</ul><p><a href="manifest.json">File hashes</a> · '
                          '<a href="../licenses/index.html">Licenses</a></p></html>\n', encoding='utf-8')
         bundle['source_index'] = record(stage_root, index)

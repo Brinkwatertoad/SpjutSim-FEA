@@ -1,5 +1,6 @@
 'use strict';
 var WORKER_PROTOCOL_VERSION = 4;
+var STL_PREPARATION_WORKER_KIND = 'stl-preparation';
 function preview(mesh,revision){return{revision:revision,positions:mesh.positions.slice(),triangles:mesh.triangles.slice(),bounds:{min:mesh.minimum,max:mesh.maximum}};}
 async function sourceDigest(bytes){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),function(v){return v.toString(16).padStart(2,'0');}).join('');}
 function geometryFromParsed(parsed,message,options){
@@ -24,7 +25,12 @@ self.onmessage=async function(event){
     send('stl-preview',{preview:preview(mesh,'source')});
     send('stl-progress',{message:'Checking surfaces and preparing repairs…'});
     var prepared=StlRepair.prepare(mesh,{maxHoleDiameterRatio:m.maxHoleDiameterRatio});
-    var changed=prepared.report.removedDuplicateTriangles+prepared.report.removedZeroAreaTriangles+prepared.report.removedLooseTriangles+prepared.report.flippedTriangles+prepared.report.addedTriangles>0;
+    var solidError=null;
+    if(STL_PREPARATION_WORKER_KIND==='stl-solid-repair'){
+      send('stl-progress',{message:'Rebuilding a solid for review…'});
+      try{prepared=await StlSolidRepair.prepare(prepared.sourceBytes?StlImport.decode(prepared.sourceBytes):mesh);}catch(e){solidError=e;}
+    }
+    var changed=!!prepared.solidRepair||prepared.report.removedDuplicateTriangles+prepared.report.removedZeroAreaTriangles+prepared.report.removedLooseTriangles+prepared.report.flippedTriangles+prepared.report.addedTriangles>0;
     var bytes=changed&&prepared.sourceBytes?prepared.sourceBytes:m.sourceBytes;
     var candidate=changed&&prepared.sourceBytes?StlImport.decode(bytes):null;
     var changes=prepared.changes.automatic.concat(prepared.changes.proposed);
@@ -35,11 +41,11 @@ self.onmessage=async function(event){
     var geometry=null,validation=null,error=prepared.error;
     send('stl-progress',{message:changed?'Checking the prepared model…':'Checking solid geometry…'});
     try{var parsed=await StlImport.identify(StlImport.parse(bytes,options),bytes);geometry=geometryFromParsed(parsed,m,options);validation=parsed.validation;error=null;}
-    catch(e){error={code:e.code||'STL_PREPARATION_FAILED',message:prepared.error?prepared.error.message:e.message};}
+    catch(e){error={code:solidError?solidError.code:e.code||'STL_PREPARATION_FAILED',message:solidError?solidError.message:prepared.error?prepared.error.message:e.message};}
     var result={state:geometry?(prepared.shapeChanged?'needs-review':'ready'):'blocked',sourceDigest:sourceHash,preparedDigest:preparedHash,
       sourceTriangleByCandidate:candidate?prepared.sourceTriangleByCandidate:null,preparedSourceBytes:changed?bytes:null,candidatePreview:candidate?preview(candidate,'candidate'):null,geometryCandidate:geometry,
-      diagnostics:diagnostics,changes:prepared.changes,changesTruncated:prepared.changesTruncated,shapeChanged:prepared.shapeChanged,validation:validation,error:error,lengthUnit:m.lengthUnit};
+      solidRepair:prepared.solidRepair||null,diagnostics:diagnostics,changes:prepared.changes,changesTruncated:prepared.changesTruncated,shapeChanged:prepared.shapeChanged,validation:validation,error:error,lengthUnit:m.lengthUnit};
     send('stl-prepared',{result:result});
   }catch(error){if(m)send('error',{error:{code:error.code||'STL_PREPARATION_FAILED',userMessage:error.message}});}
 };
-self.postMessage({protocol:WORKER_PROTOCOL_VERSION,type:'ready',worker:'stl-preparation'});
+self.postMessage({protocol:WORKER_PROTOCOL_VERSION,type:'ready',worker:STL_PREPARATION_WORKER_KIND});

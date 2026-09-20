@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "distribution_license": "GPL-2.0-or-later",
+  "distribution_license": "GPL-3.0-or-later",
   "components": {
     "fem": {
       "project": "fem",
@@ -109,7 +109,7 @@
         },
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "a918cee370a4242ea1808a838b9f218545e18021916c0a097b07ff1fdd186fae"
+          "sha256": "0b69941411195245fece88c23f800c8bbe034b074a9709a8889348c1050761d0"
         }
       ],
       "build_recipe": {
@@ -124,7 +124,7 @@
         },
         {
           "path": "NOTICE",
-          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+          "sha256": "8531b1730bb0051d4b1b2ce53c321700293e40e081ca51ecc513d43d89e08d69"
         },
         {
           "path": "web/licenses/PROJECT-LICENSE.txt",
@@ -132,7 +132,7 @@
         },
         {
           "path": "web/licenses/PROJECT-NOTICE.txt",
-          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+          "sha256": "8531b1730bb0051d4b1b2ce53c321700293e40e081ca51ecc513d43d89e08d69"
         },
         {
           "path": "web/licenses/GPL-2.0.txt",
@@ -179,16 +179,28 @@
         },
         {
           "path": "workers/stl-preparation-worker.js",
-          "sha256": "daf9500e5bf824caf07b0a4e2914b40527f26c15c9ee4a6ebb0a14695a606933"
+          "sha256": "ea0ed6d5d94ea5d6e9523de70f5679ad2a1fcc8658eea2e775785d6da0193ed7"
         },
         {
           "path": "web/js/geometry/stl-preparation.js",
-          "sha256": "bd347dac567e21d01f0abd6603130a5c80cc3b067de0af0a5d428f23a56a7ea0"
+          "sha256": "a43c02c2b91732a7161bf1ba5eb9962158719049dac764e500022459d26be497"
+        },
+        {
+          "path": "workers/stl-spatial.js",
+          "sha256": "55f795679d8ba9c0efa62f30b01af834bd3e0de25ae36d824e6b26829a4c3b09"
+        },
+        {
+          "path": "workers/stl-analysis.js",
+          "sha256": "49421f8a8b6d158ced0409660155b83198808bd4bcd2049466223b03b9e03244"
+        },
+        {
+          "path": "workers/stl-solid-repair.js",
+          "sha256": "eb607bd1670d2cc752e282cea82002243b0c3c0eaa5a93a4af4bb19298100ed4"
         }
       ],
       "build_recipe": {
         "path": "tools/build-local-runtime.py",
-        "sha256": "a918cee370a4242ea1808a838b9f218545e18021916c0a097b07ff1fdd186fae"
+        "sha256": "0b69941411195245fece88c23f800c8bbe034b074a9709a8889348c1050761d0"
       },
       "modifications": "First-party workers packaged as classic JavaScript source strings.",
       "notices": [
@@ -198,7 +210,7 @@
         },
         {
           "path": "NOTICE",
-          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+          "sha256": "8531b1730bb0051d4b1b2ce53c321700293e40e081ca51ecc513d43d89e08d69"
         },
         {
           "path": "web/licenses/PROJECT-LICENSE.txt",
@@ -206,7 +218,7 @@
         },
         {
           "path": "web/licenses/PROJECT-NOTICE.txt",
-          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+          "sha256": "8531b1730bb0051d4b1b2ce53c321700293e40e081ca51ecc513d43d89e08d69"
         },
         {
           "path": "web/licenses/GPL-2.0.txt",
@@ -280,7 +292,7 @@
         },
         {
           "path": "NOTICE",
-          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+          "sha256": "8531b1730bb0051d4b1b2ce53c321700293e40e081ca51ecc513d43d89e08d69"
         },
         {
           "path": "web/licenses/PROJECT-LICENSE.txt",
@@ -288,7 +300,7 @@
         },
         {
           "path": "web/licenses/PROJECT-NOTICE.txt",
-          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+          "sha256": "8531b1730bb0051d4b1b2ce53c321700293e40e081ca51ecc513d43d89e08d69"
         },
         {
           "path": "web/licenses/GPL-2.0.txt",
@@ -311,20 +323,20 @@
         },
         {
           "path": "NOTICE",
-          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+          "sha256": "8531b1730bb0051d4b1b2ce53c321700293e40e081ca51ecc513d43d89e08d69"
         },
         {
           "path": "tools/audit-distribution.py",
-          "sha256": "6f91dd4432bcf25f30f3afb594bb77e3acbeebc9c30c54b217a7c04e1d0adc95"
+          "sha256": "a7151c99426c1c4d04cf66d9a5f4c3dc172bfa1fbcdf894dfb3575fcb4e9677a"
         },
         {
           "path": "tools/package-distribution.py",
-          "sha256": "5f3a6199e0117bc57a207c4fcb6f5bca0e3c844dd0f85e7e8fe7956af92eccb9"
+          "sha256": "f31b06f15b795be9d78d551dc87b0e607898ac72fc1a5720e99e78ab4100d4b7"
         }
       ],
       "build_recipe": {
         "path": "docs/release/SOURCE.md",
-        "sha256": "c90c3ab24c8e8594dd4197487cc34e92f5c0d0aec7860447ec327822e1f5be48"
+        "sha256": "14e46f076c5368f89a2e2cde904ae5b299d0c51dd319dcb49b7268cf9df62123"
       },
       "modifications": "First-party policy notices and source-accompanied packaging; exact upstream notices copied unchanged.",
       "notices": [
@@ -334,7 +346,7 @@
         },
         {
           "path": "NOTICE",
-          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+          "sha256": "8531b1730bb0051d4b1b2ce53c321700293e40e081ca51ecc513d43d89e08d69"
         },
         {
           "path": "web/licenses/PROJECT-LICENSE.txt",
@@ -342,7 +354,7 @@
         },
         {
           "path": "web/licenses/PROJECT-NOTICE.txt",
-          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+          "sha256": "8531b1730bb0051d4b1b2ce53c321700293e40e081ca51ecc513d43d89e08d69"
         },
         {
           "path": "web/licenses/GPL-2.0.txt",
@@ -359,13 +371,14 @@
         "revision": "3fdabeeb1dac2417446cefb9f75ecb6645315cd6",
         "archive": {
           "url": "https://codeload.github.com/loumalouomega/GMSH-JS/tar.gz/3fdabeeb1dac2417446cefb9f75ecb6645315cd6",
-          "sha256": "27ccb49388208f4bdc1efe7da7b46a0c93c0613ef431670b1c72715a2111182c"
+          "sha256": "27ccb49388208f4bdc1efe7da7b46a0c93c0613ef431670b1c72715a2111182c",
+          "format": "tar.gz"
         }
       },
       "source_files": [
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "a918cee370a4242ea1808a838b9f218545e18021916c0a097b07ff1fdd186fae"
+          "sha256": "0b69941411195245fece88c23f800c8bbe034b074a9709a8889348c1050761d0"
         }
       ],
       "build_recipe": {
@@ -390,7 +403,8 @@
         "revision": "29726e7237db13ff77ef3f2db2d7fb9499c4e65c",
         "archive": {
           "url": "https://codeload.github.com/gmsh-project/gmsh/tar.gz/29726e7237db13ff77ef3f2db2d7fb9499c4e65c",
-          "sha256": "3e0b5f34c87a32089051a062009b3e94469c39d75dc722faab821801ec4160ef"
+          "sha256": "3e0b5f34c87a32089051a062009b3e94469c39d75dc722faab821801ec4160ef",
+          "format": "tar.gz"
         }
       },
       "source_files": [],
@@ -531,7 +545,8 @@
         "revision": "V7_8_1",
         "archive": {
           "url": "https://codeload.github.com/Open-Cascade-SAS/OCCT/tar.gz/refs/tags/V7_8_1",
-          "sha256": "7321af48c34dc253bf8aae3f0430e8cb10976961d534d8509e72516978aa82f5"
+          "sha256": "7321af48c34dc253bf8aae3f0430e8cb10976961d534d8509e72516978aa82f5",
+          "format": "tar.gz"
         }
       },
       "source_files": [],
@@ -562,7 +577,8 @@
         "revision": "r149 / npm three@0.149.0",
         "archive": {
           "url": "https://registry.npmjs.org/three/-/three-0.149.0.tgz",
-          "sha256": "ab8b7c131f6ce72e05081dff4882046584e4a4ce5ad864f9f2a0e3146cc3997c"
+          "sha256": "ab8b7c131f6ce72e05081dff4882046584e4a4ce5ad864f9f2a0e3146cc3997c",
+          "format": "tar.gz"
         }
       },
       "source_files": [],
@@ -588,7 +604,8 @@
         "revision": "3.1.74",
         "archive": {
           "url": "https://codeload.github.com/emscripten-core/emscripten/tar.gz/refs/tags/3.1.74",
-          "sha256": "07bc112871a4992a9e4bac5131f2f28554e47f826adeca40943144b159ddb700"
+          "sha256": "07bc112871a4992a9e4bac5131f2f28554e47f826adeca40943144b159ddb700",
+          "format": "tar.gz"
         }
       },
       "source_files": [],
@@ -644,7 +661,8 @@
         "revision": "3d6d8ee910466516a53e665b86458faa81dae9ba",
         "archive": {
           "url": "https://codeload.github.com/emscripten-core/emsdk/tar.gz/3d6d8ee910466516a53e665b86458faa81dae9ba",
-          "sha256": "4f2bf52e80c2f362421b76c7288b249569388b8d7361dcd597015748e547f103"
+          "sha256": "4f2bf52e80c2f362421b76c7288b249569388b8d7361dcd597015748e547f103",
+          "format": "tar.gz"
         }
       },
       "source_files": [],
@@ -658,6 +676,120 @@
           "path": "web/licenses/emsdk/LICENSE",
           "sha256": "99d9a9616fbde3f5ee22a71d8645799a8522d48526130c5ba6dc27ad15ce01f1",
           "upstream_path": "LICENSE"
+        }
+      ]
+    },
+    "cgal": {
+      "project": "cgal",
+      "version": "6.1.1",
+      "license": "GPL-3.0-or-later AND LGPL-3.0-or-later AND BSL-1.0",
+      "source": {
+        "url": "https://github.com/CGAL/cgal",
+        "revision": "6.1.1",
+        "archive": {
+          "url": "https://github.com/CGAL/cgal/releases/download/v6.1.1/CGAL-6.1.1.tar.xz",
+          "sha256": "52506935f70e247ed2777e3c65f20e86f79208c2a2d0e180ae7475daf11c96ef",
+          "format": "tar.xz"
+        }
+      },
+      "build_recipe": {
+        "path": "tools/build-stl-repair.py",
+        "sha256": "292bbd25dddb76b43bcb4d7a35415897166251370fd905671a2e05b8d86a915d"
+      },
+      "modifications": "Upstream sources unmodified; a first-party bounded typed-array C ABI selects Alpha_wrap_3 with MP_Float and round-to-nearest-safe intervals. No GMP or MPFR.",
+      "notices": [
+        {
+          "path": "web/licenses/cgal/LICENSE",
+          "sha256": "fd3dff464988799c21f65397a314eb48eae8288a69ac512967b161e79b92d89e",
+          "upstream_path": "LICENSE"
+        },
+        {
+          "path": "web/licenses/cgal/LICENSE.GPL",
+          "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116",
+          "upstream_path": "LICENSE.GPL"
+        },
+        {
+          "path": "web/licenses/cgal/LICENSE.LGPL",
+          "sha256": "374a43f625a1b877f6f13719d1bab4ca8791ede604da3e009c3ceda1f6f85489",
+          "upstream_path": "LICENSE.LGPL"
+        },
+        {
+          "path": "web/licenses/cgal/LICENSE.BSL",
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+          "upstream_path": "LICENSE.BSL"
+        },
+        {
+          "path": "web/licenses/cgal/AUTHORS",
+          "sha256": "1c8e2e28bed439ddea5a44eb657a3b81baf48b66f678613ad950cda219e11c15",
+          "upstream_path": "AUTHORS"
+        }
+      ]
+    },
+    "boost": {
+      "project": "boost",
+      "version": "1.83.0",
+      "license": "BSL-1.0",
+      "source": {
+        "url": "https://www.boost.org",
+        "revision": "1.83.0",
+        "archive": {
+          "url": "https://archives.boost.io/release/1.83.0/source/boost_1_83_0.tar.bz2",
+          "sha256": "6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e",
+          "format": "tar.bz2"
+        }
+      },
+      "build_recipe": {
+        "path": "tools/build-stl-repair.py",
+        "sha256": "292bbd25dddb76b43bcb4d7a35415897166251370fd905671a2e05b8d86a915d"
+      },
+      "modifications": "Unmodified headers only. No Boost runtime library linked.",
+      "notices": [
+        {
+          "path": "web/licenses/boost/LICENSE_1_0.txt",
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+          "upstream_path": "LICENSE_1_0.txt"
+        }
+      ]
+    },
+    "solid-repair": {
+      "project": "SpjutSim solid-repair adapter",
+      "version": "ABI 1",
+      "license": "GPL-2.0-or-later",
+      "source": {
+        "url": "https://github.com/Brinkwatertoad/SpjutSim-FEA",
+        "revision": "candidate (source_files SHA-256 pins)"
+      },
+      "source_files": [
+        {
+          "path": "native/stl-repair/repair.cpp",
+          "sha256": "28bc5b265bc1cab0a0f953335f3039fc16cdb95db04663f11a967b2b4c3e0c4e"
+        },
+        {
+          "path": "native/stl-repair/README.md",
+          "sha256": "dd3820bf4c359d1d7040882de1d69f5035a4b9f2970cc4c797029dc1fbda07e7"
+        },
+        {
+          "path": "workers/stl-solid-repair.js",
+          "sha256": "eb607bd1670d2cc752e282cea82002243b0c3c0eaa5a93a4af4bb19298100ed4"
+        },
+        {
+          "path": "native/stl-repair/test.cpp",
+          "sha256": "d87d5238f701660b4186fadcb1f220a2d9dcd5459c4cf43736b0ecf917792e65"
+        }
+      ],
+      "build_recipe": {
+        "path": "tools/build-stl-repair.py",
+        "sha256": "292bbd25dddb76b43bcb4d7a35415897166251370fd905671a2e05b8d86a915d"
+      },
+      "modifications": "First-party CGAL-isolating adapter. Linked artifact uses GPL-3.0-or-later distribution terms.",
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "e84e31c84bce427c4ba98ba5c98650563c0c6b91f19eabc3bcd86f473cd3d5d1"
+        },
+        {
+          "path": "NOTICE",
+          "sha256": "8531b1730bb0051d4b1b2ce53c321700293e40e081ca51ecc513d43d89e08d69"
         }
       ]
     }
@@ -850,7 +982,7 @@
     },
     {
       "path": "web/generated/local-runtime/mesher-worker-source.js",
-      "sha256": "f53ec3ebf412d1d86ad11adf60cc767c793e22e782baf36c3bc2fb81ff8881ee",
+      "sha256": "777e58c1187cbfe7f42931cbe1bb85928eb86e73d3ef6b897816b6b44864b217",
       "components": [
         "workers"
       ]
@@ -955,7 +1087,7 @@
     },
     {
       "path": "web/licenses/PROJECT-NOTICE.txt",
-      "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4",
+      "sha256": "8531b1730bb0051d4b1b2ce53c321700293e40e081ca51ecc513d43d89e08d69",
       "components": [
         "distribution"
       ]
@@ -1248,7 +1380,7 @@
     },
     {
       "path": "web/licenses/index.html",
-      "sha256": "8a44370630f63fb03d9b634e891488745f1620a35098e2c0bfa81a2677a33f50",
+      "sha256": "1b116ef25aea6480af8734bd224ab98ea4002dabe79020c80c5d05dce2c71207",
       "components": [
         "distribution"
       ]
@@ -1262,7 +1394,66 @@
     },
     {
       "path": "web/generated/local-runtime/stl-preparation-worker-source.js",
-      "sha256": "37dd146adcb3f6ce63f14adec00b6d5cd11f682454cb62fc60aa093b9610a99e",
+      "sha256": "ebc7b0e4b2dd3748b22be342e991fa214c15e2edaad418420b9ee5e3b26b6225",
+      "components": [
+        "workers"
+      ]
+    },
+    {
+      "path": "web/licenses/cgal/LICENSE",
+      "sha256": "fd3dff464988799c21f65397a314eb48eae8288a69ac512967b161e79b92d89e",
+      "components": [
+        "cgal"
+      ]
+    },
+    {
+      "path": "web/licenses/cgal/LICENSE.GPL",
+      "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116",
+      "components": [
+        "cgal"
+      ]
+    },
+    {
+      "path": "web/licenses/cgal/LICENSE.LGPL",
+      "sha256": "374a43f625a1b877f6f13719d1bab4ca8791ede604da3e009c3ceda1f6f85489",
+      "components": [
+        "cgal"
+      ]
+    },
+    {
+      "path": "web/licenses/cgal/LICENSE.BSL",
+      "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+      "components": [
+        "cgal"
+      ]
+    },
+    {
+      "path": "web/licenses/cgal/AUTHORS",
+      "sha256": "1c8e2e28bed439ddea5a44eb657a3b81baf48b66f678613ad950cda219e11c15",
+      "components": [
+        "cgal"
+      ]
+    },
+    {
+      "path": "web/licenses/boost/LICENSE_1_0.txt",
+      "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+      "components": [
+        "boost"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/solid-repair-runtime-source.js",
+      "sha256": "31127b185ab2fa9f455e6b582808d986e7b0e4422d26d4d4e690bf3f54778795",
+      "components": [
+        "solid-repair",
+        "cgal",
+        "boost",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/stl-solid-repair-worker-source.js",
+      "sha256": "c85f2b3caa9c1fac0e13563eb4d87f28918713659a9507f603bbf91c5d6e53c9",
       "components": [
         "workers"
       ]

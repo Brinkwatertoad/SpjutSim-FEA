@@ -8,17 +8,23 @@
     if(self.disposed||self.pending)throw failure('STL_PREPARATION_BUSY','This STL preparation is no longer available.');
     if(!api.validateStlPreparationRequest(request))throw failure('STL_INVALID_OPTIONS','Choose valid STL source units and repair limits.');
     self.pending=true;
-    var worker=await api.startLocalWorker('stl-preparation');
-    if(self.disposed){worker.terminate();throw failure('STL_PREPARATION_CANCELLED','STL preparation cancelled.');}
+    var worker;
+    try{worker=await api.startLocalWorker('stl-preparation');}catch(error){self.pending=false;throw error;}
+    if(self.disposed){worker.terminate();self.pending=false;throw failure('STL_PREPARATION_CANCELLED','STL preparation cancelled.');}
     self.worker=worker;
     return new Promise(function(resolve,reject){
-      var id='stl-'+request.sessionId+'-'+request.generation,sourcePreview,settled=false;
+      var id='stl-'+request.sessionId+'-'+request.generation,sourcePreview,settled=false,solidPhase=false;
       var timer=root.setTimeout(function(){finish(failure('STL_PREPARATION_TIMEOUT','STL checking exceeded two minutes. The source remains available for inspection; try a simpler export.'));},Math.max(1,120000-(Date.now()-started)));
-      function finish(error,result){if(settled)return;settled=true;root.clearTimeout(timer);worker.terminate();self.worker=null;self.cancelPending=null;self.pending=false;if(error)reject(error);else resolve(result);}
+      function finish(error,result){if(settled)return;settled=true;root.clearTimeout(timer);if(worker)worker.terminate();self.worker=null;self.cancelPending=null;self.pending=false;if(error)reject(error);else resolve(result);}
       self.cancelPending=function(){finish(failure('STL_PREPARATION_CANCELLED','STL preparation cancelled.'));};
-      worker.onerror=function(e){finish(failure('STL_PREPARATION_FAILED',e.message||'STL preparation failed.'));};
-      worker.onmessageerror=function(){finish(failure('INVALID_STL_PREPARATION','The preparation worker returned unreadable data.'));};
-      worker.onmessage=function(event){
+      function bind(){
+        worker.onerror=function(e){finish(failure('STL_PREPARATION_FAILED',e.message||'STL preparation failed.'));};
+        worker.onmessageerror=function(){finish(failure('INVALID_STL_PREPARATION','The preparation worker returned unreadable data.'));};
+        worker.onmessage=receive;
+        var bytes=request.sourceBytes.slice(0);
+        worker.postMessage(Object.assign({},request,{protocol:api.WORKER_PROTOCOL_VERSION,type:'prepare-stl',requestId:id,sourceBytes:bytes}),[bytes]);
+      }
+      function receive(event){
         if(settled)return;
         var m=event.data;
         if(!m||m.requestId!==id||m.sessionId!==request.sessionId||m.generation!==request.generation)return;
@@ -32,13 +38,23 @@
             if(typeof m.message!=='string')throw failure('INVALID_STL_PREPARATION','Invalid preparation progress.');
           }else if(m.type==='stl-prepared'){
             if(!sourcePreview||!api.validateStlPreparationResult(m.result,sourcePreview))throw failure('INVALID_STL_PREPARATION','Invalid STL preparation result.');
+            // Strong reconstruction is a distinct, lazy worker. Ordinary clean
+            // imports never instantiate its WASM, and neither worker overlaps
+            // with meshing or solving. One deadline covers the entire request.
+            if(!solidPhase && m.result.state==='blocked' && m.result.diagnostics.counts && m.result.diagnostics.counts.intersection>0 &&
+                ['STL_SELF_INTERSECTION','STL_NONMANIFOLD','STL_DISCONNECTED','STL_OPEN_SURFACE'].includes(m.result.error&&m.result.error.code)){
+              solidPhase=true;worker.terminate();worker=null;self.worker=null;sourcePreview=null;id+='-solid';
+              self.onEvent(Object.assign({},m,{type:'stl-progress',result:undefined,message:'Rebuilding a solid for review…'}));
+              if(settled||self.disposed)return;
+              api.startLocalWorker('stl-solid-repair').then(function(next){if(settled||self.disposed){next.terminate();return;}worker=next;self.worker=next;try{bind();}catch(error){finish(error);}},finish);
+              return;
+            }
             self.onEvent(m);finish(null,m.result);return;
           }else throw failure('INVALID_STL_PREPARATION','Unexpected preparation response.');
           self.onEvent(m);
         }catch(e){finish(e);}
-      };
-      var bytes=request.sourceBytes.slice(0);
-      worker.postMessage(Object.assign({},request,{protocol:api.WORKER_PROTOCOL_VERSION,type:'prepare-stl',requestId:id,sourceBytes:bytes}),[bytes]);
+      }
+      try{bind();}catch(error){finish(error);}
     });
   };
   StlPreparationClient.prototype.cancel=function(){this.disposed=true;if(this.cancelPending)this.cancelPending();else if(this.worker){this.worker.terminate();this.worker=null;}};

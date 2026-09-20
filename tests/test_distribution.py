@@ -207,6 +207,48 @@ class DistributionTests(unittest.TestCase):
         (output / parts[0]['path']).write_bytes(b'corrupt')
         self.assert_rejected('SHA-256', '--release-root', str(output))
 
+    def test_gpl3_dependency_uses_later_distribution_terms_without_relicensing_sources(self):
+        self.manifest['components']['runtime']['license'] = 'GPL-3.0-or-later'
+        self.save()
+        self.assert_rejected('GPL-3.0')
+        self.policy['license'] = self.manifest['distribution_license'] = 'GPL-3.0-or-later'
+        self.save()
+        self.assertEqual(self.run_audit().returncode, 0)
+        self.assertIn('GPL-2.0-or-later', (self.root / 'LICENSE').read_text())
+
+    def test_packaged_xz_source_keeps_its_format_and_is_audited(self):
+        cache = self.root / 'build/distribution-inputs'
+        cache.mkdir(parents=True)
+        archive = cache / 'runtime.tar.xz'
+        with tarfile.open(archive, 'w:xz') as tar:
+            data = b'original upstream header\n'
+            info = tarfile.TarInfo('upstream/header.h'); info.size = len(data)
+            tar.addfile(info, io.BytesIO(data))
+        self.manifest['components']['runtime']['source']['archive'] = {
+            'url': 'https://example.invalid/pinned.tar.xz', 'format': 'tar.xz',
+            'sha256': hashlib.sha256(archive.read_bytes()).hexdigest()}
+        self.save()
+        output = self.root / 'build/distribution/web'
+        result = subprocess.run(['python3', str(ROOT / 'tools/package-distribution.py'),
+            '--root', str(self.root), '--output', str(output)], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        bundle = json.loads((output / 'sources/manifest.json').read_text())
+        self.assertTrue(bundle['archives']['runtime']['parts'][0]['path'].endswith('.tar.xz.part-001'))
+        self.assertEqual(self.run_audit('--release-root', str(output)).returncode, 0)
+
+    def test_optional_supplied_stls_are_not_redistributed(self):
+        for name in ('cathedral_gargoyle.stl', 'Better Vented Parametric Funnel.stl'):
+            self.write('tests/fixtures/stl/' + name, 'private diagnostic input')
+        output = self.root / 'build/distribution/web'
+        result = subprocess.run(['python3', str(ROOT / 'tools/package-distribution.py'),
+            '--root', str(self.root), '--output', str(output)], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        bundle = json.loads((output / 'sources/manifest.json').read_text())
+        data = b''.join((output / p['path']).read_bytes() for p in bundle['archives']['application']['parts'])
+        with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as archive:
+            self.assertFalse(any(name.endswith('.stl') for name in archive.getnames()))
+        self.assertEqual(self.run_audit('--release-root', str(output)).returncode, 0)
+
     def test_packager_refuses_missing_or_wrong_upstream_archive_without_network(self):
         self.manifest['components']['runtime']['source']['archive'] = {
             'url': 'https://example.invalid/pinned.tar.gz', 'sha256': '0' * 64}

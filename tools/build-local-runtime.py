@@ -18,6 +18,7 @@ WORKERS = {
     'mesher': 'mesher-worker.js',
     'solver': 'solver-worker.js',
     'stl-preparation': 'stl-preparation-worker.js',
+    'stl-solid-repair': 'stl-preparation-worker.js',
 }
 PROTOCOL_PATTERN = re.compile(r'\bWORKER_PROTOCOL_VERSION\s*=\s*(\d+)\s*;')
 GMSH_RUNTIME_EXPORT = 'export function buildApi'
@@ -39,9 +40,12 @@ def read_worker_source(source_root: Path, kind: str, filename: str) -> tuple[str
         raise ValueError(
             f'{kind} worker protocol is {match.group(1)}, expected {EXPECTED_PROTOCOL_VERSION}'
         )
-    if kind == 'stl-preparation':
+    if kind in ('stl-preparation', 'stl-solid-repair'):
         helpers = [ROOT / 'web/js/geometry/stl-preparation.js', source_root / 'stl-import.js',
                    source_root / 'stl-diagnostics.js', source_root / 'stl-repair.js']
+        if kind == 'stl-solid-repair':
+            helpers.append(source_root / 'stl-solid-repair.js')
+            source = source.replace("STL_PREPARATION_WORKER_KIND = 'stl-preparation'", "STL_PREPARATION_WORKER_KIND = 'stl-solid-repair'")
         source = '\n'.join(path.read_text(encoding='utf-8') for path in helpers) + '\n' + source
     if kind == 'mesher':
         helper = source_root / 'stl-import.js'

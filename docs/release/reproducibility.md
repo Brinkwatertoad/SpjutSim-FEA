@@ -75,3 +75,31 @@ archive is held in memory in full during validation.
 
 The staged audit also passes with `--require-approved`, using the owner's
 2026-09-07 final approval. Task 20's full v1.0 candidate acceptance remains open.
+
+## STL solid-repair addition, 2026-09-20
+
+This addition supersedes the earlier artifact approval for the changed candidate.
+The modular CGAL dependency is approved; publication/final artifact review remains
+pending. First-party sources retain GPL-2.0-or-later; the combined distribution
+uses GPL-3.0-or-later and accompanies original CGAL/Boost notices and sources.
+
+Two complete `python3 tools/build-stl-repair.py` executions, each compiling the
+adapter from verified extracted headers with Emscripten 3.1.74 on Linux x86_64,
+produced the same embedded wrapper:
+
+- SHA-256: `31127b185ab2fa9f455e6b582808d986e7b0e4422d26d4d4e690bf3f54778795`
+- 905,503 bytes uncompressed; 304,769 bytes gzip.
+- CGAL 6.1.1 and Boost 1.83.0 source hashes are in the recipe and artifact manifest.
+- No upstream source edits, GMP/MPFR, filesystem, or runtime network calls.
+- A second OS/toolchain build has not been performed.
+
+The separate heavy worker starts only for remaining detected intersections after
+local cleanup. It is terminated before meshing. Strict validation remains in the
+first-party worker, independently of the native adapter's return code. Native ABI
+regressions and real-browser consent/cancellation tests are documented in
+`native/stl-repair/README.md` and the current M29 review.
+
+The runtime-size figure excludes corresponding source. The pinned full CGAL and
+Boost archives add about 144 MiB to a complete source-accompanied offline folder;
+hosted startup does not request those source archives. This distinction must be
+preserved when describing installation/download size.

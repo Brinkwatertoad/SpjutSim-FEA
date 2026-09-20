@@ -14,6 +14,14 @@ licenses and exceptions. See [LICENSE](../../LICENSE),
 [the artifact manifest](artifact-manifest.json), and
 [the release procedure](SOURCE.md).
 
+On 2026-09-20 the owner approved adding a compact, modular CGAL/WASM repair
+component with license compliance and a replaceable interface. The combined
+application now uses **GPL-3.0-or-later** distribution terms, exercising the
+existing GPL-2.0-or-later source grant. First-party files are not relicensed.
+CGAL/Boost sources, notices and pinned build instructions accompany distribution.
+This records dependency approval, not independent legal review or publication
+approval. Final review of the changed artifact set remains pending.
+
 The distribution audit reads this approval record:
 
 ```json
@@ -21,18 +29,15 @@ The distribution audit reads this approval record:
   "schema_version": 1,
   "path": "gpl-source",
   "status": "approved",
-  "license": "GPL-2.0-or-later",
+  "license": "GPL-3.0-or-later",
   "approver": "Brinkwatertoad",
-  "date": "2026-09-06",
-  "approval_reference": "Task 19 owner licensing approval, 2026-09-06",
-  "scope": "First-party FEA source, including the copied UI foundation files",
+  "date": "2026-09-20",
+  "approval_reference": "Owner approved modular CGAL/WASM dependency subject to small install size and license compliance in the STL workflow conversation, 2026-09-20",
+  "scope": "Combined application with CGAL adapter; first-party source remains GPL-2.0-or-later",
   "legal_review": "No independent legal review",
   "final_review": {
-    "status": "approved",
-    "approver": "Brinkwatertoad",
-    "date": "2026-09-13",
-    "reference": "Owner accepted the FEA correction (looks good) and requested website deployment of Circuits, Truss, and FEA in this session, 2026-09-13",
-    "artifact_manifest_sha256": "012c8315cfa018e06dcc88f6131574d3e8c8cc412012661b4209d6edf8d8b92d"
+    "status": "pending",
+    "reference": "Prior artifact approval does not cover the new repair dependency; no release or publication requested."
   }
 }
 ```

@@ -16,7 +16,7 @@
     var points=new Float32Array(preview.positions.length);
     for(var i=0;i<points.length;i++)points[i]=preview.positions[i]/this.divisor-this.origin[i%3]/this.divisor;
     var geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.BufferAttribute(points,3));geometry.setIndex(new T.BufferAttribute(preview.triangles,1));geometry.computeVertexNormals();
-    var mesh=new T.Mesh(geometry,new T.MeshStandardMaterial({color:0xbcc8d3,side:T.DoubleSide,roughness:.8,metalness:0}));this.surface.add(mesh);
+    var mesh=new T.Mesh(geometry,new T.MeshStandardMaterial({color:0x28333d,side:T.DoubleSide,roughness:.8,metalness:0}));this.surface.add(mesh);
     if(first)this.viewport.fitModel(new T.Vector3(),1,true);
     this.viewport.render();
   };

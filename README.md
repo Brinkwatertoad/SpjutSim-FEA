@@ -196,6 +196,16 @@ activate the SDK on the destination OS; downloaded compiler binaries are
 platform-specific. Native tests require Python 3, CMake, and a C++17 compiler
 on each host.
 
+Rebuild the optional solid-repair runtime with `python3 tools/build-stl-repair.py`.
+It uses `EMXX`, or Emscripten 3.1.74 under `SPJUTSIM_EMSDK_ROOT` (default
+`build/emsdk`), and downloads SHA-256-pinned CGAL/Boost source archives. The
+checked-in embedded runtime is about 905 KB (305 KB gzip); compilation and
+instantiation happen only in the separate worker when local cleanup leaves
+intersections. See [the adapter](native/stl-repair/README.md) for native tests,
+limits and replacement boundaries. `tests/browser/stl-solid-repair-tests.html`
+checks reconstruction, strict validation, explicit consent, cancellation and
+original retention. Optional `?fixture=gargoyle` uses the private supplied fixture.
+
 Rebuilding the pinned Gmsh/OpenCASCADE artifact is an infrequent dependency-update operation. It downloads and compiles the toolchain and third-party sources under ignored `build/` paths:
 
 ```sh
@@ -218,7 +228,8 @@ wrangler deploy
 ```
 
 The owner approved GPL-2.0-or-later for first-party FEA and copied UI source.
-The final policy and artifact list were approved on 2026-09-07. Wrangler runs
+The prior artifact approval does not cover the new CGAL dependency; its final
+release review remains pending. Wrangler runs
 the distribution audit and serves `build/distribution/web`, including local license
 notices and exact corresponding-source archives. Do not deploy bare `web/`.
 See [the release procedure](docs/release/SOURCE.md) for rebuilding, offline
@@ -233,7 +244,9 @@ First-party SpjutSim FEA source and the UI foundation copies in this repository
 are [GPL-2.0-or-later](LICENSE), copyright (c) 2026 Brinkwatertoad, without
 warranty. Third-party materials retain their own licenses; see [NOTICE](NOTICE),
 [THIRD_PARTY.md](THIRD_PARTY.md), and the application's local Licenses page.
-The separate SpjutSim-UI-Kit repository is not relicensed by this decision.
+The combined distribution including the CGAL repair adapter uses GPL-3.0-or-later,
+as permitted by the first-party “or later” grant. CGAL and Boost notices and exact
+sources accompany releases. The separate SpjutSim-UI-Kit repository is not relicensed.
 The [distribution policy](docs/release/distribution-policy.md) records approval,
 source obligations, and final artifact approval.
 
@@ -291,13 +304,13 @@ Preparation automatically removes exact duplicate/zero-area facets and fixes
 orientable winding. Small planar convex hole fills and isolated stray-facet removals
 are highlighted proposals that require **Use repaired model**. Findings are grouped
 as fixed, proposed, or unresolved; keyboard-accessible buttons focus each location.
-Compare Original/Prepared and use Show all to return to the whole part. Original
+Compare Original/Prepared; highlight issues separately from viewport Fit. Original
 bytes remain downloadable before and after installation. Unsupported geometry stays
 visible, with analysis blocked and specific repair/export guidance.
 
 Selection grouping defaults to 40° and is adjustable from Model (1–179°). Changing
 the source, units, or grouping uses explicit assignment transfer when assignments
-exist. **Mesh → Advanced: simulation surface** offers original triangles (default),
+exist. **Mesh → Advanced: simulation surface** defaults to rebuilt analysis boundaries and offers original triangles,
 bounded simple-surface reconstruction, and experimental remeshing. Review and compare
 a candidate before applying. Method/tolerance/feature-angle edits preserve source
 group IDs and assignments, invalidate mesh/results, and support Undo/Redo.
@@ -314,8 +327,11 @@ Diagnostic details are capped at 1,000 records / 200,000 primitive references an
 clearly labeled when incomplete. Installation requires a closed, connected,
 consistently outward manifold with positive usable volume and no intersections.
 Filling defaults to 1% of the remaining part diagonal (0 disables filling; maximum
-5%). No vertex movement, welding, smoothing, component deletion/joining, shells,
-multibody or general shape rebuilding is provided.
+5%). Unresolved intersections trigger a separate CGAL 6.1.1 enclosing-surface
+repair worker. It may join overlaps, fill gaps and round details; the candidate
+must pass all strict checks and requires explicit acceptance. Plain disconnected
+bodies are not automatically joined. Tolerance welding, manual vertex edits,
+shell analysis and multibody analysis remain unsupported.
 
 `stl-preparation-tests.html` checks decoding, diagnostics, cancellation, deadlines and
 worker boundaries. `stl-repair-tests.html` retains exact-predicate/precision cases;
@@ -328,7 +344,7 @@ after winding cleanup. See [current evidence](docs/reviews/29-stl-workflow.md) a
 Open `tests/browser/stl-large-tests.html` to check a procedural 200,000-triangle
 cube in original/reconstruction modes and mesh the recovered surfaces in a fresh
 worker. The optional `?fixture=gargoyle` variant reads the user-supplied
-`tests/fixtures/stl/cathedral_gargoyle.stl` and verifies its nonmanifold rejection
+`tests/fixtures/stl/cathedral_gargoyle.stl` and checks its raw nonmanifold rejection
 in all three modes. That file has 66,174 triangles and passes the size limits,
 but needs surface repair before simulation. Neither supplied STL is redistributed.
 See [capacity and usability evidence](docs/reviews/29-stl-import-usability.md).

@@ -24,6 +24,11 @@ MANIFEST = 'docs/release/artifact-manifest.json'
 POLICY = 'docs/release/distribution-policy.md'
 COVERED_ROOTS = ('web/vendor', 'web/wasm', 'web/generated', 'web/ui', 'web/licenses')
 LICENSE = 'GPL-2.0-or-later'
+# Optional user-supplied diagnostics, not licensed as part of the CC0 corpus.
+PRIVATE_FIXTURES = {
+    'tests/fixtures/stl/cathedral_gargoyle.stl',
+    'tests/fixtures/stl/Better Vented Parametric Funnel.stl',
+}
 
 
 def source_paths(root):
@@ -35,6 +40,8 @@ def source_paths(root):
             if name in excluded or name.endswith('.pyc'):
                 continue
             path = Path(directory) / name
+            if path.relative_to(root).as_posix() in PRIVATE_FIXTURES:
+                continue
             local_path(root, path.relative_to(root).as_posix())
             yield path
 
@@ -136,7 +143,7 @@ def audit(root, require_approved=False):
         raise ValueError('unsupported policy/manifest schema')
     if policy.get('status') != 'approved' or policy.get('path') != 'gpl-source':
         raise ValueError('owner decision absent or blocked; GPL source approval required')
-    if policy.get('license') != LICENSE or manifest.get('distribution_license') != LICENSE:
+    if policy.get('license') not in (LICENSE, 'GPL-3.0-or-later') or manifest.get('distribution_license') != policy.get('license'):
         raise ValueError('policy/manifest license mismatch')
     for field in ('approver', 'date', 'approval_reference', 'scope', 'legal_review'):
         if not isinstance(policy.get(field), str) or not policy[field].strip():
@@ -149,6 +156,8 @@ def audit(root, require_approved=False):
     components = manifest['components']
     if not isinstance(components, dict) or not components:
         raise ValueError('manifest components missing')
+    if any('GPL-3.0' in c.get('license', '') for c in components.values()) and manifest['distribution_license'] != 'GPL-3.0-or-later':
+        raise ValueError('GPL-3.0 dependencies require GPL-3.0-or-later distribution terms')
     for name, component in components.items():
         for field in ('project', 'version', 'license', 'modifications'):
             if not isinstance(component.get(field), str) or not component[field].strip():
@@ -157,7 +166,7 @@ def audit(root, require_approved=False):
         if not source.get('revision') or urlsplit(source.get('url', '')).scheme != 'https':
             raise ValueError(f'component {name} missing pinned source provenance')
         archive = source.get('archive')
-        if archive and (urlsplit(archive['url']).scheme != 'https' or
+        if archive and (archive.get('format', 'tar.gz') not in ('tar.gz', 'tar.xz', 'tar.bz2') or urlsplit(archive['url']).scheme != 'https' or
                         not re.fullmatch(r'[0-9a-f]{64}', archive['sha256'])):
             raise ValueError(f'component {name} invalid source archive')
         if not component.get('source_files') and not archive:
@@ -203,7 +212,7 @@ def open_source_archive(release_root, archive):
                 for block in iter(lambda: stream.read(1024 * 1024), b''):
                     combined.write(block)
         combined.seek(0)
-        with tarfile.open(fileobj=combined, mode='r|gz') as source_tar:
+        with tarfile.open(fileobj=combined, mode='r|*') as source_tar:
             yield source_tar
 
 

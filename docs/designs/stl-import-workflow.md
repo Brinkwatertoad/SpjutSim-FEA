@@ -58,7 +58,8 @@ states. An invalid solid can be inspected without becoming eligible for analysis
 | Inconsistent or inward winding on an orientable shell | Correct automatically; summarize changes |
 | Existing narrowly defined stray-facet removal | Prepare a proposal; highlight removed facets for approval |
 | Small planar convex hole filling | Prepare a proposal; highlight added facets for approval |
-| Welding, vertex movement, smoothing, joining or discarding solid components, general reconstruction of defects | Unsupported in this scope; identify the unresolved problem |
+| Remaining detected intersections after local repair | Build a bounded enclosing-surface proposal in a separate worker; strict checks and explicit acceptance |
+| Tolerance welding, manual vertex movement, discarding solid components, arbitrary reconstruction | Unsupported; retain useful diagnostics |
 
 Automatic cleanup preserves coordinates and intended surface location. Never
 erase a thin real triangle because a floating-point cross product rounded to
@@ -78,7 +79,14 @@ Prepared without moving the camera, or reject the proposal and keep inspecting.
 No second generic approval dialog follows. Replacement assignment transfer is
 still required when existing supports/loads would be affected.
 
-If local repair cannot produce a valid solid, retain original/cleaned previews,
+For unresolved intersections, try the replaceable CGAL Alpha_wrap_3 stage. It
+may join overlapping components, fill gaps and round small features. Present the
+whole rebuilt surface as one proposal and explain these changes beside acceptance.
+Its alpha/offset are not certified maximum deviations. Plain disconnected bodies
+are not joined automatically. Both workers share one deadline and terminate before
+meshing; the application retains no CGAL types.
+
+If preparation cannot produce a valid solid, retain original/cleaned previews,
 fixed-issue information, and remaining diagnostics. Do not install a partial
 repair or imply that checks not reached have passed. Offer specific next steps
 and **Choose another file**, not an endless “Try repair” loop. Changing an actual
@@ -92,7 +100,7 @@ bytes when original and prepared input are identical.
 ### Explain problems on the model
 
 - Group findings as **Fixed automatically**, **Proposed changes**, and **Still
-  needs attention**. Show counts and concrete text, not raw codes by default.
+  unresolved**. Show counts and concrete text, not raw codes by default.
 - Open boundaries highlight edge loops; nonmanifold findings highlight edges or
   vertices; intersections highlight both implicated triangles; disconnected
   components have selectable locations and counts. Proposed fills/removals show

@@ -191,7 +191,7 @@
       originalSourceBytes:s.source.originalSourceBytes||s.source.sourceBytes,stlSource:r.geometryCandidate.stlSource,
       preparation:{version:1,originalDigest:s.source.preparation?s.source.preparation.originalDigest:r.sourceDigest,
         sourceDigest:r.sourceDigest,preparedDigest:r.preparedDigest,shapeChanged:r.shapeChanged,shapeChangesAccepted:r.shapeChanged,
-        lengthUnit:s.settings.lengthUnit}});
+        lengthUnit:s.settings.lengthUnit,solidRepair:r.solidRepair||null}});
     return {geometry:r.geometryCandidate,source:source};
   };
   AppController.prototype.beginStlSurfaceReview = function(settings) {

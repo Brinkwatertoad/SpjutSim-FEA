@@ -55,13 +55,31 @@
   OCCT is LGPL-2.1 with its additional exception. Exact notices are checked in
   under `web/wasm/gmsh/licenses/`.
 
+## Optional STL solid repair: CGAL and Boost
+
+- CGAL 6.1.1, unmodified official source archive. Alpha_wrap_3 is
+  GPL-3.0-or-later; supporting packages include LGPL-3.0-or-later and BSL-1.0 code.
+- Boost 1.83.0, unmodified headers, BSL-1.0.
+- `tools/build-stl-repair.py` pins URLs and SHA-256 values, compiles only the
+  first-party `native/stl-repair/repair.cpp` entry point using Emscripten 3.1.74,
+  and embeds the result in `web/generated/local-runtime/solid-repair-runtime-source.js`.
+- No GMP/MPFR, filesystem, runtime network dependency, CGAL types in application
+  contracts, or dependency on the native FEM solver. The worker adapter can be replaced.
+- Original notices are in `web/licenses/cgal/` and `web/licenses/boost/`; full
+  upstream archives accompany releases. Runtime size is about 905 KB raw / 305 KB
+  gzip, below the enforced 2 MiB / 768 KiB budgets. Source archives are separate
+  downloads and are not loaded at startup.
+
 ## Distribution decision and complete inventory
 
 On 2026-09-06 the copyright holder approved **GPL-2.0-or-later** for first-party
 FEA source, including the copied UI foundation. The root LICENSE now grants
 those rights; upstream licenses and exceptions remain unchanged. No commercial
 Gmsh license is claimed. See `docs/release/distribution-policy.md` for the owner
-decision and final approval of the policy and artifact list on 2026-09-07.
+decision and prior final approval of the policy and artifact list on 2026-09-07.
+The owner approved the modular CGAL dependency on 2026-09-20. The combined
+distribution uses GPL-3.0-or-later under the existing “or later” grant; first-party
+source retains GPL-2.0-or-later. Final review of this changed artifact set is pending.
 
 `docs/release/artifact-manifest.json` is the complete machine-audited inventory
 of vendor/generated payloads, UI copies, notices, build recipes, source pins,
@@ -73,5 +91,4 @@ The complete Gmsh and Emscripten source archives preserve per-file notices too.
 The source-accompanied distribution procedure is `docs/release/SOURCE.md`.
 Source archives are served alongside the exact runtime, including on the
 website; a public GitHub link alone is not the source-distribution procedure.
-The staged candidate passes the automated audit and has copyright-holder
-approval of its policy and artifact list. Task 20 owns final v1 acceptance.
+An automated audit does not approve publication. Task 20 owns final v1 acceptance.

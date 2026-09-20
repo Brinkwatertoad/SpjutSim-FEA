@@ -12,7 +12,7 @@
   document.getElementById('stl-choose-file').onclick=function(){document.getElementById('import-step-input').click();};
   this.accept.onclick=function(){var s=controller.stlImportSession;handlers.accept({acceptShapeChanges:s&&s.state==='needs-review'});};
   this.comparison.onchange=function(){if(self.display)self.display.showRevision(self.comparison.value);};
-  document.getElementById('stl-show-all').onclick=function(){if(self.display)self.display.showIssues(self.display.issues.filter(function(issue){return issue.status!=='fixed';}));};
+  document.getElementById('stl-show-all').onclick=function(){if(self.display)self.display.showIssues(self.display.issues.filter(function(issue){return issue.status==='unresolved';}));};
   document.getElementById('stl-download-original-button').onclick=function(){download(controller.stlImportSession&&controller.stlImportSession.source);};
   document.getElementById('stl-download-installed-original').onclick=function(){download(controller.geometrySource);};
   this.escape=function(event){if(event.key==='Escape'&&controller.stlImportSession){event.preventDefault();handlers.cancel();}};root.addEventListener('keydown',this.escape);
@@ -35,12 +35,14 @@
   this.unit.disabled=!s.source.sourceBytes;
   document.getElementById('stl-repair-hole-limit').disabled=!s.source.sourceBytes;
   document.getElementById('stl-download-original-button').disabled=!s.source.sourceBytes;
-  document.getElementById('stl-show-all').hidden=!(s.result&&(s.result.diagnostics.issues.length||s.result.changes.proposed.length));
+  document.getElementById('stl-show-all').hidden=!(s.result&&s.result.diagnostics.issues.some(function(issue){return issue.status==='unresolved';}));
   if(!s.preview)document.getElementById('stl-dimensions').textContent='';
   this.accept.disabled=!['ready','needs-review'].includes(s.state);this.accept.textContent=s.state==='needs-review'?'Use repaired model':'Use model';
   document.getElementById('stl-repair-consent').hidden=s.state!=='needs-review';
+  var solid=s.result&&s.result.solidRepair;
+  document.getElementById('stl-repair-consent').textContent=solid?'A rebuilt solid joins overlapping surfaces and may fill gaps or round small details. Compare Original and Prepared. Using this repaired model accepts these material changes.':'Using this repaired model approves the highlighted additions or removals. Compare with the original first.';
   document.getElementById('stl-retry-button').hidden=!(s.error&&s.error.code==='STL_PREPARATION_TIMEOUT');
-  document.getElementById('stl-error-details').textContent=s.result&&s.result.error?s.result.error.code:s.error&&s.error.code||'';
+  document.getElementById('stl-error-details').textContent=solid?'Reconstruction offset: '+solid.offset.toPrecision(3)+' '+s.settings.lengthUnit+'; detail scale: '+solid.alpha.toPrecision(3)+' '+s.settings.lengthUnit+'. Construction settings are not a maximum-error guarantee.':s.result&&s.result.error?s.result.error.code:s.error&&s.error.code||'';
   if(s.preview){
    var d=s.preview.bounds;document.getElementById('stl-dimensions').textContent=d.max.map(function(v,i){return(v-d.min[i]).toPrecision(5);}).join(' × ')+' '+s.settings.lengthUnit;
    if(this.sourcePreview!==s.preview){this.sourcePreview=s.preview;this.display.setPreview(s.preview);}
@@ -54,7 +56,7 @@
     [['fixed','Fixed automatically'],['proposed','Proposed changes'],['unresolved','Unrepaired regions']].forEach(function(group){
      var selected=issues.map(function(issue,index){return{issue:issue,index:index};}).filter(function(item){return item.issue.status===group[0];});if(!selected.length)return;
      var section=document.createElement(group[0]==='unresolved'||group[0]==='fixed'?'details':'section'),title=document.createElement(group[0]==='unresolved'||group[0]==='fixed'?'summary':'h3');title.textContent=group[1]+' ('+selected.length+')';section.appendChild(title);
-     selected.forEach(function(item){var issue=item.issue,button=document.createElement('button');button.type='button';button.textContent=(issue.kind==='intersection'?'Intersection region · '+issue.count+' triangle pairs':issue.kind==='component'?'Separate component · '+issue.triangleIds.length+' triangles':issue.kind.replaceAll('-',' ')+' · '+issue.count)+(issue.status==='proposed'?' · extent '+issue.bounds.max.map(function(v,i){return(v-issue.bounds.min[i]).toPrecision(3);}).join(' × ')+' '+s.settings.lengthUnit:'');button.setAttribute('aria-pressed','false');button.onclick=function(){self.list.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed','false');});button.setAttribute('aria-pressed','true');self.display.focusIssue(item.index);};section.appendChild(button);});self.list.appendChild(section);
+     selected.forEach(function(item){var issue=item.issue,button=document.createElement('button');button.type='button';button.textContent=(issue.kind==='rebuilt-surface'?'Rebuilt solid':issue.kind==='intersection'?'Intersection region · '+issue.count+' triangle pairs':issue.kind==='component'?'Separate component · '+issue.triangleIds.length+' triangles':issue.kind.replaceAll('-',' ')+' · '+issue.count)+(issue.status==='proposed'?' · extent '+issue.bounds.max.map(function(v,i){return(v-issue.bounds.min[i]).toPrecision(3);}).join(' × ')+' '+s.settings.lengthUnit:'');button.setAttribute('aria-pressed','false');button.onclick=function(){self.list.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed','false');});button.setAttribute('aria-pressed','true');self.display.focusIssue(item.index);};section.appendChild(button);});self.list.appendChild(section);
     });
     var summary=document.createElement('p'),d=result.diagnostics,parts=[];
     if(d.componentCount>1)parts.push(d.componentCount+' separate components');

@@ -44,7 +44,7 @@ class FrameworkTests(unittest.TestCase):
                 check=True,
                 cwd=ROOT,
             )
-            for filename in ('mesher-worker-source.js', 'solver-worker-source.js', 'stl-preparation-worker-source.js'):
+            for filename in ('mesher-worker-source.js', 'solver-worker-source.js', 'stl-preparation-worker-source.js', 'stl-solid-repair-worker-source.js'):
                 generated = (output_dir / filename).read_text(encoding='utf-8')
                 self.assertEqual(generated, (checked_in / filename).read_text(encoding='utf-8'))
                 self.assertIn('Worker protocol: 4', generated)
