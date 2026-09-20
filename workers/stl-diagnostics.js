@@ -89,8 +89,8 @@
       report.coverage.vertexFans = report.counts['nonmanifold-vertex'] ? 'failed' : 'passed';
     } else report.coverage.vertexFans = 'skipped';
     var components = new Map();
-    for (i = 0; i < count; i++) { var id = find(i); components.set(id, (components.get(id) || 0) + 1); }
-    if (components.size > 1) components.forEach(function (size, id) { add('component', [id], [], [], 'unresolved', size); });
+    for (i = 0; i < count; i++) { var id = find(i); if(!components.has(id))components.set(id,[]); components.get(id).push(i); }
+    if (components.size > 1) components.forEach(function (ids) { add('component', ids, [], [], 'unresolved', ids.length); });
     report.componentCount = components.size;
     report.coverage.topology = closed && manifold && !report.counts['nonmanifold-vertex'] && components.size === 1 && !unsafe ? 'passed' : 'failed';
     report.coverage.orientation = report.counts.winding ? 'failed' : (closed && manifold ? 'passed' : 'skipped');

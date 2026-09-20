@@ -99,21 +99,28 @@
     if(result.byteLength>16*1024*1024)fail('The repaired STL exceeds the 16 MiB output limit.');return result;
   }
   async function digest(bytes){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),function(v){return v.toString(16).padStart(2,'0');}).join('');}
-  async function repair(bytes,options,settings){
-    if(!settings||settings.version!==1||!Number.isFinite(settings.maxHoleDiameterRatio)||settings.maxHoleDiameterRatio<0||settings.maxHoleDiameterRatio>.05){var error=new Error('Choose a maximum hole width from 0% through 5% of the part diagonal.');error.code='STL_INVALID_REPAIR_OPTIONS';throw error;}
-    var mesh=root.StlImport.readUnvalidated(bytes,options),triangles=mesh.triangles,positions=mesh.positions,count=triangles.length/3;
-    var report={version:1,method:'local-stl-repair',lengthUnit:options.lengthUnit,maxHoleDiameterRatio:settings.maxHoleDiameterRatio,
+  function prepare(mesh,settings){
+    if(!settings||!Number.isFinite(settings.maxHoleDiameterRatio)||settings.maxHoleDiameterRatio<0||settings.maxHoleDiameterRatio>.05){var error=new Error('Choose a maximum hole width from 0% through 5% of the part diagonal.');error.code='STL_INVALID_REPAIR_OPTIONS';throw error;}
+    var triangles=mesh.triangles.slice(),positions=mesh.positions,count=triangles.length/3;
+    var report={version:1,method:'local-stl-repair',maxHoleDiameterRatio:settings.maxHoleDiameterRatio,
       originalBoundingBoxM:{minM:mesh.minimum.slice(),maxM:mesh.maximum.slice()},sourceDiagonalM:mesh.diagonal,originalTriangleCount:count,repairedTriangleCount:0,removedDuplicateTriangles:0,removedZeroAreaTriangles:0,removedLooseTriangles:0,
       flippedTriangles:0,filledHoles:0,addedTriangles:0,maximumFilledHoleDiameterM:0};
+    var members=new Uint32Array(count);for(var m=0;m<count;m++)members[m]=m;
+    var duplicates=[],degenerate=[],removed=[],winding=[],issueError=null;
     var offsets=new Uint32Array(positions.length/3),active=new Uint8Array(count),unique=new Set();active.fill(1);
     for(var i=0;i<triangles.length;i++)offsets[triangles[i]]=i*3;
     for(i=0;i<count;i++){
       var a=triangles[i*3],b=triangles[i*3+1],c=triangles[i*3+2],normal=areaVector(positions,a,b,c);
-      if(normal.every(function(v){return v===0;})&&root.StlImport.isZeroArea(positions,a,b,c)){active[i]=0;report.removedZeroAreaTriangles++;continue;}
+      if(normal.every(function(v){return v===0;})&&root.StlImport.isZeroArea(positions,a,b,c)){active[i]=0;report.removedZeroAreaTriangles++;degenerate.push(members[i]);continue;}
       var id=[a,b,c].sort(function(x,y){return x-y;}).join(':');
-      if(unique.has(id)){active[i]=0;report.removedDuplicateTriangles++;}else unique.add(id);
+      if(unique.has(id)){active[i]=0;report.removedDuplicateTriangles++;duplicates.push(members[i]);}else unique.add(id);
     }
-    function compact(){var size=active.reduce(function(sum,v){return sum+v;},0),output=new Uint32Array(size*3),offset=0;for(var j=0;j<active.length;j++)if(active[j]){output.set(triangles.subarray(j*3,j*3+3),offset);offset+=3;}triangles=output;active=new Uint8Array(size);active.fill(1);}
+    function compact(){
+      var size=active.reduce(function(sum,v){return sum+v;},0),output=new Uint32Array(size*3),ids=new Uint32Array(size),offset=0;
+      for(var j=0;j<active.length;j++)if(active[j]){output.set(triangles.subarray(j*3,j*3+3),offset*3);ids[offset++]=members[j];}
+      triangles=output;members=ids;active=new Uint8Array(size);active.fill(1);
+    }
+    try {
     compact();if(!triangles.length)fail('Cleanup leaves no usable triangles.');
     var edges=edgeMap(triangles);report.before=edgeCounts(edges);
     // Only remove isolated flaps whose every edge is open or over-subscribed.
@@ -121,7 +128,7 @@
     for(i=0;i<active.length;i++){
       var faceEdges=[0,1,2].map(function(j){return edges.get(key(triangles[i*3+j],triangles[i*3+(j+1)%3]));});
       if(faceEdges.some(function(e){return e.count===1;})&&faceEdges.some(function(e){return e.count>2;})&&faceEdges.every(function(e){return e.count!==2;})){
-        active[i]=0;report.removedLooseTriangles++;faceEdges.forEach(function(e){e.count--;});
+        active[i]=0;report.removedLooseTriangles++;removed.push(members[i]);faceEdges.forEach(function(e){e.count--;});
       }
     }
     compact();if(!triangles.length)fail('Cleanup leaves no usable surface.');
@@ -130,10 +137,12 @@
       var value=positions[triangles[i]*3+axis];minimum[axis]=Math.min(minimum[axis],value);maximum[axis]=Math.max(maximum[axis],value);
     }
     var diagonal=Math.hypot(maximum[0]-minimum[0],maximum[1]-minimum[1],maximum[2]-minimum[2]);
-    if(!(diagonal>=1e-9&&diagonal<=1e6))fail('Cleanup leaves a surface outside the supported size range.');
+    if(!(diagonal>0&&Number.isFinite(diagonal)))fail('Cleanup leaves no usable surface extent.');
     report.holeLimitDiagonalM=diagonal;
     edges=edgeMap(triangles);var flipped=new Uint8Array(triangles.length/3);
     orient(triangles,edges,flipped);edges=edgeMap(triangles);
+    // Record consistent orientation even if hole filling cannot complete.
+    for(i=0;i<flipped.length;i++)if(flipped[i])winding.push(members[i]);
     triangles=fillHoles(triangles,positions,edges,diagonal,settings.maxHoleDiameterRatio,report);
     var volume=0,correction=0;
     for(i=0;i<triangles.length;i+=3){normal=areaVector(positions,triangles[i],triangles[i+1],triangles[i+2]);a=triangles[i]*3;
@@ -141,13 +150,38 @@
       var sum=volume+term;correction=(sum-volume)-term;volume=sum;
     }
     if(volume<0){for(i=0;i<triangles.length;i+=3){b=triangles[i+1];triangles[i+1]=triangles[i+2];triangles[i+2]=b;}for(i=0;i<flipped.length;i++)flipped[i]^=1;}
-    report.flippedTriangles=flipped.reduce(function(sum,v){return sum+v;},0);
-    var candidate=serialize(triangles,mesh.coordinates,offsets),parsed;
-    try{parsed=root.StlImport.parse(candidate,options);}catch(error){if(error.code&&error.code.indexOf('STL_')===0)fail('Local repair did not produce a valid solid: '+error.message);throw error;}
-    report.repairedTriangleCount=parsed.triangles.length/3;report.validation=parsed.validation;
-    report.repairedBoundingBoxM={minM:parsed.minimum,maxM:parsed.maximum};
-    report.originalSha256=await digest(bytes);report.repairedSha256=await digest(candidate);
-    return{version:1,sourceBytes:candidate,report:report};
+    winding=[];for(i=0;i<flipped.length;i++)if(flipped[i])winding.push(members[i]);
+    } catch(error) { if(error.code!=='STL_REPAIR_UNSUPPORTED')throw error; issueError={code:error.code,message:error.message}; }
+    report.flippedTriangles=winding.length;
+    report.repairedTriangleCount=triangles.length/3;
+    var sourceBytes=null;
+    try { if(triangles.length)sourceBytes=serialize(triangles,mesh.coordinates,offsets); }
+    catch(error) { issueError={code:error.code,message:error.message}; }
+    var changes={automatic:[],proposed:[]},locations=root.StlDiagnostics.collector(mesh,null,'source');
+    function record(kind,ids,status){if(ids.length)locations.add(kind,ids,[],[],status,ids.length);}
+    record('duplicate',duplicates,'fixed');record('degenerate',degenerate,'fixed');record('winding',winding,'fixed');record('removed-facet',removed,'proposed');
+    locations.report.issues.forEach(function(issue){changes[issue.status==='fixed'?'automatic':'proposed'].push(issue);});
+    if(report.addedTriangles && !issueError){
+      var added=[];for(i=members.length;i<triangles.length/3;i++)added.push(i);
+      var candidateMesh={positions:positions,triangles:triangles,minimum:mesh.minimum,maximum:mesh.maximum};
+      var remaining=200000-locations.report.issues.reduce(function(sum,issue){return sum+issue.triangleIds.length;},0);
+      var fills=root.StlDiagnostics.collector(candidateMesh,{maxReferences:remaining},'candidate');
+      fills.add('filled-hole',added,[],[],'proposed',report.filledHoles);
+      changes.proposed.push.apply(changes.proposed,fills.report.issues);
+      locations.report.locationsTruncated=locations.report.locationsTruncated||fills.report.locationsTruncated;
+    }
+    return {sourceBytes:sourceBytes,report:report,changes:changes,error:issueError,
+      changesTruncated:locations.report.locationsTruncated,shapeChanged:removed.length>0||report.addedTriangles>0};
   }
-  root.StlRepair={repair:repair};
+  async function repair(bytes,options,settings){
+    var result=prepare(root.StlImport.readUnvalidated(bytes,options),settings);
+    if(result.error)fail(result.error.message);
+    var parsed;
+    try{parsed=root.StlImport.parse(result.sourceBytes,options);}catch(error){if(error.code&&error.code.indexOf('STL_')===0)fail('Local repair did not produce a valid solid: '+error.message);throw error;}
+    result.report.lengthUnit=options.lengthUnit;result.report.validation=parsed.validation;
+    result.report.repairedBoundingBoxM={minM:parsed.minimum,maxM:parsed.maximum};
+    result.report.originalSha256=await digest(bytes);result.report.repairedSha256=await digest(result.sourceBytes);
+    return {version:1,sourceBytes:result.sourceBytes,report:result.report};
+  }
+  root.StlRepair={prepare:prepare,repair:repair};
 }(globalThis));

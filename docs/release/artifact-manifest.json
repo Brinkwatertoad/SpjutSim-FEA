@@ -109,7 +109,7 @@
         },
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "e63a4414bb1c31c554cad1e721c1839ab907369361dbb41957ddef4ca5640723"
+          "sha256": "b7c64cf4fb556143cfab856a8c9d415cfe95a73d3da5741c5bfad5af62422cad"
         }
       ],
       "build_recipe": {
@@ -151,11 +151,11 @@
       "source_files": [
         {
           "path": "workers/mesher-worker.js",
-          "sha256": "65e37ace4f0c0da2c6bbf00c3cadb9a1fee0be2fbf452891db3873569a98f891"
+          "sha256": "e34eefbc816d13038d8bbdb486cb6278860300123863a908cb064fd9472c2d8e"
         },
         {
           "path": "workers/solver-worker.js",
-          "sha256": "b81719e279c95abdbaf9f54b223c6006a2103ce86d2d0b6443d2f7b010fb674f"
+          "sha256": "27fbf878e683b8e1b442e7dae587f58f0b6a8cd46f58b17994582b0cdce4d6ad"
         },
         {
           "path": "workers/stl-import.js",
@@ -171,12 +171,24 @@
         },
         {
           "path": "workers/stl-repair.js",
-          "sha256": "ab6de0beadaea550a224321e7241edf0554dbaf7f9cd844b1deab9e32dfa357b"
+          "sha256": "63b8b5bad632e639af033fe3a1b9700ccb2c5690e272c4252b1d14121328d553"
+        },
+        {
+          "path": "workers/stl-diagnostics.js",
+          "sha256": "775e2418392236e02297741981b83e30cdf6875a2165e20124cdab5c4ba353d2"
+        },
+        {
+          "path": "workers/stl-preparation-worker.js",
+          "sha256": "aa56a39c1206674973d793d62187b87071add49a8e4e2ccaa5ad5c25fcf41ac3"
+        },
+        {
+          "path": "web/js/geometry/stl-preparation.js",
+          "sha256": "df1669ee00acfb6114c4c6b94c91b58c8d08428073a6fd4aeebb4d7d8ab75925"
         }
       ],
       "build_recipe": {
         "path": "tools/build-local-runtime.py",
-        "sha256": "e63a4414bb1c31c554cad1e721c1839ab907369361dbb41957ddef4ca5640723"
+        "sha256": "b7c64cf4fb556143cfab856a8c9d415cfe95a73d3da5741c5bfad5af62422cad"
       },
       "modifications": "First-party workers packaged as classic JavaScript source strings.",
       "notices": [
@@ -353,7 +365,7 @@
       "source_files": [
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "e63a4414bb1c31c554cad1e721c1839ab907369361dbb41957ddef4ca5640723"
+          "sha256": "b7c64cf4fb556143cfab856a8c9d415cfe95a73d3da5741c5bfad5af62422cad"
         }
       ],
       "build_recipe": {
@@ -838,14 +850,14 @@
     },
     {
       "path": "web/generated/local-runtime/mesher-worker-source.js",
-      "sha256": "a528f83d1bbe99d8579fb877ef10b56b7caad260d048002b3cf6f0044ed66772",
+      "sha256": "dbcda4be20b19d68a38616a8978147f8ab3aaf111d147fb4ae9f58003ff4fddf",
       "components": [
         "workers"
       ]
     },
     {
       "path": "web/generated/local-runtime/solver-worker-source.js",
-      "sha256": "27d6bf2eb35bef2df05d71bdb6f23f67776f6bb57736c7614e43ff3392ac644d",
+      "sha256": "7aa7c55f785c7cfa1f9969497fa18e185bc24f44467ec5a325cbde807c2d74ac",
       "components": [
         "workers"
       ]
@@ -1246,6 +1258,13 @@
       "sha256": "852e0e8699169bf9f6fdc6bda3e682d078dcbc738b5d33e74df594721bff271d",
       "components": [
         "three"
+      ]
+    },
+    {
+      "path": "web/generated/local-runtime/stl-preparation-worker-source.js",
+      "sha256": "718bc1c3fdd672f5e3cadfbc96c6e52a5a508ab6f3679a6cb12dec6420bec74c",
+      "components": [
+        "workers"
       ]
     }
   ]
