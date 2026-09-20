@@ -572,6 +572,7 @@
       message = (generation.error && generation.error.userMessage) || 'The mesh could not be generated.';
     } else if (documentState.meshMetadata) {
       message = documentState.meshMetadata.statistics.elementCount + ' ' + elementLabel + ' elements; ' + documentState.meshMetadata.statistics.nodeCount + ' nodes.';
+      if(documentState.meshMetadata.quality.stlAnalysis){var fidelity=documentState.meshMetadata.quality.stlAnalysis;message+=' STL boundary rebuilt; thickness-aware size '+fidelity.maxSizeM.toPrecision(3)+' m. Area and volume changes below 1%; sampled surface deviation '+fidelity.sampledDeviationM.toPrecision(3)+' m.';}
       if (documentState.meshMetadata.quality.warning) { message += ' ' + documentState.meshMetadata.quality.warning; }
     } else if (hasGeometry) {
       message = 'Ready to generate a ' + elementLabel + ' mesh.';

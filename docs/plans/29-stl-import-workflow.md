@@ -334,11 +334,11 @@ This is the continuation of M29, not a second STL plan. No compatibility layer.
 - [ ] Independently audit gargoyle intersections and document a stronger solid
   repair path. Joining components or changing material requires a validated preview
   and explicit acceptance. Do not describe cleanup as general solid repair.
-- [ ] Make rebuilt surfaces the analysis default. Recover exact planar boundaries
+- [x] Make rebuilt surfaces the analysis default. Recover exact planar boundaries
   before volume meshing; use the existing discrete chart path for other surfaces.
   Preserve engineering groups independently of internal surfaces. Keep original
   triangles as an explicit advanced choice. Avoid silent method fallback.
-- [ ] Add thickness-aware size control, source/mesh boundary-area and volume checks,
+- [x] Add thickness-aware size control, source/mesh boundary-area and volume checks,
   geometric deviation evidence and quality regression cases for elongated and
   rotated parts. Report practical limitations and resource limits explicitly.
 - [ ] Verify focused and complete applicable tests, update the current walkthrough

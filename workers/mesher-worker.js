@@ -423,6 +423,10 @@ function restoreStlGeometry(gmsh,message,parsed){
   if(!SpjutsimFEA.validateStlSurfaceSettings(settings))throw knownImportError('STL_INVALID_SURFACE_SETTINGS','Choose valid simulation surface settings.');
   if(settings.method==='original')return restoreOriginalStlGeometry(gmsh,message,parsed);
   gmsh.clear();gmsh.option.restoreDefaults();gmsh.model.add(message.geometryId);
+  if(settings.method==='analysis'){
+    progress(message.requestId,'stl-analysis','Rebuilding surfaces for analysis…');
+    return StlAnalysis.build(gmsh,parsed);
+  }
   if(settings.method==='remesh'){
     progress(message.requestId,'stl-remesh','Preparing experimental remeshed surfaces…');
     try{return StlRemesh.build(gmsh,parsed,settings);}catch(error){if(error.code)throw error;throw knownImportError('STL_REMESH_FAILED','The STL could not be parametrized. Review the Mesh surface settings.',String(error));}
@@ -435,7 +439,9 @@ async function importStlGeometry(gmsh, message) {
   try {
     progress(message.requestId, 'stl-validate', 'Checking STL topology and surface intersections…');
     var parsed = await StlImport.identify(StlImport.parse(message.sourceBytes, message.stlSource), message.sourceBytes);
-    var restored = restoreStlGeometry(gmsh, message, parsed);
+    // Analysis import retains the checked source preview; surfaces are rebuilt
+    // once, for the requested mesh. The advanced review does not claim a fit.
+    var restored = (message.stlSurface||SpjutsimFEA.defaultStlSurface()).method==='analysis' ? restoreOriginalStlGeometry(gmsh,message,parsed) : restoreStlGeometry(gmsh,message,parsed);
     var positions = new Float64Array(parsed.triangles.length * 3), normals = new Float32Array(positions.length);
     var indices = new Uint32Array(parsed.triangles.length), offsets = new Uint32Array(parsed.patches.length);
     var start = 0;
@@ -464,9 +470,9 @@ async function importStlGeometry(gmsh, message) {
     {
       geometry.sourceMetadata.version = 3;
       geometry.sourceMetadata.surfaceMode = geometry.stlSurface.method;
-      geometry.sourceMetadata.reconstruction = restored.reconstruction || null;
-      if (restored.remeshing) { geometry.sourceMetadata.remeshing = restored.remeshing; }
-      if (restored.analytic) {
+      geometry.sourceMetadata.reconstruction = restored.analysis ? null : restored.reconstruction || null;
+      if (restored.remeshing && !restored.analysis) { geometry.sourceMetadata.remeshing = restored.remeshing; }
+      if (restored.analytic && !restored.analysis) {
         geometry.originalPreview = geometry.preview;
         geometry.boundingBoxM = boundingBoxM(gmsh, restored.solidTag);
         geometry.volumeM3 = gmsh.model.occ.getMass(3, restored.solidTag).mass;
@@ -814,13 +820,14 @@ async function generateMesh(gmsh, message) {
     ? { elementType: 'tet10', volumeNodes: 10, gmshVolumeType: 11, solverFaceType: 'tri6', solverFaceNodes: 6, gmshFaceType: 9 }
     : { elementType: 'tet4', volumeNodes: 4, gmshVolumeType: 4, solverFaceType: 'tri3', solverFaceNodes: 3, gmshFaceType: 2 };
   try {
-    progress(message.requestId, 'mesh-import', 'Restoring CAD geometry…');
+    progress(message.requestId, 'mesh-import', message.sourceFormat==='stl'?'Preparing STL analysis surfaces…':'Restoring CAD geometry…');
     restored = await restoreMeshGeometry(gmsh, message, temporaryPath);
     box = boundingBoxM(gmsh, restored.solidTag);
     diagonalM = Math.sqrt(Math.pow(box.maxM[0] - box.minM[0], 2) + Math.pow(box.maxM[1] - box.minM[1], 2) + Math.pow(box.maxM[2] - box.minM[2], 2));
+    var effectiveSizes=restored.analysis?StlAnalysis.sizing(restored.analysis,message.settings):message.settings;
     gmsh.option.setNumber('Mesh.ElementOrder', 1);
-    gmsh.option.setNumber('Mesh.MeshSizeMin', message.settings.minSizeM);
-    gmsh.option.setNumber('Mesh.MeshSizeMax', message.settings.maxSizeM);
+    gmsh.option.setNumber('Mesh.MeshSizeMin', effectiveSizes.minSizeM);
+    gmsh.option.setNumber('Mesh.MeshSizeMax', effectiveSizes.maxSizeM);
     gmsh.option.setNumber('Mesh.MeshSizeFromCurvature', 1);
     gmsh.option.setNumber('Mesh.MeshSizeExtendFromBoundary', 1);
     if (restored.remeshing) {
@@ -847,6 +854,7 @@ async function generateMesh(gmsh, message) {
     tetrahedra = extractElementConnectivity(gmsh.model.mesh.getElements(3, restored.solidTag), descriptor.gmshVolumeType,
       descriptor.volumeNodes, nodes.indexByNodeTag, 'MESH_EXTRACTION_FAILED');
     boundary = extractBoundaryFaces(gmsh, restored.surfaceTags, message.faceIds, nodes.indexByNodeTag, descriptor);
+    var fidelity=restored.analysis?StlAnalysis.verify(restored.analysis,nodes.positions,boundary,descriptor.solverFaceNodes):null;
     rotatePositionsInPlace(nodes.positions, message.orientation.rotation);
     qualityResult = gmsh.model.mesh.getElementQualities(tetrahedra.elementTags, 'gamma');
     gammaQualities = Array.prototype.slice.call((qualityResult && qualityResult.elementsQuality) || qualityResult || []);
@@ -854,7 +862,8 @@ async function generateMesh(gmsh, message) {
       throw knownMeshError('MESH_QUALITY_FAILED', 'The generated mesh quality could not be evaluated.', 'Gmsh gamma quality output did not match tetrahedron count.');
     }
     summary = meshStatistics(nodes.positions, tetrahedra.connectivity, gammaQualities, diagonalM, descriptor);
-    if (restored.remeshing) {
+    if(fidelity){summary.quality.stlAnalysis=fidelity.report;summary.quality.stlBoundaryAreas=fidelity.areas;}
+    if (restored.remeshing && !restored.analysis) {
       var boundaryCheck = StlRemesh.boundaryDiagnostics(restored.referenceAreasM2, nodes.positions, boundary, descriptor.solverFaceNodes);
       summary.quality.stlBoundaryAreas = boundaryCheck.areas;
       if (boundaryCheck.warning) {

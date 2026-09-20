@@ -39,7 +39,7 @@
    click('mesh-stl-cancel');assert(app.document.analysisRevision===revision&&!app.stlSurfaceReview,'Cancelled surface candidate edited analysis');
    click('mesh-stl-apply');await wait(function(){return !doc.getElementById('mesh-stl-confirm').disabled;});click('mesh-stl-confirm');
    assert(app.document.meshSettings.stlSurface.method==='reconstruct'&&app.document.geometry===installed,'Surface settings changed source identity');
-   app.undoEngineeringEdit();assert(app.document.meshSettings.stlSurface.method==='original','Surface setting undo failed');
+   app.undoEngineeringEdit();assert(app.document.meshSettings.stlSurface.method==='analysis','Surface setting undo failed');
    var meshClient=new api.MesherClient(),mesh=await meshClient.generateMesh({geometry:installed,sourceBytes:app.geometrySource.sourceBytes,settings:{preset:'coarse',elementType:'tet10',stlSurface:{version:1,method:'reconstruct',reconstructionToleranceM:.001,remeshFeatureAngleDegrees:null}}});meshClient.dispose();
    assert(mesh.quality.minimumJacobian>0,'Reviewed fill failed meshing');
    status.textContent='Passed';status.dataset.result='passed';

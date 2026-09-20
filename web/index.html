@@ -201,7 +201,7 @@
                 <label for="mesh-max-size">Maximum size (<span data-unit-label="lengthM">m</span>)</label><input data-unit-quantity="lengthM" id="mesh-max-size" type="number" min="0" step="any">
               </div>
               <details id="mesh-stl-surface-settings" hidden><summary>Advanced: simulation surface</summary>
-                <label>Surface method<select id="mesh-stl-method" data-surface-method><option value="original">Keep original surface</option><option value="reconstruct">Reconstruct simple surfaces</option><option value="remesh">Remesh STL surfaces (experimental)</option></select></label>
+                <label>Surface method<select id="mesh-stl-method" data-surface-method><option value="analysis">Rebuild for analysis (recommended)</option><option value="original">Keep original surface</option><option value="reconstruct">Reconstruct simple surfaces</option><option value="remesh">Remesh STL surfaces (experimental)</option></select></label>
                 <label id="mesh-stl-tolerance-label">Maximum deviation (m)<input id="mesh-stl-tolerance" type="number" min="0" step="any" value="0.00001"></label>
                 <label id="mesh-stl-feature-label">Feature angle (degrees)<input id="mesh-stl-feature-angle" type="number" min="1" max="40" value="5"></label>
                 <button id="mesh-stl-apply" type="button">Review surface settings…</button><p id="mesh-stl-status" role="status"></p>

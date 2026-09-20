@@ -98,7 +98,7 @@ bytes when original and prepared input are identical.
   components have selectable locations and counts. Proposed fills/removals show
   the affected surfaces. Fixed winding/duplicates are available in details.
 - Clicking an issue focuses its bounds and highlights it. Provide keyboard
-  selection, labels and symbols as well as color, a Show all control, and a way
+  selection, labels and symbols as well as color, issue highlighting separate from Fit, and a way
   back to the whole part. Occluded issues can be emphasized through the surface.
   Issue picking must not create load/support selections.
 - Use stage-level updates, not a message or animation per triangle. Preserve the
@@ -123,15 +123,24 @@ authored model requires explicit map/drop of assignments; cancel preserves them.
 
 Put simulation-surface settings under **Mesh → Advanced**:
 
-- Default: **Keep original surface**. This is the existing bounded, predictable
-  method, not a promise that detailed source facets will produce a small mesh.
+- Default: **Rebuild for analysis**. Reconstruct planar boundaries without retaining
+  skinny source facets. Internal planes can share one engineering group. If the
+  source requires more than 512 planar regions, use the discrete chart method;
+  failures are explicit, without trying frozen triangles as a fallback.
+- **Keep original surface** is an advanced option preserving source triangles.
 - Optional **Reconstruct simple surfaces** with a positive deviation bound and
   a source/candidate comparison before application.
 - Optional **Remesh STL surfaces (experimental)** with feature angle and clear
   geometry/pressure-fidelity diagnostics.
 
-Do not add a speculative automatic strategy chooser, silently try different
-surface methods, or expand freeform recovery as part of this workflow change.
+The default uses a fixed geometric construction rule, not repeated strategy search.
+Measure inward thickness at every facet centroid and conservatively cap global size
+at one third of the smallest measurement. This can be expensive for fine appendages;
+reject excessive estimated work rather than silently overlooking those features.
+Accept an analysis mesh only with group-area and volume errors at most 1% and
+bidirectional sampled surface distances within the documented scale/thickness limit.
+Sampling does not certify maximum deviation or engineering accuracy; convergence
+and inspection remain necessary. See spec §6.1 for numerical/work limits.
 On a meshing failure, keep the installed model and explain the relevant next
 action. Surface-method changes invalidate mesh/results but preserve selection
 identities when exact ownership is verified. Ambiguous ownership fails; an actual
@@ -257,3 +266,23 @@ Historical evidence: [M28 feasibility](../reviews/28-stl-contract.md),
 [capacity](../reviews/29-stl-import-usability.md),
 [repair](../reviews/29-stl-surface-repair.md), and
 [funnel limitations](../reviews/29-funnel-remeshing.md).
+
+## Owner-feedback follow-up
+
+Open the filename before reading bytes. Status distinguishes reading, checking and
+repairing, ready for setup, repair proposal, and unsuccessful automatic repair.
+During replacement, explicitly retain the old analysis until acceptance. A decoded
+STL is a triangle surface; this is not recognition of CAD design features.
+
+Intersection pairs sharing triangles form connected inspectable regions. The
+aggregate still reports the exact pair count; a component count means components,
+not their triangles. Keep diagnostic locations expandable and describe them as
+explanations of blockers, not repairs the user must individually perform. Hide
+issue controls for clean files and comparison for unchanged files.
+
+The optional solid-repair kernel is a separate, replaceable dependency behind
+plain typed-array worker contracts. It must produce a candidate, never directly
+install geometry. All material changes require before/after review and strict
+serialized-candidate validation. Its size, licenses, source distribution and build
+pins must be recorded before runtime integration; dependency approval alone does
+not establish geometric fidelity or authorize publishing a release.

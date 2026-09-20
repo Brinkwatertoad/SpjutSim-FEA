@@ -196,6 +196,7 @@
             return;
           }
           var meshValidation = root.SpjutsimFEA.validateVolumeMeshResult(message.result, request.geometry.faceIds);
+          if(request.geometry.sourceFormat==='stl' && (request.settings.stlSurface||root.SpjutsimFEA.defaultStlSurface()).method==='analysis' && !message.result.quality.stlAnalysis)meshValidation={valid:false,reason:'missing-stl-fidelity'};
           if (!meshValidation.valid) {
             finish(clientFailure('INVALID_VOLUME_MESH_RESULT', 'The geometry engine returned an invalid volume mesh.', meshValidation.reason, 'mesh'));
             return;

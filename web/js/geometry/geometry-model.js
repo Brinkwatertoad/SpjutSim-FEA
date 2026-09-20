@@ -173,7 +173,7 @@
     if(!root.SpjutsimFEA.validateStlSurfaceSettings(options))return false;
     if (metadata.surfaceMode!==options.method) { return false; }
     if (options.method!=='remesh' && metadata.remeshing) { return false; }
-    if (options.method==='original') { return metadata.reconstruction===null && !model.originalPreview; }
+    if (options.method==='original'||options.method==='analysis') { return metadata.reconstruction===null && !model.originalPreview; }
     if (options.method==='remesh') {
       var remeshing=metadata.remeshing;
       return Boolean(metadata.reconstruction===null && !model.originalPreview && remeshing && remeshing.version===1 &&

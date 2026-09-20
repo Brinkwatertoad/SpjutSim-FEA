@@ -109,7 +109,7 @@
         },
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "9caa7ae63a8e53fff81eff8b38028f49630eeabcc609bf69742b83d56825805d"
+          "sha256": "a918cee370a4242ea1808a838b9f218545e18021916c0a097b07ff1fdd186fae"
         }
       ],
       "build_recipe": {
@@ -151,7 +151,7 @@
       "source_files": [
         {
           "path": "workers/mesher-worker.js",
-          "sha256": "54f337b5b40303c105bad021a764a841172c2ede83d96d480e672e0022c4a3c0"
+          "sha256": "529ee755120a5384ae4f31ee9a7b86ed15c7fb9688bd4dd06710f63081dc5838"
         },
         {
           "path": "workers/solver-worker.js",
@@ -179,16 +179,16 @@
         },
         {
           "path": "workers/stl-preparation-worker.js",
-          "sha256": "158a97a1e1ff554a56f705c73801af4ed35606d370e97711f538e8f17c659029"
+          "sha256": "daf9500e5bf824caf07b0a4e2914b40527f26c15c9ee4a6ebb0a14695a606933"
         },
         {
           "path": "web/js/geometry/stl-preparation.js",
-          "sha256": "804329d6051cc51eee4182eeaaeee90feb30a9467a26ed4cc11ad2f52b03a011"
+          "sha256": "bd347dac567e21d01f0abd6603130a5c80cc3b067de0af0a5d428f23a56a7ea0"
         }
       ],
       "build_recipe": {
         "path": "tools/build-local-runtime.py",
-        "sha256": "9caa7ae63a8e53fff81eff8b38028f49630eeabcc609bf69742b83d56825805d"
+        "sha256": "a918cee370a4242ea1808a838b9f218545e18021916c0a097b07ff1fdd186fae"
       },
       "modifications": "First-party workers packaged as classic JavaScript source strings.",
       "notices": [
@@ -365,7 +365,7 @@
       "source_files": [
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "9caa7ae63a8e53fff81eff8b38028f49630eeabcc609bf69742b83d56825805d"
+          "sha256": "a918cee370a4242ea1808a838b9f218545e18021916c0a097b07ff1fdd186fae"
         }
       ],
       "build_recipe": {
@@ -850,7 +850,7 @@
     },
     {
       "path": "web/generated/local-runtime/mesher-worker-source.js",
-      "sha256": "6d95fae8148e94e449b19943f7c1cf2ba38b87a25b19028abb33758c902ac5d2",
+      "sha256": "f53ec3ebf412d1d86ad11adf60cc767c793e22e782baf36c3bc2fb81ff8881ee",
       "components": [
         "workers"
       ]
@@ -1262,7 +1262,7 @@
     },
     {
       "path": "web/generated/local-runtime/stl-preparation-worker-source.js",
-      "sha256": "ff86a7f4cf50abfa42d63958397dbc20f7df16ecbf0ad88cc54d462bf317d4ff",
+      "sha256": "37dd146adcb3f6ce63f14adec00b6d5cd11f682454cb62fc60aa093b9610a99e",
       "components": [
         "workers"
       ]

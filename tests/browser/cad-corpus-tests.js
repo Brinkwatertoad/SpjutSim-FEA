@@ -69,6 +69,9 @@
       assert(inRange(geometry.volumeM3, entry.expected.volumeM3), entry.id + ' volume outside range');
       assert(inRange(diagonal(geometry.boundingBoxM), entry.expected.boundsDiagonalM), entry.id + ' bounds outside range');
       var settings = { preset: entry.mesh.preset, elementType: entry.mesh.elementType, minSizeM: entry.mesh.minSizeM, maxSizeM: entry.mesh.maxSizeM };
+      // These stored numerical ranges benchmark exact source triangulation.
+      // Default analysis rebuilding has separate fidelity/quality regressions.
+      if(entry.format==='stl')settings.stlSurface={version:1,method:'original',reconstructionToleranceM:null,remeshFeatureAngleDegrees:null};
       var first = await client.generateMesh({ geometry: geometry, settings: settings, sourceBytes: sourceBytes });
       assert(inRange(first.statistics.nodeCount, entry.mesh.nodeCount), entry.id + ' node count outside range');
       assert(inRange(first.statistics.elementCount, entry.mesh.elementCount), entry.id + ' element count outside range');
@@ -81,7 +84,7 @@
       return { id: entry.id, preparation:preparation, outcome: 'accepted', detail: entry.mesh.elementType + ' ' + first.statistics.elementCount + ' elements', durationMs: performance.now() - started,
         geometry: { faceCount: geometry.faceIds.length, volumeM3: geometry.volumeM3, boundsDiagonalM: diagonal(geometry.boundingBoxM) },
         mesherWasmBytes: memory.wasmMemoryBytes,
-        mesh: { elementType: first.elementType, nodeCount: first.statistics.nodeCount, elementCount: first.statistics.elementCount,
+        mesh: { stlSurface:settings.stlSurface, elementType: first.elementType, nodeCount: first.statistics.nodeCount, elementCount: first.statistics.elementCount,
           gammaMinimum: first.quality.minimum, gammaP05: first.quality.p05, gammaMedian: first.quality.median,
           maximumEdgeRatio: first.quality.maximumEdgeRatio, minimumJacobian: first.quality.minimumJacobian,
           poorElementCount: first.quality.poorElementCount, warning: first.quality.warning } };

@@ -5,7 +5,7 @@
   function validSource(s){return !!(s&&s.version===3&&Object.prototype.hasOwnProperty.call(scales,s.lengthUnit)&&Number.isFinite(s.patchAngleDegrees)&&s.patchAngleDegrees>=1&&s.patchAngleDegrees<=179&&
     !['normalization','surfaceMode','reconstructionToleranceM','remeshFeatureAngleDegrees'].some(function(k){return k in s;}));}
   function validSurface(s){return !!(s&&s.version===1&&(
-    s.method==='original'&&s.reconstructionToleranceM===null&&s.remeshFeatureAngleDegrees===null ||
+    (s.method==='original'||s.method==='analysis')&&s.reconstructionToleranceM===null&&s.remeshFeatureAngleDegrees===null ||
     s.method==='reconstruct'&&Number.isFinite(s.reconstructionToleranceM)&&s.reconstructionToleranceM>0&&s.remeshFeatureAngleDegrees===null ||
     s.method==='remesh'&&s.reconstructionToleranceM===null&&Number.isFinite(s.remeshFeatureAngleDegrees)&&s.remeshFeatureAngleDegrees>=1&&s.remeshFeatureAngleDegrees<=40));}
   function validRequest(r) {
@@ -62,6 +62,6 @@
   }
   root.SpjutsimFEA=root.SpjutsimFEA||{};
   Object.assign(root.SpjutsimFEA,{STL_UNIT_SCALES:scales,validateStlSourceOptions:validSource,validateStlSurfaceSettings:validSurface,
-    defaultStlSurface:function(){return{version:1,method:'original',reconstructionToleranceM:null,remeshFeatureAngleDegrees:null};},validateStlPreparationRequest:validRequest,
+    defaultStlSurface:function(){return{version:1,method:'analysis',reconstructionToleranceM:null,remeshFeatureAngleDegrees:null};},validateStlPreparationRequest:validRequest,
     validateStlPreview:validPreview,validateStlDiagnostics:validDiagnostics,validateStlPreparationResult:validResult});
 }(globalThis));

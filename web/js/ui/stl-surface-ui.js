@@ -32,7 +32,7 @@
       if(this.reviewState!==review||!c.completeStlSurfaceReview(review,candidate))return;
       this.display.setDiagnostics([],{source:preview(review.geometry,'source'),candidate:preview(review.candidate,'candidate')});
       this.display.showRevision('candidate');element('compare').value='candidate';element('confirm').disabled=false;
-      element('status').textContent=method==='reconstruct'?'Compare the fitted surface with the original before applying. Maximum checked deviation: '+candidate.sourceMetadata.reconstruction.maximumDeviationM.toPrecision(4)+' m.':method==='remesh'?'Group ownership verified. Remeshing can change boundary area; inspect fidelity warnings with the generated mesh.':'Original triangles will define the simulation boundary.';
+      element('status').textContent=method==='analysis'?'Surfaces will be rebuilt with thickness-aware sizing. Boundary fidelity is checked during meshing.':method==='reconstruct'?'Compare the fitted surface with the original before applying. Maximum checked deviation: '+candidate.sourceMetadata.reconstruction.maximumDeviationM.toPrecision(4)+' m.':method==='remesh'?'Group ownership verified. Remeshing can change boundary area; inspect fidelity warnings with the generated mesh.':'Original triangles will define the simulation boundary.';
     }catch(error){if(!review||this.reviewState===review){this.cancel();element('status').textContent=error.message;}}
     finally{if(client)client.dispose();if(this.client===client)this.client=null;}
   };

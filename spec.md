@@ -745,9 +745,24 @@ WebAssembly availability; Gmsh/FEM engine checks execute only on demand or in te
   consent and installation; cancellation/stale replies preserve the prior analysis.
   Rendering/UI consume application contracts. The native solver stays format-neutral.
 - Generate selectable groups automatically (40° default; adjustable 1–179° near
-  selection). Put original/reconstruct/experimental-remesh settings in Mesh
-  Advanced. Default to original surface; no automatic strategy search or fallback.
-  Preserve existing bounded primitive recovery and experimental remeshing methods.
+  selection). Default to `analysis`: rebuild planar regions from their boundaries,
+  independently of engineering groups; use discrete charts when planar subdivision
+  would exceed 512 surfaces. Never silently fall back to frozen triangles on failure.
+  Keep original/reconstruct/experimental-remesh choices in Mesh Advanced.
+  For analysis, cast inward rays from every source-facet centroid using a BVH.
+  Cap global mesh size at one third of the minimum measured thickness; use the
+  smaller requested size when present. This conservative cap is not local adaptive
+  refinement or a proof of thickness resolution everywhere. Reject a workload
+  estimate `sourceVolume / size^3 > 250000` before volume generation.
+  Check each group area and total boundary volume against source (1% maximum),
+  plus bidirectional source/mesh vertices, edge midpoints and facet centroids
+  against `min(0.001 * diagonal, 0.05 * measuredThickness)` in meters. Sampling
+  is not a Hausdorff bound. Cap each spatial index at 20 million traversal/primitive
+  operations. Fail with stable fidelity/work-limit errors and no silent fallback.
+  Return checked `quality.stlAnalysis` version 1 (construction method, measured
+  thickness, effective maximum size, volume/area errors, sampled deviation and
+  its limit, sample count), plus per-group source/mesh areas. Validate these at the
+  worker/client boundary; show effective size and fidelity evidence with mesh status.
 - Group identity depends on prepared source, units and grouping/membership, not
   simulation-surface method, tolerance, feature angle, mesh resolution or rigid
   orientation. Verify exact ownership before preserving assignments. Method edits
@@ -761,7 +776,7 @@ WebAssembly availability; Gmsh/FEM engine checks execute only on demand or in te
 - Current coarse worker protocol is 4. Source/group settings are
   `stlSource: {version:3,lengthUnit,patchAngleDegrees}`. Independent
   `meshSettings.stlSurface` is `{version:1,method,reconstructionToleranceM,remeshFeatureAngleDegrees}`;
-  original uses both null, reconstruct uses a positive SI tolerance and null angle,
+  analysis and original use both null, reconstruct uses a positive SI tolerance and null angle,
   remesh uses null tolerance and a 1–40° angle. Geometry metadata is version 3.
   Old versions/repair requests are rejected without migration or compatibility paths.
 - Pending preview coordinates are Float64 source units, separately indexed by Uint32

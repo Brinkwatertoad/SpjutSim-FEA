@@ -95,6 +95,14 @@ equilibrium, staleness, and default-result-view checks. Open
 enabled (or from the optional HTTP server) for the full STEP cube import,
 face-authored support/load, mesh, analytical axial solve, and four-view check.
 
+STL meshing defaults to **Rebuild for analysis**. Planar boundaries are rebuilt
+without freezing the input triangles; other surfaces use discrete charts. Thickness
+measurements constrain mesh size, and area/volume plus sampled surface-distance
+checks reject excessive boundary changes. Original triangles remain in Mesh Advanced.
+This is a conservative global sizing cap; very small details can exceed work limits.
+`tests/browser/stl-analysis-tests.html` covers elongated/rotated Tet4/Tet10 parts,
+a thin appendage, group ownership, and boundary fidelity.
+
 For the optional supplied-funnel diagnostic, place `Better Vented Parametric Funnel.stl`
 in `tests/fixtures/stl/` and open `tests/browser/funnel-solve-tests.html` from the
 local server (or Chromium with local-file access enabled). It uses millimeters,

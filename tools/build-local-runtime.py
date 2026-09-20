@@ -56,7 +56,7 @@ def read_worker_source(source_root: Path, kind: str, filename: str) -> tuple[str
         repair = source_root / 'stl-repair.js'
         if not repair.is_file():
             raise ValueError(f'STL repair helper is unavailable: {repair}')
-        source = '\n'.join(path.read_text(encoding='utf-8') for path in (ROOT / 'web/js/geometry/stl-preparation.js', helper, reconstruction, remesh)) + '\n' + source
+        source = '\n'.join(path.read_text(encoding='utf-8') for path in (ROOT / 'web/js/geometry/stl-preparation.js', helper, reconstruction, remesh, source_root / 'stl-spatial.js', source_root / 'stl-analysis.js')) + '\n' + source
     return source, hashlib.sha256(source.encode('utf-8')).hexdigest()
 
 
