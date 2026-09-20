@@ -17,7 +17,7 @@ async function rebuildSurface(parsed,analysis,progress){
  try{
   if(!pp||!tp||!gp||!hp)surfaceFailure('STL_ANALYSIS_LIMIT','The boundary mesh exceeded available memory.');
   module.HEAPF64.set(p,pp/8);module.HEAPU32.set(t,tp/4);module.HEAPU32.set(g,gp/4);
-  for(var attempt=0;attempt<5;attempt++){
+  for(var attempt=0;attempt<6;attempt++){
    progress(attempt?'Refining regions that exceed the surface tolerance…':'Meshing the STL surface without charts…');
    module.HEAPF64.set(targets.map(function(v){return v/parsed.diagonal;}),hp/8);
    var code=module._surface_remesh(pp,p.length/3,tp,t.length/3,gp,hp,Math.min(2,analysis.maxSizeM/parsed.diagonal));
@@ -27,7 +27,7 @@ async function rebuildSurface(parsed,analysis,progress){
    var positions=module.HEAPF64.slice(module._surface_positions()/8,module._surface_positions()/8+nv*3),triangles=module.HEAPU32.slice(module._surface_triangles()/4,module._surface_triangles()/4+nf*3),owners=module.HEAPU32.slice(module._surface_groups()/4,module._surface_groups()/4+nf);
    positions.forEach(function(v,i){positions[i]=v*parsed.diagonal+origin[i%3];});
    progress('Checking boundary topology, selection areas and surface detail…');
-   try{StlImport.validateMesh({positions:positions,triangles:triangles},parsed.options);}catch(error){
+   try{StlImport.validateMesh({positions:positions,triangles:triangles},parsed.options,false);}catch(error){
     if(error.code!=='STL_SELF_INTERSECTION')throw error;
     // Reject the candidate and refine only its offending source neighborhood.
     // No invalid remesh is repaired into a different accepted solid.
@@ -39,7 +39,7 @@ async function rebuildSurface(parsed,analysis,progress){
     marked.forEach(function(v,i){if(v)targets[i]*=.4;});continue;
    }
    var boundary=surfaceBoundary(positions,triangles,owners,parsed.patches.length),assessment=StlAnalysis.verify(analysis,positions,boundary,3,true);
-   progress('Surface detail checked.',{attempt:attempt+1,facets:nf,refinedSourceFacets:assessment.refine.reduce(function(n,v){return n+v;},0),areaError:assessment.areaError,volumeError:assessment.volumeError,maximumDeviationRatio:assessment.maximumDeviationRatio});
+   progress('Surface detail checked.',{attempt:attempt+1,facets:nf,wasmMemoryBytes:module.HEAPU8.buffer.byteLength,refinedSourceFacets:assessment.refine.reduce(function(n,v){return n+v;},0),areaError:assessment.areaError,volumeError:assessment.volumeError,maximumDeviationRatio:assessment.maximumDeviationRatio});
    if(assessment.acceptable)return {positions:positions,triangles:triangles,patchByTriangle:owners};
    var changed=false;
    assessment.refine.forEach(function(v,i){if(v){targets[i]*=.4;changed=true;}});

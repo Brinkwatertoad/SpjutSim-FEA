@@ -16,9 +16,14 @@
     var points=new Float32Array(preview.positions.length);
     for(var i=0;i<points.length;i++)points[i]=preview.positions[i]/this.divisor-this.origin[i%3]/this.divisor;
     var geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.BufferAttribute(points,3));geometry.setIndex(new T.BufferAttribute(preview.triangles,1));geometry.computeVertexNormals();
-    var mesh=new T.Mesh(geometry,new T.MeshStandardMaterial({color:0x28333d,side:T.DoubleSide,roughness:.8,metalness:0}));this.surface.add(mesh);
+    var mesh=new T.Mesh(geometry,new T.MeshStandardMaterial({color:0x28333d,side:T.DoubleSide,flatShading:true,roughness:.8,metalness:0}));this.surface.add(mesh);
     if(first)this.viewport.fitModel(new T.Vector3(),1,true);
     this.viewport.render();
+  };
+  StlDiagnosticsDisplay.prototype.showFaceBoundaries=function(geometry){
+    var edges=geometry.preview.featureEdges,scale=root.SpjutsimFEA.STL_UNIT_SCALES[geometry.stlSource.lengthUnit],points=new Float32Array(edges.indices.length*3);
+    for(var i=0;i<edges.indices.length;i++)for(var axis=0;axis<3;axis++)points[3*i+axis]=(edges.positionsM[3*edges.indices[i]+axis]/scale-this.origin[axis])/this.divisor;
+    var lines=new T.BufferGeometry();lines.setAttribute('position',new T.BufferAttribute(points,3));this.surface.add(new T.LineSegments(lines,new T.LineBasicMaterial({color:0xc8d6e0})));this.viewport.render();
   };
   StlDiagnosticsDisplay.prototype.setDiagnostics=function(issues,previews){this.issues=issues;this.previews=previews;};
   StlDiagnosticsDisplay.prototype.focusIssue=function(index){

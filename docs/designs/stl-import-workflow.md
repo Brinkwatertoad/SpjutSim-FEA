@@ -58,7 +58,7 @@ states. An invalid solid can be inspected without becoming eligible for analysis
 | Inconsistent or inward winding on an orientable shell | Correct automatically; summarize changes |
 | Existing narrowly defined stray-facet removal | Prepare a proposal; highlight removed facets for approval |
 | Small planar convex hole filling | Prepare a proposal; highlight added facets for approval |
-| Remaining detected intersections after local repair | Build a bounded enclosing-surface proposal in a separate worker; strict checks and explicit acceptance |
+| Remaining detected intersections after local repair | Subdivide intersections and extract a detail-preserving solid-boundary proposal in a separate worker; strict checks and explicit acceptance |
 | Tolerance welding, manual vertex movement, discarding solid components, arbitrary reconstruction | Unsupported; retain useful diagnostics |
 
 Automatic cleanup preserves coordinates and intended surface location. Never
@@ -164,8 +164,21 @@ action. Surface-method changes invalidate mesh/results but preserve selection
 identities when exact ownership is verified. Ambiguous ownership fails; an actual
 group/source change goes through explicit assignment transfer.
 
+Recognize broad planar loading/support areas separately from the small curved strips
+around fillets. Keep smooth cylinder walls together; a transitive angle flood alone
+must not swallow the flat sides of a rounded mechanical part. See spec §6.1 for the
+bounded, scale-relative classifier. This labels existing facets, without recovering
+or inventing an exact CAD surface. Show face count and boundary lines during review.
+
+Optional **Split selected face into two** and **Merge selected faces** sit beside
+selection. Splitting creates two connected regions along source triangle edges;
+merging requires touching faces. These are corrective controls, not import steps
+or arbitrary sketch-based surface cuts. Preview changes; preserve the installed
+model on cancellation and explicitly review existing assignments before transfer.
+Source-bound edit records are capped at 64 operations. Reset recognition clears them.
+
 Patch IDs derive from canonical prepared source content and group membership,
-with source units and grouping definition included. They do not include mesh
+with source units included. A local split or merge retains IDs of unchanged faces. They do not include mesh
 preset, simulation-surface method, reconstruction tolerance, remesh feature angle,
 or rigid orientation. A method may own multiple internal surfaces for one group;
 all must have unambiguous source ownership. Changing method must never attach

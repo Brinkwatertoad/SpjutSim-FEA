@@ -38,6 +38,7 @@ self.onmessage=async function(event){
     var diagnostics=StlDiagnostics.inspect(candidate||mesh,{maxRecords:1000-changes.length,maxReferences:200000-usedReferences},candidate?'candidate':'source');
     var sourceHash=await sourceDigest(m.sourceBytes),preparedHash=changed?await sourceDigest(bytes):sourceHash;
     var options={version:3,lengthUnit:m.lengthUnit,patchAngleDegrees:m.patchAngleDegrees};
+    if(m.faceEdits)options.faceEdits=m.faceEdits;
     var geometry=null,validation=null,error=prepared.error;
     send('stl-progress',{message:changed?'Checking the prepared model…':'Checking solid geometry…'});
     try{var parsed=await StlImport.identify(StlImport.parse(bytes,options),bytes);geometry=geometryFromParsed(parsed,m,options);validation=parsed.validation;error=null;}

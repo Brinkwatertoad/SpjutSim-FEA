@@ -102,7 +102,7 @@
     }
     // Native boundary output is already indexed Float64 data. Validate it using
     // exactly the source topology/intersection checks, without an STL round trip.
-    function validateMesh(decoded,options) {
+    function validateMesh(decoded,options,recognizeFaces) {
       if(!root.SpjutsimFEA.validateStlSourceOptions(options))fail('STL_INVALID_OPTIONS','Choose valid STL source units and grouping.');
       var positions=decoded.positions,triangles=decoded.triangles;
       if(!(positions instanceof Float64Array)||positions.length<12||positions.length%3||positions.length>1800000||!(triangles instanceof Uint32Array)||triangles.length<12||triangles.length%3||triangles.length>600000)fail('STL_INPUT_LIMIT','The indexed surface exceeds its geometry limits.');
@@ -161,23 +161,8 @@
       if (volume < 0) { fail('STL_INWARD_WINDING', 'The closed surface points inward. Reverse winding in the source and export again.'); }
       if (!(volume > diagonal*diagonal*diagonal*1e-14)) { fail('STL_ZERO_VOLUME', 'The surface does not enclose a numerically usable positive volume.'); }
       var validationReport = validateSolid(positions, triangles);
-      var patchByTriangle = new Uint32Array(count); patchByTriangle.fill(0xffffffff);
-      var patches = [], cosine = Math.cos(options.patchAngleDegrees * Math.PI / 180);
-      for (index = 0; index < count; index += 1) {
-        if (patchByTriangle[index] !== 0xffffffff) { continue; }
-        var patch = patches.length; head = 0; tail = 1; queue[0] = index; patchByTriangle[index] = patch;
-        while (head < tail) {
-          current = queue[head++];
-          for (edge = 0; edge < 3; edge += 1) {
-            adjacent = neighbors[current*3+edge];
-            var dot = normals[current*3]*normals[adjacent*3] + normals[current*3+1]*normals[adjacent*3+1] + normals[current*3+2]*normals[adjacent*3+2];
-            if (patchByTriangle[adjacent] === 0xffffffff && dot >= cosine) {
-              patchByTriangle[adjacent] = patch; queue[tail++] = adjacent;
-            }
-          }
-        }
-        patches.push({ index: patch, triangleCount: tail });
-      }
+      var regions=recognizeFaces===false?{patchByTriangle:new Uint32Array(count),patches:[{index:0,triangleCount:count}]}:root.StlFaces.group({positions:positions,triangles:triangles,normals:normals,neighbors:neighbors,diagonal:diagonal},options.patchAngleDegrees,options.faceEdits);
+      var patchByTriangle=regions.patchByTriangle,patches=regions.patches;
       return { positions: positions, triangles: triangles, normals: normals, patchByTriangle: patchByTriangle,
         neighbors: neighbors, patches: patches, minimum: minimum, maximum: maximum, diagonal: diagonal, volume: volume,
         validation: validationReport, unit: options.lengthUnit, angleDegrees: options.patchAngleDegrees, options: Object.assign({}, options) };
@@ -355,7 +340,8 @@
         }
         members[parsed.patchByTriangle[i/3]].push(vertices.sort().join(';'));
       }
-      var prefix = 'stl-patch-v3|' + sourceHash + '|' + parsed.unit + '|' + parsed.angleDegrees + '|';
+      if(parsed.options.faceEdits&&parsed.options.faceEdits.sourceHash!==sourceHash)fail('STL_FACE_EDIT_SOURCE','Face corrections belong to a different STL source. Reset them before importing.');
+      var prefix = 'stl-face-v4|' + sourceHash + '|' + parsed.unit + '|';
       parsed.patchIds = await Promise.all(members.map(async function (triangles) {
         return 'stl:' + await digest(new TextEncoder().encode(prefix + triangles.sort().join('\n')));
       }));

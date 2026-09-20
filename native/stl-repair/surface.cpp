@@ -12,6 +12,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <vector>
+#include <unordered_map>
 
 namespace {
 using K=CGAL::Exact_predicates_inexact_constructions_kernel;
@@ -36,6 +37,11 @@ double distance2(const K::Point_3& p,const K::Triangle_3& f){
  double va=d3*d6-d5*d4;if(va<=0&&d4-d3>=0&&d5-d6>=0)return (bp-(c-b)*((d4-d3)/((d4-d3)+(d5-d6)))).squared_length();
  auto n=CGAL::cross_product(ab,ac);double h=ap*n;return h*h/n.squared_length();
 }
+struct Point_hash {
+  std::size_t operator()(const std::array<double,3>& p) const noexcept {
+    std::size_t h=0;for(double x:p)h^=std::hash<double>{}(x)+0x9e3779b9+(h<<6)+(h>>2);return h;
+  }
+};
 struct Field {
   using FT=double;
   using Point_3=K::Point_3;
@@ -45,6 +51,9 @@ struct Field {
   std::vector<Node> nodes;
   double maximum;
   mutable std::size_t work=0;
+  // The field is immutable. Repeated edge tests revisit identical coordinates;
+  // retain a bounded cache, keyed by coordinates rather than mutable vertex IDs.
+  mutable std::unordered_map<std::array<double,3>,double,Point_hash> cache;
   Field(const Mesh& mesh,const double* targets,double max):maximum(max) {
     for(auto f:mesh.faces()) {
       auto h=mesh.halfedge(f);
@@ -77,7 +86,10 @@ struct Field {
     if(n.left){auto a=n.left,b=n.right;if(lower(a,p)>lower(b,p))std::swap(a,b);visit(a,p,best);visit(b,p,best);}
     else for(unsigned i=n.start;i<n.end;++i){auto f=order[i];if(sizes[f]<best)best=std::min(best,sizes[f]+.35*std::sqrt(distance2(p,faces[f])));}
   }
-  double value(const Point_3& p) const {double best=maximum;visit(0,p,best);return best;}
+  double value(const Point_3& p) const {
+    std::array<double,3> key={p.x(),p.y(),p.z()};auto found=cache.find(key);if(found!=cache.end())return found->second;
+    double best=maximum;visit(0,p,best);if(cache.size()<500000)cache.emplace(key,best);return best;
+  }
   FT at(Mesh::Vertex_index v,const Mesh& mesh) const {return value(mesh.point(v));}
   std::optional<FT> is_too_long(Mesh::Vertex_index a,Mesh::Vertex_index b,const Mesh& mesh) const {
     auto& p=mesh.point(a);auto& q=mesh.point(b);double h=value(CGAL::midpoint(p,q)),d=CGAL::squared_distance(p,q);
@@ -88,7 +100,9 @@ struct Field {
     if(d<h*h*.64)return d/(h*h);return std::nullopt;
   }
   Point_3 split_placement(Mesh::Halfedge_index h,const Mesh& m) const {return CGAL::midpoint(m.point(m.source(h)),m.point(m.target(h)));}
-  void register_split_vertex(Mesh::Vertex_index,const Mesh& m) {if(m.number_of_faces()>200000)throw std::length_error("facet limit");}
+  // Bisection precedes collapse: allow bounded temporary fans larger than the
+  // 200k exported boundary. The worker still has a hard 512 MiB heap.
+  void register_split_vertex(Mesh::Vertex_index,const Mesh& m) {if(m.number_of_faces()>600000)throw std::length_error("facet limit");}
 };
 }
 extern "C" {

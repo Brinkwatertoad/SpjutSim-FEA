@@ -375,16 +375,20 @@ approved the following replacement. Keep one design/plan and no compatibility pa
 M29 acceptance remains pending. Prior wrap results and failures are historical
 evidence, not acceptance criteria for this revision.
 
-Repair checkpoint: native ABI and five Chromium file-mode browser suites pass.
-The original gargoyle yields 61,448 strict-valid facets, including 57,030 unchanged
-source facets, identical exterior bounds and one explicitly proposed tiny enclosed
-void fill. Runtime: 1,004,422 bytes / 336,902 gzip; no added dependency. Meshing
-items above remain in progress.
+Current checkpoint: exact gargoyle repair retains 57,030 unchanged original facets
+and proposes one tiny enclosed void fill. Chart-free meshing yields 144,736 boundary
+triangles / 613,123 Tet4 elements, with 0.065% volume error and 0.870% maximum
+face-area error. Chromium and Firefox meet the 120-second deadline. No inverted or
+near-zero elements; 876 poor elements remain warned. Combined runtime:
+1,484,193 bytes / 482,670 gzip. See the current review/evidence for full checks.
 
-Meshing checkpoint: chart-free gargoyle boundary has 129,256 triangles and produces
-517,043 Tet4 elements. Chromium and Firefox pass the complete path within the
-120-second deadline. Volume error 0.063%, worst group-area error 0.870%; all local
-sampled deviation limits pass. No inverted/near-zero elements; 1,002 poor elements
-remain explicitly warned. Local sizing, lifecycle, numerical and corpus checks pass.
-The combined runtime is 1,479,354 bytes / 480,772 gzip, with reproducible builds.
-See the single current M29 review/evidence for checks, packaging and limitations.
+## 9. Selectable engineering faces and public meshing regression
+
+- [x] Regress rounded mechanical parts: separate planar support/loading areas from
+  fillets, retain cylinder walls, and prove rotation-independent face recognition.
+- [x] Add optional reviewed split/merge, stable untouched IDs, source-bound edits,
+  and cancellation/assignment-transfer checks. Keep correction out of import's required path.
+- [x] Prove corrected face ownership through meshing, pressure integration and
+  supported node membership; rerun gargoyle and public dense-cylinder meshing.
+- [x] Verify native limits, full applicable suites, file-mode packaging and license
+  audit; update the single current evidence record and commit the complete changes.

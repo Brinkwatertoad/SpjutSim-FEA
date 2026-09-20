@@ -37,6 +37,15 @@ checks, per-group area/volume limits and bidirectional local surface-deviation c
 Original/reconstruct/experimental-remesh remain explicit advanced choices. Group IDs,
 assignments, method invalidation and Undo/Redo retain their existing contracts.
 
+Automatic face recognition separates broad planar load/support areas from adjoining
+fillets while keeping cylinder walls together. Review shows selectable face counts
+and seams with faithful flat-triangle shading. Optional split/merge controls live
+under Model; import adds no required choices. Splitting partitions source triangles
+into two connected regions; merging requires touching faces. Untouched FaceIds stay
+stable. Corrections preserve orientation, preview/cancel safely, and require explicit
+assignment transfer for installed supports or loads. This is facet-based recognition,
+not recovery of arbitrary original CAD topology or sketch-based surface cutting.
+
 ## Repair-engine decision and limits
 
 The supplied gargoyle has 66,174 raw facets. Local cleanup removes two stray
@@ -56,14 +65,14 @@ identical exterior bounds. One enclosed inward four-facet void (about 0.25 mm wi
 is filled within the explicit local limit. The original exterior is not offset.
 
 **Gargoyle default volume meshing now passes in Chromium and Firefox.** The recorded coarse
-Tet4 run produced 129,256 boundary triangles and 517,043 tetrahedra in about 50 s in Chromium and 111 s in Firefox.
-Its volume change was 0.063%; maximum group-area change was 0.870%. Bidirectional
-sampling checked 572,112 unique vertex/edge-midpoint/facet-centroid locations;
-maximum sampled deviation was 0.129 mm, and every local limit passed.
+Tet4 run produced 144,736 boundary triangles and 613,123 tetrahedra in about 61 s in Chromium and 113 s in Firefox.
+Its volume change was 0.065%; maximum group-area change was 0.870%. Bidirectional
+sampling checked 618,552 unique vertex/edge-midpoint/facet-centroid locations;
+maximum sampled deviation was 0.128 mm, and every local limit passed.
 
-The mesh has no inverted or near-zero-Jacobian elements. It still has 1,002 elements
-below gamma 0.1 (about 0.19%), minimum gamma about 2.1e-6 and maximum edge ratio
-about 15,629 around retained microscopic features. The quality warning remains
+The mesh has no inverted or near-zero-Jacobian elements. It still has 876 elements
+below gamma 0.1 (about 0.14%), minimum gamma about 1.5e-6 and maximum edge ratio
+about 15,126 around retained microscopic features. The quality warning remains
 visible. Median gamma is about 0.75 and fifth percentile about 0.40. A successful
 mesh does not establish stress accuracy or convergence; no gargoyle solve is claimed.
 
@@ -72,9 +81,13 @@ exact refinement cannot produce one supported closed boundary within the local
 fill limit. It remains visible with a specific explanation. The corpus expectation
 records this intentional consequence of removing automatic approximation.
 
-The combined repair/surface runtime is 1,479,354 bytes (480,772 gzip), within the
+The combined repair/surface runtime is 1,484,193 bytes (482,670 gzip), within the
 2 MiB / 768 KiB budget. An optimized build replaces the earlier size-optimized
 prototype to reduce Firefox meshing time. Only the selected CGAL adapter is linked.
+Repeated native sizing queries use a bounded 500k-entry coordinate cache; the
+observed gargoyle surface heap is 207 MiB, below the 512 MiB cap. Dense planar fans
+may temporarily reach 600k facets before collapse; exported boundaries stay capped
+at 200k. At most six local refinement attempts share the unchanged deadline.
 Full pinned CGAL/Boost corresponding-source archives add about 144 MiB to a complete
 offline source-accompanied folder; the hosted application does not load them.
 First-party sources remain GPL-2.0-or-later; the combined CGAL distribution uses
@@ -98,6 +111,12 @@ and [initial workflow evidence](29-stl-workflow-evidence.json) preserve history.
   analytical solves/convergence, repair consent, replacement cancellation, worker
   protocol, geometry authoring/history, reports, unit preferences and layout.
   All 68 corpus cases agree, including the intentionally blocked folded-cube fixture.
+- Rounded-block recognition yields ten faces at two tessellation densities and
+  after rotation; cylinders retain three faces. Split/merge preserves untouched
+  identities, rejects stale sources/disconnected selections, and reviews assignment
+  transfer. A split flat face of area 0.8 m² under 100 Pa produces exactly 80 N;
+  supported nodes stay on the opposite plane, off the fillets. A 600-sided cylinder
+  also meshes after splitting one cap, preserving all four resulting face groups.
 - The elongated 20 × 0.5 × 0.5 part and fully rotated Tet4/Tet10 tests yield about
   7,200 elements, minimum gamma about 0.30, fifth-percentile gamma about 0.57,
   maximum edge ratio about 2.5 and no poor-quality elements. Thin appendages and
@@ -111,6 +130,9 @@ and [initial workflow evidence](29-stl-workflow-evidence.json) preserve history.
   highlight button, then passed with the fix.
 - Offline, keyboard, Escape, all themes, 1440 × 1000 / 760 × 700, reduced-motion and
   2× DPI checks pass. Original/prepared gargoyle screenshots were visually reviewed.
+- The source-accompanied distribution passes the license/source audit. Its actual
+  packaged `file://` app starts and generates the dense-cylinder chart-free volume
+  mesh with all network requests blocked. No publication was performed.
 - Two native/WASM builds reproduce the repair runtime byte for byte. Python wrapper
   checks reproduce all worker scripts. License notices are verified against their
   pinned archives. Optional supplied gargoyle/funnel files are excluded from the
@@ -135,6 +157,9 @@ not a fresh release-wide calibration. M29 owner acceptance remains open.
    accept a replacement and use assignment transfer when required.
 5. Mesh the elongated/rotated test part with the default method. Inspect quality and
    fidelity evidence. Exercise an advanced method change and Undo.
+6. Import a rounded mechanical part: verify separate flat faces and fillets. Apply
+   pressure/supports to the intended areas. Optionally split a face or merge touching
+   faces; cancel once, then accept and review any existing assignment transfer.
 
 Planning approval and passing tests do not constitute owner acceptance or release
 approval. Keep M29 open until this walkthrough is accepted.

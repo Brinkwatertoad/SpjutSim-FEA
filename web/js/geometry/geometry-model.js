@@ -59,7 +59,7 @@
   });
 
   function validateStlSourceOptions(options){return root.SpjutsimFEA.validateStlSourceOptions(options);}
-  function sameStlSourceOptions(left,right){return validateStlSourceOptions(left)&&validateStlSourceOptions(right)&&left.lengthUnit===right.lengthUnit&&left.patchAngleDegrees===right.patchAngleDegrees;}
+  function sameStlSourceOptions(left,right){return validateStlSourceOptions(left)&&validateStlSourceOptions(right)&&left.lengthUnit===right.lengthUnit&&left.patchAngleDegrees===right.patchAngleDegrees&&JSON.stringify(left.faceEdits)===JSON.stringify(right.faceEdits);}
 
   function sourceFormatForFilename(name) {
     var match;

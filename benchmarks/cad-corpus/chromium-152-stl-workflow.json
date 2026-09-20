@@ -25,7 +25,7 @@
       "id": "step-box",
       "outcome": "accepted",
       "detail": "tet4 1244 elements",
-      "durationMs": 1035.199999999255,
+      "durationMs": 1044.699999999255,
       "geometry": {
         "faceCount": 6,
         "volumeM3": 0.48,
@@ -49,7 +49,7 @@
       "id": "step-tiny-box",
       "outcome": "accepted",
       "detail": "tet4 1282 elements",
-      "durationMs": 1012.3999999985099,
+      "durationMs": 1042,
       "geometry": {
         "faceCount": 6,
         "volumeM3": 4.8e-10,
@@ -73,7 +73,7 @@
       "id": "step-thin-plate",
       "outcome": "accepted",
       "detail": "tet4 8009 elements",
-      "durationMs": 1283.800000000745,
+      "durationMs": 1258.9000000022352,
       "geometry": {
         "faceCount": 6,
         "volumeM3": 0.0192,
@@ -97,7 +97,7 @@
       "id": "step-slender-bar",
       "outcome": "accepted",
       "detail": "tet4 582 elements",
-      "durationMs": 964.9000000022352,
+      "durationMs": 951,
       "geometry": {
         "faceCount": 6,
         "volumeM3": 0.010000000000000002,
@@ -121,7 +121,7 @@
       "id": "step-cylinder",
       "outcome": "accepted",
       "detail": "tet4 848 elements",
-      "durationMs": 985.9000000022352,
+      "durationMs": 968.4000000022352,
       "geometry": {
         "faceCount": 3,
         "volumeM3": 0.5026548245743669,
@@ -145,7 +145,7 @@
       "id": "step-sphere",
       "outcome": "accepted",
       "detail": "tet10 597 elements",
-      "durationMs": 1049.1000000014901,
+      "durationMs": 1081.2999999970198,
       "geometry": {
         "faceCount": 1,
         "volumeM3": 0.5235987755982989,
@@ -169,7 +169,7 @@
       "id": "step-ellipsoid",
       "outcome": "accepted",
       "detail": "tet4 278 elements",
-      "durationMs": 1254,
+      "durationMs": 1279.300000000745,
       "geometry": {
         "faceCount": 1,
         "volumeM3": 0.23446966210039089,
@@ -193,7 +193,7 @@
       "id": "step-through-hole",
       "outcome": "accepted",
       "detail": "tet10 766 elements",
-      "durationMs": 1124.1000000014901,
+      "durationMs": 1138.199999999255,
       "geometry": {
         "faceCount": 7,
         "volumeM3": 0.2694637194071061,
@@ -217,7 +217,7 @@
       "id": "step-blind-hole",
       "outcome": "accepted",
       "detail": "tet4 968 elements",
-      "durationMs": 1090.6000000014901,
+      "durationMs": 1108.6000000014901,
       "geometry": {
         "faceCount": 8,
         "volumeM3": 0.4685840734641009,
@@ -241,7 +241,7 @@
       "id": "step-annulus",
       "outcome": "accepted",
       "detail": "tet4 590 elements",
-      "durationMs": 1015.7999999970198,
+      "durationMs": 1018.1999999992549,
       "geometry": {
         "faceCount": 4,
         "volumeM3": 0.23561944901923965,
@@ -265,7 +265,7 @@
       "id": "step-fillet-box",
       "outcome": "accepted",
       "detail": "tet10 1351 elements",
-      "durationMs": 2529.300000000745,
+      "durationMs": 2494.199999999255,
       "geometry": {
         "faceCount": 26,
         "volumeM3": 0.3385993125155688,
@@ -289,7 +289,7 @@
       "id": "step-rounded-column",
       "outcome": "accepted",
       "detail": "tet4 715 elements",
-      "durationMs": 1057.8999999985099,
+      "durationMs": 1047.5,
       "geometry": {
         "faceCount": 3,
         "volumeM3": 0.3976732700669443,
@@ -313,7 +313,7 @@
       "id": "step-cross-union",
       "outcome": "accepted",
       "detail": "tet4 1070 elements",
-      "durationMs": 1198.5,
+      "durationMs": 1138,
       "geometry": {
         "faceCount": 14,
         "volumeM3": 0.17400000000000004,
@@ -337,7 +337,7 @@
       "id": "step-mixed-boss",
       "outcome": "accepted",
       "detail": "tet4 2949 elements",
-      "durationMs": 1278.3999999985099,
+      "durationMs": 1132.9000000022352,
       "geometry": {
         "faceCount": 8,
         "volumeM3": 0.24226194671058462,
@@ -361,7 +361,7 @@
       "id": "step-cone",
       "outcome": "accepted",
       "detail": "tet4 554 elements",
-      "durationMs": 1074.699999999255,
+      "durationMs": 974.0999999977648,
       "geometry": {
         "faceCount": 3,
         "volumeM3": 0.36390114904059956,
@@ -385,7 +385,7 @@
       "id": "step-torus",
       "outcome": "accepted",
       "detail": "tet4 479 elements",
-      "durationMs": 1293.2000000029802,
+      "durationMs": 1201.199999999255,
       "geometry": {
         "faceCount": 1,
         "volumeM3": 0.38373021911436855,
@@ -409,7 +409,7 @@
       "id": "step-loft",
       "outcome": "accepted",
       "detail": "tet4 542 elements",
-      "durationMs": 1330.0999999977648,
+      "durationMs": 1273,
       "geometry": {
         "faceCount": 3,
         "volumeM3": 0.3245223379941775,
@@ -433,7 +433,7 @@
       "id": "step-offset-box",
       "outcome": "accepted",
       "detail": "tet4 1144 elements",
-      "durationMs": 1063.3999999985099,
+      "durationMs": 1013,
       "geometry": {
         "faceCount": 6,
         "volumeM3": 0.6929999999999998,
@@ -457,7 +457,7 @@
       "id": "iges-box",
       "outcome": "accepted",
       "detail": "tet4 1263 elements",
-      "durationMs": 1166.300000000745,
+      "durationMs": 1087.9000000022352,
       "geometry": {
         "faceCount": 6,
         "volumeM3": 0.48000000000000004,
@@ -481,7 +481,7 @@
       "id": "iges-tiny-box",
       "outcome": "accepted",
       "detail": "tet4 1289 elements",
-      "durationMs": 1141.8999999985099,
+      "durationMs": 1094.800000000745,
       "geometry": {
         "faceCount": 6,
         "volumeM3": 4.8e-10,
@@ -505,7 +505,7 @@
       "id": "iges-thin-plate",
       "outcome": "accepted",
       "detail": "tet4 8007 elements",
-      "durationMs": 1386.199999999255,
+      "durationMs": 1419.3999999985099,
       "geometry": {
         "faceCount": 6,
         "volumeM3": 0.0192,
@@ -529,7 +529,7 @@
       "id": "iges-cylinder",
       "outcome": "accepted",
       "detail": "tet4 554 elements",
-      "durationMs": 1249.699999999255,
+      "durationMs": 1261.4000000022352,
       "geometry": {
         "faceCount": 3,
         "volumeM3": 0.5066769051171568,
@@ -553,7 +553,7 @@
       "id": "iges-cone",
       "outcome": "accepted",
       "detail": "tet4 442 elements",
-      "durationMs": 1396.8999999985099,
+      "durationMs": 1328,
       "geometry": {
         "faceCount": 3,
         "volumeM3": 0.3665563505747116,
@@ -577,7 +577,7 @@
       "id": "iges-through-hole",
       "outcome": "accepted",
       "detail": "tet10 814 elements",
-      "durationMs": 1584,
+      "durationMs": 1469.300000000745,
       "geometry": {
         "faceCount": 7,
         "volumeM3": 0.26922307090199143,
@@ -601,7 +601,7 @@
       "id": "iges-fillet-box",
       "outcome": "accepted",
       "detail": "tet10 1212 elements",
-      "durationMs": 3462.39999999851,
+      "durationMs": 3248.5,
       "geometry": {
         "faceCount": 26,
         "volumeM3": 0.3360878629416808,
@@ -625,7 +625,7 @@
       "id": "iges-mixed-boss",
       "outcome": "accepted",
       "detail": "tet4 2741 elements",
-      "durationMs": 1575.199999999255,
+      "durationMs": 1440.800000000745,
       "geometry": {
         "faceCount": 8,
         "volumeM3": 0.24227977252418714,
@@ -649,7 +649,7 @@
       "id": "brep-box",
       "outcome": "accepted",
       "detail": "tet4 1270 elements",
-      "durationMs": 939.5,
+      "durationMs": 865.5,
       "geometry": {
         "faceCount": 6,
         "volumeM3": 0.48,
@@ -673,7 +673,7 @@
       "id": "brep-tiny-box",
       "outcome": "accepted",
       "detail": "tet4 1245 elements",
-      "durationMs": 928.6000000014901,
+      "durationMs": 867.6000000014901,
       "geometry": {
         "faceCount": 6,
         "volumeM3": 4.8e-10,
@@ -697,7 +697,7 @@
       "id": "brep-thin-plate",
       "outcome": "accepted",
       "detail": "tet4 8156 elements",
-      "durationMs": 1179.3999999985099,
+      "durationMs": 1105.5,
       "geometry": {
         "faceCount": 6,
         "volumeM3": 0.0192,
@@ -721,7 +721,7 @@
       "id": "brep-cylinder",
       "outcome": "accepted",
       "detail": "tet4 877 elements",
-      "durationMs": 920.8000000007451,
+      "durationMs": 862.5,
       "geometry": {
         "faceCount": 3,
         "volumeM3": 0.5026548245743674,
@@ -745,7 +745,7 @@
       "id": "brep-sphere",
       "outcome": "accepted",
       "detail": "tet10 727 elements",
-      "durationMs": 1030.8999999985099,
+      "durationMs": 962.5999999977648,
       "geometry": {
         "faceCount": 1,
         "volumeM3": 0.5235987755982988,
@@ -769,7 +769,7 @@
       "id": "brep-through-hole",
       "outcome": "accepted",
       "detail": "tet10 762 elements",
-      "durationMs": 959.5,
+      "durationMs": 900.9000000022352,
       "geometry": {
         "faceCount": 7,
         "volumeM3": 0.26946371940710717,
@@ -793,7 +793,7 @@
       "id": "brep-fillet-box",
       "outcome": "accepted",
       "detail": "tet10 1359 elements",
-      "durationMs": 2258.60000000149,
+      "durationMs": 2093.400000002235,
       "geometry": {
         "faceCount": 26,
         "volumeM3": 0.33859931251556713,
@@ -817,7 +817,7 @@
       "id": "brep-mixed-boss",
       "outcome": "accepted",
       "detail": "tet4 2968 elements",
-      "durationMs": 973.1000000014901,
+      "durationMs": 907.4000000022352,
       "geometry": {
         "faceCount": 8,
         "volumeM3": 0.24226194671058468,
@@ -841,7 +841,7 @@
       "id": "step-two-solids",
       "outcome": "rejected",
       "detail": "MULTIPLE_SOLIDS_UNSUPPORTED",
-      "durationMs": 828.8999999985099,
+      "durationMs": 773.2999999970198,
       "diagnostic": {
         "code": "MULTIPLE_SOLIDS_UNSUPPORTED",
         "stage": "import",
@@ -853,7 +853,7 @@
       "id": "step-open-shell",
       "outcome": "rejected",
       "detail": "GEOMETRY_NO_SOLID",
-      "durationMs": 759.5,
+      "durationMs": 730.3999999985099,
       "diagnostic": {
         "code": "GEOMETRY_NO_SOLID",
         "stage": "import",
@@ -865,7 +865,7 @@
       "id": "step-malformed-1",
       "outcome": "rejected",
       "detail": "GEOMETRY_NO_SOLID",
-      "durationMs": 718.8000000007451,
+      "durationMs": 660.7000000029802,
       "diagnostic": {
         "code": "GEOMETRY_NO_SOLID",
         "stage": "import",
@@ -877,7 +877,7 @@
       "id": "step-malformed-2",
       "outcome": "rejected",
       "detail": "GEOMETRY_NO_SOLID",
-      "durationMs": 700.6999999992549,
+      "durationMs": 675.1999999992549,
       "diagnostic": {
         "code": "GEOMETRY_NO_SOLID",
         "stage": "import",
@@ -889,7 +889,7 @@
       "id": "step-malformed-3",
       "outcome": "rejected",
       "detail": "GEOMETRY_NO_SOLID",
-      "durationMs": 735.3999999985099,
+      "durationMs": 661.3000000007451,
       "diagnostic": {
         "code": "GEOMETRY_NO_SOLID",
         "stage": "import",
@@ -901,7 +901,7 @@
       "id": "iges-two-solids",
       "outcome": "rejected",
       "detail": "GEOMETRY_NO_SOLID",
-      "durationMs": 886.5999999977648,
+      "durationMs": 823.3999999985099,
       "diagnostic": {
         "code": "GEOMETRY_NO_SOLID",
         "stage": "import",
@@ -913,7 +913,7 @@
       "id": "iges-open-shell",
       "outcome": "rejected",
       "detail": "GEOMETRY_NO_SOLID",
-      "durationMs": 771,
+      "durationMs": 720,
       "diagnostic": {
         "code": "GEOMETRY_NO_SOLID",
         "stage": "import",
@@ -925,7 +925,7 @@
       "id": "iges-malformed-1",
       "outcome": "rejected",
       "detail": "IGES_UNITS_UNSUPPORTED",
-      "durationMs": 717.6000000014901,
+      "durationMs": 651.6000000014901,
       "diagnostic": {
         "code": "IGES_UNITS_UNSUPPORTED",
         "stage": "import",
@@ -937,7 +937,7 @@
       "id": "iges-malformed-2",
       "outcome": "rejected",
       "detail": "IGES_UNITS_UNSUPPORTED",
-      "durationMs": 761.5,
+      "durationMs": 656.3000000007451,
       "diagnostic": {
         "code": "IGES_UNITS_UNSUPPORTED",
         "stage": "import",
@@ -949,7 +949,7 @@
       "id": "iges-malformed-3",
       "outcome": "rejected",
       "detail": "IGES_UNITS_UNSUPPORTED",
-      "durationMs": 691.5,
+      "durationMs": 656.8999999985099,
       "diagnostic": {
         "code": "IGES_UNITS_UNSUPPORTED",
         "stage": "import",
@@ -961,7 +961,7 @@
       "id": "brep-two-solids",
       "outcome": "rejected",
       "detail": "MULTIPLE_SOLIDS_UNSUPPORTED",
-      "durationMs": 727.1000000014901,
+      "durationMs": 644.6999999992549,
       "diagnostic": {
         "code": "MULTIPLE_SOLIDS_UNSUPPORTED",
         "stage": "import",
@@ -973,7 +973,7 @@
       "id": "brep-open-shell",
       "outcome": "rejected",
       "detail": "GEOMETRY_NO_SOLID",
-      "durationMs": 678.1999999992549,
+      "durationMs": 636.9000000022352,
       "diagnostic": {
         "code": "GEOMETRY_NO_SOLID",
         "stage": "import",
@@ -985,7 +985,7 @@
       "id": "brep-malformed-1",
       "outcome": "rejected",
       "detail": "GEOMETRY_NO_SOLID",
-      "durationMs": 671.6000000014901,
+      "durationMs": 626,
       "diagnostic": {
         "code": "GEOMETRY_NO_SOLID",
         "stage": "import",
@@ -997,7 +997,7 @@
       "id": "brep-malformed-2",
       "outcome": "rejected",
       "detail": "GEOMETRY_NO_SOLID",
-      "durationMs": 694.8999999985099,
+      "durationMs": 623.3999999985099,
       "diagnostic": {
         "code": "GEOMETRY_NO_SOLID",
         "stage": "import",
@@ -1009,7 +1009,7 @@
       "id": "brep-malformed-3",
       "outcome": "rejected",
       "detail": "GEOMETRY_NO_SOLID",
-      "durationMs": 668,
+      "durationMs": 620.3999999985099,
       "diagnostic": {
         "code": "GEOMETRY_NO_SOLID",
         "stage": "import",
@@ -1021,7 +1021,7 @@
       "id": "step-empty",
       "outcome": "rejected",
       "detail": "INVALID_IMPORT_REQUEST",
-      "durationMs": 1.699999999254942,
+      "durationMs": 1.9000000022351742,
       "diagnostic": {
         "code": "INVALID_IMPORT_REQUEST",
         "stage": "import",
@@ -1037,7 +1037,7 @@
       },
       "outcome": "accepted",
       "detail": "tet10 12 elements",
-      "durationMs": 764,
+      "durationMs": 649.5,
       "geometry": {
         "faceCount": 6,
         "volumeM3": 1,
@@ -1071,7 +1071,7 @@
       },
       "outcome": "accepted",
       "detail": "tet10 12 elements",
-      "durationMs": 872.1999999992549,
+      "durationMs": 671.2000000029802,
       "geometry": {
         "faceCount": 6,
         "volumeM3": 1,
@@ -1105,7 +1105,7 @@
       },
       "outcome": "accepted",
       "detail": "tet10 11 elements",
-      "durationMs": 799.6999999992549,
+      "durationMs": 754.8999999985099,
       "geometry": {
         "faceCount": 6,
         "volumeM3": 0.019999999552965164,
@@ -1139,7 +1139,7 @@
       },
       "outcome": "rejected",
       "detail": "STL_DISCONNECTED",
-      "durationMs": 773.9000000022352,
+      "durationMs": 706.8999999985099,
       "diagnostic": {
         "code": "STL_DISCONNECTED",
         "stage": "import",
@@ -1155,7 +1155,7 @@
       },
       "outcome": "rejected",
       "detail": "STL_OPEN_SURFACE",
-      "durationMs": 770.3999999985099,
+      "durationMs": 698,
       "diagnostic": {
         "code": "STL_OPEN_SURFACE",
         "stage": "import",
@@ -1171,7 +1171,7 @@
       },
       "outcome": "rejected",
       "detail": "STL_NONMANIFOLD",
-      "durationMs": 744.8999999985099,
+      "durationMs": 684.2999999970198,
       "diagnostic": {
         "code": "STL_NONMANIFOLD",
         "stage": "import",
@@ -1187,7 +1187,7 @@
       },
       "outcome": "rejected",
       "detail": "STL_INWARD_WINDING",
-      "durationMs": 725.5,
+      "durationMs": 689.1000000014901,
       "diagnostic": {
         "code": "STL_INWARD_WINDING",
         "stage": "import",
@@ -1203,7 +1203,7 @@
       },
       "outcome": "rejected",
       "detail": "STL_INCONSISTENT_WINDING",
-      "durationMs": 710.3999999985099,
+      "durationMs": 699.7999999970198,
       "diagnostic": {
         "code": "STL_INCONSISTENT_WINDING",
         "stage": "import",
@@ -1219,7 +1219,7 @@
       },
       "outcome": "rejected",
       "detail": "STL_DEGENERATE_TRIANGLE",
-      "durationMs": 717.6999999992549,
+      "durationMs": 687.6000000014901,
       "diagnostic": {
         "code": "STL_DEGENERATE_TRIANGLE",
         "stage": "import",
@@ -1235,7 +1235,7 @@
       },
       "outcome": "rejected",
       "detail": "STL_SELF_INTERSECTION",
-      "durationMs": 765.3000000007451,
+      "durationMs": 723.6999999992549,
       "diagnostic": {
         "code": "STL_SELF_INTERSECTION",
         "stage": "import",
@@ -1251,7 +1251,7 @@
       },
       "outcome": "rejected",
       "detail": "STL_NONMANIFOLD",
-      "durationMs": 697,
+      "durationMs": 674.8000000007451,
       "diagnostic": {
         "code": "STL_NONMANIFOLD",
         "stage": "import",
@@ -1268,7 +1268,7 @@
       },
       "outcome": "rejected",
       "detail": "STL_NONFINITE",
-      "durationMs": 696.8000000007451,
+      "durationMs": 661.7999999970198,
       "diagnostic": {
         "code": "STL_NONFINITE",
         "stage": "import",
@@ -1284,7 +1284,7 @@
       },
       "outcome": "accepted",
       "detail": "tet10 57 elements",
-      "durationMs": 758.4000000022352,
+      "durationMs": 719.2000000029802,
       "geometry": {
         "faceCount": 3,
         "volumeM3": 0.7653668363416362,
@@ -1318,7 +1318,7 @@
       },
       "outcome": "accepted",
       "detail": "tet10 119 elements",
-      "durationMs": 862.9000000022352,
+      "durationMs": 790.0999999977648,
       "geometry": {
         "faceCount": 3,
         "volumeM3": 0.7803612594167166,
@@ -1352,7 +1352,7 @@
       },
       "outcome": "accepted",
       "detail": "tet10 239 elements",
-      "durationMs": 1029.699999999255,
+      "durationMs": 960.6999999992549,
       "geometry": {
         "faceCount": 3,
         "volumeM3": 0.7841371103709776,
@@ -1387,7 +1387,7 @@
       },
       "outcome": "rejected",
       "detail": "STL_MALFORMED",
-      "durationMs": 694.8999999985099,
+      "durationMs": 669.1000000014901,
       "diagnostic": {
         "code": "STL_MALFORMED",
         "stage": "import",
@@ -1404,7 +1404,7 @@
       },
       "outcome": "rejected",
       "detail": "STL_MALFORMED",
-      "durationMs": 703.3999999985099,
+      "durationMs": 658.6999999992549,
       "diagnostic": {
         "code": "STL_MALFORMED",
         "stage": "import",
@@ -1421,7 +1421,7 @@
       },
       "outcome": "rejected",
       "detail": "STL_MALFORMED",
-      "durationMs": 690.3999999985099,
+      "durationMs": 660.8000000007451,
       "diagnostic": {
         "code": "STL_MALFORMED",
         "stage": "import",

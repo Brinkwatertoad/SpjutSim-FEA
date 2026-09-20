@@ -2,7 +2,8 @@
 (function (root) {
   'use strict';
   var scales = Object.freeze({ m:1, mm:.001, cm:.01, in:.0254, ft:.3048 });
-  function validSource(s){return !!(s&&s.version===3&&Object.prototype.hasOwnProperty.call(scales,s.lengthUnit)&&Number.isFinite(s.patchAngleDegrees)&&s.patchAngleDegrees>=1&&s.patchAngleDegrees<=179&&
+  function validFaceEdits(value){return value===undefined || !!(value&&/^[a-f0-9]{64}$/.test(value.sourceHash)&&Array.isArray(value.operations)&&value.operations.length<=64&&value.operations.every(function(op){return op&&['split','merge'].includes(op.type)&&Array.isArray(op.faceIndices)&&op.faceIndices.length>=(op.type==='merge'?2:1)&&op.faceIndices.length<=(op.type==='split'?1:512)&&new Set(op.faceIndices).size===op.faceIndices.length&&op.faceIndices.every(function(i,j){return Number.isSafeInteger(i)&&i>=0&&i<512&&(!j||i>op.faceIndices[j-1]);});}));}
+  function validSource(s){return !!(s&&s.version===3&&Object.prototype.hasOwnProperty.call(scales,s.lengthUnit)&&Number.isFinite(s.patchAngleDegrees)&&s.patchAngleDegrees>=1&&s.patchAngleDegrees<=179&&validFaceEdits(s.faceEdits)&&
     !['normalization','surfaceMode','reconstructionToleranceM','remeshFeatureAngleDegrees'].some(function(k){return k in s;}));}
   function validSurface(s){return !!(s&&s.version===1&&(
     (s.method==='original'||s.method==='analysis')&&s.reconstructionToleranceM===null&&s.remeshFeatureAngleDegrees===null ||
@@ -12,7 +13,7 @@
     return !!(r && typeof r.sessionId === 'string' && r.sessionId && Number.isSafeInteger(r.generation) && r.generation >= 0 &&
       typeof r.sourceName === 'string' && /\.stl$/i.test(r.sourceName) && typeof r.geometryId === 'string' && r.geometryId &&
       r.sourceBytes instanceof ArrayBuffer && r.sourceBytes.byteLength > 0 && r.sourceBytes.byteLength <= 16*1024*1024 &&
-      Object.prototype.hasOwnProperty.call(scales,r.lengthUnit) && Number.isFinite(r.patchAngleDegrees) && r.patchAngleDegrees>=1 && r.patchAngleDegrees<=179 &&
+      Object.prototype.hasOwnProperty.call(scales,r.lengthUnit) && Number.isFinite(r.patchAngleDegrees) && r.patchAngleDegrees>=1 && r.patchAngleDegrees<=179 && validFaceEdits(r.faceEdits) &&
       Number.isFinite(r.maxHoleDiameterRatio) && r.maxHoleDiameterRatio>=0 && r.maxHoleDiameterRatio<=.05);
   }
   function vector(v) { return Array.isArray(v) && v.length===3 && v.every(Number.isFinite); }

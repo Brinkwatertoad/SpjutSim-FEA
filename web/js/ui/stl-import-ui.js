@@ -23,6 +23,7 @@
   var model=document.getElementById('stl-model-settings'),surface=document.getElementById('mesh-stl-surface-settings');
   model.hidden=surface.hidden=!state.geometry||state.geometry.sourceFormat!=='stl';
   if(!model.hidden&&document.activeElement!==document.getElementById('stl-group-angle'))document.getElementById('stl-group-angle').value=state.geometry.stlSource.patchAngleDegrees;
+  if(!model.hidden){var selected=state.selectedFaceIds.length,busy=!!s||!!state.assignmentDraft||state.meshGeneration.status==='generating'||state.solveExecution.status==='running'||!!(state.geometry.stlSource.faceEdits&&state.geometry.stlSource.faceEdits.operations.length>=64);document.getElementById('stl-face-summary').textContent=state.geometry.faceIds.length+' selectable faces · '+selected+' selected';document.getElementById('stl-split-face').disabled=!!busy||selected!==1;document.getElementById('stl-merge-faces').disabled=!!busy||selected<2;}
   this.panel.hidden=!s;document.getElementById('setup-inspector').hidden=!!s;
   if(!s){this.close();return;}
   if(this.session!==s){this.close();this.session=s;this.display=new api.StlDiagnosticsDisplay(this.viewport);this.list.replaceChildren();this.previousResult=null;this.focusBefore=document.activeElement;document.getElementById('toggle-setup-pane').getAttribute('aria-expanded')==='false'&&document.getElementById('toggle-setup-pane').click();this.unit.focus();}
@@ -30,7 +31,7 @@
   document.getElementById('stl-repair-hole-limit').value=s.settings.maxHoleDiameterRatio*100;
   document.getElementById('stl-source-summary').textContent=s.source.sourceName+' · '+(s.state==='reading'?'Reading file':s.state==='checking'?'Checking and repairing':s.state==='ready'?'Ready for analysis setup':s.state==='needs-review'?'Review proposed repair':'Repair incomplete');
   document.getElementById('stl-unit-assumption').textContent='Assumed '+this.unit.options[this.unit.selectedIndex].text.toLowerCase()+' — confirm the dimensions.';
-  document.getElementById('stl-import-status').textContent=s.message;
+  document.getElementById('stl-import-status').textContent=s.message+(s.result&&s.result.geometryCandidate?' '+s.result.geometryCandidate.faceIds.length+' selectable faces recognized.':'');
   document.getElementById('stl-replacement-note').hidden=!state.geometry;
   this.unit.disabled=!s.source.sourceBytes;
   document.getElementById('stl-repair-hole-limit').disabled=!s.source.sourceBytes;
@@ -62,10 +63,11 @@
     if(d.componentCount>1)parts.push(d.componentCount+' separate components');
     if(d.counts.intersection)parts.push(d.intersectionRegionCount+' intersection regions ('+d.counts.intersection+' triangle pairs)');
     if(parts.length){summary.textContent=parts.join(' · ');this.list.prepend(summary);}
-    if(s.state==='blocked'){var help=document.createElement('p');help.textContent='These locations explain why this surface cannot be used yet. They are not individual repair tasks. Export a watertight solid from the source model, or repair the highlighted regions in a mesh editor and import it again.';this.list.prepend(help);}
+    if(s.state==='blocked'){var help=document.createElement('p');help.textContent=s.settings.faceEdits&&result.error&&/^STL_FACE_EDIT_/.test(result.error.code)?'The installed model is unchanged. Cancel to choose a different selection, or reset face recognition.':'These locations explain why this surface cannot be used yet. They are not individual repair tasks. Export a watertight solid from the source model, or repair the highlighted regions in a mesh editor and import it again.';this.list.prepend(help);}
     var incomplete=result.diagnostics.locationsTruncated||result.changesTruncated||Object.values(result.diagnostics.coverage).some(function(value){return value==='skipped'||value==='limit';});
     if(incomplete){var note=document.createElement('p');note.textContent='Some checks or locations are incomplete. This view does not certify unchecked regions.';this.list.appendChild(note);}
     this.display.showIssues(issues.filter(function(issue){return issue.status!=='fixed';}));
+    if(result.geometryCandidate&&!result.shapeChanged)this.display.showFaceBoundaries(result.geometryCandidate);
    }else if(this.display){this.display.setDiagnostics([],{source:s.preview});this.display.showIssues([]);}
   }
  };

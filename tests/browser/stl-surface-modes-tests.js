@@ -45,7 +45,7 @@
    client=new api.MesherClient();
    try{var recovered=await client.importGeometry({sourceName:'cylinder-32.stl',sourceFormat:'stl',sourceBytes:cylinder.source,stlSource:sourceOptions,stlSurface:options('reconstruct',.003)});assert(recovered.faceIds.join()===cylinder.geometry.faceIds.join(),'Fresh-worker reconstruction changed source identity after cancellation');}finally{client.dispose();}
    client=new api.MesherClient();failed=null;
-   try{await client.generateMesh({geometry:Object.assign({},cylinder.geometry,{stlSource:Object.assign({},sourceOptions,{patchAngleDegrees:30})}),sourceBytes:cylinder.source,settings:{preset:'coarse',elementType:'tet10',stlSurface:options('reconstruct',.004)}});}catch(error){failed=error.diagnostic;}finally{client.dispose();}
+   try{await client.generateMesh({geometry:Object.assign({},cylinder.geometry,{stlSource:Object.assign({},sourceOptions,{patchAngleDegrees:1})}),sourceBytes:cylinder.source,settings:{preset:'coarse',elementType:'tet10',stlSurface:options('reconstruct',.004)}});}catch(error){failed=error.diagnostic;}finally{client.dispose();}
    assert(failed&&failed.code==='STL_PATCH_MAPPING_FAILED','Changed grouping reused old assignments');
    assert(original.geometry.faceIds.join()===cylinder.geometry.faceIds.join(),'Surface method changed source identities');
    client=new api.MesherClient();failed=null;

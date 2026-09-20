@@ -26,7 +26,7 @@
    result=root.StlReconstruction.build(gmsh,partition.parsed,parsed.diagonal*1e-8);
    var groups=parsed.patches.map(function(){return [];});result.surfaceTags.forEach(function(tags,i){groups[partition.sourceOwners[i]].push.apply(groups[partition.sourceOwners[i]],tags);});result.surfaceTags=groups;
   }else{
-   var boundary=prepared.boundary,checked=root.StlImport.validateMesh(boundary,parsed.options),patches=parsed.patches.map(function(){return {triangleCount:0};});
+   var boundary=prepared.boundary,checked=root.StlImport.validateMesh(boundary,parsed.options,false),patches=parsed.patches.map(function(){return {triangleCount:0};});
    for(var i=0;i<boundary.patchByTriangle.length;i++){var owner=boundary.patchByTriangle[i];if(owner>=patches.length)fail('STL_PATCH_MAPPING_FAILED','The rebuilt surface lost a selection group.');patches[owner].triangleCount++;}
    if(patches.some(function(p){return !p.triangleCount;}))fail('STL_PATCH_MAPPING_FAILED','The rebuilt surface lost a selection group.');
    result=discreteBuilder(Object.assign({},checked,{patches:patches,patchByTriangle:boundary.patchByTriangle}));
@@ -52,8 +52,10 @@
     var other=p.neighbors[i*3+edge];if(other<0)continue;
     var cosine=0;for(var a=0;a<3;a++)cosine+=p.normals[i*3+a]*p.normals[other*3+a];
     if(cosine<Math.cos(40*Math.PI/180)||cosine>1-1e-10)continue;
-    var length=Math.hypot.apply(null,face[edge].map(function(v,a){return v-face[(edge+1)%3][a];}));
-    var radius=length/(2*Math.sqrt((1-Math.min(1,cosine))/2));h=Math.min(h,Math.sqrt(8*tolerance*radius));
+    var tangent=face[(edge+1)%3].map(function(v,a){return v-face[edge][a];}),length=Math.hypot.apply(null,tangent);
+    var across=origin.map(function(v,a){return v-(p.positions[p.triangles[other*3]*3+a]+p.positions[p.triangles[other*3+1]*3+a]+p.positions[p.triangles[other*3+2]*3+a])/3;});
+    var separation=Math.hypot(across[1]*tangent[2]-across[2]*tangent[1],across[2]*tangent[0]-across[0]*tangent[2],across[0]*tangent[1]-across[1]*tangent[0])/length;
+    var radius=separation/(2*Math.sqrt((1-Math.min(1,cosine))/2));h=Math.min(h,Math.sqrt(8*tolerance*radius));
    }
    targets[i]=h;minSize=Math.min(minSize,h);
   }

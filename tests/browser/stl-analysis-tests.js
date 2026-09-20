@@ -3,7 +3,7 @@
  var status=document.getElementById('test-status');
  function assert(v,m){if(!v)throw new Error(m);}
  document.getElementById('application-frame').addEventListener('load',async function(){
-  var win=this.contentWindow,api=win.SpjutsimFEA,client,evidence=[];
+  var win=this.contentWindow,api=win.SpjutsimFEA,client,evidence=[];window.__stlSurfaceEvidence={cases:evidence};
   try {
    var distanceIndex=new StlSpatial.Index(new Float64Array([0,0,0,1,0,0,0,1,0]),new Uint32Array([0,1,2]));
    [[[.2,.3,2],2],[[.5,-1,0],1],[[-1,-1,0],Math.sqrt(2)],[[1,1,0],Math.SQRT1_2]].forEach(function(test){assert(Math.abs(distanceIndex.distance(test[0])-test[1])<1e-12,'Surface distance lost a face, edge or vertex closest point');});
@@ -41,6 +41,38 @@
     for(var bad of [null,Object.assign({},mesh.quality.stlAnalysis,{relativeVolumeError:.02}),Object.assign({},mesh.quality.stlAnalysis,{sampledDeviationM:1}),Object.assign({},mesh.quality.stlAnalysis,{maximumDeviationRatio:1.01}),Object.assign({},mesh.quality.stlAnalysis,{estimatedElementCount:Infinity}),Object.assign({},mesh.quality.stlAnalysis,{gradation:0})])assert(!api.validateVolumeMeshResult(Object.assign({},mesh,{quality:Object.assign({},mesh.quality,{stlAnalysis:bad})}),geometry.faceIds).valid,'Invalid fidelity report crossed the mesh boundary');
     evidence.push({rotated:rotated,statistics:mesh.statistics,quality:mesh.quality});
    }
+   // Public regression for the chart-free branch, independent of private STLs.
+   var roundSource=new win.Uint8Array(new Uint8Array(StlTestShapes.round(600,0,false))).buffer;
+   client=new api.StlPreparationClient();var roundPrepared=await client.prepare({sessionId:'round',generation:0,geometryId:'round',sourceName:'round.stl',sourceBytes:roundSource,lengthUnit:'m',patchAngleDegrees:40,maxHoleDiameterRatio:0});client.dispose();
+   assert(roundPrepared.state==='ready'&&roundPrepared.geometryCandidate.faceIds.length===3,'Detailed cylinder did not retain its wall and caps');
+   var roundRequest={sessionId:'round-split',generation:0,geometryId:'round-split',sourceName:'round.stl',sourceBytes:roundSource,lengthUnit:'m',patchAngleDegrees:40,maxHoleDiameterRatio:0,
+    faceEdits:{sourceHash:roundPrepared.geometryCandidate.sourceMetadata.sha256,operations:[{type:'split',faceIndices:[0]}]}};
+   client=new api.StlPreparationClient();roundPrepared=await client.prepare(roundRequest);client.dispose();assert(roundPrepared.state==='ready','Dense cylinder cap could not be split');
+   var roundProgress=[];evidence.push({fixture:'round-progress',progress:roundProgress});client=new api.MesherClient({onProgress:function(p){roundProgress.push(p);}});var roundMesh=await client.generateMesh({geometry:roundPrepared.geometryCandidate,sourceBytes:roundSource,settings:{preset:'coarse',elementType:'tet4',stlSurface:api.defaultStlSurface()}});client.dispose();
+   assert(roundMesh.quality.stlAnalysis.method==='discrete-boundary','More than 512 surface planes still required charts');
+   assert(roundMesh.boundaryFaces.faceRanges.length===4,'Curved remeshing lost the corrected cap faces');
+   evidence.push({fixture:'round-600',statistics:roundMesh.statistics,quality:roundMesh.quality});
+   // Face recognition is an engineering boundary: split one flat loading area,
+   // mesh it, and verify the actual pressure resultant and supported nodes.
+   var blockSource=new win.Uint8Array(new Uint8Array(StlTestShapes.roundedBlock(8,false))).buffer;
+   client=new api.StlPreparationClient();var blockRequest={sessionId:'block',generation:0,geometryId:'block',sourceName:'block.stl',sourceBytes:blockSource,lengthUnit:'m',patchAngleDegrees:40,maxHoleDiameterRatio:0};
+   var block=await client.prepare(blockRequest);client.dispose();assert(block.geometryCandidate.faceIds.length===10,'Rounded mechanical faces were not recognized');
+   var bg=block.geometryCandidate,top=bg.preview.faceRanges.findIndex(function(r){return r.count===6&&bg.preview.normals[r.start*3+1]>.99;});
+   blockRequest.faceEdits={sourceHash:bg.sourceMetadata.sha256,operations:[{type:'split',faceIndices:[top]}]};
+   client=new api.StlPreparationClient();block=await client.prepare(blockRequest);client.dispose();bg=block.geometryCandidate;
+   assert(bg&&bg.faceIds.length===11,'Prepared manual face correction was lost');
+   client=new api.MesherClient();var blockMesh=await client.generateMesh({geometry:bg,sourceBytes:blockSource,settings:{preset:'coarse',elementType:'tet4',stlSurface:api.defaultStlSurface()}});client.dispose();
+   assert(blockMesh.boundaryFaces.faceRanges.length===11,'Mesh lost corrected selectable faces');
+   var loadFace=bg.preview.faceRanges.find(function(r){return r.count===3&&bg.preview.normals[r.start*3+1]>.99;}).faceId;
+   var supportFace=bg.preview.faceRanges.find(function(r){return r.count===6&&bg.preview.normals[r.start*3+1]<-.99;}).faceId;
+   var controller=new api.AppController({document:api.createAnalysisDocument()});controller.replaceGeometry(bg,{sourceName:'block.stl',sourceFormat:'stl',stlSource:bg.stlSource,sourceBytes:blockSource});
+   controller.replaceMaterial({name:'Test',youngsModulusPa:1e9,poissonsRatio:.25,densityKgM3:1000});controller.completeMeshGeneration(blockMesh);
+   controller.replaceSelectedFaces([supportFace]);controller.createBoundaryCondition({type:'support',componentsM:{x:0,y:0,z:0}});
+   controller.replaceSelectedFaces([loadFace]);controller.createLoad({type:'pressure',pressurePa:100});
+   var projected=api.prepareSolverInput(controller.document),force=[0,0,0];projected.loads[0].equivalentNodalForcesN.forEach(function(v,i){force[i%3]+=v;});
+   assert(Math.abs(force[0])+Math.abs(force[2])<1e-8&&Math.abs(force[1]+80)<1e-8,'Pressure included the fillet or the other half of the loading face');
+   projected.boundaryConditions[0].nodeIndices.forEach(function(i){assert(Math.abs(blockMesh.nodePositionsM[3*i+1]+1)<1e-12,'Support escaped its recognized flat face');});
+   evidence.push({fixture:'rounded-block-split-pressure',faceCount:bg.faceIds.length,pressurePa:100,expectedAreaM2:.8,resultantN:force,supportedNodes:projected.boundaryConditions[0].nodeIndices.length,statistics:blockMesh.statistics,quality:blockMesh.quality});
    // A thin appendage can be much smaller than every whole-part extent.
    var axes=[[0,2,4],[0,.1,1],[0,.1,1]],facets=[];
    function occupied(x,y,z){return x>=0&&x<2&&y>=0&&y<2&&z>=0&&z<2&&(x===0||y===0&&z===0);}

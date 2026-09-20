@@ -173,8 +173,8 @@
     else if(event.type==='stl-prepared'){
       var r=event.result;
       if(!api.validateStlPreparationResult(r,s.preview)||r.lengthUnit!==s.settings.lengthUnit||s.source.preparation&&r.sourceDigest!==s.source.preparation.preparedDigest)throw new Error('The STL result does not match this review.');
-      if(r.geometryCandidate&&(!api.validateGeometryModel(r.geometryCandidate).valid||r.geometryCandidate.geometryId!==s.geometryId||r.geometryCandidate.sourceName!==s.source.sourceName||r.geometryCandidate.stlSource.lengthUnit!==s.settings.lengthUnit||r.geometryCandidate.stlSource.patchAngleDegrees!==s.settings.patchAngleDegrees))throw new Error('The prepared solid has an invalid geometry contract.');
-      s.result=r;s.state=r.state;s.message=r.state==='ready'?'Ready for analysis setup — confirm the dimensions, then use this model.':r.state==='needs-review'?'Review the highlighted additions or removals before using this repaired model.':'Automatic repair could not produce a usable solid. '+(r.error&&r.error.message||'Review the highlighted regions.');
+      if(r.geometryCandidate&&(!api.validateGeometryModel(r.geometryCandidate).valid||r.geometryCandidate.geometryId!==s.geometryId||r.geometryCandidate.sourceName!==s.source.sourceName||r.geometryCandidate.stlSource.lengthUnit!==s.settings.lengthUnit||!api.sameStlSourceOptions(r.geometryCandidate.stlSource,Object.assign({version:3},s.settings))))throw new Error('The prepared solid has an invalid geometry contract.');
+      s.result=r;s.state=r.state;s.message=r.state==='ready'?'Ready for analysis setup — confirm the dimensions, then use this model.':r.state==='needs-review'?'Review the highlighted additions or removals before using this repaired model.':(s.settings.faceEdits&&r.error&&/^STL_FACE_EDIT_/.test(r.error.code)?'Face correction could not be applied. ':'Automatic repair could not produce a usable solid. ')+(r.error&&r.error.message||'Review the highlighted regions.');
     }else return false;
     this.notify();return true;
   };
@@ -192,7 +192,17 @@
       preparation:{version:1,originalDigest:s.source.preparation?s.source.preparation.originalDigest:r.sourceDigest,
         sourceDigest:r.sourceDigest,preparedDigest:r.preparedDigest,shapeChanged:r.shapeChanged,shapeChangesAccepted:r.shapeChanged,
         lengthUnit:s.settings.lengthUnit,solidRepair:r.solidRepair||null}});
-    return {geometry:r.geometryCandidate,source:source};
+    var geometry=r.geometryCandidate,installed=this.document.geometry;
+    if(installed&&installed.sourceFormat==='stl'&&installed.sourceMetadata.sha256===geometry.sourceMetadata.sha256)geometry=api.restoreGeometryOrientation(geometry,installed.orientation);
+    return {geometry:geometry,source:source};
+  };
+  AppController.prototype.stlFaceEditSettings = function(type) {
+    var geometry=this.document.geometry,selection=this.document.selectedFaceIds;
+    if(!geometry||geometry.sourceFormat!=='stl'||this.stlImportSession||this.document.assignmentDraft||!['split','merge'].includes(type)||selection.length<(type==='split'?1:2)||type==='split'&&selection.length!==1)throw new Error('Finish the current edit, then select '+(type==='split'?'one face to split.':'touching faces to merge.'));
+    var operations=geometry.stlSource.faceEdits?geometry.stlSource.faceEdits.operations.slice():[];
+    if(operations.length>=64)throw new Error('The face correction limit is reached. Reset recognition before making further changes.');
+    operations.push({type:type,faceIndices:selection.map(function(id){return geometry.faceIds.indexOf(id);}).sort(function(a,b){return a-b;})});
+    return Object.assign({},geometry.stlSource,{faceEdits:{sourceHash:geometry.sourceMetadata.sha256,operations:operations}});
   };
   AppController.prototype.beginStlSurfaceReview = function(settings) {
     var api=root.SpjutsimFEA,g=this.document.geometry;

@@ -764,21 +764,35 @@ WebAssembly availability; Gmsh/FEM engine checks execute only on demand or in te
   consent and installation; cancellation/stale replies preserve the prior analysis.
   Rendering/UI consume application contracts. The native solver stays format-neutral.
 - Generate selectable groups automatically (40° default; adjustable 1–179° near
-  selection). Default to `analysis`: rebuild exact planar boundaries when the source
+  selection). First isolate planar cores using seed-anchored normals (dot >= 1-1e-10)
+  and plane distance <= diagonal*1e-7. A core contains at least two triangles and
+  four times the area of every neighboring coplanar region reached below the grouping
+  angle. Grow the remaining curved regions by adjacency/angle. This separates broad
+  loading planes from finely tessellated fillets without treating equal-sized cylinder
+  strips as independent faces. Recognition labels source facets; it does not move them
+  or claim to recover the original CAD topology. Show recognized face count and seams.
+  Provide optional split/merge beside selection. Split uses two graph-distance seeds
+  to form two connected source-triangle regions; merging requires touching selections.
+  Review the candidate before installation and explicitly transfer existing assignments.
+  Preserve orientation, unchanged membership IDs, original bytes, and cancellation.
+  Default to `analysis`: rebuild exact planar boundaries when the source
   needs at most 512 coplanar regions, independently of engineering groups. Otherwise
   use chart-free isotropic remeshing directly on the triangle surface. Constrain
   selection seams and ridges at 40°; do not collapse constrained edges or apply
-  tangential smoothing. Split/collapse/flip with projection, three native iterations.
+  tangential smoothing. Allow up to 600k temporary facets during bisection before
+  collapse, while retaining the 200k exported-boundary and 512 MiB native limits.
+  Cache at most 500k immutable size-field point queries by exact coordinates.
+  Split/collapse/flip with projection, three native iterations.
   Validate every candidate with the same strict indexed topology/intersection checks.
   Rejected surface candidates can refine offending source neighborhoods, reducing
-  local targets by 0.4, for at most five attempts of this same construction method.
+  local targets by 0.4, for at most six attempts of this same construction method.
   Never silently switch to frozen triangles. Keep original/reconstruct/experimental
   parametrized-remesh choices in Mesh Advanced.
 - For analysis, measure inward rays at every source-facet centroid. Each source
   triangle receives a size target no larger than requested maximum or thickness/3.
   Smooth curvature (neighbor normal angle below 40°) additionally limits targets
   using the chord estimate `sqrt(8*tolerance*radius)`, with radius estimated from
-  shared edge length and normal angle; tolerance is `min(diagonal*.001,thickness*.05)`.
+  perpendicular centroid separation across the shared edge and normal angle; tolerance is `min(diagonal*.001,thickness*.05)`.
   These estimates guide construction; final fidelity checks decide acceptance.
   Use the same graded field for surface and volume meshing:
   `h(x)=min(requestedMax,min_i(target_i+0.35*distance(x,sourceTriangle_i)))`.
@@ -823,7 +837,12 @@ WebAssembly availability; Gmsh/FEM engine checks execute only on demand or in te
   >1% remeshed patch-area warnings and solver memory preflight. Detailed numerical
   criteria and method limitations are consolidated in the workflow design.
 - Current coarse worker protocol is 4. Source/group settings are
-  `stlSource: {version:3,lengthUnit,patchAngleDegrees}`. Independent
+  `stlSource: {version:3,lengthUnit,patchAngleDegrees,faceEdits?}`. Optional
+  `faceEdits:{sourceHash,operations}` binds up to 64 split/merge operations to the
+  SHA-256 of the prepared source. Each operation carries sorted, unique current
+  `faceIndices` (one for split, 2–512 for merge); reject stale source hashes or indices.
+  Resetting recognition clears corrections. IDs hash the source, units and exact
+  member triangles, so a local correction leaves other IDs unchanged. Independent
   `meshSettings.stlSurface` is `{version:1,method,reconstructionToleranceM,remeshFeatureAngleDegrees}`;
   analysis and original use both null, reconstruct uses a positive SI tolerance and null angle,
   remesh uses null tolerance and a 1–40° angle. Geometry metadata is version 3.

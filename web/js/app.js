@@ -315,8 +315,9 @@
   });
   ui.setImportHandler(importCadFile);
   document.getElementById('regroup-stl-button').addEventListener('click', function () {
-    if (app.geometrySource && app.geometrySource.sourceFormat === 'stl') { openStlReview(app.geometrySource, Object.assign({},app.document.geometry.stlSource,{patchAngleDegrees:Number(document.getElementById('stl-group-angle').value)})); }
+    if (app.geometrySource && app.geometrySource.sourceFormat === 'stl') { openStlReview(app.geometrySource, Object.assign({},app.document.geometry.stlSource,{patchAngleDegrees:Number(document.getElementById('stl-group-angle').value),faceEdits:undefined})); }
   });
+  ['split','merge'].forEach(function(type){document.getElementById(type==='split'?'stl-split-face':'stl-merge-faces').addEventListener('click',function(){openStlReview(app.geometrySource,app.stlFaceEditSettings(type));});});
   ui.setMeshHandlers(generateMesh, function () { if (activeMesh) { activeMesh.cancel(); } }, function () {
     disposeSolver();
     app.clearMesh();

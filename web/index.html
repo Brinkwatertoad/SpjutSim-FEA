@@ -100,7 +100,7 @@
             <div id="model-editor">
               <button id="import-step-button" type="button">Import or replace model…</button>
               <input id="import-step-input" type="file" accept=".step,.stp,.iges,.igs,.brep,.stl" hidden>
-              <fieldset id="stl-model-settings" hidden><legend>STL selection groups</legend><label>Grouping angle (degrees)<input id="stl-group-angle" type="number" min="1" max="179" value="40"></label><button id="regroup-stl-button" type="button">Review grouping change…</button><button id="stl-download-installed-original" type="button">Download original STL</button></fieldset>
+              <fieldset id="stl-model-settings" hidden><legend>STL faces</legend><p id="stl-face-summary"></p><p>Faces are recognized automatically. Select faces in the model to correct a region if needed.</p><button id="stl-split-face" type="button" disabled>Split selected face into two…</button><button id="stl-merge-faces" type="button" disabled>Merge selected faces…</button><details><summary>Recognition settings</summary><label>Grouping angle (degrees)<input id="stl-group-angle" type="number" min="1" max="179" value="40"></label><button id="regroup-stl-button" type="button">Reset and review recognition…</button><p>Reset removes manual face corrections. Grouping changes are reviewed before loads or supports are transferred.</p></details><button id="stl-download-installed-original" type="button">Download original STL</button></fieldset>
               <p id="geometry-status">Choose a STEP, IGES, BREP, or STL solid to begin.</p>
               <fieldset class="fea-orientation-controls"><legend>Model orientation</legend>
                 <div class="fea-orientation-fields">

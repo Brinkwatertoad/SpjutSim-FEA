@@ -33,5 +33,18 @@
   faces.forEach(function(point,face){for(var i=0;i<n;i++)for(var j=0;j<n;j++){var a=point(i/n,j/n),b=point((i+1)/n,j/n),c=point((i+1)/n,(j+1)/n),d=point(i/n,(j+1)/n),pair=[[a,b,c],[a,c,d]];if([0,3,4].includes(face))pair=pair.map(function(t){return t.slice().reverse();});triangles.push.apply(triangles,pair);}});
   return encode(triangles);
  }
- root.StlTestShapes={round:round,squareTube:squareTube,subdividedCube:subdividedCube};
+ function roundedBlock(segments,rotated){
+  var ring=[],triangles=[],r=.2;
+  for(var corner=0;corner<4;corner++)for(var i=0;i<=segments;i++){
+   var angle=(corner+i/segments)*Math.PI/2,cx=corner===0||corner===3?.8:-.8,cy=corner<2?.8:-.8;
+   ring.push([cx+r*Math.cos(angle),cy+r*Math.sin(angle)]);
+  }
+  for(i=0;i<ring.length;i++){
+   var a=ring[i],b=ring[(i+1)%ring.length],lo=[a[0],a[1],0],hi=[a[0],a[1],1],bl=[b[0],b[1],0],bh=[b[0],b[1],1];
+   triangles.push([[0,0,0],bl,lo],[[0,0,1],hi,bh],[lo,bl,bh],[lo,bh,hi]);
+  }
+  if(rotated)triangles=triangles.map(function(t){return t.map(function(p){return [2+(p[0]+p[2])/Math.SQRT2,-3+p[1],4+(p[2]-p[0])/Math.SQRT2];});});
+  return encode(triangles);
+ }
+ root.StlTestShapes={round:round,roundedBlock:roundedBlock,squareTube:squareTube,subdividedCube:subdividedCube};
 }(globalThis));

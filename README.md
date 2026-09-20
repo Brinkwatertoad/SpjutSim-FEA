@@ -7,7 +7,8 @@ SpjutSim FEA is a local-first browser application for simple static finite eleme
 v1 is unreleased. Plans 21–23 were accepted on 2026-09-08, plans 24–27 on
 2026-09-10, and M28 feasibility on 2026-09-11. The revised M29 STL workflow is
 implemented on `feat/stl-import-workflow`: immediate previews, automatic routine
-cleanup, localized repair review, and surface settings under Mesh. The
+cleanup, localized repair review, automatic selectable faces with optional
+split/merge, and surface settings under Mesh. The
 [current design](docs/designs/stl-import-workflow.md) and
 [implementation plan](docs/plans/29-stl-import-workflow.md) replace the earlier
 STL plans. **M29 owner walkthrough/acceptance remains pending.**

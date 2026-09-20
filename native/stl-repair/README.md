@@ -61,4 +61,8 @@ strict topology/intersections, worker cancellation and explicit material consent
 The surface regression uses the same compiler flags, replacing the two source
 arguments with `native/stl-repair/surface.cpp native/stl-repair/surface-test.cpp`.
 It checks an elongated closed box, preserved volume/groups, refined long edges,
-and invalid input. The combined embedded runtime is 1,479,354 bytes (480,772 gzip).
+and invalid input. The combined embedded runtime is 1,484,193 bytes (482,670 gzip).
+
+Surface bisection permits up to 600k temporary facets before collapse, while exported
+boundaries remain capped at 200k. A coordinate-keyed cache retains at most 500k
+immutable size-field values; the worker heap remains capped at 512 MiB.

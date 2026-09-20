@@ -109,7 +109,7 @@
         },
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "ae0ac53aa4b70f2fc3c70fd96821f2d7a340e1f1c7a4cecbdec2c2d4bc3f0d71"
+          "sha256": "53a63b8ed5d2909021127bd31a91172479bffc3c7f5a5d91b88a6e13679392bb"
         }
       ],
       "build_recipe": {
@@ -159,7 +159,7 @@
         },
         {
           "path": "workers/stl-import.js",
-          "sha256": "4b9843696e5568884a08d27b20d0b656fd669708e65bb171d42f20a282955da8"
+          "sha256": "649c3814f810c2912c0ed44e5151afc8462c2cf7d28539bac2e35593db38bdd5"
         },
         {
           "path": "workers/stl-reconstruction.js",
@@ -179,11 +179,11 @@
         },
         {
           "path": "workers/stl-preparation-worker.js",
-          "sha256": "9a9c7d5710a90395d6a3d4ff940f343c550be4902091ecc8b5e94c74c5ec170e"
+          "sha256": "40bd349af950529013447a7f77c401600577c23e47ea8becb056a63e7d0d654f"
         },
         {
           "path": "web/js/geometry/stl-preparation.js",
-          "sha256": "cade8420fd80a343b1d87e9e8a032efd97ea05f8c203dc6dc3d079d9dbc3e0b8"
+          "sha256": "f79ded2350f6200ea8355d2ef6f5202621a7f9bebe3a5dfcc14fa47417755df8"
         },
         {
           "path": "workers/stl-spatial.js",
@@ -191,7 +191,7 @@
         },
         {
           "path": "workers/stl-analysis.js",
-          "sha256": "efd03e7848d8191815c5b759f8228e611391e5c3b9b8ea6669bc9aa90357b836"
+          "sha256": "1dd3db1c2d39b7a4eb5c7278d7d205b6d6a4c3b0797f6e48af6fa519435122ba"
         },
         {
           "path": "workers/stl-solid-repair.js",
@@ -199,16 +199,20 @@
         },
         {
           "path": "workers/stl-surface-worker.js",
-          "sha256": "2e43989ae3ce2893d303259b5daf902bc1bd2e7aefd03759bec8cd5aa6d8f454"
+          "sha256": "6450c2a62116d9236700c880ee360bfa39b366b38303c15cd05596d8e1da9f28"
         },
         {
           "path": "web/js/geometry/stl-surface.js",
           "sha256": "00016fb4dfa8f1623fbc1706382189cfa89c603d4c536a90e60ac8727b2c7fdb"
+        },
+        {
+          "path": "workers/stl-faces.js",
+          "sha256": "100066b39233452d68c6c298d079c59f80ec1d1beb4c90dfd84acf8040b7f9a1"
         }
       ],
       "build_recipe": {
         "path": "tools/build-local-runtime.py",
-        "sha256": "ae0ac53aa4b70f2fc3c70fd96821f2d7a340e1f1c7a4cecbdec2c2d4bc3f0d71"
+        "sha256": "53a63b8ed5d2909021127bd31a91172479bffc3c7f5a5d91b88a6e13679392bb"
       },
       "modifications": "First-party workers packaged as classic JavaScript source strings.",
       "notices": [
@@ -386,7 +390,7 @@
       "source_files": [
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "ae0ac53aa4b70f2fc3c70fd96821f2d7a340e1f1c7a4cecbdec2c2d4bc3f0d71"
+          "sha256": "53a63b8ed5d2909021127bd31a91172479bffc3c7f5a5d91b88a6e13679392bb"
         }
       ],
       "build_recipe": {
@@ -774,7 +778,7 @@
         },
         {
           "path": "native/stl-repair/README.md",
-          "sha256": "73007ad78926cbea7e092b865e4074ef0a391685ef0682e6d5d950814e2685fe"
+          "sha256": "c5559da78503a94c0d192186ec15117c581f90a09744e9ba993b8d2c8e6411ec"
         },
         {
           "path": "workers/stl-solid-repair.js",
@@ -786,7 +790,7 @@
         },
         {
           "path": "native/stl-repair/surface.cpp",
-          "sha256": "7377e150fbd710248808d85345f93dbcb92d94fdde9521b8d8329e277479bb63"
+          "sha256": "23f39858e068d62091f578332ed60e3165225e8dfd043c7b8cabe6da5bda8adc"
         },
         {
           "path": "native/stl-repair/surface-test.cpp",
@@ -998,7 +1002,7 @@
     },
     {
       "path": "web/generated/local-runtime/mesher-worker-source.js",
-      "sha256": "5e7466df183a01cf8781b8322433128d0c2d4e841e706144e61a42af52e90ea8",
+      "sha256": "4bb1f986bfe129c908bc928c939af3e7d64ed7f2731546c78315c75053f4e2fe",
       "components": [
         "workers"
       ]
@@ -1410,7 +1414,7 @@
     },
     {
       "path": "web/generated/local-runtime/stl-preparation-worker-source.js",
-      "sha256": "371e11d7347b5a96534e6239fd823d64e9e681999617b69cf41a48fd0c9f4c7c",
+      "sha256": "2f10b5f7fd0005942863493db28d66ca658d3f68ac89a0d4b9cdf49cdc4be6dc",
       "components": [
         "workers"
       ]
@@ -1459,7 +1463,7 @@
     },
     {
       "path": "web/generated/local-runtime/solid-repair-runtime-source.js",
-      "sha256": "54d1e5361439be8f6852778d2bd6ab81622cfad418194848f492ca5cd8f81fcf",
+      "sha256": "1f91f5209290379f6ba16aff78ebec8dd129880fbd3e266a7bb171599cdcfb88",
       "components": [
         "solid-repair",
         "cgal",
@@ -1469,14 +1473,14 @@
     },
     {
       "path": "web/generated/local-runtime/stl-solid-repair-worker-source.js",
-      "sha256": "a2ae35776cb891b0d62cf3ca5ada761c84119eeffb8a1c3201df3a5641a76b00",
+      "sha256": "0764cbf2cd814ba65d20a78825de0e2269ac6b78e82bfec51466c8a3229f869e",
       "components": [
         "workers"
       ]
     },
     {
       "path": "web/generated/local-runtime/stl-surface-worker-source.js",
-      "sha256": "2a9db6106a204f32c38059e8041dec4a838f44c27a88944369364ee38bdf0ef0",
+      "sha256": "82784e7b17f532745327f3f63ee131529cb0149ee7aac949c16b421399fc23f4",
       "components": [
         "workers"
       ]
