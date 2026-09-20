@@ -703,139 +703,65 @@ Use Gmsh's OpenCASCADE geometry kernel for import.
 
 The implementation should set OpenCASCADE's target unit so the imported model is normalized to meters before meshing. Do not infer units from filename or UI assumptions.
 
-Binary/ASCII `.stl` uses the accepted M28 adapter plus the owner-authorized
-simulation-surface extension in `docs/designs/stl-simulation-surfaces.md`. The
-pinned runtime provides indexed original surfaces and bounded OCC primitive
-reconstruction; the native solver has no source-format dependency. Require
-explicit `m`, `mm`, `cm`, `in`, or `ft` units; the review displays dimensions in
-chosen units. Accept only one connected, closed, consistently outward
-manifold boundary with positive usable volume and no self-intersections. Exact
-coordinate indexing is allowed; tolerance welding and unrequested repair/winding
-reversal are forbidden. Explicit local repair uses the separate reviewed-candidate
-workflow below. Stored normals are advisory.
+### 6.1.1 STL workflow — target revision, 2026-09-19
 
-`workers/stl-import.js` owns strict parsing, edge and vertex-link topology,
-compensated signed volume, BVH candidate search, and filtered orientation tests
-with exact binary64 integer fallback for intersection/contact predicates. Reject
-contacts beyond shared edges/vertices. Bounds are 16 MiB, 200,000 triangles,
-512 internal geometric surfaces, 2,000,000 candidate pairs, and 120 seconds per
-STL operation (terminate the disposable worker on timeout/cancellation). SI
-bounds diagonal must be 1e-9 through 1e6 m; triangle cross-product norm and volume
-must exceed 1e-14 times diagonal squared and cubed, respectively. Stable errors
-and numerical criteria are specified in `docs/designs/stl-import-contract.md`.
+**Implementation status:** The current application has the earlier explicit
+units/repair/surface-mode dialog. The owner requested changes to M29; the workflow
+below is planned and is not yet implemented or accepted. The sole current design
+is [STL import workflow](docs/designs/stl-import-workflow.md), implemented by
+[Plan 29](docs/plans/29-stl-import-workflow.md). These replace the accumulated
+M28/M29 import, surface and repair plans/contracts; earlier review records remain
+historical numerical/feasibility evidence.
 
-Coarse worker protocol **3** supports version-1 `importOptions` containing explicit
-`lengthUnit`, `patchAngleDegrees` (1–179, UI default 40), and
-`normalization: 'none'`. Geometry retains these options, source SHA-256, triangle
-and internal-surface counts, validation version/report, and `surfaceKind:
-'stl-patch'`. Original bytes remain controller-owned; work copies transfer to
-fresh workers. Reconstruction verifies source digest and patch membership.
-
-Selectable patches are connected components of the neighbor-dihedral rule.
-Opaque `stl:` IDs hash versioned source bytes/options and sorted canonical
-triangle membership; orientation and mesh settings do not change them. Geometry
-classification uses 1e-8 radians, maps every source triangle exactly once before
-remeshing, and keeps internal subdivisions separate from user patches. Straight
-Tet10 midpoints preserve the faceted boundary; no smooth CAD curvature is inferred.
-Each patch owns contiguous Tri6 integration and separate display ranges.
-
-Installation requires dimensions/patch acceptance. Failed, cancelled, or stale
-review preserves the installed model/setup/results. Later units/grouping changes
-and CAD↔STL replacement explicitly map/drop each assignment using the existing
-transfer workflow. Downstream analysis/rendering consume opaque IDs. Full parsing,
-hashing, classification, meshing, and recovery stay in workers. The build script
-bundles parsing and reconstruction helpers before the mesher shell for file and HTTP modes. General shape rebuilding,
-shells, multibody analysis, and OBJ remain deferred. See Section 15.11.
-
-Explicit local STL repair is offered after repairable topology/winding errors.
-The user chooses a maximum hole width from 0–5% of the retained part diagonal
-(default 1%; 0 disables filling). A version-1 `stl-repair` request on coarse
-protocol 3 returns separately serialized candidate bytes and a validated change
-report. Supported operations remove exact duplicates/zero-area faces and isolated
-stray triangles, orient consistently/outward, and fill at most 128 small strictly
-convex planar holes of 3–32 vertices. Exact predicates prevent roundoff-only
-zero-area removal. Recomputed retained bounds prevent removed outliers from
-inflating hole limits. No vertex motion, welding, smoothing, component deletion
-or component joining is performed. Serialized coordinates must retain their
-source precision; every candidate passes the unchanged full solid validator.
-
-A successful repair enters normal preview/reconstruction review and still needs
-explicit import and assignment transfer. Candidate source bytes, original bytes
-and versioned report remain controller-owned; fingerprints/counts bind the report
-to imported geometry. Original bytes can be downloaded, and a pending repair can
-be discarded. Cancellation, timeouts, stale replies and failed repair preserve
-the installed model. Input/output remain 16 MiB/200,000 triangles, and repair has
-the same 120-second worker deadline. This is bounded local repair, not arbitrary
-surface recovery. See `docs/designs/stl-surface-repair.md` for exact contracts,
-numerical criteria, ownership, limits and errors.
-
-The new UI uses version-2 STL options with `surfaceMode` (`original` or
-`reconstruct`) and `reconstructionToleranceM` (null for original, positive finite
-SI distance for reconstruction). New imports default to original triangles and
-start review automatically when the user chooses units. Existing imports retain
-their reviewed settings. Surface processing and grouping live in advanced
-options; changes require an updated preview and explicit acceptance. Failed
-reconstruction/remeshing offers an explicit original-triangle retry, never an
-automatic fallback. Error codes remain available under technical details.
-Binary source triangle counts may be read from an exact-length header before
-validation; this does not establish validity or enable acceptance. At 25,000 or
-more source triangles, import and mesh controls show qualitative runtime advice,
-a Coarse-first recommendation, and the 120-second operation limit/cancellation.
-This threshold is a usability heuristic, not a calibrated time estimate. ASCII
-counts and advice become available after worker validation.
-Original mode retains every source triangle using one indexed discrete surface
-per selectable patch, avoiding the legacy near-planar subdivision limit.
-Reconstruction initially supports coplanar polyhedra (including holes) and full
-cylinders/conical frusta with perpendicular flat ends. Arbitrary fitted-surface
-intersections and freeform reconstruction remain unsupported and produce explicit
-errors. Never silently fall back after a failed reconstruction.
-
-Reconstruction has a user-selected deviation bound and original/candidate preview
-comparison. Version-2 source metadata carries the mode and reconstruction report;
-`originalPreview` is retained beside the recovered `preview`. Version, mode and
-tolerance enter patch identity. Fresh workers reproduce and verify the source,
-options, fit, closed shell and ownership. Recovered surfaces use curved Tet10
-geometry; the original path retains straight facets. Display tessellation and
-finite-element approximation error are separate from the reconstruction bound.
-Changing mode/deviation requires review and explicit assignment transfer just as
-changing units/grouping does. See the extension design for geometric bounds,
-implemented limitations, errors and acceptance tests.
-
-An additional opt-in, experimental `surfaceMode: 'remesh'` keeps both established
-paths intact. It requires `reconstructionToleranceM: null` and a finite
-`remeshFeatureAngleDegrees` in [1, 40] (UI default 5). It creates parametrized
-discrete surfaces from the validated STL, subdividing each selection group as
-needed; it does not fit smooth CAD geometry or claim a reconstruction deviation
-bound. The effective feature angle is the smaller of this setting and the
-selection grouping angle. Feature angle enters identity and review invalidation.
-The version-2 metadata has `reconstruction: null` and a `remeshing` report with
-version 1, method `stl-parametrization`, effective `featureAngleDegrees`, and
-`surfaceCountsByPatch`; counts must be positive, cover all groups, and sum to
-`internalSurfaceCount`. No alternate-geometry preview is advertised: the reference
-geometry is still the source STL. Source element ownership is checked exactly
-once before parametrization in each fresh worker, and the 512-chart/120-second
-limits remain. Parametrization failures use `STL_REMESH_FAILED`; neither failed
-parametrization nor failed meshing silently switches modes or feature angles.
-
-Experimental remeshing regenerates both surface and volume elements. It uses
-the selected mesh sizes, Gmsh surface algorithm 6, no point/curvature-derived size
-field, and straight Tet10 midpoints. Existing Jacobian, ownership, preflight,
-convergence and equilibrium gates apply. Finite-element boundaries approximate
-the source surface: coarse elements can bridge facets and distort stresses, and
-finer feature angles can make difficult inputs unmeshable. The UI states these
-limitations. Mesh quality includes optional `stlBoundaryAreas` with version 1 and
-positive finite `sourceM2`/`meshM2` arrays in boundary-patch order. Straight Tri3/
-Tri6 corner areas are exact for this mode. Any patch area change exceeding 1%
-adds an explicit pressure-force fidelity warning to the existing mesh/checks
-warnings. Area agreement is a diagnostic, not a geometric error certificate.
-The numerical cylinder checks use 5 degrees to retain their creases;
-the optional funnel trial uses 40 degrees and records volume/refinement evidence
-separately from solver convergence. Automatic freeform CAD fitting remains future
-work; successful remeshing is not reported as successful CAD reconstruction.
+- Show safely decoded binary/ASCII triangles in the main viewport before solid
+  validation, automatic cleanup or Gmsh startup. Invalid readable geometry stays
+  visible with localized findings; malformed/unsafe input may fail decoding.
+  Preview is separate from analysis-ready geometry and never enables analysis.
+- Show physical dimensions and an explicit source-unit assumption: last confirmed
+  STL unit, or mm on first use. Support m/mm/cm/in/ft. One Use model action confirms
+  scale and installs a fully checked part; changes recheck automatically without
+  hiding the source. Never infer units from filename or display preferences.
+- Automatically remove exact duplicate/zero-area facets and correct orientable
+  winding. Automatically prepare bounded hole-fill/stray-removal proposals, but
+  require Use repaired model after highlighting added/removed surfaces. Preserve
+  the original bytes. No automatic component deletion/joining, vertex movement,
+  tolerance welding, smoothing or general shape reconstruction is introduced.
+- Expose fixed, proposed and unresolved findings with edge/vertex/triangle
+  locations, keyboard focus/zoom and Original/Prepared comparison. Retain source
+  and useful partial diagnostics on failure. Cap detailed locations at 1,000
+  records and 200,000 referenced primitives; label truncated/incomplete checks.
+- Accept only one closed, connected, consistently outward manifold solid with
+  positive usable volume and no self-intersections. Preserve exact predicates,
+  precision, strict serialized-candidate revalidation and all existing numerical
+  gates. Original input remains byte-identical and downloadable.
+- Source/group preparation runs in a small disposable JavaScript worker without
+  Gmsh/WASM. Terminate it before meshing. The controller owns pending generations,
+  consent and installation; cancellation/stale replies preserve the prior analysis.
+  Rendering/UI consume application contracts. The native solver stays format-neutral.
+- Generate selectable groups automatically (40° default; adjustable 1–179° near
+  selection). Put original/reconstruct/experimental-remesh settings in Mesh
+  Advanced. Default to original surface; no automatic strategy search or fallback.
+  Preserve existing bounded primitive recovery and experimental remeshing methods.
+- Group identity depends on prepared source, units and grouping/membership, not
+  simulation-surface method, tolerance, feature angle, mesh resolution or rigid
+  orientation. Verify exact ownership before preserving assignments. Method edits
+  invalidate mesh/results; source/group changes use explicit assignment transfer.
+- Retain limits of 16 MiB per source/candidate, 200,000 triangles, 512 internal
+  surfaces, 2 million intersection candidate pairs and 120 seconds per worker
+  operation. Retain SI diagonal `[1e-9,1e6]` m and scale-relative degeneracy checks,
+  bounded planar convex local filling, exact indexed meshing, positive Jacobians,
+  >1% remeshed patch-area warnings and solver memory preflight. Detailed numerical
+  criteria and method limitations are consolidated in the workflow design.
+- Replace alpha STL contracts directly. Plan 29 moves the coarse worker envelope
+  from 3 to 4 and replaces old STL metadata/options; update all producers,
+  consumers, fixtures and generated wrappers. Reject old versions; add no
+  compatibility adapters, migrations or alternate legacy flow. Until implemented,
+  protocol 3 remains the current runtime. General repair, shells, multibody and
+  OBJ remain outside this scope.
 
 ### 6.2 Geometry validation
 
-After import:
+For accepted analysis geometry (STL diagnostic previews are separate):
 
 1. Confirm at least one 3D volume exists.
 2. Require exactly one selected/usable solid for v1.
@@ -2072,7 +1998,8 @@ The UI must clearly mark results stale and require a new solve.
 ### 15.11 Approved pre-v1 usability and STL improvement sequence
 
 Approved on 2026-09-07. **Tasks 21–23 implemented and accepted 2026-09-08;
-Tasks 24–27 accepted; M28 accepted 2026-09-11; M29 implemented pending owner review; Task 30 planned.** Tasks 21–30 in
+Tasks 24–27 accepted; M28 accepted 2026-09-11; M29 workflow changes requested
+2026-09-19 and consolidated in Plan 29; Task 30 planned.** Tasks 21–30 in
 `docs/plans/README.md` schedule independent delivery and mandatory owner reviews.
 These requirements refine the earlier UI descriptions where behavior changes.
 They preserve the numerical, worker, dependency, and direct-local requirements.
@@ -2127,15 +2054,14 @@ They preserve the numerical, worker, dependency, and direct-local requirements.
   old analysis revisions. Clear history on source import/replacement/removal; worker
   execution and active drafts disable engineering history commands. Mesh generation,
   solve, and convergence are not replayable commands.
-- **STL (28–29):** First prove a pinned-runtime binary/ASCII STL-to-Tet10 path and
-  obtain owner acceptance of explicit units, dimensions, closed connected manifold
-  validation, deterministic selectable patches, and grouping/remapping semantics.
-  Then implement the accepted subset with fresh-worker identity, full load/support
-  integration, replacement/orientation behavior, classified failures, licensed corpus,
-  cancellation/resource evidence, and numerical/direct-local verification. Heavy
-  preprocessing runs in workers. Do not silently repair input, add dependencies, or
-  downgrade analysis support to a preview-only import. Failed feasibility requires
-  an explicit owner scope decision; it does not waive the v1 gate.
+- **STL (28–29):** M28 established feasibility; the target workflow is now
+  Section 6.1.1 and `docs/designs/stl-import-workflow.md`. Execute the consolidated
+  Plan 29: immediate invalid-capable preview, automatic routine cleanup, localized
+  diagnostics, scale/shape consent, and separate selection/meshing controls.
+  Preserve full numerical, source-ownership, cancellation, resource and direct-local
+  evidence. M29 needs changes and new owner acceptance before M30. Earlier manual
+  units/repair dialogs and compatibility paths are superseded, not requirements
+  to preserve. Preview availability does not expand the supported analysis subset.
 - **Manual acceptance (21–30):** Every plan ends in its named owner checkpoint.
   Provide a working review packet after automated checks, record the actual response,
   and wait before starting the next plan. The owner's 2026-09-07 execution
@@ -2492,7 +2418,8 @@ When the generic UI foundation changes:
 - keep reusable shell/control behavior generic;
 - place app-specific panels and commands under `/web/js/ui`;
 - document non-obvious loading order between legacy/global helper files;
-- prefer backward-compatible changes to shared helper APIs where practical.
+- update in-repository callers together when helper APIs change; this alpha has
+  no backwards-compatibility requirement and needs no legacy adapters.
 
 ### 18.2 Vendored dependencies
 
@@ -2778,8 +2705,8 @@ evidence.
 - [x] Transactional load/support previews and M25 are accepted.
 - [x] Readable setup and the reviewed check-then-solve workflow and M26 are accepted.
 - [x] Bounded engineering edit undo/redo and M27 are accepted.
-- [x] STL feasibility, units/validation/patch contract, and M28 owner scope decision are accepted (2026-09-11).
-- [ ] The accepted STL analysis subset passes topology, numerical, corpus, resource, direct-local, and M29 reviews.
+- [x] Initial STL feasibility and M28 owner scope decision are accepted (2026-09-11); the revised workflow is tracked separately at M29.
+- [ ] The revised STL workflow and accepted analysis subset pass localized-diagnostic, repair-consent, topology, numerical, corpus, resource, direct-local, and M29 reviews.
 - [ ] Integrated post-change regression and owner usability review M30 are accepted.
 - [ ] Task 20 binds all required evidence to the exact final candidate after Tasks 21–30; release authorization is recorded.
 
@@ -2817,7 +2744,7 @@ Reference documentation consulted while preparing this specification:
 | Area | Decision |
 |---|---|
 | Product model | Local-first browser FEA |
-| CAD format | STEP, IGES, and OpenCASCADE BREP; bounded binary/ASCII STL implemented, M29 owner review pending; OBJ deferred |
+| CAD format | STEP, IGES, and OpenCASCADE BREP; bounded binary/ASCII STL implemented; revised import workflow planned, M29 changes requested; OBJ deferred |
 | Geometry | One closed solid body |
 | Geometry kernel | OpenCASCADE through Gmsh for CAD; validated STL original-surface and bounded primitive-reconstruction paths |
 | Mesher | Gmsh, isolated behind replaceable interface |

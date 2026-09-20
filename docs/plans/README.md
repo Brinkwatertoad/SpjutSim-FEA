@@ -61,18 +61,22 @@ merely mirror implementation or turn each mechanical step into an approval gate.
 25. [x] [Support/load preview authoring](25-support-and-load-preview-authoring.md) — implemented and accepted 2026-09-10
 26. [x] [Setup workflow and solve checks](26-setup-workflow-and-solve-checks.md) — implemented and accepted 2026-09-10
 27. [x] [Engineering edit undo/redo](27-engineering-edit-undo-and-redo.md) — implemented and accepted 2026-09-10
-28. [x] [STL feasibility and surface patch contract](28-stl-feasibility-and-surface-patch-contract.md) — implemented; [M28 accepted 2026-09-11](../reviews/28-stl-contract.md)
-29. [ ] [STL import, meshing, and validation](29-stl-import-meshing-and-validation.md) — implemented with [simulation-surface follow-up](../reviews/29-stl-simulation-surfaces.md); [M29 owner review pending](../reviews/29-stl-workflow.md)
+28. [x] [STL feasibility decision](../reviews/28-stl-contract.md) — M28 accepted 2026-09-11; retained as historical evidence, with no remaining Plan 28 work
+29. [ ] [STL import workflow](29-stl-import-workflow.md) — **changes requested 2026-09-19**; one [target design](../designs/stl-import-workflow.md) and one implementation plan replace the earlier STL plans; implementation and new M29 review pending
 30. [ ] [Integrated usability and pre-release regression](30-integrated-usability-and-pre-release-regression.md)
 
-The execution order is **21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29 → 30 → 20**.
-Plan 28 produces the concrete STL contract used by Plan 29. Its experiments must
-use the pinned runtime first. A runtime/dependency change or a change to the
-supported subset requires the owner's M28 decision. Bounded single-solid STL
-support is planned before v1; infeasibility does not silently defer it or waive
-the release gate. OBJ, general STL repair, and multi-body analysis stay deferred.
-Duplicate/suppress assignment controls and additional unapproved features are
-not required by this sequence.
+The remaining execution order is **29 → 30 → 20**. M21–M28 are accepted.
+Plan 29 replaces the old import/repair dialog with immediate previews, automatic
+routine cleanup, localized problems and repair proposals, and simple scale
+confirmation. Grouping moves near selection and surface methods into Mesh.
+No backwards compatibility is required for this alpha: replace obsolete STL
+contracts and tests directly, without adapters or a second flow.
+
+The consolidated design retains the supported single-solid subset, pinned
+runtime, numerical checks and bounded repair algorithms. General shape rebuilding,
+OBJ, shells and multibody analysis remain deferred. Historical experiments and
+review evidence remain under `docs/reviews/` and `benchmarks/`; their old UI steps
+are not instructions for new work. Git history retains the superseded plans.
 
 ## Manual review schedule
 
@@ -84,11 +88,12 @@ with manual checks after the group and commits along the way. These four plans
 were executed in the current agent without subagents. Their per-package stops
 are replaced by [the grouped review and follow-up](../reviews/24-27-followup.md);
 The owner approved M24–M27 on 2026-09-10 with the final imperial-unit and toolbar
-adjustments, implemented in `0ed6e31`. M28 is accepted and M29 is implemented pending owner review;
-later gates remain unchanged.
+adjustments, implemented in `0ed6e31`. M28 is accepted. On 2026-09-19 the owner
+requested M29 workflow changes and plan consolidation. The revised Plan 29 now owns the remaining implementation
+and new walkthrough; M30 and Task 20 remain open.
 
 This is a milestone schedule, not calendar appointments or automated reminders.
-M21–M23 are **Accepted**; later reviews remain **Pending**. Reserve review time when the preceding implementation
+M21–M28 are **Accepted**; M29 is **Changes requested**; M30 is **Pending**. Reserve review time when the preceding implementation
 is ready, not before a runnable result exists. At each checkpoint (or the end of an explicitly authorized batch), the agent must
 stop, provide the review packet, and wait for the owner's explicit acceptance
 before starting the next plan. Automated checks are necessary but cannot approve
@@ -104,8 +109,8 @@ same checkpoint. Silence is not acceptance.
 | M25 | Plan 25 | Add/edit/toggle/preview/Apply/Cancel assignments | 20 min | `docs/reviews/24-27-review.md` |
 | M26 | Plan 26 | Setup → explicit checks → solve, errors and recovery | 20 min | `docs/reviews/24-27-review.md` |
 | M27 | Plan 27 | Undo/redo with text fields, drafts, and stale results | 10 min | `docs/reviews/24-27-review.md` |
-| M28 | Plan 28 | STL units/patch demo and feasibility/scope decision | 20 min | `docs/reviews/28-stl-contract.md` |
-| M29 | Plan 29 | STL import → patch assignments → mesh → solve | 20 min | `docs/reviews/29-stl-workflow.md` |
+| M28 (accepted) | Completed feasibility work | Historical STL feasibility/scope decision | Complete | `docs/reviews/28-stl-contract.md` |
+| M29 | Revised Plan 29 | Immediate preview, automatic cleanup, localized repair review, scale → setup → mesh → solve | 20 min | `docs/reviews/29-stl-workflow.md` |
 | M30 | Plan 30 | Combined workflow and final usability acceptance | 30–45 min | `docs/reviews/30-integrated-usability.md` |
 
 ### Review packet and record template

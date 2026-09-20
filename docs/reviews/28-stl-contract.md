@@ -1,5 +1,12 @@
 # M28: STL feasibility and contract decision
 
+> Historical evidence for the earlier STL implementation. The owner requested
+> workflow changes on 2026-09-19; current requirements and next work are in the
+> [consolidated design](../designs/stl-import-workflow.md) and
+> [Plan 29](../plans/29-stl-import-workflow.md). Older walkthroughs, options and
+> protocol descriptions below do not govern the replacement workflow. Original
+> design/plan versions remain in Git history; measured results retain their scope.
+
 - Status: **Accepted by owner on 2026-09-11**.
 - Branch: `feat/28-29-stl-import`, based on `fed435a`.
 - Implementation: the branch's `tests/browser/stl-*` experiments, generated
@@ -7,7 +14,8 @@
   application/worker code and capability claims remain unchanged.
 - Browser/platform: Chromium 152.0.7977.75 on Linux; direct `file://` with local
   file access enabled, and HTTP through `tools/serve.py`.
-- [Proposed contract](../designs/stl-import-contract.md).
+- [Current replacement design](../designs/stl-import-workflow.md); the accepted
+  historical decision is recorded below.
 - [Recorded runtime and UI evidence](28-stl-runtime-evidence.json), including
   exact experimental source hashes and pinned runtime metadata.
 

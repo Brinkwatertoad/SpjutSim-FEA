@@ -1,5 +1,12 @@
 # M29 STL import usability and capacity
 
+> Historical evidence for the earlier STL implementation. The owner requested
+> workflow changes on 2026-09-19; current requirements and next work are in the
+> [consolidated design](../designs/stl-import-workflow.md) and
+> [Plan 29](../plans/29-stl-import-workflow.md). Older walkthroughs, options and
+> protocol descriptions below do not govern the replacement workflow. Original
+> design/plan versions remain in Git history; measured results retain their scope.
+
 Implemented on `feat/28-29-stl-import` in response to the owner’s import-flow
 feedback. M29 acceptance and release approval remain separate.
 

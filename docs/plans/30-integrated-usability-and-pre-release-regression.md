@@ -12,7 +12,9 @@
 
 ## Dependencies and constraints
 
-- Requires explicit acceptance of M21–M29, or an owner-approved scope amendment recorded in the index/spec. A failed STL gate cannot be silently marked deferred.
+- Requires explicit acceptance of M21–M29, including the revised
+  [STL workflow](29-stl-import-workflow.md), or an owner-approved scope amendment
+  recorded in the index/spec. A failed STL gate cannot be silently marked deferred.
 - Implementation progress, old Task 20 checks, a deployed preview, and headless test success do not substitute for owner usability acceptance.
 - Reuse valid historical numerical evidence with its original commit/scope; rerun every claim affected by changed runtime, postprocessing, input paths, or state transitions.
 - This plan does not authorize a v1 tag, publication, or final release-status change.
@@ -40,7 +42,11 @@
 ## Manual review M30 — integrated workflow, about 30–45 minutes
 
 - [ ] Owner completes import → units/material → draft supports/loads → mesh → Check model → Solve → peak/legend/probe → convergence in the working application.
-- [ ] Repeat key actions on STL, resize mid-workflow, change projection, undo an edit, cancel a draft, fix a check failure, and replace geometry with explicit mapping.
+- [ ] Repeat STL immediate preview, automatic cleanup, scale confirmation,
+  localized failed checks and explicit shape-repair consent. Verify invalid
+  previews cannot enable analysis and surface methods live in Mesh. Then resize
+  mid-workflow, change projection, undo an edit, cancel a draft, fix a check failure,
+  and replace geometry with explicit mapping.
 - [ ] Owner confirms that the application is understandable without the implementer narrating which controls to use. Record confusing steps and correct them before accepting the affected flow.
 - [ ] Record final usability acceptance and permission to proceed to candidate auditing. This acceptance is not permission to tag or publish.
 

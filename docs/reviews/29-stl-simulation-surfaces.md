@@ -1,5 +1,12 @@
 # M29 follow-up: STL simulation surfaces
 
+> Historical evidence for the earlier STL implementation. The owner requested
+> workflow changes on 2026-09-19; current requirements and next work are in the
+> [consolidated design](../designs/stl-import-workflow.md) and
+> [Plan 29](../plans/29-stl-import-workflow.md). Older walkthroughs, options and
+> protocol descriptions below do not govern the replacement workflow. Original
+> design/plan versions remain in Git history; measured results retain their scope.
+
 Status: **Implemented; owner review pending.** The owner authorized this follow-up
 on 2026-09-11. Work remains on `feat/28-29-stl-import`. This is not final M29 or
 release acceptance.
@@ -22,7 +29,8 @@ Original-surface meshing retains source triangles, uses one discrete surface per
 selectable patch, and bypasses the old near-planar-region bottleneck. Browser
 Jacobian validation now matches the native solver's element-relative tolerance;
 low gamma quality remains visible. Native FEM and pinned Gmsh/OCCT binaries are
-unchanged. See the [design and contract](../designs/stl-simulation-surfaces.md).
+unchanged. See the [current design](../designs/stl-import-workflow.md) for retained method
+limits and revised controls/ownership.
 
 ## Measured evidence
 

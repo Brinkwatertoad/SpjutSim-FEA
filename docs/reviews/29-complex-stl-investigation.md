@@ -1,5 +1,12 @@
 # Complex STL follow-up: supplied vented funnel
 
+> Historical evidence for the earlier STL implementation. The owner requested
+> workflow changes on 2026-09-19; current requirements and next work are in the
+> [consolidated design](../designs/stl-import-workflow.md) and
+> [Plan 29](../plans/29-stl-import-workflow.md). Older walkthroughs, options and
+> protocol descriptions below do not govern the replacement workflow. Original
+> design/plan versions remain in Git history; measured results retain their scope.
+
 Date: 2026-09-11. Investigated against `811b668` on
 `feat/28-29-stl-import`. **Experiments only; production behavior is unchanged.**
 

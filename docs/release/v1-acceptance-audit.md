@@ -31,28 +31,28 @@ needs broader evidence; every “Pending” row keeps the release closed.
 | Representative/problematic CAD corpus size | Pass | 50 CC0 fixtures: 34 accepted across three formats and 16 classified rejections |
 | Gmsh distribution rights | Pass | `distribution-policy.md`, `artifact-manifest.json`, `SOURCE.md`; owner approval on 2026-09-07 and successful staged-source audit with `--require-approved` |
 
-## Revised pre-v1 gates — all pending
+## Revised pre-v1 gates — status updated 2026-09-19
 
-The Pass rows above record the earlier evidence scope; they are not acceptance
-of the approved changes. New boundary-range/contour, resize, and authoring
-behavior requires regression evidence even where an earlier row passed.
+The Pass rows above record the earlier evidence scope and are not exact-candidate
+release certification. M21–M28 owner acceptance is recorded below; changed STL
+behavior requires the consolidated Plan 29 and new M29 review before M30/Task 20.
 
 | Area | Status | Required evidence |
 | --- | --- | --- |
-| Responsive workspace and bounded overlays | Pending | Task 21 regression and owner M21 |
-| Accurate surface extrema and result explanation | Pending | Task 22 numerical/postprocessing regression and owner M22 |
-| Orthographic/isometric and interactive gizmo | Pending | Task 23 navigation tests and owner M23 |
-| Contextual display and vertical/horizontal legend | Pending | Task 24 presentation tests and owner M24 |
-| Transactional assignment previews | Pending | Task 25 state/integration tests and owner M25 |
-| Setup and explicitly triggered solve checks | Pending | Task 26 preflight/recovery tests and owner M26 |
-| Bounded engineering undo/redo | Pending | Task 27 invalidation/memory tests and owner M27 |
-| STL feasibility and accepted patch contract | Pending | Task 28 runtime evidence and owner M28 decision |
-| Accepted STL import/mesh/solve subset | Pending | Task 29 topology/numerical/resource/corpus evidence and owner M29 |
+| Responsive workspace and bounded overlays | Accepted 2026-09-08 | [M21–M23 review](../reviews/21-23-review.md) |
+| Accurate surface extrema and result explanation | Accepted 2026-09-08 | [M21–M23 review](../reviews/21-23-review.md) |
+| Orthographic/isometric and interactive gizmo | Accepted 2026-09-08 | [M21–M23 review](../reviews/21-23-review.md) |
+| Contextual display and vertical/horizontal legend | Accepted 2026-09-10 | [M24–M27 review](../reviews/24-27-followup.md) |
+| Transactional assignment previews | Accepted 2026-09-10 | [M24–M27 review](../reviews/24-27-followup.md) |
+| Setup and explicitly triggered solve checks | Accepted 2026-09-10 | [M24–M27 review](../reviews/24-27-followup.md) |
+| Bounded engineering undo/redo | Accepted 2026-09-10 | [M24–M27 review](../reviews/24-27-followup.md) |
+| STL feasibility | Accepted 2026-09-11 | [Historical M28 decision](../reviews/28-stl-contract.md); workflow subsequently revised |
+| Revised STL import/mesh/solve workflow | Changes requested 2026-09-19 | [Plan 29](../plans/29-stl-import-workflow.md), current topology/numerical/resource/corpus evidence and new owner M29 |
 | Integrated usability and changed-path regression | Pending | Task 30 complete applicable suites and owner M30 |
 | Exact final candidate | Pending | Task 20 audit after accepted Tasks 21–30 |
 
-The project must not be tagged or described as v1.0-ready while any Pending row
-that maps to section 26 remains unresolved.
+The project must not be tagged or described as v1.0-ready while any Pending or
+Changes requested row that maps to section 26 remains unresolved.
 
 Historical evidence ownership: Task 16 owns numerical and
 independent-solver validation, Task 17 owns the CAD corpus and quality evidence,

@@ -4,16 +4,19 @@ SpjutSim FEA is a local-first browser application for simple static finite eleme
 
 ## Development status
 
-v1 is unreleased. The approved interface, result-clarity, and bounded STL work
-is tracked in [plans 21–30](docs/plans/README.md). Plans 21–23 are implemented
-and accepted in the [combined owner review](docs/reviews/21-23-review.md) on
-2026-09-08; plans
-24–27 are implemented and accepted in the [grouped owner review](docs/reviews/24-27-followup.md) on 2026-09-10; M28 is accepted on 2026-09-11; M29 is implemented pending owner review. Plan 30 remains ahead of the final plan 20 candidate audit. No v1 acceptance is
-implied by passing automated checks.
+v1 is unreleased. Plans 21–23 were accepted on 2026-09-08, plans 24–27 on
+2026-09-10, and M28 feasibility on 2026-09-11. **M29 needs workflow changes:** on
+2026-09-19 the owner requested immediate STL previews, automatic routine cleanup,
+localized error/repair highlighting and fewer import decisions. The single
+[current STL design](docs/designs/stl-import-workflow.md) and
+[implementation plan](docs/plans/29-stl-import-workflow.md) replace the earlier
+STL plans. This revision is planned; the application still uses the earlier
+import dialog described under Current boundary below.
 
-The [accepted STL contract](docs/designs/stl-import-contract.md) and
-[M29 review packet](docs/reviews/29-stl-workflow.md) describe the supported subset
-and end-to-end evidence.
+After implementing and accepting revised M29, complete Plan 30's integrated
+regression/usability review and Plan 20's exact-candidate audit. Passing automated
+checks is not v1 acceptance. See the [roadmap](docs/plans/README.md) and
+[historical M29 evidence](docs/reviews/29-stl-workflow.md).
 
 ## Run locally
 
@@ -286,7 +289,8 @@ perpendicular flat ends. Compare the original and candidate before applying.
 More complicated fitted-surface intersections and freeform regions are reported
 as unsupported; selecting the original surface preserves every triangle and can
 retain very small or low-quality elements. See the
-[simulation-surface design](docs/designs/stl-simulation-surfaces.md).
+[consolidated STL design](docs/designs/stl-import-workflow.md) for retained
+method limits and the planned workflow revision.
 **Remesh STL surfaces (experimental)** is a separate option that creates
 parametrized surfaces and regenerates both the surface and volume mesh. It
 retains selection groups, allowing each group to own several surfaces. It does
@@ -322,7 +326,7 @@ source preservation, cancellation, deadlines and fresh-worker meshing. Append
 `?fixture=gargoyle` to either for the supplied file's remaining-component refusal.
 `stl-mesh-solve-tests.html?surfaceMode=original&repair=1` checks an analytical solve
 after winding repair; `stl-large-tests.html?repair=1` exercises repair at 200,000
-triangles. See the [repair design](docs/designs/stl-surface-repair.md) and
+triangles. See the [consolidated repair requirements](docs/designs/stl-import-workflow.md) and
 [repair evidence](docs/reviews/29-stl-surface-repair.md).
 
 Open `tests/browser/stl-large-tests.html` to check a procedural 200,000-triangle

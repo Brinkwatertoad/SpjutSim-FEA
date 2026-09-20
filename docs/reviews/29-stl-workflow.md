@@ -1,6 +1,16 @@
 # M29: STL import through analysis
 
-Status: **Implemented; owner review pending.** M28 was accepted on 2026-09-11
+> Historical evidence for the earlier STL implementation. The owner requested
+> workflow changes on 2026-09-19; current requirements and next work are in the
+> [consolidated design](../designs/stl-import-workflow.md) and
+> [Plan 29](../plans/29-stl-import-workflow.md). Older walkthroughs, options and
+> protocol descriptions below do not govern the replacement workflow. Original
+> design/plan versions remain in Git history; measured results retain their scope.
+
+Current status: **Changes requested on 2026-09-19; revised implementation pending.**
+
+The following packet records the previous implementation. M28 was accepted
+on 2026-09-11
 (“yes, accept.”). This packet covers plan 29 on `feat/28-29-stl-import`.
 Plan 30 and release acceptance have not started.
 
@@ -33,7 +43,7 @@ The coarse worker protocol is 3; the local-runtime builder bundles the STL helpe
 
 See [machine-readable evidence](29-stl-evidence.json), the
 [68-case corpus report](../../benchmarks/cad-corpus/chromium-152-stl.json), and
-the [accepted contract](../designs/stl-import-contract.md).
+the [historical accepted decision](28-stl-contract.md).
 
 - 79 Python tests and all 8 native tests pass.
 - All 33 browser harnesses pass in Chromium 152.0.7977.75 under direct `file://`;
@@ -128,5 +138,9 @@ Use files in `tests/fixtures/stl/`.
    assignment transfer and the cleared history after replacement. Run a small
    convergence study if desired.
 
-Owner response: **not yet received**. Record the actual M29 response here before
-starting plan 30. Automated results do not constitute owner or v1 acceptance.
+Owner response, 2026-09-19: the import flow asks for too many choices and should
+show readable STL geometry even with errors, attempt routine cleanup automatically,
+and highlight problems and proposed repairs. The owner requested a consolidated
+plan; this is **changes requested**, not M29 acceptance. Replace this walkthrough
+with current evidence after implementing Plan 29, then obtain usability acceptance
+before Plan 30. Automated results do not constitute owner or v1 acceptance.

@@ -52,7 +52,9 @@ status, or skipping new manual reviews. Re-run affected checks after changes.
   run `file://` import -> material -> component support/load -> Tet10 mesh ->
   explicit Check model -> Solve -> probes/FoS -> two-level convergence for STEP,
   plus import/mesh coverage for IGES and BREP and the accepted binary/ASCII STL
-  units/patch/mesh/solve workflow. Include draft cancellation, undo/redo, resize,
+  immediate-preview/automatic-cleanup/scale/repair-consent/mesh/solve workflow
+  from the revised Plan 29, including blocked readable models and issue locations.
+  Include draft cancellation, undo/redo, resize,
   projection/gizmo, boundary-only contour ranges, and both legend orientations.
   Repeat the production STEP workflow in
   optional cross-origin-isolated HTTP mode and run the declared Firefox

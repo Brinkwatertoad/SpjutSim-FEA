@@ -1,5 +1,12 @@
 # M29 reviewed local STL surface repair
 
+> Historical evidence for the earlier STL implementation. The owner requested
+> workflow changes on 2026-09-19; current requirements and next work are in the
+> [consolidated design](../designs/stl-import-workflow.md) and
+> [Plan 29](../plans/29-stl-import-workflow.md). Older walkthroughs, options and
+> protocol descriptions below do not govern the replacement workflow. Original
+> design/plan versions remain in Git history; measured results retain their scope.
+
 Implemented on `feat/28-29-stl-import` following the owner's request to detect
 surface defects during import and offer repair. The existing import validator
 exposes **Try surface repair** after relevant errors. A successful candidate
@@ -22,9 +29,9 @@ the imported geometry. Cancellation, deadlines, failed validation and stale
 replies preserve the installed source and analysis. The invalid-source review
 now hides the viewer's default placeholder until a validated preview exists.
 
-The [design](../designs/stl-surface-repair.md) specifies numerical criteria,
-ownership, protocol and refusal behavior. No solver method, dependency, vendor
-code or WASM binary changed. Worker packaging was regenerated reproducibly and
+The [current design](../designs/stl-import-workflow.md) retains the numerical
+criteria and replaces this explicit repair workflow and protocol. No solver
+method, dependency, vendor code or WASM binary changed in the recorded work. Worker packaging was regenerated reproducibly and
 the distribution artifact audit passed.
 
 ## Verification
