@@ -91,7 +91,7 @@
   }
 
   function installImportedGeometry(geometry, source) {
-    if (app.document.geometry) {
+    if (app.document.geometry && (app.document.boundaryConditions.length || app.document.loads.length)) {
       var draft = api.createReplacementMigrationDraft(app.document, geometry, source);
       app.restoreGeometryImportStatus();
       replacementMigrationUI.open(draft, function (replacementGeometry, replacementSource, transfer) {
@@ -268,7 +268,7 @@
 
   function setText(id, value) { document.getElementById(id).textContent = value; }
   setText('launch-mode', location.protocol === 'file:' ? 'Direct local file' : (root.crossOriginIsolated ? 'HTTP, isolated' : 'HTTP, portable'));
-  root.addEventListener('pagehide', function () { if (activeImport) { activeImport.cancel(); } if (activeMesh) { activeMesh.cancel(); } if (activeConvergence) { activeConvergence.cancel(); } disposeSolver(); stlImportUI.close(); replacementMigrationUI.dispose(); ui.dispose(); viewport.dispose(); }, { once: true });
+  root.addEventListener('pagehide', function () { if (activeImport) { activeImport.cancel(); } if (activeMesh) { activeMesh.cancel(); } if (activeConvergence) { activeConvergence.cancel(); } disposeSolver(); stlSurfaceUI.cancel(); stlImportUI.close(); replacementMigrationUI.dispose(); ui.dispose(); viewport.dispose(); }, { once: true });
   viewport.setFacePickHandler(function (faceId, additive) {
     if(app.stlImportSession)return;
     if (app.document.assignmentDraft) {
@@ -327,17 +327,13 @@
   api.bindUnitSettings(app, ui);
   api.bindReportExport(app, viewport, ui);
 
-  var repeatedMesherCheck = api.exerciseMesherRuntime().then(function (firstResult) {
-    return api.exerciseMesherRuntime().then(function () { return firstResult; });
-  });
+  // Startup verifies the lightweight worker path. Gmsh/FEM start only for an
+  // operation that needs them; their full smoke checks live in runtime tests.
   Promise.all([
-    repeatedMesherCheck,
-    api.exerciseWorker('solver'),
-    WebAssembly.instantiate(wasmBytes)
+    api.startLocalWorker('stl-preparation').then(function(worker){worker.terminate();}), WebAssembly.instantiate(wasmBytes)
   ]).then(function (checks) {
-    var mesher = checks[0];
-    setText('worker-status', 'Gmsh ' + mesher.diagnostics.gmshVersion + '; box ' + mesher.smoke.volume + ' m³ / ' + mesher.smoke.surfaceCount + ' faces');
-    setText('wasm-status', 'FEM API ' + checks[1].result.apiVersion + '; ' + Math.round(checks[1].result.wasmMemoryBytes / 1048576) + ' MiB initial memory');
+    setText('worker-status', 'Local preparation worker ready');
+    setText('wasm-status', 'WebAssembly available; analysis engines load when needed');
     ui.runtimeStatus='Local runtime ready';ui.renderActivity(app.document);
   }).catch(function (error) {
     ui.runtimeStatus='Compatibility check failed';ui.renderActivity(app.document);

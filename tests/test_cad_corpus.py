@@ -26,7 +26,7 @@ class CadCorpusTests(unittest.TestCase):
 
     def test_committed_browser_report_agrees_with_manifest(self):
         manifest = self.module.read_manifest(ROOT / "tests/fixtures/corpus-v1.json")
-        report = self.module.read_manifest(ROOT / "benchmarks/cad-corpus/chromium-152-stl.json")
+        report = self.module.read_manifest(ROOT / "benchmarks/cad-corpus/chromium-152-stl-workflow.json")
         self.assertEqual([], self.module.validate_report(report, manifest))
 
     def test_release_mix_has_required_coverage(self):
@@ -60,6 +60,14 @@ class CadCorpusTests(unittest.TestCase):
                 entry["stlSource"] = invalid
                 errors = self.module.validate_manifest(manifest, ROOT)
                 self.assertTrue(any("stlSource is invalid" in error for error in errors))
+
+    def test_preparation_is_separate_from_raw_solid_acceptance(self):
+        manifest = self.module.read_manifest(ROOT / "tests/fixtures/corpus-v1.json")
+        entry = next(e for e in manifest["entries"] if e["id"] == "stl-inconsistent")
+        self.assertEqual("rejected", entry["expected"]["classification"])
+        self.assertEqual("ready", entry["preparation"]["state"])
+        entry["preparation"] = {"state": "blocked", "preview": False}
+        self.assertTrue(any("preparation is invalid" in e for e in self.module.validate_manifest(manifest, ROOT)))
 
     def test_manifest_cli_passes(self):
         result = subprocess.run(

@@ -91,6 +91,11 @@ def validate_manifest(manifest: Any, root: pathlib.Path) -> list[str]:
                     type(options.get("patchAngleDegrees")) not in (int, float) or
                     not 1 <= options.get("patchAngleDegrees", 0) <= 179):
                 errors.append(f"{prefix}.stlSource is invalid")
+            preparation = entry.get("preparation", {})
+            if (not isinstance(preparation, dict) or preparation.get("state") not in {"ready", "needs-review", "blocked", "unreadable"}
+                    or type(preparation.get("preview")) is not bool
+                    or (preparation.get("state") == "unreadable") == preparation.get("preview")):
+                errors.append(f"{prefix}.preparation is invalid")
         expected = entry.get("expected")
         classification = expected.get("classification") if isinstance(expected, dict) else None
         if classification not in CLASSIFICATIONS:
@@ -151,6 +156,8 @@ def validate_report(report: Any, manifest: Any) -> list[str]:
         if not isinstance(row, dict) or row.get("id") not in expected_entries:
             continue
         entry = expected_entries[row["id"]]
+        if entry.get("format") == "stl" and row.get("preparation") != entry.get("preparation"):
+            errors.append(f"{row['id']} preparation outcome does not match")
         expected = entry["expected"]
         if row.get("outcome") != expected["classification"]:
             errors.append(f"{row['id']} outcome does not match")

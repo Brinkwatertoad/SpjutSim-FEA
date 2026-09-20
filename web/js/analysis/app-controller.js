@@ -232,6 +232,7 @@
       originalSourceBytes: source.originalSourceBytes, preparation: source.preparation };
     this.rememberStlUnit(source);
     this.document.geometry = geometry;
+    this.document.meshSettings=Object.assign({},this.document.meshSettings,{stlSurface:geometry.sourceFormat==='stl'?geometry.stlSurface:undefined});
     this.document.selectedFaceIds = [];
     this.document.boundaryConditions = [];
     this.document.loads = [];
@@ -303,7 +304,7 @@
     this.document.boundaryConditions = supports;
     this.document.loads = loads;
     this.document.gravity = gravityValidation.value;
-    this.document.meshSettings = Object.assign({}, transfer.meshSettings);
+    this.document.meshSettings = Object.assign({}, transfer.meshSettings,{stlSurface:geometry.sourceFormat==='stl'?geometry.stlSurface:undefined});
     this.document.solveSettings = Object.assign({}, transfer.solveSettings);
     this.document.selectedFaceIds = [];
     this.document.meshMetadata = null;

@@ -24,7 +24,7 @@
   StlDiagnosticsDisplay.prototype.focusIssue=function(index){
     var issue=this.issues[index];if(!issue)return;this.showIssues([issue]);
     var center=issue.bounds.min.map(function(v,i){return(v/2+issue.bounds.max[i]/2)/this.divisor-this.origin[i]/this.divisor;},this);
-    var extent=Math.max.apply(null,issue.bounds.max.map(function(v,i){return(v-issue.bounds.min[i])/this.divisor;},this));
+    var extent=Math.max.apply(null,issue.bounds.max.map(function(v,i){return v/this.divisor-issue.bounds.min[i]/this.divisor;},this));
     this.viewport.fitModel(new T.Vector3().fromArray(center),Math.max(extent,.05),false);
   };
   StlDiagnosticsDisplay.prototype.showIssues=function(issues){

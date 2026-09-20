@@ -50,6 +50,17 @@
   }
   async function runEntry(entry) {
     var started = performance.now(); var sourceBytes = await readBytes('../../' + entry.path); var client = new api.MesherClient();
+    var preparation;
+    if(entry.format==='stl'){
+      var seenPreview=false,preparer=new api.StlPreparationClient({onEvent:function(e){if(e.type==='stl-preview')seenPreview=true;}});
+      try{
+        var result=await preparer.prepare({sessionId:entry.id,generation:0,geometryId:entry.id,sourceName:entry.path.split('/').pop(),sourceBytes:sourceBytes,lengthUnit:entry.stlSource.lengthUnit,patchAngleDegrees:entry.stlSource.patchAngleDegrees,maxHoleDiameterRatio:.01});
+        preparation={state:result.state,preview:seenPreview};
+        assert(result.state==='blocked'?result.geometryCandidate===null:api.validateGeometryModel(result.geometryCandidate).valid,entry.id+' invalid preparation geometry');
+      }catch(error){if(!error.diagnostic)throw error;preparation={state:'unreadable',preview:seenPreview,code:error.diagnostic.code};}
+      finally{preparer.dispose();}
+      assert(JSON.stringify(preparation)===JSON.stringify(entry.preparation),entry.id+' preparation outcome changed: '+JSON.stringify(preparation));
+    }
     try {
       var geometry = await client.importGeometry({ geometryId: 'corpus-' + entry.id, sourceName: entry.path.split('/').pop(), sourceFormat: entry.format, stlSource: entry.stlSource, sourceBytes: sourceBytes });
       if (entry.expected.classification === 'rejected') { throw new Error(entry.id + ' was accepted unexpectedly'); }
@@ -67,7 +78,7 @@
       var second = await client.generateMesh({ geometry: geometry, settings: settings, sourceBytes: sourceBytes });
       assert(sameValues(faceIds(first), geometry.faceIds) && sameValues(faceIds(second), geometry.faceIds), entry.id + ' FaceIds changed on remesh');
       var memory = await clientDiagnostics(client);
-      return { id: entry.id, outcome: 'accepted', detail: entry.mesh.elementType + ' ' + first.statistics.elementCount + ' elements', durationMs: performance.now() - started,
+      return { id: entry.id, preparation:preparation, outcome: 'accepted', detail: entry.mesh.elementType + ' ' + first.statistics.elementCount + ' elements', durationMs: performance.now() - started,
         geometry: { faceCount: geometry.faceIds.length, volumeM3: geometry.volumeM3, boundsDiagonalM: diagonal(geometry.boundingBoxM) },
         mesherWasmBytes: memory.wasmMemoryBytes,
         mesh: { elementType: first.elementType, nodeCount: first.statistics.nodeCount, elementCount: first.statistics.elementCount,
@@ -80,7 +91,7 @@
       assert(diagnostic && diagnostic.code === entry.expected.code && diagnostic.stage === entry.expected.stage,
         entry.id + ' expected ' + entry.expected.code + ' but received ' + (diagnostic && diagnostic.code));
       assert(diagnostic.userMessage && !/(gmsh|emscripten)/i.test(diagnostic.userMessage), entry.id + ' exposed raw runtime text');
-      return { id: entry.id, outcome: 'rejected', detail: diagnostic.code, durationMs: performance.now() - started,
+      return { id: entry.id, preparation:preparation, outcome: 'rejected', detail: diagnostic.code, durationMs: performance.now() - started,
         diagnostic: { code: diagnostic.code, stage: diagnostic.stage, userMessage: diagnostic.userMessage, recoverable: diagnostic.recoverable } };
     } finally { client.dispose(); sourceBytes = null; }
   }

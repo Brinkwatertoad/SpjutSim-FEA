@@ -49,6 +49,11 @@
     if(r.candidatePreview!==null && (!validPreview(r.candidatePreview)||r.candidatePreview.revision!=='candidate'))return false;
     if(!sourcePreview||sourcePreview.revision!=='source'||typeof r.shapeChanged!=='boolean'||typeof r.changesTruncated!=='boolean'||!Object.prototype.hasOwnProperty.call(scales,r.lengthUnit))return false;
     if((r.preparedSourceBytes===null)!==(r.candidatePreview===null)||r.preparedSourceBytes===null&&r.sourceDigest!==r.preparedDigest)return false;
+    var map=r.sourceTriangleByCandidate;
+    if(r.candidatePreview){
+      if(!(map instanceof Int32Array)||map.length!==r.candidatePreview.triangles.length/3)return false;
+      for(var i=0;i<map.length;i++)if(map[i]<-1||map[i]>=sourcePreview.triangles.length/3)return false;
+    }else if(map!==null)return false;
     var previews={source:sourcePreview,candidate:r.candidatePreview||sourcePreview};
     if(!validDiagnostics(r.diagnostics,previews)||!r.changes||!Array.isArray(r.changes.automatic)||!Array.isArray(r.changes.proposed)||!validIssues(r.changes.automatic.concat(r.changes.proposed),previews))return false;
     if(r.state==='blocked')return r.geometryCandidate===null;

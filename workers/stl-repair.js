@@ -169,7 +169,8 @@
       changes.proposed.push.apply(changes.proposed,fills.report.issues);
       locations.report.locationsTruncated=locations.report.locationsTruncated||fills.report.locationsTruncated;
     }
-    return {sourceBytes:sourceBytes,report:report,changes:changes,error:issueError,
+    var sourceTriangleByCandidate=new Int32Array(triangles.length/3);sourceTriangleByCandidate.fill(-1);sourceTriangleByCandidate.set(members);
+    return {sourceBytes:sourceBytes,sourceTriangleByCandidate:sourceTriangleByCandidate,report:report,changes:changes,error:issueError,
       changesTruncated:locations.report.locationsTruncated,shapeChanged:removed.length>0||report.addedTriangles>0};
   }
   root.StlRepair={prepare:prepare};

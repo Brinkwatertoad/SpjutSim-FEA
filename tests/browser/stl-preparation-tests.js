@@ -44,6 +44,36 @@
     assert(cancelled && !client.worker, 'Cancellation did not reject and terminate preparation');
     var malformed={revision:'source',positions:new Float64Array([0,0,0]),triangles:new Uint32Array([0,0,99]),bounds:{min:[0,0,0],max:[0,0,0]}};
     assert(!SpjutsimFEA.validateStlPreview(malformed),'Out-of-range diagnostic preview connectivity was accepted');
+    function sphere(level){
+      var vertices=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]],faces=[[0,2,4],[2,1,4],[1,3,4],[3,0,4],[2,0,5],[1,2,5],[3,1,5],[0,3,5]];
+      for(var l=0;l<level;l++){var next=[],midpoints=new Map();function mid(a,b){var key=Math.min(a,b)+':'+Math.max(a,b);if(midpoints.has(key))return midpoints.get(key);var p=vertices[a].map(function(v,i){return(v+vertices[b][i])/2;}),n=Math.hypot.apply(Math,p),id=vertices.length;vertices.push(p.map(function(v){return v/n;}));midpoints.set(key,id);return id;}
+        faces.forEach(function(f){var a=mid(f[0],f[1]),b=mid(f[1],f[2]),c=mid(f[2],f[0]);next.push([f[0],a,c],[a,f[1],b],[c,b,f[2]],[a,b,c]);});faces=next;
+      }
+      var bytes=new ArrayBuffer(84+faces.length*50),v=new DataView(bytes);v.setUint32(80,faces.length,true);faces.forEach(function(f,i){f.forEach(function(id,j){vertices[id].forEach(function(x,k){v.setFloat32(84+i*50+12+j*12+k*4,x,true);});});});return bytes;
+    }
+    for(var level of [3,4]){
+      client=new SpjutsimFEA.StlPreparationClient();
+      result=await client.prepare({sessionId:'groups-'+level,generation:0,geometryId:'groups',sourceName:'sphere.stl',sourceBytes:sphere(level),lengthUnit:'m',patchAngleDegrees:1,maxHoleDiameterRatio:0});
+      assert(level===3?result.state==='ready'&&result.geometryCandidate.faceIds.length===488:result.state==='blocked'&&result.error.code==='STL_PATCH_LIMIT','Selection group limit changed: '+level+' '+result.state+' '+(result.geometryCandidate&&result.geometryCandidate.faceIds.length)+' '+JSON.stringify(result.error));
+    }
+    var request={sessionId:'boundary',generation:2,sourceName:'cube.stl',geometryId:'boundary',sourceBytes:await fixture('cube-binary'),lengthUnit:'m',patchAngleDegrees:40,maxHoleDiameterRatio:.01};
+    var startWorker=SpjutsimFEA.startLocalWorker,realTimer=globalThis.setTimeout,terminated=false;
+    try{
+      SpjutsimFEA.startLocalWorker=function(){return Promise.resolve({terminate:function(){terminated=true;},postMessage:function(){}});};
+      globalThis.setTimeout=function(fn,ms){return realTimer(fn,ms>100000?1:ms);};
+      client=new SpjutsimFEA.StlPreparationClient();var code;
+      try{await client.prepare(request);}catch(e){code=e.diagnostic.code;}
+      assert(code==='STL_PREPARATION_TIMEOUT'&&terminated&&!client.worker,'Deadline did not terminate the preparation worker');
+      globalThis.setTimeout=realTimer;terminated=false;
+      SpjutsimFEA.startLocalWorker=function(){return Promise.resolve({terminate:function(){terminated=true;},postMessage:function(m){
+        var envelope={protocol:4,requestId:m.requestId,sessionId:m.sessionId,generation:m.generation};
+        this.onmessage({data:Object.assign({},envelope,{generation:1,type:'stl-preview',preview:malformed})});
+        this.onmessage({data:Object.assign({},envelope,{type:'stl-preview',preview:malformed})});
+      }});};
+      var forwarded=0;client=new SpjutsimFEA.StlPreparationClient({onEvent:function(){forwarded++;}});code=null;
+      try{await client.prepare(request);}catch(e){code=e.diagnostic.code;}
+      assert(code==='INVALID_STL_PREPARATION'&&terminated&&forwarded===0,'Stale or malformed preview crossed the client boundary');
+    }finally{SpjutsimFEA.startLocalWorker=startWorker;globalThis.setTimeout=realTimer;}
     status.textContent = 'Passed'; status.dataset.result = 'passed';
   } catch (e) { status.textContent = 'Failed: ' + e.message; status.dataset.result = 'failed'; }
 }());

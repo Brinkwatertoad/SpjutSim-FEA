@@ -2218,24 +2218,24 @@
         "minSizeM": 0.075,
         "maxSizeM": 0.3,
         "nodeCount": [
-          1809,
-          2449
+          29,
+          41
         ],
         "elementCount": [
-          980,
-          1328
+          10,
+          14
         ],
         "gammaMinimum": [
-          0.15218167904919677,
-          0.4565450371475903
+          0.19721745085083686,
+          0.5916523525525106
         ],
         "gammaP05": [
-          0.39803600612221124,
-          0.7392097256555352
+          0.2761044311911716,
+          0.5127653722121759
         ],
         "maximumEdgeRatio": [
-          1.8862152230596383,
-          3.1436920384327305
+          1.5434872662825798,
+          2.5724787771376327
         ]
       },
       "remeshFaceIds": true,
@@ -2243,6 +2243,10 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "ready",
+        "preview": true
       }
     },
     {
@@ -2280,24 +2284,24 @@
         "minSizeM": 0.075,
         "maxSizeM": 0.3,
         "nodeCount": [
-          1809,
-          2449
+          29,
+          41
         ],
         "elementCount": [
-          980,
-          1328
+          10,
+          14
         ],
         "gammaMinimum": [
-          0.15218167904919677,
-          0.4565450371475903
+          0.19721745085083686,
+          0.5916523525525106
         ],
         "gammaP05": [
-          0.39803600612221124,
-          0.7392097256555352
+          0.2761044311911716,
+          0.5127653722121759
         ],
         "maximumEdgeRatio": [
-          1.8862152230596383,
-          3.1436920384327305
+          1.5434872662825798,
+          2.5724787771376327
         ]
       },
       "remeshFaceIds": true,
@@ -2305,6 +2309,10 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "ready",
+        "preview": true
       }
     },
     {
@@ -2342,24 +2350,24 @@
         "minSizeM": 0.075,
         "maxSizeM": 0.3,
         "nodeCount": [
-          912,
-          1234
+          28,
+          40
         ],
         "elementCount": [
-          412,
-          558
+          9,
+          13
         ],
         "gammaMinimum": [
-          0.011527277072522874,
-          0.03458183121756862
+          0.00033730393748640584,
+          0.0010119118124592174
         ],
         "gammaP05": [
-          0.09474007689404217,
-          0.17594585708893548
+          0.00047222551248096814,
+          0.0008769902374646552
         ],
         "maximumEdgeRatio": [
-          15.980457168541061,
-          26.63409528090177
+          53.03831280997306,
+          88.39718801662175
         ]
       },
       "remeshFaceIds": true,
@@ -2367,6 +2375,10 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "ready",
+        "preview": true
       }
     },
     {
@@ -2387,6 +2399,10 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "blocked",
+        "preview": true
       }
     },
     {
@@ -2407,6 +2423,10 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "blocked",
+        "preview": true
       }
     },
     {
@@ -2427,6 +2447,10 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "ready",
+        "preview": true
       }
     },
     {
@@ -2447,6 +2471,10 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "ready",
+        "preview": true
       }
     },
     {
@@ -2467,6 +2495,10 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "ready",
+        "preview": true
       }
     },
     {
@@ -2487,6 +2519,10 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "ready",
+        "preview": true
       }
     },
     {
@@ -2507,6 +2543,10 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "blocked",
+        "preview": true
       }
     },
     {
@@ -2527,6 +2567,10 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "blocked",
+        "preview": true
       }
     },
     {
@@ -2547,6 +2591,11 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "unreadable",
+        "preview": false,
+        "code": "STL_NONFINITE"
       }
     },
     {
@@ -2584,24 +2633,24 @@
         "minSizeM": 0.075,
         "maxSizeM": 0.3,
         "nodeCount": [
-          2738,
-          3706
+          134,
+          182
         ],
         "elementCount": [
-          1435,
-          1943
+          48,
+          66
         ],
         "gammaMinimum": [
-          0.11588491216693225,
-          0.34765473650079676
+          0.1237807807030685,
+          0.37134234210920547
         ],
         "gammaP05": [
-          0.2926722276934973,
-          0.5435341371450665
+          0.18594206018823645,
+          0.3453209689210106
         ],
         "maximumEdgeRatio": [
-          2.717635621272855,
-          4.529392702121425
+          4.298140009609991,
+          7.163566682683319
         ]
       },
       "remeshFaceIds": true,
@@ -2609,6 +2658,10 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "ready",
+        "preview": true
       }
     },
     {
@@ -2646,24 +2699,24 @@
         "minSizeM": 0.075,
         "maxSizeM": 0.3,
         "nodeCount": [
-          6977,
-          9441
+          272,
+          368
         ],
         "elementCount": [
-          3793,
-          5133
+          101,
+          137
         ],
         "gammaMinimum": [
-          0.007479670185626262,
-          0.022439010556878785
+          0.0578391316011614,
+          0.17351739480348422
         ],
         "gammaP05": [
-          0.25846629434751334,
-          0.4800088323596676
+          0.08472733741194705,
+          0.15735076947933024
         ],
         "maximumEdgeRatio": [
-          5.037204146707904,
-          8.395340244513173
+          8.5548872305137,
+          14.2581453841895
         ]
       },
       "remeshFaceIds": true,
@@ -2671,6 +2724,10 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "ready",
+        "preview": true
       }
     },
     {
@@ -2708,24 +2765,24 @@
         "minSizeM": 0.075,
         "maxSizeM": 0.3,
         "nodeCount": [
-          10100,
-          13666
+          540,
+          732
         ],
         "elementCount": [
-          5275,
-          7139
+          203,
+          275
         ],
         "gammaMinimum": [
-          0.0407074448493129,
-          0.1221223345479387
+          0.032848305960895434,
+          0.0985449178826863
         ],
         "gammaP05": [
-          0.12262818563088447,
-          0.22773805902878547
+          0.056045399376106274,
+          0.10408431312705452
         ],
         "maximumEdgeRatio": [
-          8.859237492192571,
-          14.765395820320952
+          17.089167785521298,
+          28.481946309202165
         ]
       },
       "remeshFaceIds": true,
@@ -2733,6 +2790,10 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "ready",
+        "preview": true
       }
     },
     {
@@ -2753,6 +2814,11 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "unreadable",
+        "preview": false,
+        "code": "STL_MALFORMED"
       }
     },
     {
@@ -2773,6 +2839,11 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "unreadable",
+        "preview": false,
+        "code": "STL_MALFORMED"
       }
     },
     {
@@ -2793,6 +2864,11 @@
         "version": 3,
         "lengthUnit": "m",
         "patchAngleDegrees": 40
+      },
+      "preparation": {
+        "state": "unreadable",
+        "preview": false,
+        "code": "STL_MALFORMED"
       }
     }
   ]

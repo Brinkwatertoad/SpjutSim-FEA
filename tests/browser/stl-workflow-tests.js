@@ -11,9 +11,11 @@
   try{
    await wait(function(){return doc.getElementById('app-status').textContent==='Local runtime ready';});
    assert(doc.getElementById('stl-import-panel'),'STL needs an inline preparation panel and the main viewport');
+   var startedWorkers=[],startWorker=api.startLocalWorker;api.startLocalWorker=function(kind){startedWorkers.push(kind);return startWorker.apply(this,arguments);};
    var notify=api.AppController.prototype.notify;api.AppController.prototype.notify=function(){app=this;return notify.apply(this,arguments);};
    await open('cube-binary');await wait(function(){return app.stlImportSession.preview;});
    assert(!app.document.geometry,'A source preview was installed as analysis geometry');
+   assert(startedWorkers.every(function(kind){return kind==='stl-preparation';}),'STL preparation started a WASM worker');
    fill('stl-length-unit','m');await wait(function(){return app.stlImportSession.state==='ready';});
    assert(doc.getElementById('stl-dimensions').textContent.includes('1'),'Physical dimensions missing');
    assert(!doc.querySelector('#stl-import-panel [data-surface-method]'),'Meshing choices still block import');
@@ -24,7 +26,9 @@
    assert(app.stlImportSession.preview && !doc.getElementById('stl-import-panel').hidden,'Invalid input lost its preview');
    assert(doc.getElementById('generate-mesh-button').disabled && doc.getElementById('stl-accept-button').disabled,'Pending invalid model enabled engineering actions');
    var issue=doc.querySelector('#stl-issues button');assert(issue,'No clickable error location');issue.click();assert(issue.getAttribute('aria-pressed')==='true','Issue did not select/highlight');
+   fill('stl-length-unit','cm');
    click('stl-cancel-button');assert(app.document.geometry===old&&app.document.analysisRevision===revision,'Cancellation changed installed analysis');
+   assert(win.localStorage.getItem('spjutsim-fea-stl-source-unit')==='m','Cancelled units became the remembered assumption');
    await open('inconsistent');await wait(function(){return app.stlImportSession.state==='ready';});
    assert(app.stlImportSession.result.changes.automatic.length && !app.stlImportSession.result.shapeChanged,'Routine cleanup asks for shape consent');
    click('stl-accept-button');await wait(function(){return !app.stlImportSession;});

@@ -500,6 +500,9 @@
       else if(state.meshGeneration && state.meshGeneration.status==='succeeded')message='Mesh ready';
       else if(state.geometry)message='Model ready';
     }
+    var preparation=this.controller.stlImportSession,review=this.controller.stlSurfaceReview;
+    if(preparation){active=['reading','checking'].includes(preparation.state);message=active?preparation.message:preparation.state==='blocked'?'STL needs attention':'STL ready for review';}
+    else if(review){active=!review.candidate;message=active?'Preparing surface candidate…':'Surface candidate ready for review';}
     element.textContent=message;element.title=message;if(spinner)spinner.hidden=!active;
   };
   UIController.prototype.render = function (documentState) {

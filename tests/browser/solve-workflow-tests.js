@@ -38,6 +38,7 @@
           this.dispose = function () { client.disposed = true; };
           clients.push({client:client,preflight:work,result:done});
         },
+        startLocalWorker:function(){return Promise.resolve({terminate:noop});},
         exerciseMesherRuntime:function () { return Promise.resolve({diagnostics:{},smoke:{}}); },
         exerciseWorker:function () { return Promise.resolve({result:{}}); }
       }};

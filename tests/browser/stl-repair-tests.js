@@ -29,6 +29,7 @@
   var hole=ts.slice(1);
   for(var i=0;i<3;i++){var j=(i+1)%3;hole.push([t[i],t[j],ring[j]],[t[i],ring[j],ring[i]]);}
   fixed=await repair(binary(hole));
+  assert(fixed.sourceTriangleByCandidate[fixed.sourceTriangleByCandidate.length-1]===-1,'Added triangle has no candidate/source identity marker');
   assert(fixed.report.filledHoles===1&&fixed.report.addedTriangles===1&&fixed.report.maximumFilledHoleDiameterM<.002,'Small hole was not bounded and filled');
   assert(Math.abs(StlImport.parse(fixed.sourceBytes,options).volume-1)<1e-12,'Hole repair changed a planar cube boundary');
   await reject(binary(hole),'hole',0);

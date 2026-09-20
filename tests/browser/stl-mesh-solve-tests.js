@@ -55,13 +55,21 @@
   }
 
   fetch('../fixtures/stl/cube-binary.stl').then(function (response) { return response.arrayBuffer(); }).then(async function (bytes) {
-    if(new URLSearchParams(location.search).get('repair')==='1'){
+    var repairCase=new URLSearchParams(location.search).get('repair');
+    if(repairCase){
+      if(repairCase==='hole'){
+        var input=new DataView(bytes),faces=[];for(var i=0;i<12;i++){var face=[];for(var j=0;j<3;j++)face.push([0,1,2].map(function(k){return input.getFloat32(84+i*50+12+j*12+k*4,true);}));faces.push(face);}
+        var first=faces.shift(),center=first[0].map(function(v,k){return(v+first[1][k]+first[2][k])/3;}),ring=first.map(function(p){return p.map(function(v,k){return center[k]+.001*(v-center[k]);});});
+        for(i=0;i<3;i++){j=(i+1)%3;faces.push([first[i],first[j],ring[j]],[first[i],ring[j],ring[i]]);}
+        bytes=new ArrayBuffer(84+faces.length*50);var output=new DataView(bytes);output.setUint32(80,faces.length,true);faces.forEach(function(f,i){f.forEach(function(p,j){p.forEach(function(v,k){output.setFloat32(84+i*50+12+j*12+k*4,v,true);});});});
+      }else{
       var view=new DataView(bytes);
       for(var axis=0;axis<3;axis++){var value=view.getFloat32(108+axis*4,true);view.setFloat32(108+axis*4,view.getFloat32(120+axis*4,true),true);view.setFloat32(120+axis*4,value,true);}
+      }
       var preparer=new api.StlPreparationClient();
       var repaired=await preparer.prepare({sourceName:'cube-binary.stl',sourceBytes:bytes,geometryId:'repair-cube',sessionId:'repair-cube',generation:0,lengthUnit:'m',patchAngleDegrees:40,maxHoleDiameterRatio:.01});
       repaired={sourceBytes:repaired.preparedSourceBytes,report:repaired.changes};
-      assert(repaired.report.automatic.some(function(i){return i.kind==='winding'&&i.count===1;}),'Analytical cube repair did not correct the inverted face');bytes=repaired.sourceBytes;
+      assert(repairCase==='hole'?repaired.report.proposed.some(function(i){return i.kind==='filled-hole';}):repaired.report.automatic.some(function(i){return i.kind==='winding'&&i.count===1;}),'Analytical cube cleanup/proposal missing');bytes=repaired.sourceBytes;
     }
     sourceBytes = bytes;
     controller.beginGeometryImport('stl/cube-binary.stl');

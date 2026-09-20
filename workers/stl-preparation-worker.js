@@ -33,9 +33,9 @@ self.onmessage=async function(event){
     var geometry=null,validation=null,error=prepared.error;
     send('stl-progress',{message:changed?'Checking the prepared model…':'Checking solid geometry…'});
     try{var parsed=await StlImport.identify(StlImport.parse(bytes,options),bytes);geometry=geometryFromParsed(parsed,m,options);validation=parsed.validation;error=null;}
-    catch(e){error={code:e.code||'STL_PREPARATION_FAILED',message:e.message};}
+    catch(e){error={code:e.code||'STL_PREPARATION_FAILED',message:prepared.error?prepared.error.message:e.message};}
     var result={state:geometry?(prepared.shapeChanged?'needs-review':'ready'):'blocked',sourceDigest:sourceHash,preparedDigest:preparedHash,
-      preparedSourceBytes:changed?bytes:null,candidatePreview:candidate?preview(candidate,'candidate'):null,geometryCandidate:geometry,
+      sourceTriangleByCandidate:candidate?prepared.sourceTriangleByCandidate:null,preparedSourceBytes:changed?bytes:null,candidatePreview:candidate?preview(candidate,'candidate'):null,geometryCandidate:geometry,
       diagnostics:diagnostics,changes:prepared.changes,changesTruncated:prepared.changesTruncated,shapeChanged:prepared.shapeChanged,validation:validation,error:error,lengthUnit:m.lengthUnit};
     send('stl-prepared',{result:result});
   }catch(error){if(m)send('error',{error:{code:error.code||'STL_PREPARATION_FAILED',userMessage:error.message}});}

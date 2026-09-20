@@ -39,7 +39,7 @@
    var d=s.preview.bounds;document.getElementById('stl-dimensions').textContent=d.max.map(function(v,i){return(v-d.min[i]).toPrecision(5);}).join(' × ')+' '+s.settings.lengthUnit;
    if(this.sourcePreview!==s.preview){this.sourcePreview=s.preview;this.display.setPreview(s.preview);}
   }
-  var result=s.result;document.getElementById('stl-comparison-label').hidden=!(result&&result.candidatePreview);
+  var result=s.result;if(result&&result.candidatePreview){var bounds=result.candidatePreview.bounds;document.getElementById('stl-dimensions').textContent='Original: '+document.getElementById('stl-dimensions').textContent+' · Prepared: '+bounds.max.map(function(v,i){return(v-bounds.min[i]).toPrecision(5);}).join(' × ')+' '+s.settings.lengthUnit;}document.getElementById('stl-comparison-label').hidden=!(result&&result.candidatePreview);
   if(result!==this.previousResult){this.previousResult=result;this.list.replaceChildren();
    if(result){
     var issues=result.changes.automatic.concat(result.changes.proposed,result.diagnostics.issues),self=this;

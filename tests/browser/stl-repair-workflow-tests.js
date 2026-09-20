@@ -19,6 +19,10 @@
    await wait(function(){return app&&app.stlImportSession&&app.stlImportSession.result;});
    fill('stl-length-unit','m');await wait(function(){return app.stlImportSession.state==='needs-review';});
    var session=app.stlImportSession,result=session.result;
+   [Object.assign({},result,{lengthUnit:'mm'}),Object.assign({},result,{preparedDigest:'0'.repeat(64)}),Object.assign({},result,{geometryCandidate:session.preview})].forEach(function(bad){
+     var refused=false;try{app.applyStlPreparationEvent({type:'stl-prepared',sessionId:session.sessionId,generation:session.generation,result:bad});}catch(e){refused=true;}
+     assert(refused&&session.result===result,'Mismatched worker result crossed the controller boundary');
+   });
    assert(result.shapeChanged&&result.changes.proposed.some(function(i){return i.kind==='filled-hole';}),'Small hole was not proposed with a location');
    var rejected=false;try{app.acceptStlImport({acceptShapeChanges:false});}catch(e){rejected=true;}assert(rejected,'Shape change accepted without consent');
    assert(doc.getElementById('stl-accept-button').textContent==='Use repaired model','Explicit repair acceptance missing');
@@ -35,7 +39,7 @@
    click('mesh-stl-cancel');assert(app.document.analysisRevision===revision&&!app.stlSurfaceReview,'Cancelled surface candidate edited analysis');
    click('mesh-stl-apply');await wait(function(){return !doc.getElementById('mesh-stl-confirm').disabled;});click('mesh-stl-confirm');
    assert(app.document.meshSettings.stlSurface.method==='reconstruct'&&app.document.geometry===installed,'Surface settings changed source identity');
-   app.undoEngineeringEdit();assert(!app.document.meshSettings.stlSurface,'Surface setting undo failed');
+   app.undoEngineeringEdit();assert(app.document.meshSettings.stlSurface.method==='original','Surface setting undo failed');
    var meshClient=new api.MesherClient(),mesh=await meshClient.generateMesh({geometry:installed,sourceBytes:app.geometrySource.sourceBytes,settings:{preset:'coarse',elementType:'tet10',stlSurface:{version:1,method:'reconstruct',reconstructionToleranceM:.001,remeshFeatureAngleDegrees:null}}});meshClient.dispose();
    assert(mesh.quality.minimumJacobian>0,'Reviewed fill failed meshing');
    status.textContent='Passed';status.dataset.result='passed';
