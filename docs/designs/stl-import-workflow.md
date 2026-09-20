@@ -1,8 +1,8 @@
 # STL import workflow
 
-Status: **Target design; implementation pending.** On 2026-09-19 the owner
+Status: **Implemented; M29 owner walkthrough/acceptance pending.** On 2026-09-19 the owner
 requested a simpler import workflow and consolidation of the previous STL plans.
-M29 needs changes; the old implementation has not received usability acceptance.
+The revised implementation is tracked in the [M29 review](../reviews/29-stl-workflow.md).
 This document replaces the earlier import, simulation-surface and repair designs.
 Historical measurements remain in `docs/reviews/` and `benchmarks/`; they do not
 certify this workflow. [Plan 29](../plans/29-stl-import-workflow.md) is the sole

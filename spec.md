@@ -641,7 +641,7 @@ The application/orchestrator must depend on an abstract mesher contract rather t
 
 ```js
 // Conceptual MesherBackend API
-await mesher.importGeometry(sourceBytes, sourceFormat, importOptions);
+await mesher.importGeometry({ sourceName, sourceFormat, sourceBytes, stlSource, stlSurface });
 await mesher.generateMesh(meshRequest);
 await mesher.dispose();
 ```
@@ -703,15 +703,14 @@ Use Gmsh's OpenCASCADE geometry kernel for import.
 
 The implementation should set OpenCASCADE's target unit so the imported model is normalized to meters before meshing. Do not infer units from filename or UI assumptions.
 
-### 6.1.1 STL workflow — target revision, 2026-09-19
+### 6.1.1 STL workflow — implemented revision, 2026-09-20
 
-**Implementation status:** The current application has the earlier explicit
-units/repair/surface-mode dialog. The owner requested changes to M29; the workflow
-below is planned and is not yet implemented or accepted. The sole current design
-is [STL import workflow](docs/designs/stl-import-workflow.md), implemented by
-[Plan 29](docs/plans/29-stl-import-workflow.md). These replace the accumulated
-M28/M29 import, surface and repair plans/contracts; earlier review records remain
-historical numerical/feasibility evidence.
+**Implementation status:** Implemented on `feat/stl-import-workflow`; M29 owner
+walkthrough/acceptance is pending. [STL import workflow](docs/designs/stl-import-workflow.md)
+and [Plan 29](docs/plans/29-stl-import-workflow.md) are the sole current design/plan.
+[Current evidence](docs/reviews/29-stl-workflow.md) distinguishes this revision from
+historical M28/M29 measurements. Startup checks the lightweight worker path and
+WebAssembly availability; Gmsh/FEM engine checks execute only on demand or in tests.
 
 - Show safely decoded binary/ASCII triangles in the main viewport before solid
   validation, automatic cleanup or Gmsh startup. Invalid readable geometry stays
@@ -752,12 +751,18 @@ historical numerical/feasibility evidence.
   bounded planar convex local filling, exact indexed meshing, positive Jacobians,
   >1% remeshed patch-area warnings and solver memory preflight. Detailed numerical
   criteria and method limitations are consolidated in the workflow design.
-- Replace alpha STL contracts directly. Plan 29 moves the coarse worker envelope
-  from 3 to 4 and replaces old STL metadata/options; update all producers,
-  consumers, fixtures and generated wrappers. Reject old versions; add no
-  compatibility adapters, migrations or alternate legacy flow. Until implemented,
-  protocol 3 remains the current runtime. General repair, shells, multibody and
-  OBJ remain outside this scope.
+- Current coarse worker protocol is 4. Source/group settings are
+  `stlSource: {version:3,lengthUnit,patchAngleDegrees}`. Independent
+  `meshSettings.stlSurface` is `{version:1,method,reconstructionToleranceM,remeshFeatureAngleDegrees}`;
+  original uses both null, reconstruct uses a positive SI tolerance and null angle,
+  remesh uses null tolerance and a 1–40° angle. Geometry metadata is version 3.
+  Old versions/repair requests are rejected without migration or compatibility paths.
+- Pending preview coordinates are Float64 source units, separately indexed by Uint32
+  triangles. Findings name source/candidate revision; repaired candidates carry an
+  Int32 source-facet mapping (`-1` for added triangles). Only strictly validated SI
+  GeometryModels can be installed. Surface review records mesh settings and retains
+  the installed source geometry; previewing/cancelling changes no engineering state.
+- General repair, shells, multibody and OBJ remain outside this scope.
 
 ### 6.2 Geometry validation
 
@@ -995,7 +1000,7 @@ Use uniform pressure ±magnitude/selected area, positive for Push and negative f
 Pull. Opposing local normals may cancel. In the solver worker, Tri3 uses triangle
 area and Tri6 uses the same three-point surface quadrature as native `tri6_area`.
 This normalization then calls the unchanged native pressure integration. The
-surface-load record (introduced in protocol 2, retained in protocol 3) adds optional normal magnitude/sense; normal loads
+surface-load record (introduced in protocol 2, retained in protocol 4) adds optional normal magnitude/sense; normal loads
 omit the preview-only equivalent nodal force array (`null`). No native API or
 WASM binary change is needed. Malformed magnitudes and degenerate areas fail
 with actionable errors.
@@ -2744,7 +2749,7 @@ Reference documentation consulted while preparing this specification:
 | Area | Decision |
 |---|---|
 | Product model | Local-first browser FEA |
-| CAD format | STEP, IGES, and OpenCASCADE BREP; bounded binary/ASCII STL implemented; revised import workflow planned, M29 changes requested; OBJ deferred |
+| CAD format | STEP, IGES, and OpenCASCADE BREP; bounded binary/ASCII STL implemented; revised import workflow implemented, M29 acceptance pending; OBJ deferred |
 | Geometry | One closed solid body |
 | Geometry kernel | OpenCASCADE through Gmsh for CAD; validated STL original-surface and bounded primitive-reconstruction paths |
 | Mesher | Gmsh, isolated behind replaceable interface |

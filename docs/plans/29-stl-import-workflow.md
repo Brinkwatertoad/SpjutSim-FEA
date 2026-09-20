@@ -18,10 +18,11 @@ local Three.js, pinned Gmsh/WASM, Python/CMake/CTest. No new dependencies.
 **Spec:** `spec.md` §§6.1, 15.11, 16, 18–21, 26 and
 [STL workflow design](../designs/stl-import-workflow.md).
 
-**Status:** Planned, not implemented. The owner requested this replacement plan
-on 2026-09-19 after identifying problems with the existing import workflow.
-M28 remains historical feasibility acceptance; M29 requires changes and a new
-walkthrough. The earlier six STL plans are superseded, not additional work queues.
+**Status:** Implementation complete on `feat/stl-import-workflow`; automated and
+presentation evidence is in the [M29 review](../reviews/29-stl-workflow.md).
+Owner walkthrough/acceptance is pending. Task 30 and release acceptance have not
+started. The full resource calibration matrix exceeded the local harness deadline;
+the resource smoke profile and STL-specific 50k/200k bounds passed.
 
 ## Global constraints and execution order
 
@@ -97,21 +98,21 @@ check as `passed/failed/skipped/limit`, and `locationsTruncated`/`countsExact`
 describe collection limits. Boundary validation rejects mismatched revisions,
 nonfinite bounds, odd edge arrays, out-of-range indices and exceeded caps.
 
-- [ ] Write failing behavioral cases: an open cube yields a preview before a
+- [x] Write failing behavioral cases: an open cube yields a preview before a
   deliberately delayed topology pass; inconsistent winding is double-sided
   displayable; disconnected components and both intersection triangles receive
   correct locations; malformed bytes/nonfinite coordinates never reach rendering.
-- [ ] Extract decode and diagnostic passes. Continue independent safe checks
+- [x] Extract decode and diagnostic passes. Continue independent safe checks
   after a finding, skip checks with invalid prerequisites, and reuse spatial
   acceleration. Deterministic counts/locations must not use an all-pairs scan.
-- [ ] Create the lightweight worker/client, send one source preview before checks,
+- [x] Create the lightweight worker/client, send one source preview before checks,
   and enforce whole-request timeout/cancellation. Transfer preview buffers once;
   keep one bounded working copy if validation needs the data after transfer.
-- [ ] Move the coarse protocol to 4 across the shared constant, mesher/solver
+- [x] Move the coarse protocol to 4 across the shared constant, mesher/solver
   envelopes, startup handshake, tests and builder in this package; native solver ABI
   stays unchanged.
   Package the new worker without Gmsh/FEM payloads; reject protocol 3 outright.
-- [ ] Verify stale/malformed events, truncated diagnostics, deadline and cancellation
+- [x] Verify stale/malformed events, truncated diagnostics, deadline and cancellation
   behavior in file and HTTP modes. Build wrappers reproducibly before proceeding.
 
 ## 2. Split automatic cleanup from reviewable shape changes
@@ -127,7 +128,7 @@ mapping. The worker serializes/revalidates the candidate and completes with:
 ```js
 { protocol: 4, type: 'stl-prepared', requestId, sessionId, generation,
   result: { state: 'ready', sourceDigest, preparedDigest, preparedSourceBytes,
-    candidatePreview, geometryCandidate, diagnostics, changes, validation } }
+    candidatePreview, sourceTriangleByCandidate, geometryCandidate, diagnostics, changes, validation } }
 // state: ready | needs-review | blocked
 // changes: { automatic: [...], proposed: [...] }, with revision-bound locations.
 // preparedSourceBytes/candidatePreview are null when identical to source;
@@ -143,18 +144,18 @@ If a changed candidate fails validation, its preview may remain for diagnosis bu
 no accepted geometry is produced. Every serializer
 output is reparsed before a ready/reviewable result is emitted.
 
-- [ ] Test automatic correction of reversed/inward winding, exact duplicate and
+- [x] Test automatic correction of reversed/inward winding, exact duplicate and
   exact-zero-area removal without coordinate changes. Confirm thin real facets
   and high-precision ASCII coordinates survive unchanged.
-- [ ] Test hole fills and stray removals always produce `needs-review`, include
+- [x] Test hole fills and stray removals always produce `needs-review`, include
   accurate before/after locations, and never discard/join components. Preserve
   existing loop/convexity/planarity/diameter and serialization limits.
-- [ ] Implement deterministic source-to-candidate facet maps through compaction,
+- [x] Implement deterministic source-to-candidate facet maps through compaction,
   orientation and added faces. Record source locations before deleting faces.
-- [ ] Test cleanup that fixes one problem but leaves another: source stays visible,
+- [x] Test cleanup that fixes one problem but leaves another: source stays visible,
   fixed/unresolved findings remain distinct, incomplete validation stays blocked.
   Verify no stale candidate or old consent survives a unit/repair-setting edit.
-- [ ] Verify original bytes are unchanged, digests/counts reconcile, bounds exclude
+- [x] Verify original bytes are unchanged, digests/counts reconcile, bounds exclude
   removed outliers, and the 200,000-triangle case stays within explicit limits.
 
 ## 3. Own preparation and installation as a controller transaction
@@ -167,23 +168,23 @@ methods `beginStlImport(source)`, `updateStlImportSettings(settings)`,
 `applyStlPreparationEvent(event)`, `cancelStlImport()` and
 `acceptStlImport({acceptShapeChanges})`. They own session/generation checks,
 readiness and validation; UI handlers never assemble accepted geometry themselves.
-`acceptStlImport` installs fully validated data only, requiring explicit shape
-consent for `needs-review`; it invokes existing replacement mapping when assignments exist.
+`acceptStlImport` returns only validated, consented installation data to the app
+coordinator, which installs it or invokes existing replacement mapping when assignments exist.
 
-- [ ] Write failures for cancellation/stale completion after a newer source,
+- [x] Write failures for cancellation/stale completion after a newer source,
   settings edit or closed session; wrong digests/units/revisions; preview objects
   offered as geometry; and consent sent for a blocked or outdated candidate.
-- [ ] Implement one source-unit preference independent of display units. A new
+- [x] Implement one source-unit preference independent of display units. A new
   session uses the last installed source unit or `mm`, always marked assumed;
   committing stores it. Blocked/cancelled sessions do not update the preference.
-- [ ] Validate and adopt worker-produced source/group geometry from a completely
+- [x] Validate and adopt worker-produced source/group geometry from a completely
   checked preparation result, without Gmsh startup. Compute grouping, hashing and
   SI geometry buffers in the preparation worker, not the controller. Keep strict
   geometry-contract guards for worker and controller data.
-- [ ] Test replacement Cancel/failure preserves prior source, assignments, revision,
+- [x] Test replacement Cancel/failure preserves prior source, assignments, revision,
   mesh and results; successful installation uses normal invalidation/history rules.
   Unit edits retain source preview but revoke old validation and consent.
-- [ ] Assert invalid previews cannot enable authoring, meshing, solve, convergence
+- [x] Assert invalid previews cannot enable authoring, meshing, solve, convergence
   or report export. Dispose pending workers/buffers on every terminal transition.
 
 ## 4. Replace the import dialog with visible progress and actionable findings
@@ -198,22 +199,22 @@ actions. `StlDiagnosticsDisplay` owns preview/issue GPU buffers and exposes
 `showRevision(revision)` and `dispose()`. Integrate through `ViewportController`;
 generic `/web/ui` helpers never import simulation contracts.
 
-- [ ] Add real-app tests for immediate source display and usable rotate/zoom while
+- [x] Add real-app tests for immediate source display and usable rotate/zoom while
   checking; one Use model action after a valid/automatically cleaned part; dimension
   changes without manual refresh; and no mesh-strategy/grouping controls in import.
-- [ ] Replace the modal canvas with the main viewport and compact preparation
+- [x] Replace the modal canvas with the main viewport and compact preparation
   panel. Snapshot/restore only presentation state on Cancel; do not clone the
   installed analysis. Disable conflicting engineering controls during preparation.
-- [ ] Render grouped findings and proposed changes, keyboard focus/zoom, Show all,
+- [x] Render grouped findings and proposed changes, keyboard focus/zoom, Show all,
   Original/Prepared comparison without camera jumps, and labeled through-surface
   highlighting. Keep issue clicks separate from engineering face selection.
-- [ ] Implement Use model / Use repaired model readiness, shape-change explanation,
+- [x] Implement Use model / Use repaired model readiness, shape-change explanation,
   download-original, choose-another-file and Cancel. Blocked states retain preview
   and specific next steps; advanced repair limits recheck automatically.
-- [ ] Remove Try surface repair, Update preview, import surface-mode selectors and
+- [x] Remove Try surface repair, Update preview, import surface-mode selectors and
   the old dialog handlers/DOM. Remove their legacy tests; retain their engineering
   assertions in the new flow. Keep technical codes expandable.
-- [ ] Test keyboard-only operation, focus restoration, live-region progress,
+- [x] Test keyboard-only operation, focus restoration, live-region progress,
   reduced motion, all themes, narrow desktop sizes and 2× DPI. Stage events must
   not rebuild geometry or issue layers when only text/counts change. Normalize
   render coordinates around a local origin before Float32 upload; retain decoded
@@ -242,24 +243,24 @@ include prepared source/group membership, grouping definition and source units;
 exclude simulation-surface settings and orientation. Fresh-worker meshing checks
 source digest and exact group ownership before applying supports/loads.
 
-- [ ] Test same-source groups retain IDs across original/reconstruct/remesh,
+- [x] Test same-source groups retain IDs across original/reconstruct/remesh,
   refinement and rigid orientation; changed source/units/grouping invokes explicit
   assignment transfer. Reject missing, overlapping or ambiguous surface ownership.
-- [ ] Move grouping controls into Model selection and surface-method controls into
+- [x] Move grouping controls into Model selection and surface-method controls into
   Mesh Advanced. Default to original; present optional reconstruction candidate
   comparison before Apply. Applying a method/tolerance/angle invalidates mesh and
   results, retains verified source groups and authored assignments, and is an
   engineering edit subject to normal history rules. Failed/cancelled preparation
   leaves the previous settings and analysis intact.
-- [ ] Refactor reconstruction/remesh adapters to consume prepared source and mesh
+- [x] Refactor reconstruction/remesh adapters to consume prepared source and mesh
   settings without changing numerical algorithms. Preserve original-facet,
   curved-reconstruction, straight-remesh and area-warning behavior; no automatic
   fallback. Display physical fidelity warnings with mesh results.
-- [ ] Delete STL versions 1/2, `normalization: 'none'`, obsolete repair requests,
+- [x] Delete STL versions 1/2, `normalization: 'none'`, obsolete repair requests,
   legacy classification/identity branches and imports of old validators. Update
   live fixture manifests, corpus option validators and test constructors together.
   Preserve historical evidence as historical; do not rewrite measured outcomes.
-- [ ] Run the analytical cube in all modes and after automatic cleanup/reviewed
+- [x] Run the analytical cube in all modes and after automatic cleanup/reviewed
   filling. Retain tight constant-strain checks; reconstructed curved cases retain
   §16.2's 1% displacement/stress, 0.1% reaction and <1e-6 equilibrium thresholds.
   Test pressure, total force, remeshing, orientation and convergence with retained
@@ -272,28 +273,28 @@ source digest and exact group ownership before applying supports/loads.
 `tests/browser/cad-corpus-tests.js`, `tests/browser/stl-resource-tests.{html,js}`,
 `docs/reviews/29-stl-workflow.md`, `README.md`, `spec.md`, release evidence records.
 
-- [ ] Update corpus expectations with separate raw defects and prepared outcomes.
+- [x] Update corpus expectations with separate raw defects and prepared outcomes.
   Winding/duplicate fixtures may now become usable; open/intersecting/disconnected
   cases must retain explicit diagnostics. Preserve all 50 CAD classifications.
   Record new measurements separately from the older 68-case report.
-- [ ] Regenerate file-safe wrappers twice and confirm byte equality. Audit packaged
+- [x] Regenerate file-safe wrappers twice and confirm byte equality. Audit packaged
   preparation-worker content, script ordering, protocol consistency and distribution
   hashes; no Gmsh/FEM rebuild is needed unless numerical sources change separately.
-- [ ] Run `python3 -m unittest discover -s tests`, native configure/build/CTest,
+- [x] Run `python3 -m unittest discover -s tests`, native configure/build/CTest,
   `python3 tools/validate-validation-records.py`, `python3 tools/validate-cad-corpus.py`,
   `python3 tools/validate-resource-records.py`, and distribution audits following
   README. Run every applicable pure and integrated browser harness, all STL surface
   modes, the CAD corpus and report/unit/history regressions. Keep actual logs and
   browser/platform/commit scope; older records are not new passes.
-- [ ] Exercise file/HTTP Chromium and supported Firefox checks, offline startup,
+- [x] Exercise file/HTTP Chromium and supported Firefox checks, offline startup,
   repeated replace/cancel/retry, deadlines, 200,000-triangle bounds and truncated
   issue collection. Measure time to first preview, stage timing, buffer/GPU ownership
   and WASM overlap. Confirm preview precedes delayed expensive checks; avoid claiming
   a universal latency or whole-browser memory figure from buffer sizes alone.
-- [ ] Review the complete diff once for numerical validation, state ownership,
+- [x] Review the complete diff once for numerical validation, state ownership,
   allocations/copies, stale events, accessibility, missed legacy paths and unintended
   vendor/generated edits. Use verification-before-completion before success claims.
-- [ ] Replace `docs/reviews/29-stl-workflow.md` with current evidence and the owner
+- [x] Replace `docs/reviews/29-stl-workflow.md` with current evidence and the owner
   walkthrough below, preserving links to dated historical evidence. Update README
   from implemented behavior only. Keep M29 unchecked until actual acceptance.
 

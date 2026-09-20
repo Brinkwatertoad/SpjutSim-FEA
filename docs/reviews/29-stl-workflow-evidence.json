@@ -1,0 +1,1735 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-20",
+  "branch": "feat/stl-import-workflow",
+  "implementationCommit": "5a9c9344db00eae0f47f5d21468d128307b78a0a",
+  "platform": "Linux x86_64",
+  "workerProtocol": 4,
+  "status": "Implementation verified; M29 owner walkthrough pending",
+  "scope": "Checks accumulated during implementation; changed paths received focused rechecks. Hashes identify the handoff source. The full resource calibration timeout is retained as an incomplete check.",
+  "python": {
+    "command": "python3 -m unittest discover -s tests",
+    "passed": 80
+  },
+  "native": {
+    "command": "cmake configure/build and ctest --test-dir build/native-fem --output-on-failure",
+    "passed": 8
+  },
+  "audits": {
+    "validationRecords": 5,
+    "resourceRecords": 36,
+    "cadCorpusEntries": 68,
+    "distribution": "passed; no publication approval",
+    "workerReproducibility": "all three wrappers byte-identical across two successive builds"
+  },
+  "browserChecks": [
+    {
+      "name": "stl-preparation",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-import",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-repair",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "worker-runtime",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "wasm-solve-result",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-workflow",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-surface-modes",
+      "status": "Passed",
+      "errors": [],
+      "evidence": {
+        "cases": [
+          {
+            "name": "cube-binary.stl",
+            "mode": "reconstruct",
+            "sourceTriangles": 12,
+            "surfaces": 6,
+            "volumeM3": 0.9999999999999997,
+            "maximumDeviationM": 1.732051917791902e-10,
+            "statistics": {
+              "nodeCount": 5883,
+              "elementCount": 3509,
+              "boundaryTriangleCount": 4728,
+              "boundaryElementCount": 1182,
+              "minCharacteristicSizeM": 0.08169117814047422,
+              "maxCharacteristicSizeM": 0.22950417883794036,
+              "boundingBoxDiagonalM": 1.732051407568877
+            },
+            "quality": {
+              "metric": "gamma",
+              "minimum": 0.30466799712421544,
+              "p05": 0.5482965682108898,
+              "median": 0.8054895396638238,
+              "poorElementCount": 0,
+              "invertedElementCount": 0,
+              "nearZeroJacobianCount": 0,
+              "minimumJacobian": 0.0005467781696281511,
+              "maximumEdgeRatio": 2.491024471826591,
+              "warning": null
+            }
+          },
+          {
+            "name": "subdivided-cube.stl",
+            "mode": "reconstruct",
+            "sourceTriangles": 3072,
+            "surfaces": 6,
+            "volumeM3": 0.9999999999999997,
+            "maximumDeviationM": 1.7320508075688773e-10,
+            "statistics": {
+              "nodeCount": 5901,
+              "elementCount": 3530,
+              "boundaryTriangleCount": 4720,
+              "boundaryElementCount": 1180,
+              "minCharacteristicSizeM": 0.0816911781404744,
+              "maxCharacteristicSizeM": 0.2351861933392036,
+              "boundingBoxDiagonalM": 1.732051407568877
+            },
+            "quality": {
+              "metric": "gamma",
+              "minimum": 0.2711495770823884,
+              "p05": 0.5153327400204297,
+              "median": 0.8013212424989964,
+              "poorElementCount": 0,
+              "invertedElementCount": 0,
+              "nearZeroJacobianCount": 0,
+              "minimumJacobian": 0.00047279511329354997,
+              "maximumEdgeRatio": 2.4945247224571845,
+              "warning": null
+            }
+          },
+          {
+            "name": "cylinder-32.stl",
+            "mode": "reconstruct",
+            "sourceTriangles": 128,
+            "surfaces": 3,
+            "volumeM3": 0.7853981345647432,
+            "maximumDeviationM": 0.002407642049854813,
+            "statistics": {
+              "nodeCount": 4721,
+              "elementCount": 2834,
+              "boundaryTriangleCount": 3712,
+              "boundaryElementCount": 928,
+              "minCharacteristicSizeM": 0.07380133920883485,
+              "maxCharacteristicSizeM": 0.2255363508126936,
+              "boundingBoxDiagonalM": 1.7320511327839674
+            },
+            "quality": {
+              "metric": "gamma",
+              "minimum": 0.3016537608110351,
+              "p05": 0.5125249487189005,
+              "median": 0.8031449188224754,
+              "poorElementCount": 0,
+              "invertedElementCount": 0,
+              "nearZeroJacobianCount": 0,
+              "minimumJacobian": 0.0005081291369320119,
+              "maximumEdgeRatio": 2.6854071969230606,
+              "warning": null
+            }
+          },
+          {
+            "name": "rotated-cone.stl",
+            "mode": "reconstruct",
+            "sourceTriangles": 128,
+            "surfaces": 3,
+            "volumeM3": 1.8325957145940428,
+            "maximumDeviationM": 0.004815273957155287,
+            "statistics": {
+              "nodeCount": 2094,
+              "elementCount": 1144,
+              "boundaryTriangleCount": 2168,
+              "boundaryElementCount": 542,
+              "minCharacteristicSizeM": 0.1289159811435769,
+              "maxCharacteristicSizeM": 0.4358753532802125,
+              "boundingBoxDiagonalM": 3.1505349698824214
+            },
+            "quality": {
+              "metric": "gamma",
+              "minimum": 0.3017122364954854,
+              "p05": 0.4718530868438282,
+              "median": 0.7839667016445945,
+              "poorElementCount": 0,
+              "invertedElementCount": 0,
+              "nearZeroJacobianCount": 0,
+              "minimumJacobian": 0.0017063775400440588,
+              "maximumEdgeRatio": 2.9368762066824594,
+              "warning": null
+            }
+          },
+          {
+            "name": "square-tube.stl",
+            "mode": "reconstruct",
+            "sourceTriangles": 32,
+            "surfaces": 10,
+            "volumeM3": 3,
+            "maximumDeviationM": 3.0000011102230246e-10,
+            "statistics": {
+              "nodeCount": 4116,
+              "elementCount": 2109,
+              "boundaryTriangleCount": 4616,
+              "boundaryElementCount": 1154,
+              "minCharacteristicSizeM": 0.13904866286996698,
+              "maxCharacteristicSizeM": 0.3996359926418616,
+              "boundingBoxDiagonalM": 3.000001000000013
+            },
+            "quality": {
+              "metric": "gamma",
+              "minimum": 0.301651283566242,
+              "p05": 0.5782784909201097,
+              "median": 0.7902215636665776,
+              "poorElementCount": 0,
+              "invertedElementCount": 0,
+              "nearZeroJacobianCount": 0,
+              "minimumJacobian": 0.0027195695436842866,
+              "maximumEdgeRatio": 2.4812102884641125,
+              "warning": null
+            }
+          },
+          {
+            "name": "dense-cylinder.stl",
+            "mode": "reconstruct",
+            "sourceTriangles": 4096,
+            "surfaces": 3,
+            "volumeM3": 0.7853981633974627,
+            "maximumDeviationM": 2.3534416355551337e-06,
+            "statistics": {
+              "nodeCount": 4626,
+              "elementCount": 2761,
+              "boundaryTriangleCount": 3696,
+              "boundaryElementCount": 924,
+              "minCharacteristicSizeM": 0.07646328043467299,
+              "maxCharacteristicSizeM": 0.23059860444545816,
+              "boundingBoxDiagonalM": 1.7320511539790493
+            },
+            "quality": {
+              "metric": "gamma",
+              "minimum": 0.300138861236874,
+              "p05": 0.5317209535862037,
+              "median": 0.8017379783792704,
+              "poorElementCount": 0,
+              "invertedElementCount": 0,
+              "nearZeroJacobianCount": 0,
+              "minimumJacobian": 0.0004128902015544582,
+              "maximumEdgeRatio": 2.576789248040247,
+              "warning": null
+            }
+          },
+          {
+            "name": "cylinder-32.stl",
+            "mode": "original",
+            "sourceTriangles": 128,
+            "surfaces": 3,
+            "volumeM3": 0.7803612594167166,
+            "maximumDeviationM": null,
+            "statistics": {
+              "nodeCount": 320,
+              "elementCount": 119,
+              "boundaryTriangleCount": 512,
+              "boundaryElementCount": 128,
+              "minCharacteristicSizeM": 0.09801712959064231,
+              "maxCharacteristicSizeM": 1.118033988749895,
+              "boundingBoxDiagonalM": 1.7320508075688772
+            },
+            "quality": {
+              "metric": "gamma",
+              "minimum": 0.1156782632023228,
+              "p05": 0.12103905344563864,
+              "median": 0.22576019493817762,
+              "poorElementCount": 0,
+              "invertedElementCount": 0,
+              "nearZeroJacobianCount": 0,
+              "minimumJacobian": 0.016257524868826125,
+              "maximumEdgeRatio": 11.4065163073516,
+              "warning": null
+            }
+          }
+        ],
+        "cancellationVerified": true,
+        "staleIdentityRejected": true
+      },
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-remesh",
+      "status": "Passed",
+      "errors": [],
+      "evidence": {
+        "cases": [
+          {
+            "name": "dense-cube.stl",
+            "groups": 6,
+            "remeshing": {
+              "version": 1,
+              "method": "stl-parametrization",
+              "featureAngleDegrees": 5,
+              "surfaceCountsByPatch": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            "statistics": {
+              "nodeCount": 5831,
+              "elementCount": 3477,
+              "boundaryTriangleCount": 4712,
+              "boundaryElementCount": 1178,
+              "minCharacteristicSizeM": 0.07312658448170652,
+              "maxCharacteristicSizeM": 0.2335118409397938,
+              "boundingBoxDiagonalM": 1.7320508075688772
+            },
+            "quality": {
+              "metric": "gamma",
+              "minimum": 0.2922830289760055,
+              "p05": 0.5221945000172177,
+              "median": 0.7951337061903034,
+              "poorElementCount": 0,
+              "invertedElementCount": 0,
+              "nearZeroJacobianCount": 0,
+              "minimumJacobian": 0.0004962581756597497,
+              "maximumEdgeRatio": 2.6252231354877114,
+              "warning": null,
+              "stlBoundaryAreas": {
+                "version": 1,
+                "sourceM2": [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "meshM2": [
+                  1,
+                  1.0000000000000004,
+                  1.0000000000000004,
+                  1.0000000000000004,
+                  1.0000000000000002,
+                  0.9999999999999996
+                ]
+              }
+            }
+          },
+          {
+            "name": "grouped-cube.stl",
+            "groups": 1,
+            "remeshing": {
+              "version": 1,
+              "method": "stl-parametrization",
+              "featureAngleDegrees": 5,
+              "surfaceCountsByPatch": [
+                10
+              ]
+            },
+            "statistics": {
+              "nodeCount": 6424,
+              "elementCount": 3820,
+              "boundaryTriangleCount": 5240,
+              "boundaryElementCount": 1310,
+              "minCharacteristicSizeM": 0.06130414049120794,
+              "maxCharacteristicSizeM": 0.23552597444425877,
+              "boundingBoxDiagonalM": 1.7320508075688772
+            },
+            "quality": {
+              "metric": "gamma",
+              "minimum": 0.3004567050703356,
+              "p05": 0.5172410749630416,
+              "median": 0.7868922696587591,
+              "poorElementCount": 0,
+              "invertedElementCount": 0,
+              "nearZeroJacobianCount": 0,
+              "minimumJacobian": 0.00030070844960264814,
+              "maximumEdgeRatio": 2.644879997661422,
+              "warning": null,
+              "stlBoundaryAreas": {
+                "version": 1,
+                "sourceM2": [
+                  6
+                ],
+                "meshM2": [
+                  6.000000000000006
+                ]
+              }
+            }
+          },
+          {
+            "name": "square-tube.stl",
+            "groups": 10,
+            "remeshing": {
+              "version": 1,
+              "method": "stl-parametrization",
+              "featureAngleDegrees": 5,
+              "surfaceCountsByPatch": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            "statistics": {
+              "nodeCount": 3965,
+              "elementCount": 2071,
+              "boundaryTriangleCount": 4608,
+              "boundaryElementCount": 1152,
+              "minCharacteristicSizeM": 0.1521718728642228,
+              "maxCharacteristicSizeM": 0.38811055995886845,
+              "boundingBoxDiagonalM": 3
+            },
+            "quality": {
+              "metric": "gamma",
+              "minimum": 0.3038396145630764,
+              "p05": 0.5363748462812014,
+              "median": 0.7828864943265581,
+              "poorElementCount": 0,
+              "invertedElementCount": 0,
+              "nearZeroJacobianCount": 0,
+              "minimumJacobian": 0.0031404092467552905,
+              "maximumEdgeRatio": 2.533373328346915,
+              "warning": null,
+              "stlBoundaryAreas": {
+                "version": 1,
+                "sourceM2": [
+                  2,
+                  1,
+                  3,
+                  3,
+                  2,
+                  1,
+                  2,
+                  1,
+                  2,
+                  1
+                ],
+                "meshM2": [
+                  1.9999999999999991,
+                  0.9999999999999998,
+                  2.999999999999999,
+                  2.999999999999998,
+                  2,
+                  1,
+                  2,
+                  1,
+                  1.9999999999999987,
+                  1
+                ]
+              }
+            }
+          }
+        ],
+        "cancellationVerified": true
+      },
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-mesh-solve",
+      "status": "Passed",
+      "errors": [],
+      "evidence": {
+        "cube": {
+          "displacementM": 1.0000000012516834e-06,
+          "stressPa": 1000.0000026285716,
+          "equilibrium": 3.2420788695681206e-10
+        },
+        "curved": [
+          {
+            "segments": 16,
+            "preset": "coarse",
+            "surfaceMode": "original",
+            "elementCount": 57,
+            "displacementRelativeError": 9.675125145491847e-10,
+            "stressRelativeError": 2.1532435834359376e-09,
+            "facetedArea": 0.7653668363416362,
+            "displacementM": 1.3065630146027694e-06,
+            "expectedM": 1.3065630133386532e-06,
+            "sourceAreaDeficit": 0.025504677740983417,
+            "equilibrium": 1.2481756900204006e-10
+          },
+          {
+            "segments": 32,
+            "preset": "coarse",
+            "surfaceMode": "original",
+            "elementCount": 119,
+            "displacementRelativeError": 1.1478835659772813e-09,
+            "stressRelativeError": 3.965654249427075e-09,
+            "facetedArea": 0.7803612594167166,
+            "displacementM": 1.281457772385237e-06,
+            "expectedM": 1.2814577709142726e-06,
+            "sourceAreaDeficit": 0.00641318533130153,
+            "equilibrium": 1.4866065532670843e-10
+          },
+          {
+            "segments": 64,
+            "preset": "coarse",
+            "surfaceMode": "original",
+            "elementCount": 239,
+            "displacementRelativeError": 7.866303164405508e-10,
+            "stressRelativeError": 2.6950226494903973e-09,
+            "facetedArea": 0.7841371103709776,
+            "displacementM": 1.2752871756235683e-06,
+            "expectedM": 1.275287174620389e-06,
+            "sourceAreaDeficit": 0.001605622581310473,
+            "equilibrium": 8.681150569946613e-11
+          }
+        ]
+      },
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-repair-workflow",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-mesh-solve?surfaceMode=reconstruct",
+      "status": "Passed",
+      "errors": [],
+      "evidence": {
+        "cube": {
+          "displacementM": 1.0000000014062847e-06,
+          "stressPa": 1000.0000074721569,
+          "equilibrium": 5.044258558908777e-10
+        },
+        "curved": [
+          {
+            "segments": 16,
+            "preset": "coarse",
+            "surfaceMode": "reconstruct",
+            "elementCount": 2715,
+            "displacementRelativeError": 9.895564441886329e-05,
+            "stressRelativeError": 0.0028224270378878202,
+            "facetedArea": 0.7853981342659155,
+            "displacementM": 1.2733655862057488e-06,
+            "expectedM": 1.2732395919614265e-06,
+            "sourceAreaDeficit": 3.709141949137518e-08,
+            "equilibrium": 2.3482620036000656e-10
+          },
+          {
+            "segments": 32,
+            "preset": "coarse",
+            "surfaceMode": "reconstruct",
+            "elementCount": 2834,
+            "displacementRelativeError": 9.431881058707958e-05,
+            "stressRelativeError": 0.00252760627719395,
+            "facetedArea": 0.7853981345647432,
+            "displacementM": 1.273359681920846e-06,
+            "expectedM": 1.2732395914769855e-06,
+            "sourceAreaDeficit": 3.671094028767641e-08,
+            "equilibrium": 5.172244282842865e-10
+          },
+          {
+            "segments": 64,
+            "preset": "coarse",
+            "surfaceMode": "reconstruct",
+            "elementCount": 2837,
+            "displacementRelativeError": 4.922386528649625e-05,
+            "stressRelativeError": 0.0010294772990182555,
+            "facetedArea": 0.7853981511122168,
+            "displacementM": 1.273302238424038e-06,
+            "expectedM": 1.2732395646512302e-06,
+            "sourceAreaDeficit": 1.5642042550112478e-08,
+            "equilibrium": 2.0208377246876208e-10
+          },
+          {
+            "segments": 32,
+            "preset": "fine",
+            "surfaceMode": "reconstruct",
+            "elementCount": 148422,
+            "displacementRelativeError": 5.649345655944771e-06,
+            "stressRelativeError": 0.00032367399833899135,
+            "facetedArea": 0.7853981345647432,
+            "displacementM": 1.2732467844475407e-06,
+            "expectedM": 1.2732395914769855e-06,
+            "sourceAreaDeficit": 3.671094028767641e-08,
+            "equilibrium": 3.677800319164776e-10
+          }
+        ]
+      },
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-mesh-solve?surfaceMode=remesh",
+      "status": "Passed",
+      "errors": [],
+      "evidence": {
+        "cube": {
+          "displacementM": 1.0000000018081618e-06,
+          "stressPa": 1000.0000064525227,
+          "equilibrium": 1.5192100257595027e-10
+        },
+        "curved": [
+          {
+            "segments": 16,
+            "preset": "coarse",
+            "surfaceMode": "remesh",
+            "elementCount": 5125,
+            "displacementRelativeError": 1.404968363871717e-09,
+            "stressRelativeError": 7.0676591246154885e-09,
+            "facetedArea": 0.7653668363416362,
+            "displacementM": 1.3065630151743328e-06,
+            "expectedM": 1.3065630133386532e-06,
+            "sourceAreaDeficit": 0.025504677740983417,
+            "equilibrium": 1.706716314646629e-10
+          },
+          {
+            "segments": 32,
+            "preset": "coarse",
+            "surfaceMode": "remesh",
+            "elementCount": 21049,
+            "displacementRelativeError": 8.003822049573728e-10,
+            "stressRelativeError": 1.803849558612569e-08,
+            "facetedArea": 0.7803612594167166,
+            "displacementM": 1.2814577719399285e-06,
+            "expectedM": 1.2814577709142726e-06,
+            "sourceAreaDeficit": 0.00641318533130153,
+            "equilibrium": 3.635823293086123e-10
+          },
+          {
+            "segments": 64,
+            "preset": "coarse",
+            "surfaceMode": "remesh",
+            "elementCount": 72092,
+            "displacementRelativeError": 6.200946423007281e-10,
+            "stressRelativeError": 1.060517873519018e-08,
+            "facetedArea": 0.7841371103709776,
+            "displacementM": 1.2752871754111875e-06,
+            "expectedM": 1.275287174620389e-06,
+            "sourceAreaDeficit": 0.001605622581310473,
+            "equilibrium": 5.410751489204709e-11
+          }
+        ]
+      },
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-mesh-solve?repair=1",
+      "status": "Passed",
+      "errors": [],
+      "evidence": {
+        "cube": {
+          "displacementM": 1.0000000012516834e-06,
+          "stressPa": 1000.0000026285716,
+          "equilibrium": 3.2420788695681206e-10
+        },
+        "curved": [
+          {
+            "segments": 16,
+            "preset": "coarse",
+            "surfaceMode": "legacy",
+            "elementCount": 57,
+            "displacementRelativeError": 9.675125145491847e-10,
+            "stressRelativeError": 2.1532435834359376e-09,
+            "facetedArea": 0.7653668363416362,
+            "displacementM": 1.3065630146027694e-06,
+            "expectedM": 1.3065630133386532e-06,
+            "sourceAreaDeficit": 0.025504677740983417,
+            "equilibrium": 1.2481756900204006e-10
+          },
+          {
+            "segments": 32,
+            "preset": "coarse",
+            "surfaceMode": "legacy",
+            "elementCount": 119,
+            "displacementRelativeError": 1.1478835659772813e-09,
+            "stressRelativeError": 3.965654249427075e-09,
+            "facetedArea": 0.7803612594167166,
+            "displacementM": 1.281457772385237e-06,
+            "expectedM": 1.2814577709142726e-06,
+            "sourceAreaDeficit": 0.00641318533130153,
+            "equilibrium": 1.4866065532670843e-10
+          },
+          {
+            "segments": 64,
+            "preset": "coarse",
+            "surfaceMode": "legacy",
+            "elementCount": 239,
+            "displacementRelativeError": 7.866303164405508e-10,
+            "stressRelativeError": 2.6950226494903973e-09,
+            "facetedArea": 0.7841371103709776,
+            "displacementM": 1.2752871756235683e-06,
+            "expectedM": 1.275287174620389e-06,
+            "sourceAreaDeficit": 0.001605622581310473,
+            "equilibrium": 8.681150569946613e-11
+          }
+        ]
+      },
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "review-contract",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "engineering-history",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "analysis-authoring",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "assignment-draft",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "grouped-authoring",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "unit-preferences",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "load-unit",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "load-entry",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "material-strength",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "factor-of-safety",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "result-range",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "result-formatting",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "result-presentation",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "report",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "report-workflow",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "docx",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "viewport-navigation",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "workspace-layout",
+      "status": "Passed: stable pane gutters across scrollbar modes and overflow, initialized resize sequence, independent pane sizing, compact drawers, keyboard/focus and storage fallback",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "preview-selection",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "solve-workflow",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "solve-checks-ui",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "mesh-quality",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "convergence",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "convergence-runner",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-large?repair=1",
+      "status": "Passed",
+      "errors": [],
+      "evidence": [
+        {
+          "operation": "prepare",
+          "firstPreviewMs": 133.59999999962747,
+          "preparationMs": 60377
+        },
+        {
+          "mode": "original",
+          "triangles": 200000,
+          "importMs": 19740.200000001118,
+          "previewBytes": 26412336,
+          "mesherWasmBytes": 67108864
+        },
+        {
+          "mode": "reconstruct",
+          "triangles": 200000,
+          "importMs": 20496.799999998882,
+          "previewBytes": 26663364,
+          "mesherWasmBytes": 67108864
+        },
+        {
+          "meshMs": 20568.099999999627,
+          "nodes": 5901,
+          "elements": 3530,
+          "minimumJacobian": 0.00047279511329354997
+        }
+      ],
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-resource",
+      "status": "Passed",
+      "errors": [],
+      "evidence": [
+        {
+          "bytes": 16777217,
+          "rejection": "STL_INPUT_LIMIT"
+        },
+        {
+          "bytes": 10000134,
+          "rejection": "STL_INPUT_LIMIT"
+        },
+        {
+          "bytes": 409684,
+          "rejection": "STL_VALIDATION_LIMIT"
+        },
+        {
+          "internalSurfaceCount": 3,
+          "importMs": 2678.699999999255
+        },
+        {
+          "sourceBytes": 16777216,
+          "patches": 6
+        },
+        {
+          "triangles": 50000,
+          "sourceBytes": 2500084,
+          "importMs": 5576.299999998882,
+          "mesherWasmBytes": 67108864,
+          "metadata": {
+            "version": 3,
+            "sha256": "cda76cc3b1a380df0d5884520f29b8781281cc0cad757e3e29a64fba0690bb16",
+            "triangleCount": 50000,
+            "internalSurfaceCount": 6,
+            "validation": {
+              "status": "valid",
+              "version": 1,
+              "intersectionCandidates": 432507,
+              "triangleCount": 50000
+            },
+            "surfaceMode": "original",
+            "reconstruction": null
+          },
+          "previewBytes": 6606192
+        },
+        {
+          "denseMeshMs": 5743.699999999255,
+          "nodes": 5836,
+          "elements": 3474,
+          "minimumJacobian": 0.0005431997371127585,
+          "meshBytes": 363840
+        },
+        {
+          "cancellationMs": 0.10000000149011612,
+          "code": "IMPORT_CANCELLED"
+        },
+        {
+          "timeoutCode": "MESHER_TIMEOUT",
+          "simulatedDeadlineMs": 100,
+          "productionDeadlineMs": 120000
+        }
+      ],
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-convergence",
+      "status": "Passed",
+      "errors": [],
+      "evidence": {
+        "levels": [
+          {
+            "level": 1,
+            "targetSizeM": 0.2,
+            "nodeCount": 35,
+            "elementCount": 12,
+            "degreeOfFreedomCount": 105,
+            "maximumDisplacementM": 1.0606601732139884e-06,
+            "strainEnergyJ": 0.0004999999999999978,
+            "rawVonMisesMaxPa": 1000.0000026285716,
+            "minimumFactorOfSafety": 249999.9993428571,
+            "iterations": 54,
+            "solveDurationMs": 0.5,
+            "estimatedPeakBytes": 100784358,
+            "peakLocationM": [
+              0.8157378651666527,
+              0.9078689325833263,
+              0.7927050983124844
+            ],
+            "peakFaceId": "stl:52f329eef985679fae0947ec32d833afb4e0fa4377da021a283b77035b27a5e5"
+          },
+          {
+            "level": 2,
+            "targetSizeM": 0.13999999999999999,
+            "nodeCount": 35,
+            "elementCount": 12,
+            "degreeOfFreedomCount": 105,
+            "maximumDisplacementM": 1.0606601732139884e-06,
+            "strainEnergyJ": 0.0004999999999999978,
+            "rawVonMisesMaxPa": 1000.0000026285716,
+            "minimumFactorOfSafety": 249999.9993428571,
+            "iterations": 54,
+            "solveDurationMs": 0.5,
+            "estimatedPeakBytes": 100784358,
+            "peakLocationM": [
+              0.8157378651666527,
+              0.9078689325833263,
+              0.7927050983124844
+            ],
+            "peakFaceId": "stl:52f329eef985679fae0947ec32d833afb4e0fa4377da021a283b77035b27a5e5"
+          }
+        ],
+        "classification": {
+          "status": "converged",
+          "globalConverged": true,
+          "stressStable": true,
+          "likelyStressSingularity": false,
+          "warning": null,
+          "changes": {
+            "maximumDisplacement": 0,
+            "strainEnergy": 0,
+            "rawVonMisesMax": 0
+          },
+          "stopReason": "criteria-met"
+        }
+      },
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-preparation",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "http"
+    },
+    {
+      "name": "stl-import",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "http"
+    },
+    {
+      "name": "stl-repair",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "http"
+    },
+    {
+      "name": "stl-workflow",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "http"
+    },
+    {
+      "name": "stl-repair-workflow",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "http"
+    },
+    {
+      "name": "worker-runtime",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "http"
+    },
+    {
+      "name": "stl-preparation",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "153.0",
+      "mode": "file"
+    },
+    {
+      "name": "stl-import",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "153.0",
+      "mode": "file"
+    },
+    {
+      "name": "stl-repair",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "153.0",
+      "mode": "file"
+    },
+    {
+      "name": "stl-preparation",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "153.0",
+      "mode": "http"
+    },
+    {
+      "name": "stl-import",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "153.0",
+      "mode": "http"
+    },
+    {
+      "name": "stl-repair",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "153.0",
+      "mode": "http"
+    },
+    {
+      "name": "stl-workflow",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "153.0",
+      "mode": "http"
+    },
+    {
+      "name": "stl-repair-workflow",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "153.0",
+      "mode": "http"
+    },
+    {
+      "name": "cad-corpus",
+      "status": "Passed: 68/68",
+      "errors": [],
+      "evidence": {
+        "path": "benchmarks/cad-corpus/chromium-152-stl-workflow.json"
+      },
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "step-import",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "tet4-mesh",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "tet10-mesh",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "cube-wasm-vertical-slice",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "cube-convergence",
+      "status": "Passed",
+      "errors": [],
+      "evidence": {
+        "levels": [
+          {
+            "level": 1,
+            "targetSizeM": 0.2,
+            "nodeCount": 2058,
+            "elementCount": 1111,
+            "degreeOfFreedomCount": 6174,
+            "maximumDisplacementM": 1.0606601717044431e-06,
+            "strainEnergyJ": 0.0004999999999999448,
+            "rawVonMisesMaxPa": 1000.0000079844727,
+            "minimumFactorOfSafety": 249999.99800388183,
+            "iterations": 261,
+            "solveDurationMs": 50.4,
+            "estimatedPeakBytes": 110164734,
+            "peakLocationM": [
+              0.6770713386323061,
+              0.959074710581554,
+              0.01899340122875355
+            ],
+            "peakFaceId": "face-convergence-cube-1"
+          },
+          {
+            "level": 2,
+            "targetSizeM": 0.13999999999999999,
+            "nodeCount": 4321,
+            "elementCount": 2485,
+            "degreeOfFreedomCount": 12963,
+            "maximumDisplacementM": 1.0606601717833233e-06,
+            "strainEnergyJ": 0.0005000000000003887,
+            "rawVonMisesMaxPa": 1000.0000070942754,
+            "minimumFactorOfSafety": 249999.99822643117,
+            "iterations": 359,
+            "solveDurationMs": 159,
+            "estimatedPeakBytes": 121379610,
+            "peakLocationM": [
+              0.09846800794233052,
+              0.012645866682104797,
+              0.9873541333178953
+            ],
+            "peakFaceId": "face-convergence-cube-2"
+          }
+        ],
+        "classification": {
+          "status": "converged",
+          "globalConverged": true,
+          "stressStable": true,
+          "likelyStressSingularity": false,
+          "warning": null,
+          "changes": {
+            "maximumDisplacement": 7.436892331361508e-11,
+            "strainEnergy": 8.87744738831229e-13,
+            "rawVonMisesMax": 8.901973771434667e-10
+          },
+          "stopReason": "criteria-met"
+        }
+      },
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "validation-benchmark",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "resource-benchmark",
+      "status": "Running mixed-scale-tet10-150k repetition 1",
+      "errors": [
+        "page.waitForFunction: Timeout 300000ms exceeded."
+      ],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "resource-benchmark?profile=smoke",
+      "status": "Passed: 1 records",
+      "errors": [],
+      "evidence": [
+        {
+          "schemaVersion": 2,
+          "repetition": 1,
+          "recordedAt": "2026-09-20T04:36:16.925Z",
+          "application": {
+            "gitCommit": null,
+            "solverRuntimeSha256": "99e80904d087866d47e5f1c7d61d16199e89d1a6a22c1a7e54b31166cfcaba88"
+          },
+          "browser": {
+            "name": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "version": "5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "launchMode": "file://",
+            "crossOriginIsolated": false
+          },
+          "system": {
+            "os": "Linux x86_64",
+            "architecture": "unknown",
+            "logicalCores": 24,
+            "memoryBytes": 0
+          },
+          "case": {
+            "id": "smoke-tet4",
+            "kind": "axial",
+            "elementType": "tet4",
+            "nodeCount": 341,
+            "elementCount": 1133,
+            "degreeOfFreedomCount": 1023,
+            "exactNnz": 34443
+          },
+          "preflight": {
+            "modelVersion": 1,
+            "allocations": {
+              "meshBytes": 26312,
+              "graphBytes": 58476,
+              "matrixValuesBytes": 275544,
+              "matrixIndexBytes": 137772,
+              "rowPointerBytes": 4096,
+              "assemblyWorkBytes": 1824,
+              "solverWorkBytes": 65472,
+              "resultBytes": 291016,
+              "runtimeOverheadBytes": 67108864
+            },
+            "modeledPeakBytes": 67868156,
+            "safetyMultiplier": 1.5,
+            "predictedPeakBytes": 101802234,
+            "wasmHeapCapBytes": 3758096384
+          },
+          "observed": {
+            "wasmMemoryByPhaseBytes": {
+              "initial": 16777216,
+              "inputLoaded": 16777216,
+              "graphPreflight": 16777216,
+              "assembly": 16777216,
+              "solve": 16777216,
+              "postprocess": 16777216
+            },
+            "wasmMemoryHighWaterBytes": 16777216,
+            "jsHeapPeakBytes": 131000000,
+            "externalProcessPeakBytes": null,
+            "mesherSolverOverlap": false
+          },
+          "solve": {
+            "outcome": "passed",
+            "preconditioner": "jacobi",
+            "relativeTolerance": 1e-08,
+            "maximumIterations": 0,
+            "iterations": 121,
+            "finalRelativeResidual": 7.0791258813815455e-09,
+            "phaseDurationMs": {
+              "input": 767.2000000011176,
+              "preflight": 13.300000000745058,
+              "assembly": 0,
+              "solve": 1.8,
+              "postprocess": 7.600000000372529
+            },
+            "wallTimeMs": 9.400000000372529
+          },
+          "cancellation": {
+            "meshLatencyMs": 1,
+            "solveLatencyMs": 0.10000000149011612,
+            "editAfterCancelPassed": true
+          }
+        }
+      ],
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-reconstruction",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-mesh-solve?surfaceMode=original",
+      "status": "Passed",
+      "errors": [],
+      "evidence": {
+        "cube": {
+          "displacementM": 1.0000000012516834e-06,
+          "stressPa": 1000.0000026285716,
+          "equilibrium": 3.2420788695681206e-10
+        },
+        "curved": [
+          {
+            "segments": 16,
+            "preset": "coarse",
+            "surfaceMode": "original",
+            "elementCount": 57,
+            "displacementRelativeError": 9.675125145491847e-10,
+            "stressRelativeError": 2.1532435834359376e-09,
+            "facetedArea": 0.7653668363416362,
+            "displacementM": 1.3065630146027694e-06,
+            "expectedM": 1.3065630133386532e-06,
+            "sourceAreaDeficit": 0.025504677740983417,
+            "equilibrium": 1.2481756900204006e-10
+          },
+          {
+            "segments": 32,
+            "preset": "coarse",
+            "surfaceMode": "original",
+            "elementCount": 119,
+            "displacementRelativeError": 1.1478835659772813e-09,
+            "stressRelativeError": 3.965654249427075e-09,
+            "facetedArea": 0.7803612594167166,
+            "displacementM": 1.281457772385237e-06,
+            "expectedM": 1.2814577709142726e-06,
+            "sourceAreaDeficit": 0.00641318533130153,
+            "equilibrium": 1.4866065532670843e-10
+          },
+          {
+            "segments": 64,
+            "preset": "coarse",
+            "surfaceMode": "original",
+            "elementCount": 239,
+            "displacementRelativeError": 7.866303164405508e-10,
+            "stressRelativeError": 2.6950226494903973e-09,
+            "facetedArea": 0.7841371103709776,
+            "displacementM": 1.2752871756235683e-06,
+            "expectedM": 1.275287174620389e-06,
+            "sourceAreaDeficit": 0.001605622581310473,
+            "equilibrium": 8.681150569946613e-11
+          }
+        ]
+      },
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-workflow",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "153.0",
+      "mode": "file"
+    },
+    {
+      "name": "stl-repair-workflow",
+      "status": "Passed",
+      "errors": [],
+      "evidence": null,
+      "browser": "153.0",
+      "mode": "file"
+    },
+    {
+      "name": "stl-mesh-solve?surfaceMode=reconstruct&repair=hole",
+      "status": "Passed",
+      "errors": [],
+      "evidence": {
+        "cube": {
+          "displacementM": 1.0000000038135845e-06,
+          "stressPa": 1000.0000075872758,
+          "equilibrium": 1.853284154193257e-10
+        },
+        "curved": [
+          {
+            "segments": 16,
+            "preset": "coarse",
+            "surfaceMode": "reconstruct",
+            "elementCount": 2715,
+            "displacementRelativeError": 9.895564441886329e-05,
+            "stressRelativeError": 0.0028224270378878202,
+            "facetedArea": 0.7853981342659155,
+            "displacementM": 1.2733655862057488e-06,
+            "expectedM": 1.2732395919614265e-06,
+            "sourceAreaDeficit": 3.709141949137518e-08,
+            "equilibrium": 2.3482620036000656e-10
+          },
+          {
+            "segments": 32,
+            "preset": "coarse",
+            "surfaceMode": "reconstruct",
+            "elementCount": 2834,
+            "displacementRelativeError": 9.431881058707958e-05,
+            "stressRelativeError": 0.00252760627719395,
+            "facetedArea": 0.7853981345647432,
+            "displacementM": 1.273359681920846e-06,
+            "expectedM": 1.2732395914769855e-06,
+            "sourceAreaDeficit": 3.671094028767641e-08,
+            "equilibrium": 5.172244282842865e-10
+          },
+          {
+            "segments": 64,
+            "preset": "coarse",
+            "surfaceMode": "reconstruct",
+            "elementCount": 2837,
+            "displacementRelativeError": 4.922386528649625e-05,
+            "stressRelativeError": 0.0010294772990182555,
+            "facetedArea": 0.7853981511122168,
+            "displacementM": 1.273302238424038e-06,
+            "expectedM": 1.2732395646512302e-06,
+            "sourceAreaDeficit": 1.5642042550112478e-08,
+            "equilibrium": 2.0208377246876208e-10
+          },
+          {
+            "segments": 32,
+            "preset": "fine",
+            "surfaceMode": "reconstruct",
+            "elementCount": 148422,
+            "displacementRelativeError": 5.649345655944771e-06,
+            "stressRelativeError": 0.00032367399833899135,
+            "facetedArea": 0.7853981345647432,
+            "displacementM": 1.2732467844475407e-06,
+            "expectedM": 1.2732395914769855e-06,
+            "sourceAreaDeficit": 3.671094028767641e-08,
+            "equilibrium": 3.677800319164776e-10
+          }
+        ]
+      },
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    },
+    {
+      "name": "stl-large?repair=1&prepareOnly=1",
+      "status": "Passed",
+      "errors": [],
+      "evidence": [
+        {
+          "operation": "prepare",
+          "firstPreviewMs": 140.90000000037253,
+          "preparationMs": 40518.70000000112
+        }
+      ],
+      "browser": "152.0.7977.75",
+      "mode": "file"
+    }
+  ],
+  "presentation": {
+    "records": [
+      {
+        "size": {
+          "width": 1440,
+          "height": 1000
+        },
+        "scheme": "FEA Classic",
+        "overflow": false,
+        "panel": true,
+        "pressed": "true",
+        "canvas": 1154
+      },
+      {
+        "size": {
+          "width": 1440,
+          "height": 1000
+        },
+        "scheme": "Light Mode",
+        "overflow": false,
+        "panel": true,
+        "pressed": "true",
+        "canvas": 1154
+      },
+      {
+        "size": {
+          "width": 1440,
+          "height": 1000
+        },
+        "scheme": "Dark Mode",
+        "overflow": false,
+        "panel": true,
+        "pressed": "true",
+        "canvas": 1154
+      },
+      {
+        "size": {
+          "width": 1440,
+          "height": 1000
+        },
+        "scheme": "Vivid",
+        "overflow": false,
+        "panel": true,
+        "pressed": "true",
+        "canvas": 1154
+      },
+      {
+        "size": {
+          "width": 760,
+          "height": 700
+        },
+        "scheme": "FEA Classic",
+        "overflow": false,
+        "panel": true,
+        "pressed": "true",
+        "canvas": 474
+      },
+      {
+        "size": {
+          "width": 760,
+          "height": 700
+        },
+        "scheme": "Light Mode",
+        "overflow": false,
+        "panel": true,
+        "pressed": "true",
+        "canvas": 474
+      },
+      {
+        "size": {
+          "width": 760,
+          "height": 700
+        },
+        "scheme": "Dark Mode",
+        "overflow": false,
+        "panel": true,
+        "pressed": "true",
+        "canvas": 474
+      },
+      {
+        "size": {
+          "width": 760,
+          "height": 700
+        },
+        "scheme": "Vivid",
+        "overflow": false,
+        "panel": true,
+        "pressed": "true",
+        "canvas": 474
+      }
+    ],
+    "offline": true,
+    "deviceScaleFactor": 2,
+    "reducedMotion": true,
+    "errors": []
+  },
+  "sourceSha256": {
+    "tests/browser/analysis-authoring-tests.html": "ebb22e08cf7522831402262ff86e6b70f761144cbaa6c007ce1a2487a93f0665",
+    "tests/browser/assignment-draft-tests.html": "ea4f87caa6fc0537826174e1d8271ea7f7b699e848c56e44b1f443cb0e7579c8",
+    "tests/browser/cad-corpus-tests.html": "23cc403b613da82ce0c31ba42e628654e50f305e76a5031b2df7b84f8e80a249",
+    "tests/browser/cad-corpus-tests.js": "9649444e2cdb18e10e168b650df052a92b38e81fab2884185ad46e36764d1819",
+    "tests/browser/cube-convergence-tests.html": "beec7c0a11316cabc793e76ae0183344b2d92af78edd03f5c920f06dcbaa666e",
+    "tests/browser/cube-wasm-vertical-slice-tests.html": "6871eaee006713a8ccf53f3e7b807a185aa958e70a51217e7040c99c9f60431a",
+    "tests/browser/engineering-history-tests.html": "7a0c316e2960427dbe1a35fb3a470fe4f1e358faae3b95f2f8e965046bb555fb",
+    "tests/browser/funnel-solve-tests.html": "82f1ed65c29cf3df185111e13a09893c55953406a18212d282c107ec400187eb",
+    "tests/browser/funnel-solve-tests.js": "ba89dc71dff91f6f07947f50ffb25c40f4ff87dbdba3408968bfbae34c5ba47b",
+    "tests/browser/preview-selection-tests.html": "1b185cd5123415cf96ab7e15c00efcd5e67454df92f9a6e0e08bd42a5f760f16",
+    "tests/browser/resource-benchmark-tests.html": "6010a85fbade6ca4e1bfadbd26c0d00c4d9af9aaaa35d9c0aa2cbf2d0cfe7c60",
+    "tests/browser/review-contract-tests.html": "6a951a90913eae658d8a6850063e4ce7e74bdca77d581277325360c14b806ef8",
+    "tests/browser/solve-workflow-tests.js": "8c363c8ea03160e19e90048b6ce13e09e5311113180bdee0dbf425a305e4b1c2",
+    "tests/browser/step-import-tests.html": "0839096335ec2c56af989a495bfa3bea2f4d04548f17a915500a305f408ba51f",
+    "tests/browser/stl-convergence-tests.html": "9b0a17a4da1326880fb0220cb3df63df3d45d27efd2143c8d93f801c5ee8a635",
+    "tests/browser/stl-convergence-tests.js": "26c4d3a800112473938780f60bad205241613d31ac972f42d17c9dada1b94b92",
+    "tests/browser/stl-import-tests.html": "e7c2489a22ae487156389230a82a6ba93ccb0bb3f533fc4c93c4f5a7fea57ee4",
+    "tests/browser/stl-import-tests.js": "0c44e92668549fbc0ce47e61250d60abc3151cc37303f062b0eede3fe675ac26",
+    "tests/browser/stl-large-tests.html": "dce66427f26c3e06bdbcff953e355a535cee8a7e520fd430ec261ff7f8b88d82",
+    "tests/browser/stl-large-tests.js": "7ad6eb5df496b89a4621299931e084e236faf4e96627c0a10ee05b169421e3ce",
+    "tests/browser/stl-mesh-solve-tests.html": "e877ca853ff1832d5062ddde6ae24c8011c251b5fbebf98a430d5129dfdc8518",
+    "tests/browser/stl-mesh-solve-tests.js": "07db8af509cc53097e84149ea93a6f29f35c7aff697cf3bae03383d84f3ed449",
+    "tests/browser/stl-preparation-tests.html": "e1d47f8eaeaf97ffd1f612f31aec75a57f310fe1193988b124510efbedc2953a",
+    "tests/browser/stl-preparation-tests.js": "ae7e433d2ae97284260bcc62fa6e45fe9ae3fb15ad00cc56db01a8f4788da3ca",
+    "tests/browser/stl-reconstruction-tests.html": "8aef78ee8bec514fa5453b3491d42852b01014df892626074e2d7f34af08fd62",
+    "tests/browser/stl-reconstruction-tests.js": "404036a481dd9d5fcb770a3b12a6037d19738c003a16552246797eedc0cc09e9",
+    "tests/browser/stl-remesh-tests.js": "98fb87d50743aa612d2f2f5d21738ba6d7a903f6551e096a917449381e08bea6",
+    "tests/browser/stl-repair-tests.html": "d80649750e1696be4f464d7318ff3a6c9514f27b816869c0e0607ce43b2954fe",
+    "tests/browser/stl-repair-tests.js": "a3217a4ee4dcd0d0bcfc705d3a1dd8a4a5b55a88f7e6c19b3d9417b024d631c4",
+    "tests/browser/stl-repair-workflow-tests.js": "0f0dc16fc092b1c7fb4c7627b11739bed9e0fc434a99b852d8b6f2755bfb82a4",
+    "tests/browser/stl-resource-tests.html": "6b18a9afa89325a58bab29ce8b2f7cf469f93619fb01888889e391ff07c69cdb",
+    "tests/browser/stl-resource-tests.js": "ec724d23b3d0baf8711165f38421c51012689579ad2d602e60a9c30e93503cbe",
+    "tests/browser/stl-surface-modes-tests.js": "027e072960d3e604dcc73e6b3772d24c329a32383f6e6266cbb35a41404c62c3",
+    "tests/browser/stl-workflow-tests.js": "f396970facfc2255953b6a8a34383b3bad10ebd4bac894b80ffa90555711cc71",
+    "tests/browser/tet10-mesh-tests.html": "d53ec74f1a83faa9c94bf0ce0d1348458a81c8b246c86610a454250bf90eaf1d",
+    "tests/browser/tet4-mesh-tests.html": "58b409644f7b3b83e30733256ade8c92e88ea3e1a1d0d32577af74ffce53472f",
+    "tests/browser/validation-benchmark-tests.html": "624e69def91c68acfcfafed07404867fa143779bbc072bb558621e96301b22b2",
+    "tests/browser/wasm-solve-result-tests.html": "1cf337df2dc412bce95e802a6a7dc5d5b4a61111e2911be03eb79a5c6be5089a",
+    "tests/browser/worker-runtime-tests.html": "92ebb87fb8bc8275d4be7343f69dc5888f5b4d35c18ac1ecc766716456258839",
+    "tests/browser/worker-runtime-tests.js": "4c1ab85135617bf87e899805b5bab6959bd5e1ff9404756a1b60344761ec2753",
+    "tests/fixtures/corpus-v1.json": "9a1b57fcd5c063516179eb27e50c1a72ad2160356004b485038a482dd732131c",
+    "tests/test_cad_corpus.py": "1003001cbcff184a09da4f5cd112dcb7c5379659340c60913e7e46e4fd52abce",
+    "tests/test_framework.py": "397b55399869713b52977806fadf25f7878badb7990ec4da5eeb2f0f1da30154",
+    "tools/build-local-runtime.py": "9caa7ae63a8e53fff81eff8b38028f49630eeabcc609bf69742b83d56825805d",
+    "tools/cad_corpus.py": "a2480e652e20f2990c1ec8bbc7e3ef82851c1397b77d76147a23310a926dc46d",
+    "tools/validate-cad-corpus.py": "989b964301d4f669a0df3788851de8e48d14dba33138704ec864ebb5bf357caa",
+    "web/css/app.css": "a81ad9c11db50b36f218bc4be3e1ca3e150a9e0abf0b223e303ea1fda2e474cd",
+    "web/generated/local-runtime/mesher-worker-source.js": "6d95fae8148e94e449b19943f7c1cf2ba38b87a25b19028abb33758c902ac5d2",
+    "web/generated/local-runtime/solver-worker-source.js": "7aa7c55f785c7cfa1f9969497fa18e185bc24f44467ec5a325cbde807c2d74ac",
+    "web/generated/local-runtime/stl-preparation-worker-source.js": "53d76e335ea3867012e7634b0b86ad0aad258be1aa6892f2833911027dd8e747",
+    "web/index.html": "816d6fa99db7e929e260b947d096e429940bdfabdf000961a7e4b1e77c6b1085",
+    "web/js/analysis/app-controller.js": "72a1585658266ff301ad97bd62758d24d54b61bdca15b8dd24a0be179c282fe9",
+    "web/js/analysis/assignment-draft.js": "717f55feb68b7e08c3b5fabc4164d2dd3833147989a79fb76e84b1abf6b36a15",
+    "web/js/analysis/engineering-history.js": "d08290a893b3a0d9a3e0db54df71df33addc87ba7be441dced2aee90d50bc198",
+    "web/js/app.js": "4ad97f64d6266a147ff83403797f477abdec7b25a23073cecfd4c9c6ccc3a054",
+    "web/js/geometry/geometry-model.js": "c3403cccec0ec410d8cfeaa9a90cf858b87b7d7cee7063dfd49ac924d324f96d",
+    "web/js/geometry/stl-preparation.js": "804329d6051cc51eee4182eeaaeee90feb30a9467a26ed4cc11ad2f52b03a011",
+    "web/js/mesh/volume-mesh.js": "07cd751c42cb8b787880fba6ded59f0f8ff1dc9c05724b02116a6917196d2a08",
+    "web/js/render/stl-diagnostics-display.js": "3d550ac43033787ff829f741f32e148944ce9498edd306c0e06c6990a3f03d5c",
+    "web/js/render/viewport-controller.js": "c49c7393e7c0596c890773fbea04e9d0755252095e9fd9f32439be01a7014b35",
+    "web/js/ui/report-export.js": "54cfc8e42ddc7a2348b10b9e5dfe58981970bf3c24312b43ce2a7425b9feba93",
+    "web/js/ui/stl-import-ui.js": "17e9c9a2e7fab7502628054cb7f8f54809bc94be32aae1ab933426ef2b9219af",
+    "web/js/ui/stl-surface-ui.js": "9e1d352eb7336c4302644aa0507a25561d5e46c9fca45ba2e426d244f7356303",
+    "web/js/ui/ui-controller.js": "0c8c1d159fc8cf5b51e4c6c9154751e5a07a9ec69a05a6ab00417e9469567854",
+    "web/js/workers/mesher-client.js": "da3b4566f0b48eec4532371182e882ee2a41367c1f397cb689d19af9ffe2ca6d",
+    "web/js/workers/stl-preparation-client.js": "619be8b5f54b545ae4b9da1238c419df2afbba7fa9f6a88b5c6d7f641d887025",
+    "web/js/workers/worker-protocol.js": "d75b93a521c66c704500a80f81bae45aaa1a3f7504c16136cc567583a117954b",
+    "workers/mesher-worker.js": "54f337b5b40303c105bad021a764a841172c2ede83d96d480e672e0022c4a3c0",
+    "workers/solver-worker.js": "27fbf878e683b8e1b442e7dae587f58f0b6a8cd46f58b17994582b0cdce4d6ad",
+    "workers/stl-diagnostics.js": "9710dfb30b71ffb1b89370c3765d1a82296fdc522ca02e1771c76dcaf97271a4",
+    "workers/stl-import.js": "46b64e643d3e4b22a8a24340329b5672aaceda66ad82896d07a9de473cb7c9d6",
+    "workers/stl-preparation-worker.js": "158a97a1e1ff554a56f705c73801af4ed35606d370e97711f538e8f17c659029",
+    "workers/stl-remesh.js": "1796ea6b46d523280e0b6c592aa7dbddfdecbebb752e0ce987769b3052bb22e4",
+    "workers/stl-repair.js": "e0f9b274b0c265f73712552e07f0a90762aff2c8d24cad2286dc014c398619d8"
+  },
+  "limitations": [
+    "Full resource calibration exceeded the 300-second harness wait; the smoke profile and separate STL capacity checks passed.",
+    "Buffer byte counts and WASM allocations are not total browser/GPU memory measurements.",
+    "Historical validation/resource reports were audited, not regenerated as release calibration.",
+    "M29 owner usability acceptance, Plan 30 and release approval remain pending."
+  ]
+}

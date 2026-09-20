@@ -5,22 +5,20 @@ SpjutSim FEA is a local-first browser application for simple static finite eleme
 ## Development status
 
 v1 is unreleased. Plans 21–23 were accepted on 2026-09-08, plans 24–27 on
-2026-09-10, and M28 feasibility on 2026-09-11. **M29 needs workflow changes:** on
-2026-09-19 the owner requested immediate STL previews, automatic routine cleanup,
-localized error/repair highlighting and fewer import decisions. The single
-[current STL design](docs/designs/stl-import-workflow.md) and
+2026-09-10, and M28 feasibility on 2026-09-11. The revised M29 STL workflow is
+implemented on `feat/stl-import-workflow`: immediate previews, automatic routine
+cleanup, localized repair review, and surface settings under Mesh. The
+[current design](docs/designs/stl-import-workflow.md) and
 [implementation plan](docs/plans/29-stl-import-workflow.md) replace the earlier
-STL plans. This revision is planned; the application still uses the earlier
-import dialog described under Current boundary below.
+STL plans. **M29 owner walkthrough/acceptance remains pending.**
 
-After implementing and accepting revised M29, complete Plan 30's integrated
-regression/usability review and Plan 20's exact-candidate audit. Passing automated
-checks is not v1 acceptance. See the [roadmap](docs/plans/README.md) and
-[historical M29 evidence](docs/reviews/29-stl-workflow.md).
+After accepting M29, complete Plan 30's integrated review and Plan 20's
+exact-candidate audit. See the [roadmap](docs/plans/README.md) and
+[current M29 evidence and walkthrough](docs/reviews/29-stl-workflow.md).
 
 ## Run locally
 
-Open `web/index.html` directly in a current Chromium desktop browser. The startup check renders the repository-local Three.js scene, initializes serial Gmsh/OpenCASCADE in two fresh disposable workers, creates a unit box in each, and starts the solver worker shell. No network requests or local server are required.
+Open `web/index.html` directly in a current Chromium desktop browser. Startup renders the local Three.js scene and checks a lightweight preparation worker and WebAssembly availability. Gmsh and FEM workers start only when an operation needs them; full engine smoke checks are in the runtime test harness. No network requests or local server are required.
 
 For optional cross-origin-isolated HTTP mode:
 
@@ -274,60 +272,50 @@ invalidates the mesh and results. Component forces, gravity, and support
 components stay in global axes; pressure and normal force follow their assigned
 surfaces. Material and opaque surface IDs are retained.
 
-Binary and ASCII STL require explicit m/mm/cm/in/ft units and a dimensions/patch
-review before installation. Import supports one closed, connected, consistently
-outward-wound, non-self-intersecting manifold solid. Normal import rejects defects
-without changing the file. For local topology or winding errors it offers **Try
-surface repair**, followed by a repaired-model preview and a change report. Review
-that candidate before importing it. Connected angle-based patches default to 40°
-(adjustable 1–179°). Choosing units automatically previews the original
-triangles; confirm the dimensions, then select **Import model**. Open **Advanced**
-to change grouping or choose **Reconstruct simple surfaces** with a maximum
-deviation. Reconstruction currently merges
-coplanar faces (including holes) and recovers full cylinders/conical frusta with
-perpendicular flat ends. Compare the original and candidate before applying.
-More complicated fitted-surface intersections and freeform regions are reported
-as unsupported; selecting the original surface preserves every triangle and can
-retain very small or low-quality elements. See the
-[consolidated STL design](docs/designs/stl-import-workflow.md) for retained
-method limits and the planned workflow revision.
-**Remesh STL surfaces (experimental)** is a separate option that creates
-parametrized surfaces and regenerates both the surface and volume mesh. It
-retains selection groups, allowing each group to own several surfaces. It does
-not recover smooth CAD curves. The remesh feature angle defaults to 5° to retain
-more creases; the supplied funnel trial uses 40°. Changing it requires a new
-review. Coarse meshes can approximate away details, so inspect the mesh and
-compare refinement before relying on stresses. Meshing failure does not silently
-change modes or settings. Mesh/checks diagnostics warn when a patch area changes
-by more than 1%, since that can alter pressure forces. See the
-[funnel experiment](docs/reviews/29-funnel-remeshing.md) for measured limitations.
-**Review STL import settings…** in the Model editor uses explicit assignment transfer, with Cancel
-preserving the installed model. Source bytes and options reproduce patch IDs in
-fresh workers and after rigid orientation. Limits are 16 MiB, 200,000 triangles,
-512 internal geometric surfaces, 2 million intersection candidates, and 120
-seconds per STL worker operation. A file below the storage limits can still
-exceed the geometric/work limits. Existing solver memory preflight still applies.
-Detailed models (25,000+ triangles) show meshing-time advice during review and
-beside the mesh controls. This is qualitative guidance, not an estimated finish
-time: shape, mesh settings and hardware matter. Begin with Coarse and compare
-refinement; keeping original triangles can still produce a dense mesh.
-Repair can remove duplicate, zero-area or isolated stray triangles, correct
-winding and fill small flat convex holes within the selected limit (default 1%
-of the remaining part diagonal; 0 disables filling). It never moves vertices or
-joins/discards components. The repaired source must pass every solid check.
-**Discard repair** returns to the original pending source; **Download original
-STL** preserves access to the original bytes after installation via import
-settings. General shape rebuilding, intersecting/disconnected-surface repair,
-shells, multiple solids, and OBJ remain deferred.
+Binary and ASCII STL appear in the main viewport as soon as they can be decoded,
+including readable surfaces with errors. A compact **Prepare STL** panel shows
+checking progress, dimensions, and the assumed file unit (last confirmed unit, or
+mm initially). Change the unit to recheck automatically; **Use model** confirms
+scale and installs a fully validated solid. Source units are independent of display
+preferences. Cancel restores the existing analysis and view.
 
-Open `tests/browser/stl-repair-tests.html` for local repair, numerical and refusal
-checks, and `stl-repair-workflow-tests.html` for the real worker/UI flow,
-source preservation, cancellation, deadlines and fresh-worker meshing. Append
-`?fixture=gargoyle` to either for the supplied file's remaining-component refusal.
+Preparation automatically removes exact duplicate/zero-area facets and fixes
+orientable winding. Small planar convex hole fills and isolated stray-facet removals
+are highlighted proposals that require **Use repaired model**. Findings are grouped
+as fixed, proposed, or unresolved; keyboard-accessible buttons focus each location.
+Compare Original/Prepared and use Show all to return to the whole part. Original
+bytes remain downloadable before and after installation. Unsupported geometry stays
+visible, with analysis blocked and specific repair/export guidance.
+
+Selection grouping defaults to 40° and is adjustable from Model (1–179°). Changing
+the source, units, or grouping uses explicit assignment transfer when assignments
+exist. **Mesh → Advanced: simulation surface** offers original triangles (default),
+bounded simple-surface reconstruction, and experimental remeshing. Review and compare
+a candidate before applying. Method/tolerance/feature-angle edits preserve source
+group IDs and assignments, invalidate mesh/results, and support Undo/Redo.
+Reconstruction supports planes, full cylinders and conical frusta with perpendicular
+flat ends; more complicated intersections/freeform recovery remain unsupported.
+Remeshing parametrizes surfaces without recovering smooth CAD. Its feature angle
+defaults to 5°; mesh/checks warnings flag patch-area changes above 1%. There is no
+automatic method fallback. Original triangles can retain slivers and dense boundaries;
+start with Coarse and compare refinement.
+
+Limits remain 16 MiB per source/candidate, 200,000 triangles, 512 internal surfaces,
+2 million intersection candidates, and 120 seconds per preparation/meshing operation.
+Diagnostic details are capped at 1,000 records / 200,000 primitive references and
+clearly labeled when incomplete. Installation requires a closed, connected,
+consistently outward manifold with positive usable volume and no intersections.
+Filling defaults to 1% of the remaining part diagonal (0 disables filling; maximum
+5%). No vertex movement, welding, smoothing, component deletion/joining, shells,
+multibody or general shape rebuilding is provided.
+
+`stl-preparation-tests.html` checks decoding, diagnostics, cancellation, deadlines and
+worker boundaries. `stl-repair-tests.html` retains exact-predicate/precision cases;
+`stl-workflow-tests.html` and `stl-repair-workflow-tests.html` exercise the real UI,
+consent, source preservation, candidate cancellation, settings history and meshing.
 `stl-mesh-solve-tests.html?surfaceMode=original&repair=1` checks an analytical solve
-after winding repair; `stl-large-tests.html?repair=1` exercises repair at 200,000
-triangles. See the [consolidated repair requirements](docs/designs/stl-import-workflow.md) and
-[repair evidence](docs/reviews/29-stl-surface-repair.md).
+after winding cleanup. See [current evidence](docs/reviews/29-stl-workflow.md) and
+[method limits](docs/designs/stl-import-workflow.md).
 
 Open `tests/browser/stl-large-tests.html` to check a procedural 200,000-triangle
 cube in original/reconstruction modes and mesh the recovered surfaces in a fresh
@@ -499,8 +487,8 @@ or **Delete** to retain its values as Custom. Edits to a selected saved set upda
 that set automatically. This follows SpjutMath's Milestone-4 preset workflow.
 Inline load and result unit controls use the same browser-local preferences.
 Changing units converts current entries while preserving the mesh and results.
-STL **File units** and explicitly labeled file-unit reconstruction tolerance
-continue to describe the source file, independently of display preferences.
+STL **File units** describe the source independently of display preferences. Mesh
+reconstruction tolerance is explicitly labeled in meters.
 
 For a generated report, validate ZIP checksums, XML, package relationships,
 editable tables, embedded PNGs and image proportions without additional tools:

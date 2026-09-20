@@ -1,146 +1,118 @@
-# M29: STL import through analysis
+# M29: visible STL preparation and analysis workflow
 
-> Historical evidence for the earlier STL implementation. The owner requested
-> workflow changes on 2026-09-19; current requirements and next work are in the
-> [consolidated design](../designs/stl-import-workflow.md) and
-> [Plan 29](../plans/29-stl-import-workflow.md). Older walkthroughs, options and
-> protocol descriptions below do not govern the replacement workflow. Original
-> design/plan versions remain in Git history; measured results retain their scope.
+Status: **Implemented; owner walkthrough/acceptance pending.**
+Branch: `feat/stl-import-workflow`. Implementation through `5a9c934`, verified
+2026-09-20 on Linux x86_64. Task 30 and release acceptance remain unstarted.
+The [design](../designs/stl-import-workflow.md) and
+[completed implementation plan](../plans/29-stl-import-workflow.md) are the sole
+current STL work queue.
 
-Current status: **Changes requested on 2026-09-19; revised implementation pending.**
+## Delivered workflow
 
-The following packet records the previous implementation. M28 was accepted
-on 2026-09-11
-(“yes, accept.”). This packet covers plan 29 on `feat/28-29-stl-import`.
-Plan 30 and release acceptance have not started.
+Open an STL and see safely decoded triangles in the main viewport before solid
+checks. Readable invalid geometry remains visible. The preparation panel shows
+assumed source units, original/prepared dimensions, progress and localized findings.
+Routine exact-duplicate/zero-area removal and winding correction run automatically.
+Hole fills and nonzero stray-facet removal require **Use repaired model** after
+inspection. Unresolved problems block acceptance. Keyboard issue buttons focus
+locations; comparison preserves the camera; Cancel restores the prior presentation
+and analysis. Original bytes remain downloadable.
 
-The owner-authorized [simulation-surface follow-up](29-stl-simulation-surfaces.md)
-adds original-triangle meshing and bounded primitive recovery. The initial M29
-measurements below remain historical evidence for the version-1 path.
+The preparation worker contains no Gmsh/FEM payload. Startup checks only the
+lightweight worker path and WebAssembly availability. Gmsh/FEM start on demand.
+The controller rejects stale generations, mismatched geometry/digests/units,
+invalid previews offered as geometry, and unconsented shape changes.
 
-## Delivered behavior
+Grouping is in Model; surface settings are in Mesh Advanced. Review a candidate
+before Apply. Source group identities survive original/reconstruct/remesh choices,
+feature-angle/tolerance edits and rigid orientation. Applying mesh settings retains
+assignments, clears mesh/results and participates in Undo/Redo. Replacing source or
+grouping uses explicit assignment transfer when assignments exist. A new source
+starts with its reviewed surface settings, rather than inheriting an unrelated fit.
 
-Import binary or ASCII STL, choose explicit length units, review dimensions and
-selectable patches, then accept the model. The adapter validates a single closed,
-connected, outward-wound manifold solid, including vertex links and intersections.
-Defects produce stable, actionable errors without repair, welding, or reversal.
-Stored normals are advisory; triangle winding defines the surface.
+Protocol 4, source/group version 3, and independent surface settings replace the
+old combined options and repair request. There is no compatibility path. Native
+solver sources, numerical algorithms, pinned Gmsh/FEM binaries and vendor assets
+are unchanged.
 
-Connected angle-based grouping defaults to 40°. Patch identity derives from
-original bytes/options and triangle membership. Fresh-worker reconstruction,
-remeshing, and rigid orientation preserve identity. Changing units/grouping opens
-the existing explicit assignment-transfer workflow. Failed/cancelled/stale review
-preserves the installed model and analysis. CAD↔STL transfer supports mapping and
-dropping assignments, and clears engineering history on installation.
+## Evidence
 
-Tet10 retains straight source facets, six-node integration faces, separate display
-triangles, and positive-Jacobian checks. Component forces, normal forces, pressure,
-supports, preflight, result views, FoS/peak, and convergence consume the shared
-analysis contracts. The native solver and pinned Gmsh/WASM binaries are unchanged.
-The coarse worker protocol is 3; the local-runtime builder bundles the STL helper.
+[Machine-readable checks and source hashes](29-stl-workflow-evidence.json) accompany
+this review. The [new corpus report](../../benchmarks/cad-corpus/chromium-152-stl-workflow.json)
+contains fresh measurements; older reports remain unchanged.
 
-## Automated evidence
+- 80 Python tests and all 8 native CTest tests pass. Five stored validation records,
+  36 stored resource records, the 68-entry corpus and distribution artifacts audit
+  successfully. Auditing historical records is not fresh release calibration.
+- The browser evidence lists 46 distinct current harnesses, plus STL mode/repair
+  variants, in Chromium 152.0.7977.75. The CAD corpus agrees on all 68 raw
+  classifications and all 18 STL preparation outcomes. The original 50 CAD
+  expectations are unchanged.
+- Chromium and Firefox 153 pass preparation and real-app import/repair/surface-review
+  checks under both `file://` and HTTP. Chromium worker-runtime, numerical, report,
+  history, selection, units, convergence and layout regressions pass.
+- Cube solves pass for original, reconstruction, experimental remeshing and winding
+  cleanup; a reviewed hole-fill candidate also passes reconstruction and analytical
+  solve checks. Curved reconstruction retains the existing displacement/stress,
+  reaction and equilibrium limits. No numerical acceptance tolerance was relaxed.
+- Cancellation, accelerated deadline, stale/malformed messages, source preservation,
+  source/candidate facet indices, grouping limits, and truncated diagnostic locations
+  have explicit regression coverage. The deadline test shortens only the test clock;
+  production retains 120 seconds.
+- Offline real-app checks made no remote requests or page errors. Keyboard issue
+  focus/activation and Escape, all bundled color schemes, 1440×1000 and 760×700
+  layouts, reduced motion and 2× DPI passed. There was no horizontal overflow.
+- All three generated worker wrappers reproduce byte-for-byte across repeated
+  builds. Distribution hashes are current; publication approval is not asserted.
 
-See [machine-readable evidence](29-stl-evidence.json), the
-[68-case corpus report](../../benchmarks/cad-corpus/chromium-152-stl.json), and
-the [historical accepted decision](28-stl-contract.md).
+### Resource and corpus interpretation
 
-- 79 Python tests and all 8 native tests pass.
-- All 33 browser harnesses pass in Chromium 152.0.7977.75 under direct `file://`;
-  the resource matrix uses its smoke profile for this change.
-- HTTP repeats pass for STL review, mesh/solve, convergence, and resource smoke.
-- All 68 corpus classifications agree: original 50 CAD expectations plus six
-  accepted and twelve rejected STL fixtures. Existing quality warnings remain.
-- Five validation records, 36 historical resource records, fixture hashes, and
-  distribution artifacts validate. Historical records are audited, not represented
-  as newly rerun release calibration.
-- The 18 STL fixtures/manifest and both worker wrappers regenerate byte for byte.
-- Real-app offline startup/import produces no remote requests or script errors.
-  The review was visually checked at 1440×1000 and 760×700, with no horizontal
-  overflow; the narrow dialog scrolls to its footer. Keyboard patch buttons and
-  native dialog focus/Escape complement viewport picking.
+The 200,000-triangle winding-cleanup case provides separate time-to-first-preview,
+preparation, surface import and mesh timings in the evidence. The final preparation-only
+repeat measured 140.9 ms to preview and 40,518.7 ms to complete. These are local
+measurements, not latency guarantees. The 50,000-triangle case, 16 MiB boundary,
+triangle/work limits and cancellation/recovery also pass. Retained preview byte
+counts and WASM sizes do not measure total browser or GPU peak memory. The new
+source/candidate facet map has at most 200,000 Int32 entries (0.8 MB).
 
-The corpus harness reloads after 24 cases, retaining a manifest-checked session
-checkpoint. Chromium deferred collection of terminated worker objects during an
-uninterrupted 68-case run. Forced GC established the cause; document batches then
-passed without a GC flag. Every fixture still receives a fresh worker, and no
-classification, mesh-quality, or identity expectation was relaxed.
+The full resource calibration matrix exceeded the browser harness's 300-second
+wait during the first mixed-scale 150k-node repetition. It is **not claimed as
+passed**. The resource smoke profile passed; full calibration remains part of the
+later release audit. STL-specific capacity checks completed independently.
 
-### Numerical checks
-
-The 1 m cube uses E=1 GPa, ν=0.25, component symmetry supports, and 1000 N axial
-force. Computed loaded-face displacement is approximately 1.0000000023e-6 m,
-raw von Mises stress 1000.000009 Pa, and relative equilibrium residual 2.1e-10.
-The analytical targets are 1e-6 m and 1000 Pa. Displacement/stress relative
-tolerances are 2e-5/2e-4 (absolute floors 1e-11 m/1e-3 Pa), with equilibrium
-below 1e-6. Recovery-sample peak location and yield FoS=250,000 are verified.
-
-The radius-0.5 m, height-1 m faceted cylinders use E=1 GPa, ν=0, a fixed base,
-and 1000 N tensile loading. Their reference displacement is F·L/(E·A), where A
-is the **faceted** cross-section. Cases use component force, normal force, and
-pressure respectively; stress F/A and reaction −1000 N pass the same checks.
-
-| Sides | Faceted area (m²) | Displacement (m) | Source area deficit vs circle |
-| --- | --- | --- | --- |
-| 16 | 0.7653668363 | 1.306563016e-6 | 2.55047% |
-| 32 | 0.7803612594 | 1.281457773e-6 | 0.641319% |
-| 64 | 0.7841371104 | 1.275287179e-6 | 0.160562% |
-
-This separates source tessellation error from FE mesh convergence. A separate
-two-level cube study uses 1,154 and 2,390 Tet10 elements; displacement, energy,
-and raw stress satisfy the existing convergence criteria. Rotating then undoing
-the STL invalidates mesh/results, and source-digest mismatch rejects remeshing
-under old patch identities.
-
-### Bounds and resource checks
-
-The accepted bounds remain 16 MiB source, 50,000 triangles, 512 internal surfaces,
-2,000,000 intersection candidates, and 120 seconds per STL operation. Separate
-generated cases exercise exact storage/surface bounds; excess byte/triangle,
-surface, and intersection-work cases return the specified limit errors.
-
-A 50,000-triangle cube imports in approximately seven seconds, preserving six
-patches and all triangles; the validator examines 432,507 candidate pairs. The
-source is 2,500,084 bytes, preview buffers 6,606,192 bytes, and measured import
-WASM capacity 64 MiB. Fresh-worker coarse Tet10 reconstruction produces 3,756
-elements/6,333 nodes with positive sampled Jacobians and 395,832 mesh-buffer bytes.
-Timings and exact sampled values are in the evidence JSON.
-
-Cancelling during validation terminates the worker; a fresh import and mesh
-succeed. The timeout termination/error path is tested using a simulated 100 ms
-deadline, while the production deadline remains 120 seconds. The existing solver
-memory preflight remains mandatory. WASM capacity is a high-water allocation,
-not live native memory or browser RSS; JS maps, strings, Blob code, and garbage
-collection add unmeasured transient memory. These are bounded development tests,
-not a new full cross-browser release resource calibration.
+The new default keeps original boundary triangles. Consequently its element counts
+and quality distribution differ from the removed version-1 classification path.
+Only the six accepted STL mesh baselines were remeasured, using the same relative
+regression bands; geometry-volume, positive-Jacobian and analytical accuracy checks
+remain intact. Raw invalid fixtures still reject. Preparation makes reversed,
+inconsistent, duplicate/nonmanifold and exact-degenerate fixtures usable where
+routine cleanup suffices; open, intersecting, disconnected and pinched cases stay
+blocked. Malformed/nonfinite input produces no preview.
 
 ## Owner walkthrough — about 20 minutes
 
-Open `web/index.html` directly, or run `python3 tools/serve.py` and open `/web/`.
-Use files in `tests/fixtures/stl/`.
+1. Open valid binary and ASCII parts. Confirm visible size and use the model with
+   one action. Change assumed units and check the resulting physical dimensions.
+2. Open a reversed/duplicate-facet part. Inspect optional cleanup findings and
+   continue without a separate repair command.
+3. Open a small-hole part. Focus the proposed fill, compare Original/Prepared,
+   reject once, then explicitly accept. Download the unchanged original.
+4. Open intersecting/disconnected input. Inspect localized errors and actionable
+   explanations; verify there is no analysis-ready claim.
+5. Replace a solved model, then Cancel. Verify view, setup and results return.
+   Retry and exercise explicit assignment transfer where needed.
+6. Author supports/load, mesh, check and solve. Find grouping in Model and surface
+   methods in Mesh Advanced. Compare and apply a method change, verify retained
+   assignments/invalidation, Undo/Redo, and remesh.
 
-1. Import `cube-binary.stl`. Confirm units start blank. Choose meters, review the
-   1×1×1 m dimensions and six patches, pick using the canvas and patch buttons,
-   then accept. Repeat with `cube-ascii.stl`; try millimeters and check the SI
-   dimension conversion before cancelling.
-2. Apply a material, supports, and a force or pressure using patch selection.
-   Mesh with Tet10, run checks, solve, and inspect Stress, Deformation, FoS,
-   and Locate peak. The automated analytical harness supplies the quantitative
-   reference; an arbitrary manual setup need not reproduce the axial case.
-3. Import `cylinder-32.stl`, inspect its faceted side patch, and change grouping.
-   For an installed model, use **Review STL units and patches…** in Model.
-   Verify that applying new grouping requires mapping/dropping existing assignments;
-   Cancel must retain the previous model/setup/result.
-4. Try `open.stl`, `self-intersecting.stl`, and `pinched-vertex.stl`. Check that
-   each failure explains re-export/correction, preserves the old model, and offers
-   no automatic repair. Cancel a review while validation is running and retry.
-5. Remesh, rotate/undo, and replace STL with CAD and back. Inspect explicit
-   assignment transfer and the cleared history after replacement. Run a small
-   convergence study if desired.
+Record confusing steps and address them within M29. Automated evidence does not
+replace owner usability acceptance; keep M29 unchecked until that walkthrough.
 
-Owner response, 2026-09-19: the import flow asks for too many choices and should
-show readable STL geometry even with errors, attempt routine cleanup automatically,
-and highlight problems and proposed repairs. The owner requested a consolidated
-plan; this is **changes requested**, not M29 acceptance. Replace this walkthrough
-with current evidence after implementing Plan 29, then obtain usability acceptance
-before Plan 30. Automated results do not constitute owner or v1 acceptance.
+## Historical evidence
+
+The [2026-09-11 packet](29-stl-workflow-2026-09-11.md),
+[original machine evidence](29-stl-evidence.json),
+[old corpus report](../../benchmarks/cad-corpus/chromium-152-stl.json),
+[M28 scope decision](28-stl-contract.md),
+[surface-method evidence](29-stl-simulation-surfaces.md), and
+[repair evidence](29-stl-surface-repair.md) retain their original scope.
