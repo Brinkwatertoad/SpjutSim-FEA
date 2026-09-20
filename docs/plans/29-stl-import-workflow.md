@@ -18,7 +18,7 @@ local Three.js, pinned Gmsh/WASM, Python/CMake/CTest. No new dependencies.
 **Spec:** `spec.md` §§6.1, 15.11, 16, 18–21, 26 and
 [STL workflow design](../designs/stl-import-workflow.md).
 
-**Status:** Implementation complete on `feat/stl-import-workflow`; automated and
+**Status:** Owner-feedback follow-up in progress on `feat/stl-import-workflow`. The initial implementation is committed; its automated and
 presentation evidence is in the [M29 review](../reviews/29-stl-workflow.md).
 Owner walkthrough/acceptance is pending. Task 30 and release acceptance have not
 started. The full resource calibration matrix exceeded the local harness deadline;
@@ -36,7 +36,8 @@ the resource smoke profile and STL-specific 50k/200k bounds passed.
 - Cap diagnostic details at 1,000 records / 200,000 referenced primitives; state
   explicitly when checks or locations are incomplete.
 - No automatic welding, component deletion, smoothing, arbitrary repair,
-  automatic surface-method search or new CAD kernel. Retain existing method scope.
+  automatic surface-method search or new CAD kernel without explicit dependency approval.
+  The approved follow-up below supersedes the original-triangle default.
 - First-use source-unit assumption is visibly `mm`; remember only successful STL
   source-unit confirmations. Physical scale is confirmed by Use model.
 - Execute packages 1 → 2 → 3 → 4 → 5 → 6. Packages 1–2 can be verified in
@@ -318,3 +319,27 @@ source digest and exact group ownership before applying supports/loads.
 Record confusing steps and fix them within M29. Task 30 follows accepted M29;
 Task 20 subsequently audits the exact release candidate. Planning approval is
 not implementation completion, usability acceptance or release authorization.
+
+## 7. Owner feedback: useful diagnosis and analysis-ready surface meshing
+
+This is the continuation of M29, not a second STL plan. No compatibility layer.
+
+- [x] Open the selected filename before file reading finishes; distinguish reading,
+  checking/repairing, ready, proposed repair, and unsuccessful repair. Preserve the
+  previous analysis until acceptance, including read cancellation and late results.
+- [x] Replace intersection-pair rows with connected regions and exact aggregate
+  counts. Count components as components. Put locations in expandable diagnostics;
+  explain unavailable repairs without inventing a manual task list. Hide issue
+  controls for clean imports and separate highlighting from viewport Fit.
+- [ ] Independently audit gargoyle intersections and document a stronger solid
+  repair path. Joining components or changing material requires a validated preview
+  and explicit acceptance. Do not describe cleanup as general solid repair.
+- [ ] Make rebuilt surfaces the analysis default. Recover exact planar boundaries
+  before volume meshing; use the existing discrete chart path for other surfaces.
+  Preserve engineering groups independently of internal surfaces. Keep original
+  triangles as an explicit advanced choice. Avoid silent method fallback.
+- [ ] Add thickness-aware size control, source/mesh boundary-area and volume checks,
+  geometric deviation evidence and quality regression cases for elongated and
+  rotated parts. Report practical limitations and resource limits explicitly.
+- [ ] Verify focused and complete applicable tests, update the current walkthrough
+  and specification, and commit tested checkpoints. M29 acceptance remains open.

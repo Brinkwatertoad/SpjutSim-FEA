@@ -75,7 +75,8 @@
           <p><strong id="stl-dimensions" aria-live="polite"></strong></p>
           <p id="stl-import-status" role="status" aria-live="polite">Reading triangles…</p>
           <label id="stl-comparison-label" hidden>Compare <select id="stl-preview-surface"><option value="candidate">Prepared</option><option value="source">Original</option></select></label>
-          <button id="stl-show-all" type="button">Show all issues / fit part</button>
+          <p id="stl-replacement-note" hidden>Previewing the new file. Your existing analysis is retained until you use this model; Cancel returns to it.</p>
+          <button id="stl-show-all" type="button" hidden>Highlight unrepaired regions</button>
           <div id="stl-issues" aria-label="Surface findings"></div>
           <details><summary>Repair details</summary>
             <label>Maximum hole width (% of part diagonal)<input id="stl-repair-hole-limit" type="number" min="0" max="5" step="0.1" value="1"></label>

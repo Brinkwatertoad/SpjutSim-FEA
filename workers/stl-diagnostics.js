@@ -98,7 +98,7 @@
     } else report.coverage.vertexFans = 'skipped';
     var components = new Map();
     for (i = 0; i < count; i++) { var id = find(i); if(!components.has(id))components.set(id,[]); components.get(id).push(i); }
-    if (components.size > 1) components.forEach(function (ids) { add('component', ids, [], [], 'unresolved', ids.length); });
+    if (components.size > 1) components.forEach(function (ids) { add('component', ids); });
     report.componentCount = components.size;
     report.coverage.topology = closed && manifold && !report.counts['nonmanifold-vertex'] && components.size === 1 && !unsafe ? 'passed' : 'failed';
     report.coverage.orientation = report.counts.winding ? 'failed' : (closed && manifold ? 'passed' : 'skipped');
@@ -109,14 +109,34 @@
     } else report.coverage.volume = 'skipped';
     report.coverage.intersections = 'skipped';
     if (!unsafe) {
+      // Union triangle pairs as they arrive; retain O(facets) storage even when
+      // millions of candidate pairs are checked. One record locates a connected
+      // intersection region, with the exact pair count kept as detail.
+      var regions = new Int32Array(count); regions.fill(-1);
+      var pairs = new Uint32Array(count);
+      function region(i) { while (regions[i] !== i) { regions[i] = regions[regions[i]]; i = regions[i]; } return i; }
       try {
-        var checked = root.StlImport.validateIntersections(p, t, function (first, second) { add('intersection', [first,second]); });
+        var checked = root.StlImport.validateIntersections(p, t, function (first, second) {
+          if (regions[first] < 0) regions[first] = first;
+          if (regions[second] < 0) regions[second] = second;
+          var a = region(first), b = region(second);
+          if (a !== b) { regions[b] = a; pairs[a] += pairs[b]; }
+          pairs[a]++;
+        });
         report.intersectionCandidates = checked.intersectionCandidates;
-        report.coverage.intersections = report.counts.intersection ? 'failed' : 'passed';
+        report.coverage.intersections = 'passed';
       } catch (e) {
         if (e.code !== 'STL_VALIDATION_LIMIT') throw e;
         report.coverage.intersections = 'limit'; report.countsExact = false; add('work-limit');
       }
+      var grouped = new Map();
+      for (i = 0; i < count; i++) if (regions[i] >= 0) {
+        var owner = region(i); if (!grouped.has(owner)) grouped.set(owner, []);
+        grouped.get(owner).push(i);
+      }
+      grouped.forEach(function(ids, owner) { add('intersection', ids, [], [], 'unresolved', pairs[owner]); });
+      report.intersectionRegionCount = grouped.size;
+      if (grouped.size && report.coverage.intersections !== 'limit') report.coverage.intersections = 'failed';
     }
     return report;
   }

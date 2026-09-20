@@ -59,10 +59,11 @@
     app.beginGeometryImport(file.name);
     if (sourceFormat === 'stl') {
       if (!file.size || file.size > 16 * 1024 * 1024) { app.failGeometryImport(importFailure('STL_INPUT_LIMIT', 'Choose a nonempty STL file no larger than 16 MiB.')); return; }
+      var session=app.beginStlImport({sourceName:file.name,sourceFormat:'stl',sourceBytes:null});
       file.arrayBuffer().then(function (bytes) {
-        if (generation !== importGeneration) { return; }
-        openStlReview({ sourceName: file.name, sourceFormat: 'stl', sourceBytes: bytes });
-      }).catch(function (error) { if (generation === importGeneration) { app.failGeometryImport(error); } });
+        if (generation !== importGeneration || !app.completeStlFileRead(session,bytes)) { return; }
+        prepareStl();
+      }).catch(function (error) { app.failStlImport(session,session.generation,error); });
       return;
     }
     geometryId = api.createGeometryId();

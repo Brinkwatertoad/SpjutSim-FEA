@@ -13,7 +13,18 @@
     assert(report.issues.some(function (issue) { return issue.kind === 'open-boundary' && issue.edgeVertexIds.length; }), 'Open boundaries have no locations');
     assert(report.coverage.topology === 'failed', 'Open surface was marked valid');
     report = StlDiagnostics.inspect(StlImport.decode(await fixture('self-intersecting')));
-    assert(report.issues.some(function (issue) { return issue.kind === 'intersection' && issue.triangleIds.length === 2; }), 'Intersections must locate both triangles');
+    assert(report.issues.some(function (issue) { return issue.kind === 'intersection' && issue.triangleIds.length >= 2; }), 'Intersections must locate both triangles');
+    // A dense cluster is one inspectable region, not a triangle-pair task list.
+    var check = StlImport.validateIntersections;
+    try {
+      StlImport.validateIntersections = function(p,t,visit) { visit(0,1); visit(1,2); visit(8,9); return {intersectionCandidates:3}; };
+      var clustered = StlDiagnostics.inspect(cube);
+      var regions = clustered.issues.filter(function(issue){return issue.kind==='intersection';});
+      assert(clustered.counts.intersection===3 && regions.length===2, 'Intersecting pairs were not grouped into connected regions');
+      assert(regions[0].count===2 && regions[0].triangleIds.length===3, 'Region lost pair counts or deduplicated locations');
+    } finally { StlImport.validateIntersections = check; }
+    var disconnected = StlDiagnostics.inspect(StlImport.decode(await fixture('disconnected')));
+    assert(disconnected.counts.component===disconnected.componentCount, 'Component count reports facets instead of bodies');
     report = StlDiagnostics.inspect(open, { maxRecords: 1, maxReferences: 2 });
     assert(report.locationsTruncated && report.issues.length <= 1, 'Diagnostic collection ignored its memory limit');
     var bytes = await fixture('cube-binary'), view = new DataView(bytes); view.setFloat32(96, NaN, true);

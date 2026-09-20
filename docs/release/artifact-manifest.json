@@ -175,7 +175,7 @@
         },
         {
           "path": "workers/stl-diagnostics.js",
-          "sha256": "9710dfb30b71ffb1b89370c3765d1a82296fdc522ca02e1771c76dcaf97271a4"
+          "sha256": "dcecc40a48a6297a23b8e9d84a3ac9c9361ac4d97fa0947f30d353b1ec3dad8a"
         },
         {
           "path": "workers/stl-preparation-worker.js",
@@ -1262,7 +1262,7 @@
     },
     {
       "path": "web/generated/local-runtime/stl-preparation-worker-source.js",
-      "sha256": "53d76e335ea3867012e7634b0b86ad0aad258be1aa6892f2833911027dd8e747",
+      "sha256": "ff86a7f4cf50abfa42d63958397dbc20f7df16ecbf0ad88cc54d462bf317d4ff",
       "components": [
         "workers"
       ]

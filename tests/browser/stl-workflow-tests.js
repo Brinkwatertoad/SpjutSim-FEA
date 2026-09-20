@@ -17,14 +17,30 @@
    assert(!app.document.geometry,'A source preview was installed as analysis geometry');
    assert(startedWorkers.every(function(kind){return kind==='stl-preparation';}),'STL preparation started a WASM worker');
    fill('stl-length-unit','m');await wait(function(){return app.stlImportSession.state==='ready';});
+   assert(doc.getElementById('stl-show-all').hidden, 'Clean import displays issue controls');
+   assert(doc.getElementById('stl-source-summary').textContent.includes('cube-binary.stl'), 'New filename missing');
+   assert(doc.getElementById('stl-comparison-label').hidden, 'Unchanged import displays comparison');
    assert(doc.getElementById('stl-dimensions').textContent.includes('1'),'Physical dimensions missing');
    assert(!doc.querySelector('#stl-import-panel [data-surface-method]'),'Meshing choices still block import');
    click('stl-accept-button');await wait(function(){return app.document.geometry;});
    assert(app.document.geometry.volumeM3===1 && app.document.geometry.faceIds.length===6,'Cube scale or selection groups changed');
    var old=app.document.geometry,revision=app.document.analysisRevision;
+   var read=win.File.prototype.arrayBuffer,release;
+   try {
+    win.File.prototype.arrayBuffer=function(){return new Promise(function(resolve){release=resolve;});};
+    await open('cube-binary');
+    assert(app.stlImportSession.state==='reading' && doc.getElementById('stl-source-summary').textContent.includes('cube-binary.stl'), 'Selected filename waits for file reading');
+    assert(!doc.getElementById('stl-replacement-note').hidden, 'Replacement does not explain retained analysis');
+    click('stl-cancel-button');release(new win.ArrayBuffer(1));
+    await new Promise(function(resolve){setTimeout(resolve,30);});
+    assert(!app.stlImportSession && app.document.geometry===old, 'Late file read reopened cancelled import');
+   } finally { win.File.prototype.arrayBuffer=read; }
+
    await open('open');await wait(function(){return app.stlImportSession.state==='blocked';});
    assert(app.stlImportSession.preview && !doc.getElementById('stl-import-panel').hidden,'Invalid input lost its preview');
    assert(doc.getElementById('generate-mesh-button').disabled && doc.getElementById('stl-accept-button').disabled,'Pending invalid model enabled engineering actions');
+   assert(!doc.getElementById('stl-show-all').hidden && !doc.getElementById('stl-show-all').textContent.includes('fit'), 'Issue highlight must be separate from viewport fit');
+   assert(doc.getElementById('stl-import-status').textContent.includes('Automatic repair'), 'Blocked state does not explain the repair outcome');
    var issue=doc.querySelector('#stl-issues button');assert(issue,'No clickable error location');issue.click();assert(issue.getAttribute('aria-pressed')==='true','Issue did not select/highlight');
    fill('stl-length-unit','cm');
    click('stl-cancel-button');assert(app.document.geometry===old&&app.document.analysisRevision===revision,'Cancellation changed installed analysis');

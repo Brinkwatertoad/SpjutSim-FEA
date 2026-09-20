@@ -725,10 +725,17 @@ WebAssembly availability; Gmsh/FEM engine checks execute only on demand or in te
   require Use repaired model after highlighting added/removed surfaces. Preserve
   the original bytes. No automatic component deletion/joining, vertex movement,
   tolerance welding, smoothing or general shape reconstruction is introduced.
+- Show the selected filename before asynchronous byte reading, with explicit reading,
+  checking/repairing, ready, review-required and unsuccessful-repair states. Explain
+  retention of the installed analysis during replacement. Cancel rejects late reads.
 - Expose fixed, proposed and unresolved findings with edge/vertex/triangle
   locations, keyboard focus/zoom and Original/Prepared comparison. Retain source
   and useful partial diagnostics on failure. Cap detailed locations at 1,000
   records and 200,000 referenced primitives; label truncated/incomplete checks.
+  Group intersection pairs sharing triangles into connected regions with exact pair
+  counts; report component counts separately from facet counts. Expandable locations
+  explain blockers rather than presenting unsupported repairs as tasks. Hide issue
+  controls when none exist; highlight without refitting the viewport.
 - Accept only one closed, connected, consistently outward manifold solid with
   positive usable volume and no self-intersections. Preserve exact predicates,
   precision, strict serialized-candidate revalidation and all existing numerical

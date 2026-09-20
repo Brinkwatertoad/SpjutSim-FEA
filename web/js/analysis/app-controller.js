@@ -145,9 +145,17 @@
     try { var saved=root.localStorage.getItem('spjutsim-fea-stl-source-unit'); if(api.STL_UNIT_SCALES[saved])unit=saved; } catch(e) {}
     settings=Object.assign({lengthUnit:unit,patchAngleDegrees:40,maxHoleDiameterRatio:.01},settings);
     var id=api.createGeometryId(),request=Object.assign({},settings,source,{sessionId:id,generation:0,geometryId:id});
+    // A selected file can open its transaction before asynchronous byte reading.
+    if(source.sourceBytes===null)request.sourceBytes=new ArrayBuffer(1);
     if(!api.validateStlPreparationRequest(request))throw new Error('Choose a readable STL source and valid units.');
-    this.stlImportSession={sessionId:id,generation:0,geometryId:id,source:source,settings:settings,state:'reading',preview:null,result:null,message:'Reading triangles…'};
+    this.stlImportSession={sessionId:id,generation:0,geometryId:id,source:source,settings:settings,state:'reading',preview:null,result:null,message:'Reading '+source.sourceName+'…'};
     this.beginGeometryImport(source.sourceName);return this.stlImportSession;
+  };
+  AppController.prototype.completeStlFileRead = function(session, bytes) {
+    if(this.stlImportSession!==session)return false;
+    var source=Object.assign({},session.source,{sourceBytes:bytes});
+    if(!root.SpjutsimFEA.validateStlPreparationRequest(Object.assign({},source,session.settings,{sessionId:session.sessionId,generation:session.generation,geometryId:session.geometryId})))throw new Error('The selected STL could not be read.');
+    session.source=source;this.notify();return true;
   };
   AppController.prototype.updateStlImportSettings = function(settings) {
     var s=this.stlImportSession;if(!s)return;
@@ -160,13 +168,13 @@
     if(!s||event.sessionId!==s.sessionId||event.generation!==s.generation)return false;
     if(event.type==='stl-preview'){
       if(!api.validateStlPreview(event.preview)||event.preview.revision!=='source')throw new Error('Invalid STL preview.');
-      s.preview=event.preview;s.state='checking';
+      s.preview=event.preview;s.state='checking';s.message='Checking and repairing '+s.source.sourceName+'…';
     }else if(event.type==='stl-progress')s.message=event.message;
     else if(event.type==='stl-prepared'){
       var r=event.result;
       if(!api.validateStlPreparationResult(r,s.preview)||r.lengthUnit!==s.settings.lengthUnit||s.source.preparation&&r.sourceDigest!==s.source.preparation.preparedDigest)throw new Error('The STL result does not match this review.');
       if(r.geometryCandidate&&(!api.validateGeometryModel(r.geometryCandidate).valid||r.geometryCandidate.geometryId!==s.geometryId||r.geometryCandidate.sourceName!==s.source.sourceName||r.geometryCandidate.stlSource.lengthUnit!==s.settings.lengthUnit||r.geometryCandidate.stlSource.patchAngleDegrees!==s.settings.patchAngleDegrees))throw new Error('The prepared solid has an invalid geometry contract.');
-      s.result=r;s.state=r.state;s.message=r.state==='ready'?'Ready — confirm the dimensions, then use this model.':r.state==='needs-review'?'Review the highlighted additions or removals before using this repaired model.':r.error&&r.error.message||'This surface still needs repair before analysis.';
+      s.result=r;s.state=r.state;s.message=r.state==='ready'?'Ready for analysis setup — confirm the dimensions, then use this model.':r.state==='needs-review'?'Review the highlighted additions or removals before using this repaired model.':'Automatic repair could not produce a usable solid. '+(r.error&&r.error.message||'Review the highlighted regions.');
     }else return false;
     this.notify();return true;
   };
