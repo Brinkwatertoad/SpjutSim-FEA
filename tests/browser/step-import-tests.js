@@ -43,7 +43,33 @@
     assert(api.validateGeometryModel(geometry).valid, format + ' geometry did not satisfy the public contract');
   }
 
-  readFixture('generated-unit-cube-m.step').then(function (sourceBytes) {
+  async function rejectMeshInput() {
+    var request = { geometryId: 'unsupported', sourceName: 'model.stl', sourceFormat: 'stl', sourceBytes: new ArrayBuffer(1) };
+    var client = new api.MesherClient();
+    try {
+      await client.importGeometry(request);
+      throw new Error('mesh input reached the client');
+    } catch (error) {
+      assert(error.diagnostic && error.diagnostic.code === 'INVALID_IMPORT_REQUEST', 'client accepted a mesh format');
+      assert(client.worker === null, 'unsupported format started an engine');
+    } finally { client.dispose(); }
+    var worker = await api.startLocalWorker('mesher');
+    try {
+      await new Promise(function (resolve, reject) {
+        worker.onmessage = function (event) {
+          var message = event.data;
+          try {
+            assert(message.type === 'error' && message.error.code === 'INVALID_IMPORT_REQUEST', 'worker accepted a mesh format');
+            resolve();
+          } catch (error) { reject(error); }
+        };
+        worker.onerror = reject;
+        worker.postMessage(Object.assign({}, request, {protocol: api.WORKER_PROTOCOL_VERSION, type: 'import', requestId: 'unsupported'}));
+      });
+    } finally { worker.terminate(); }
+  }
+
+  rejectMeshInput().then(function () { return readFixture('generated-unit-cube-m.step'); }).then(function (sourceBytes) {
     return importOnce({
       geometryId: 'step-import-test-cube',
       sourceName: 'generated-unit-cube-m.step',

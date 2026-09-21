@@ -10,8 +10,8 @@ Task 14 and Task 15 provide the implemented Milestone 4 trust and convergence
 workflow. The original feature path is complete through Task 15. Tasks 16–19
 supplied
 validation, corpus, resource, and distribution evidence. **v1.0 remains
-unreleased:** the owner approved the interface/result/STL improvement sequence
-on 2026-09-07. Tasks 21–30 and their manual reviews now precede Task 20
+unreleased:** the owner approved the interface/result improvement sequence
+on 2026-09-07. Tasks 21–27 and 30 and their manual reviews now precede Task 20
 candidate acceptance; passing older gates does not waive this work.
 
 1. [x] [Complete the portable runtime foundation](01-portable-runtime-foundation.md)
@@ -28,7 +28,7 @@ candidate acceptance; passing older gates does not waive this work.
 12. [x] [Generate production Tet10 meshes](12-production-tet10-meshing.md)
 13. [x] [Solve Tet10 models and calibrate resource use](13-tet10-solver-and-resource-calibration.md) — completed; Task 18 records the calibrated browser evidence
 14. [x] [Complete factor-of-safety and result trust views](14-factor-of-safety-and-result-trust.md)
-15. [ ] [Deliver convergence, validation, and the v1.0 release gate](15-convergence-validation-and-v1-release.md) — workflow, validation, corpus, resources, and distribution complete; Tasks 21–30 improvements/manual reviews and Task 20 candidate acceptance remain open (see `../release/v1-acceptance-audit.md`)
+15. [ ] [Deliver convergence, validation, and the v1.0 release gate](15-convergence-validation-and-v1-release.md) — workflow, validation, corpus, resources, and distribution complete; Tasks 21–27 and 30 improvements/manual reviews and Task 20 candidate acceptance remain open (see `../release/v1-acceptance-audit.md`)
 16. [x] [Complete the reference validation matrix](16-reference-validation-matrix.md)
 17. [x] [Establish the release CAD regression corpus](17-cad-regression-corpus.md)
 18. [x] [Calibrate browser resources and production solver settings](18-browser-resource-calibration.md)
@@ -61,18 +61,12 @@ merely mirror implementation or turn each mechanical step into an approval gate.
 25. [x] [Support/load preview authoring](25-support-and-load-preview-authoring.md) — implemented and accepted 2026-09-10
 26. [x] [Setup workflow and solve checks](26-setup-workflow-and-solve-checks.md) — implemented and accepted 2026-09-10
 27. [x] [Engineering edit undo/redo](27-engineering-edit-undo-and-redo.md) — implemented and accepted 2026-09-10
-28. [x] [STL feasibility and surface patch contract](28-stl-feasibility-and-surface-patch-contract.md) — implemented; [M28 accepted 2026-09-11](../reviews/28-stl-contract.md)
-29. [ ] [STL import, meshing, and validation](29-stl-import-meshing-and-validation.md) — implemented with [simulation-surface follow-up](../reviews/29-stl-simulation-surfaces.md); [M29 owner review pending](../reviews/29-stl-workflow.md)
+28–29. STL development paused and archived; see [the branch guide](../STL-DEVELOPMENT.md).
 30. [ ] [Integrated usability and pre-release regression](30-integrated-usability-and-pre-release-regression.md)
 
-The execution order is **21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29 → 30 → 20**.
-Plan 28 produces the concrete STL contract used by Plan 29. Its experiments must
-use the pinned runtime first. A runtime/dependency change or a change to the
-supported subset requires the owner's M28 decision. Bounded single-solid STL
-support is planned before v1; infeasibility does not silently defer it or waive
-the release gate. OBJ, general STL repair, and multi-body analysis stay deferred.
-Duplicate/suppress assignment controls and additional unapproved features are
-not required by this sequence.
+The remaining execution order is **30 → 20**. M21–M27 are accepted.
+The owner removed STL from main and v1 on 2026-09-20; M28–M29 are archived,
+not pending release gates. No compatibility layer or dormant repair runtime remains.
 
 ## Manual review schedule
 
@@ -84,11 +78,10 @@ with manual checks after the group and commits along the way. These four plans
 were executed in the current agent without subagents. Their per-package stops
 are replaced by [the grouped review and follow-up](../reviews/24-27-followup.md);
 The owner approved M24–M27 on 2026-09-10 with the final imperial-unit and toolbar
-adjustments, implemented in `0ed6e31`. M28 is accepted and M29 is implemented pending owner review;
-later gates remain unchanged.
+adjustments, implemented in `0ed6e31`. M30 and Task 20 remain open.
 
 This is a milestone schedule, not calendar appointments or automated reminders.
-M21–M23 are **Accepted**; later reviews remain **Pending**. Reserve review time when the preceding implementation
+M21–M27 are **Accepted**; M30 is **Pending**. Reserve review time when the preceding implementation
 is ready, not before a runnable result exists. At each checkpoint (or the end of an explicitly authorized batch), the agent must
 stop, provide the review packet, and wait for the owner's explicit acceptance
 before starting the next plan. Automated checks are necessary but cannot approve
@@ -104,8 +97,6 @@ same checkpoint. Silence is not acceptance.
 | M25 | Plan 25 | Add/edit/toggle/preview/Apply/Cancel assignments | 20 min | `docs/reviews/24-27-review.md` |
 | M26 | Plan 26 | Setup → explicit checks → solve, errors and recovery | 20 min | `docs/reviews/24-27-review.md` |
 | M27 | Plan 27 | Undo/redo with text fields, drafts, and stale results | 10 min | `docs/reviews/24-27-review.md` |
-| M28 | Plan 28 | STL units/patch demo and feasibility/scope decision | 20 min | `docs/reviews/28-stl-contract.md` |
-| M29 | Plan 29 | STL import → patch assignments → mesh → solve | 20 min | `docs/reviews/29-stl-workflow.md` |
 | M30 | Plan 30 | Combined workflow and final usability acceptance | 30–45 min | `docs/reviews/30-integrated-usability.md` |
 
 ### Review packet and record template
@@ -147,4 +138,4 @@ version-status change, v1 tag, or publication follows from a partial pass.
 31. [x] [Material strengths, load units, and report export](31-material-units-and-report.md)
     — implemented with sourced bulk defaults, inline load conversion, original
     dimensions and local ZIP reports; see [verification](../reviews/31-material-units-and-report.md).
-    This independent request does not change the outstanding M29/M30/v1 gates.
+    This independent request does not change the outstanding M30/v1 gates.

@@ -12,8 +12,8 @@
 
 ## Global constraints
 
-- Tasks 16–19 and the approved Tasks 21–30 sequence, including owner manual reviews M21–M30, are hard prerequisites. A pending feature, usability, evidence, or rights gate keeps the candidate unreleased.
-- Tasks 28–29 explicitly add bounded single-solid STL before v1. Do not expand that into OBJ, general mesh repair, multi-body analysis, or other deferred Onshape, anisotropy, nonlinear, cloud, GPU, or mobile scope.
+- Tasks 16–19 and the approved Tasks 21–27 and 30 sequence, including their owner manual reviews, are hard prerequisites. A pending feature, usability, evidence, or rights gate keeps the candidate unreleased.
+- The owner removed STL from main and v1 on 2026-09-20. Supported import is STEP, IGES and BREP; mesh repair, OBJ and multibody analysis remain outside scope.
 - Test the exact checked-in/generated artifact intended for distribution; rebuilding after acceptance invalidates its hashes and requires rerunning affected checks.
 - Direct-local Chromium desktop is the baseline. Optional HTTP mode and declared secondary browsers are reported precisely, without implying unavailable threaded acceleration.
 - Every checked Section 26 item links to a reproducible test, record, manual procedure, or approved distribution document.
@@ -23,8 +23,9 @@
 ## Starting point
 
 The original Tet10 workflow and Tasks 16–19 evidence are implemented. On
-2026-09-07 the owner required interface/result improvements, bounded STL work,
-and manual usability reviews before v1. Tasks 21–30 now precede this final
+2026-09-07 the owner required interface/result improvements
+and manual usability reviews before v1. STL work was subsequently archived by
+owner request; Task 30 now precedes this final
 candidate audit. The plan index schedules every owner checkpoint.
 
 Preliminary checks from this plan may run earlier and retain their original
@@ -51,8 +52,8 @@ status, or skipping new manual reviews. Re-run affected checks after changes.
 - [ ] **Exercise complete user workflows.** In current non-headless Chromium,
   run `file://` import -> material -> component support/load -> Tet10 mesh ->
   explicit Check model -> Solve -> probes/FoS -> two-level convergence for STEP,
-  plus import/mesh coverage for IGES and BREP and the accepted binary/ASCII STL
-  units/patch/mesh/solve workflow. Include draft cancellation, undo/redo, resize,
+  plus import/mesh coverage for IGES and BREP and rejection of unsupported files.
+  Include draft cancellation, undo/redo, resize,
   projection/gizmo, boundary-only contour ranges, and both legend orientations.
   Repeat the production STEP workflow in
   optional cross-origin-isolated HTTP mode and run the declared Firefox

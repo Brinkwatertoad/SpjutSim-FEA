@@ -51,7 +51,7 @@
   async function runEntry(entry) {
     var started = performance.now(); var sourceBytes = await readBytes('../../' + entry.path); var client = new api.MesherClient();
     try {
-      var geometry = await client.importGeometry({ geometryId: 'corpus-' + entry.id, sourceName: entry.path.split('/').pop(), sourceFormat: entry.format, importOptions: entry.importOptions, sourceBytes: sourceBytes });
+      var geometry = await client.importGeometry({ geometryId: 'corpus-' + entry.id, sourceName: entry.path.split('/').pop(), sourceFormat: entry.format, sourceBytes: sourceBytes });
       if (entry.expected.classification === 'rejected') { throw new Error(entry.id + ' was accepted unexpectedly'); }
       assert(inRange(1, entry.expected.solidCount), entry.id + ' solid count outside range');
       assert(inRange(geometry.faceIds.length, entry.expected.faceCount), entry.id + ' face count outside range');

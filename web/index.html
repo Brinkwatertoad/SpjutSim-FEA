@@ -79,9 +79,8 @@
           <div id="setup-inspector-form-stash" hidden>
             <div id="model-editor">
               <button id="import-step-button" type="button">Import or replace model…</button>
-              <input id="import-step-input" type="file" accept=".step,.stp,.iges,.igs,.brep,.stl" hidden>
-              <button id="regroup-stl-button" type="button" hidden>Review STL import settings…</button>
-              <p id="geometry-status">Choose a STEP, IGES, BREP, or STL solid to begin.</p>
+              <input id="import-step-input" type="file" accept=".step,.stp,.iges,.igs,.brep" hidden>
+              <p id="geometry-status">Choose a STEP, IGES, or BREP solid to begin.</p>
               <fieldset class="fea-orientation-controls"><legend>Model orientation</legend>
                 <div class="fea-orientation-fields">
                   <label for="model-rotation-axis">Global axis</label><select id="model-rotation-axis"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select>
@@ -183,7 +182,6 @@
               <button id="generate-mesh-button" type="button" disabled>Generate mesh</button>
               <button id="cancel-mesh-button" type="button" hidden>Cancel</button>
               <button id="delete-mesh-button" type="button" data-action-intent="danger" hidden>Delete mesh</button>
-              <p id="mesh-stl-advice" class="fea-stl-advice" hidden></p>
               <p id="mesh-status" role="status" aria-live="polite">Import geometry to generate a mesh.</p>
             </div>
           </div>
@@ -346,44 +344,6 @@
       </div>
     </section>
   </div>
-  <dialog id="stl-import-dialog" class="fea-stl-dialog" aria-labelledby="stl-import-title">
-    <h2 id="stl-import-title">Import STL</h2>
-    <p id="stl-source-summary"></p>
-    <p>Choose the units used to export this file. Then check that the dimensions match your part.</p>
-    <div class="fea-stl-options">
-      <label>File units <select id="stl-length-unit"><option value="">Choose units…</option><option value="m">Meters</option><option value="mm">Millimeters</option><option value="cm">Centimeters</option><option value="in">Inches</option><option value="ft">Feet</option></select></label>
-      <strong id="stl-dimensions" aria-live="polite"></strong>
-    </div>
-    <details id="stl-advanced-options">
-      <summary>Advanced: simulation surfaces and selection groups</summary>
-      <p>Groups make it easier to select faces for supports and loads. To simplify the simulation geometry or generate new surface triangles, choose a processing method below.</p>
-      <div class="fea-stl-options">
-        <label>Simulation surface <select id="stl-surface-mode"><option value="original">Keep original triangles</option><option value="reconstruct">Reconstruct simple surfaces</option><option value="remesh">Remesh STL surfaces (experimental)</option></select></label>
-        <label>Selection grouping angle (degrees) <input id="stl-patch-angle" type="number" min="1" max="179" value="40"></label>
-        <label id="stl-reconstruction-tolerance-label" hidden>Maximum deviation (file units) <input id="stl-reconstruction-tolerance" type="number" min="0" step="any" value="0.01"></label>
-        <label id="stl-remesh-angle-label" hidden>Remesh feature angle (degrees) <input id="stl-remesh-angle" type="number" min="1" max="40" step="any" value="5" aria-describedby="stl-remesh-angle-help"><span id="stl-remesh-angle-help">Lower values preserve more creases. Higher values can help complex surfaces mesh; check details by refining the mesh.</span></label>
-      </div>
-      <p>Reconstruction supports flat faces and complete cylinders or cones with flat ends. Experimental remeshing can handle more complex surfaces, but does not recover smooth CAD curves. Neither method repairs holes or overlapping faces.</p>
-    </details>
-    <p id="stl-meshing-advice" class="fea-stl-advice" hidden></p>
-    <p id="stl-import-status" role="status" aria-live="polite"></p>
-    <section id="stl-repair-panel" hidden aria-labelledby="stl-repair-title">
-      <h3 id="stl-repair-title">Try local surface repair</h3>
-      <p>Remove duplicate, zero-area or isolated stray triangles and correct face directions. Small flat convex holes can also be filled. The original file is preserved, and you review the repaired model before importing.</p>
-      <label>Maximum hole width (% of part diagonal) <input id="stl-repair-hole-limit" type="number" min="0" max="5" step="0.1" value="1" aria-describedby="stl-repair-hole-help"></label>
-      <p id="stl-repair-hole-help">The size limit uses the remaining part after cleanup. Use 0 to leave holes open. Larger or curved holes, intersecting surfaces and disconnected parts need repair in the source application.</p>
-      <button id="stl-repair-button" type="button">Try surface repair</button>
-    </section>
-    <p id="stl-repair-summary" class="fea-stl-advice" hidden></p>
-    <div class="fea-stl-options"><button id="stl-discard-repair-button" type="button" hidden>Discard repair</button><button id="stl-download-original-button" type="button" hidden>Download original STL</button></div>
-    <button id="stl-use-original-button" type="button" hidden>Use original triangles instead</button>
-    <details id="stl-error-details" hidden><summary>Technical details</summary><code id="stl-error-code"></code></details>
-    <p id="stl-remap-consequence">Changing units, grouping or surfaces requires reviewing existing supports and loads in the next step. Cancel preserves the current model and setup.</p>
-    <label id="stl-preview-surface-label" hidden>Compare surface <select id="stl-preview-surface"><option value="simulation">Reconstructed simulation surface</option><option value="original">Original STL surface</option></select></label>
-    <canvas id="stl-review-viewport" aria-label="STL patch review viewport"></canvas>
-    <details id="stl-selection-details"><summary>Inspect selectable groups</summary><div id="stl-patch-list" class="fea-stl-patches" aria-label="Selectable surface patches"></div></details>
-    <footer><button id="stl-cancel-button" type="button">Cancel</button><button id="stl-review-button" type="button" disabled>Update preview</button><button id="stl-accept-button" type="button" class="ui-button-primary" disabled>Import model</button></footer>
-  </dialog>
   <div class="ui-modal-backdrop" id="replacement-migration-backdrop" hidden>
     <section class="fea-replacement-dialog" id="replacement-migration-dialog" role="dialog" aria-modal="true" aria-labelledby="replacement-migration-title" tabindex="-1">
       <header class="fea-replacement-header"><div><h2 id="replacement-migration-title">Transfer setup to replacement model</h2><p id="replacement-migration-progress"></p></div><button id="replacement-migration-cancel" type="button">Cancel</button></header>
@@ -453,7 +413,6 @@
   <script src="generated/local-runtime/gmsh-runtime-source-part-007.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source-part-008.js"></script>
   <script src="js/ui/replacement-migration-ui.js"></script>
-  <script src="js/ui/stl-import-ui.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source.js"></script>
   <script src="generated/local-runtime/fem-runtime-source.js"></script>
   <script src="generated/local-runtime/mesher-worker-source.js"></script>

@@ -7,10 +7,6 @@
   var ui = new api.UIController(app);
   var viewport = new api.ViewportController(document.getElementById('viewport'));
   var replacementMigrationUI = new api.ReplacementMigrationUI();
-  var stlImportUI = new api.StlImportUI(app, {
-    review: reviewStl, change: invalidateStlReview, cancel: cancelStlReview, accept: acceptStlReview,
-    repair: repairStl, discardRepair: discardStlRepair
-  });
   ui.setViewportController(viewport);
   viewport.probePositionHandler=function(point){ui.positionProbe(point);};
   var wasmBytes = new Uint8Array([0,97,115,109,1,0,0,0]);
@@ -43,10 +39,9 @@
     var replacing = Boolean(app.document.geometry);
     var sourceFormat = api.sourceFormatForFilename(file.name);
     var generation = ++importGeneration;
-    if (stlImportUI.dialog.open) { cancelStlReview(); }
     cancelConvergence();
     if (replacementMigrationUI.draft) { replacementMigrationUI.cancel(); }
-    if (activeImport) { activeImport.cancel(); }
+    if (activeImport) { activeImport.cancel(); activeImport = null; }
     if (!replacing) {
       if (activeMesh) { activeMesh.cancel(); }
       disposeSolver();
@@ -54,25 +49,18 @@
     }
     if (!sourceFormat) {
       app.beginGeometryImport(file.name);
-      app.failGeometryImport(importFailure('INVALID_CAD_EXTENSION', 'Choose a STEP, IGES, BREP, or STL file.'));
+      app.failGeometryImport(importFailure('INVALID_CAD_EXTENSION', 'Choose a STEP, IGES, or BREP file.'));
       return;
     }
     app.beginGeometryImport(file.name);
-    if (sourceFormat === 'stl') {
-      if (!file.size || file.size > 16 * 1024 * 1024) { app.failGeometryImport(importFailure('STL_INPUT_LIMIT', 'Choose a nonempty STL file no larger than 16 MiB.')); return; }
-      file.arrayBuffer().then(function (bytes) {
-        if (generation !== importGeneration) { return; }
-        openStlReview({ sourceName: file.name, sourceFormat: 'stl', sourceBytes: bytes });
-      }).catch(function (error) { if (generation === importGeneration) { app.failGeometryImport(error); } });
-      return;
-    }
     geometryId = api.createGeometryId();
     client = new api.MesherClient({
-      onProgress: function (progress) { app.reportGeometryImportProgress(progress); },
+      onProgress: function (progress) { if (activeImport === client) { app.reportGeometryImportProgress(progress); } },
       onError: function () {}
     });
     activeImport = client;
     file.arrayBuffer().then(function (sourceBytes) {
+      if (activeImport !== client || generation !== importGeneration) { return; }
       return client.importGeometry({
         geometryId: geometryId,
         sourceName: file.name,
@@ -92,7 +80,7 @@
   }
 
   function installImportedGeometry(geometry, source) {
-    if (app.document.geometry) {
+    if (app.document.geometry && (app.document.boundaryConditions.length || app.document.loads.length)) {
       var draft = api.createReplacementMigrationDraft(app.document, geometry, source);
       app.restoreGeometryImportStatus();
       replacementMigrationUI.open(draft, function (replacementGeometry, replacementSource, transfer) {
@@ -100,62 +88,12 @@
         disposeSolver();
         app.replaceGeometryWithSetup(replacementGeometry, replacementSource, transfer);
       });
-    } else { app.replaceGeometry(geometry, source); }
+    } else {
+      if (activeMesh) { activeMesh.cancel(); activeMesh = null; }
+      disposeSolver();
+      app.replaceGeometry(geometry, source);
+    }
   }
-  function openStlReview(source, options) {
-    cancelConvergence();
-    if (activeImport) { activeImport.cancel(); activeImport = null; }
-    app.beginGeometryReview(source);
-    stlImportUI.open(options);
-  }
-  function invalidateStlReview() {
-    if (activeImport) { activeImport.cancel(); activeImport = null; }
-    app.invalidateGeometryReview();
-  }
-  function reviewStl(options) {
-    var review = app.geometryReview, generation;
-    if (!review) { return; }
-    if (activeImport) { activeImport.cancel(); activeImport = null; }
-    try { generation = app.setGeometryReviewOptions(options); }
-    catch (error) { stlImportUI.reportFailure(error); return; }
-    var client = new api.MesherClient({ onProgress: function (progress) {
-      if (activeImport === client) { stlImportUI.report(progress.userMessage); app.reportGeometryImportProgress(progress); }
-    } });
-    activeImport = client;
-    client.importGeometry(Object.assign({}, review.source, { geometryId: api.createGeometryId(), importOptions: options })).then(function (geometry) {
-      if (activeImport === client) { app.completeGeometryReview(review, generation, geometry); }
-    }).catch(function (error) {
-      if (activeImport === client && app.geometryReview === review) { stlImportUI.reportFailure(error); }
-    }).finally(function () { client.dispose(); if (activeImport === client) { activeImport = null; } });
-  }
-  function repairStl(options,ratio) {
-    var review=app.geometryReview;if(!review||review.source.repair)return;
-    if(activeImport){activeImport.cancel();activeImport=null;}
-    var generation;
-    try{generation=app.setGeometryReviewOptions(options);}catch(error){stlImportUI.reportFailure(error);return;}
-    var client=new api.MesherClient({onProgress:function(progress){if(activeImport===client)stlImportUI.report(progress.userMessage);}});
-    activeImport=client;
-    client.repairStl(Object.assign({},review.source,{importOptions:options,repairOptions:{version:1,maxHoleDiameterRatio:ratio}})).then(function(result){
-      if(activeImport===client&&app.completeGeometryRepair(review,generation,result)){
-        activeImport=null;client.dispose();stlImportUI.review();
-      }
-    }).catch(function(error){if(activeImport===client&&app.geometryReview===review)stlImportUI.reportFailure(error);})
-      .finally(function(){client.dispose();if(activeImport===client)activeImport=null;});
-  }
-  function discardStlRepair() {
-    if(activeImport){activeImport.cancel();activeImport=null;}
-    if(app.discardGeometryRepair())stlImportUI.review();
-  }
-  function cancelStlReview() {
-    if (activeImport) { activeImport.cancel(); activeImport = null; }
-    app.cancelGeometryReview(); stlImportUI.close();
-  }
-  function acceptStlReview() {
-    var reviewed = app.acceptGeometryReview();
-    stlImportUI.close();
-    installImportedGeometry(reviewed.geometry, reviewed.source);
-  }
-
   function generateMesh() {
     var client;
     if (!app.document.geometry || !app.geometrySource) { return; }
@@ -306,7 +244,7 @@
 
   function setText(id, value) { document.getElementById(id).textContent = value; }
   setText('launch-mode', location.protocol === 'file:' ? 'Direct local file' : (root.crossOriginIsolated ? 'HTTP, isolated' : 'HTTP, portable'));
-  root.addEventListener('pagehide', function () { if (activeImport) { activeImport.cancel(); } if (activeMesh) { activeMesh.cancel(); } if (activeConvergence) { activeConvergence.cancel(); } disposeSolver(); stlImportUI.close(); replacementMigrationUI.dispose(); ui.dispose(); viewport.dispose(); }, { once: true });
+  root.addEventListener('pagehide', function () { if (activeImport) { activeImport.cancel(); } if (activeMesh) { activeMesh.cancel(); } if (activeConvergence) { activeConvergence.cancel(); } disposeSolver(); replacementMigrationUI.dispose(); ui.dispose(); viewport.dispose(); }, { once: true });
   viewport.setFacePickHandler(function (faceId, additive) {
     if (app.document.assignmentDraft) {
       if (faceId) { app.toggleDraftFace(faceId); }
@@ -350,9 +288,6 @@
     if (indicator && documentState.assignmentDraft) { indicator.textContent = documentState.assignmentDraft.kind === 'gravity' ? 'Gravity preview · Apply or Cancel in Setup' : 'Preview · click faces to toggle · Apply or Cancel in Setup'; }
   });
   ui.setImportHandler(importCadFile);
-  document.getElementById('regroup-stl-button').addEventListener('click', function () {
-    if (app.geometrySource && app.geometrySource.sourceFormat === 'stl') { openStlReview(app.geometrySource, app.document.geometry.importOptions); }
-  });
   ui.setMeshHandlers(generateMesh, function () { if (activeMesh) { activeMesh.cancel(); } }, function () {
     disposeSolver();
     app.clearMesh();
@@ -364,17 +299,11 @@
   api.bindUnitSettings(app, ui);
   api.bindReportExport(app, viewport, ui);
 
-  var repeatedMesherCheck = api.exerciseMesherRuntime().then(function (firstResult) {
-    return api.exerciseMesherRuntime().then(function () { return firstResult; });
-  });
-  Promise.all([
-    repeatedMesherCheck,
-    api.exerciseWorker('solver'),
-    WebAssembly.instantiate(wasmBytes)
-  ]).then(function (checks) {
-    var mesher = checks[0];
-    setText('worker-status', 'Gmsh ' + mesher.diagnostics.gmshVersion + '; box ' + mesher.smoke.volume + ' m³ / ' + mesher.smoke.surfaceCount + ' faces');
-    setText('wasm-status', 'FEM API ' + checks[1].result.apiVersion + '; ' + Math.round(checks[1].result.wasmMemoryBytes / 1048576) + ' MiB initial memory');
+  // Startup verifies WebAssembly support. Gmsh/FEM start only for an
+  // operation that needs them; their full smoke checks live in runtime tests.
+  WebAssembly.instantiate(wasmBytes).then(function () {
+    setText('worker-status', 'Analysis workers start when needed');
+    setText('wasm-status', 'WebAssembly available; analysis engines load when needed');
     ui.runtimeStatus='Local runtime ready';ui.renderActivity(app.document);
   }).catch(function (error) {
     ui.runtimeStatus='Compatibility check failed';ui.renderActivity(app.document);

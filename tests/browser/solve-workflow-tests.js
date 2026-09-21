@@ -30,7 +30,7 @@
       var fakeRoot = {requestAnimationFrame:requestAnimationFrame.bind(window),navigator:{},addEventListener:noop,confirm:function () { confirmations++; return confirmResult; },SpjutsimFEA:{
         bindUnitSettings:noop,bindReportExport:noop,FEAColorSchemes:inert,createAnalysisDocument:noop,AppController:function () { return app; },
         UIController:function () { return new Proxy({setSolveHandlers:function (preflight,solve,cancel) { handlers = {preflight:preflight,solve:solve,cancel:cancel}; }}, {get:function (target,key) { return target[key] || noop; }}); },
-        ViewportController:inert,ReplacementMigrationUI:inert,StlImportUI:inert,prepareSolverInput:function () { return {}; },
+        ViewportController:inert,ReplacementMigrationUI:inert,prepareSolverInput:function () { return {}; },
         SolverClient:function () {
           var work = deferred(); var done = deferred(); var client = this;
           this.preflight = function () { return work.promise; };
@@ -38,6 +38,7 @@
           this.dispose = function () { client.disposed = true; };
           clients.push({client:client,preflight:work,result:done});
         },
+        startLocalWorker:function(){return Promise.resolve({terminate:noop});},
         exerciseMesherRuntime:function () { return Promise.resolve({diagnostics:{},smoke:{}}); },
         exerciseWorker:function () { return Promise.resolve({result:{}}); }
       }};

@@ -53,7 +53,7 @@
         },
         {
           "path": "native/fem/src/pcg.cpp",
-          "sha256": "62c0ac7d71b3d3c5997645ca7aaea3639c099f396842da91871fcd2cd44d1486"
+          "sha256": "d36f1e381009683ad318fa0a6d63ad88d778656aae99bfe8f76f574343d4aa57"
         },
         {
           "path": "native/fem/src/sparse.cpp",
@@ -109,7 +109,7 @@
         },
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "e63a4414bb1c31c554cad1e721c1839ab907369361dbb41957ddef4ca5640723"
+          "sha256": "163ca8f33d0dc0a74da8b6e4de985ccaa2d36840b8f4c00938ec87d37cb15c27"
         }
       ],
       "build_recipe": {
@@ -142,41 +142,25 @@
     },
     "workers": {
       "project": "workers",
-      "version": "protocol 3; candidate source hashes",
+      "version": "protocol 4; candidate source hashes",
       "license": "GPL-2.0-or-later",
       "source": {
         "url": "https://github.com/Brinkwatertoad/SpjutSim-FEA",
-        "revision": "protocol 3; candidate source hashes"
+        "revision": "protocol 4; candidate source hashes"
       },
       "source_files": [
         {
           "path": "workers/mesher-worker.js",
-          "sha256": "65e37ace4f0c0da2c6bbf00c3cadb9a1fee0be2fbf452891db3873569a98f891"
+          "sha256": "eb6e839c5504b1e832be2dda0a4c5d26b1e130e9eaba57b78dfdef6e2244e346"
         },
         {
           "path": "workers/solver-worker.js",
-          "sha256": "b81719e279c95abdbaf9f54b223c6006a2103ce86d2d0b6443d2f7b010fb674f"
-        },
-        {
-          "path": "workers/stl-import.js",
-          "sha256": "55af32c0906c5bc9169c906d0c29c70c8025ff36a4e73698bf3ec25ebd6b08d7"
-        },
-        {
-          "path": "workers/stl-reconstruction.js",
-          "sha256": "abfb4956e0b9136b199a4e02220444008230abd78f9f59797455cafbdf51e4a6"
-        },
-        {
-          "path": "workers/stl-remesh.js",
-          "sha256": "c44baaf2c25c80ee35a3c1598f57d62b8b1f498c941502931365f27b1aa86362"
-        },
-        {
-          "path": "workers/stl-repair.js",
-          "sha256": "ab6de0beadaea550a224321e7241edf0554dbaf7f9cd844b1deab9e32dfa357b"
+          "sha256": "27fbf878e683b8e1b442e7dae587f58f0b6a8cd46f58b17994582b0cdce4d6ad"
         }
       ],
       "build_recipe": {
         "path": "tools/build-local-runtime.py",
-        "sha256": "e63a4414bb1c31c554cad1e721c1839ab907369361dbb41957ddef4ca5640723"
+        "sha256": "163ca8f33d0dc0a74da8b6e4de985ccaa2d36840b8f4c00938ec87d37cb15c27"
       },
       "modifications": "First-party workers packaged as classic JavaScript source strings.",
       "notices": [
@@ -353,7 +337,7 @@
       "source_files": [
         {
           "path": "tools/build-local-runtime.py",
-          "sha256": "e63a4414bb1c31c554cad1e721c1839ab907369361dbb41957ddef4ca5640723"
+          "sha256": "163ca8f33d0dc0a74da8b6e4de985ccaa2d36840b8f4c00938ec87d37cb15c27"
         }
       ],
       "build_recipe": {
@@ -675,7 +659,7 @@
     },
     {
       "path": "web/wasm/fem/fem.js",
-      "sha256": "99e80904d087866d47e5f1c7d61d16199e89d1a6a22c1a7e54b31166cfcaba88",
+      "sha256": "ad6092982a53585e62673f177b0a8a408e1d2fda2a5d8b3aa1bf1852bf880e45",
       "components": [
         "fem",
         "emscripten"
@@ -740,7 +724,7 @@
     },
     {
       "path": "web/generated/local-runtime/fem-runtime-source.js",
-      "sha256": "3f6da0781664bcad99a5bce15f12fa8160b0fbced6cdecbc26d590727c67b6c2",
+      "sha256": "107067eb549a027dc2e789c93cc175eef6e6091899f81e8d1ef975be264da97e",
       "components": [
         "fem",
         "emscripten"
@@ -838,14 +822,14 @@
     },
     {
       "path": "web/generated/local-runtime/mesher-worker-source.js",
-      "sha256": "5f9d9149256bc72db680e2e4adf4d65ccf2d49480dda7cf277f08b4d19a75950",
+      "sha256": "24cec618ed62c987902592998492d24cd78dd495d5b1f27602ab48b7f88fbfb1",
       "components": [
         "workers"
       ]
     },
     {
       "path": "web/generated/local-runtime/solver-worker-source.js",
-      "sha256": "27d6bf2eb35bef2df05d71bdb6f23f67776f6bb57736c7614e43ff3392ac644d",
+      "sha256": "7aa7c55f785c7cfa1f9969497fa18e185bc24f44467ec5a325cbde807c2d74ac",
       "components": [
         "workers"
       ]

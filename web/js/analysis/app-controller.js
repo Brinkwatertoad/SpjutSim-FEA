@@ -140,68 +140,6 @@
     this.notify();
   };
 
-  AppController.prototype.beginGeometryReview = function (source) {
-    if (!source || source.sourceFormat !== 'stl' || !(source.sourceBytes instanceof ArrayBuffer) ||
-        !source.sourceBytes.byteLength || source.sourceBytes.byteLength > 16 * 1024 * 1024) { throw new Error('Choose a nonempty STL file no larger than 16 MiB.'); }
-    if(!root.SpjutsimFEA.validateStlRepairSource(source))throw new Error('The retained STL repair history is invalid.');
-    this.geometryReview = { source: source, geometry: null, generation: 0, options: null };
-    this.beginGeometryImport(source.sourceName);
-    return this.geometryReview;
-  };
-
-  AppController.prototype.setGeometryReviewOptions = function (options) {
-    if (!this.geometryReview || !root.SpjutsimFEA.validateStlOptions(options)) { throw new Error('Choose explicit STL units and a grouping angle from 1 to 179 degrees.'); }
-    this.geometryReview.options = Object.assign({}, options);
-    this.geometryReview.geometry = null;
-    this.geometryReview.generation += 1;
-    this.notify();
-    return this.geometryReview.generation;
-  };
-
-  AppController.prototype.invalidateGeometryReview = function () {
-    if (!this.geometryReview) { return; }
-    this.geometryReview.generation += 1;
-    this.geometryReview.geometry = null;
-    this.notify();
-  };
-
-  AppController.prototype.completeGeometryReview = function (review, generation, geometry) {
-    if (this.geometryReview !== review || review.generation !== generation) { return false; }
-    var valid = root.SpjutsimFEA.validateGeometryModel(geometry);
-    if (!valid.valid || !root.SpjutsimFEA.sameStlOptions(geometry.importOptions, review.options)) { throw new Error('The STL preview does not match the reviewed import options.'); }
-    if(!root.SpjutsimFEA.validateStlRepairSource(review.source,geometry))throw new Error('The preview does not match the repaired source.');
-    review.geometry = geometry;
-    this.document.geometryImport.progress = { stage: 'stl-review', userMessage: 'Review STL dimensions and patches.' };
-    this.notify();
-    return true;
-  };
-
-  AppController.prototype.completeGeometryRepair = function(review,generation,result) {
-    if(this.geometryReview!==review||review.generation!==generation)return false;
-    if(review.source.repair||!root.SpjutsimFEA.validateStlRepairResult(result))throw new Error('The repair candidate or its source history is invalid.');
-    review.source=Object.assign({},review.source,{sourceBytes:result.sourceBytes,
-      repair:{version:1,originalSourceBytes:review.source.sourceBytes,report:result.report}});
-    review.geometry=null;review.generation+=1;this.notify();return true;
-  };
-  AppController.prototype.discardGeometryRepair = function() {
-    var review=this.geometryReview;if(!review||!review.source.repair)return false;
-    review.source=Object.assign({},review.source,{sourceBytes:review.source.repair.originalSourceBytes});delete review.source.repair;
-    this.invalidateGeometryReview();return true;
-  };
-
-  AppController.prototype.cancelGeometryReview = function () {
-    this.geometryReview = null;
-    this.restoreGeometryImportStatus();
-  };
-
-  AppController.prototype.acceptGeometryReview = function () {
-    var review = this.geometryReview;
-    if (!review || !review.geometry) { throw new Error('Review valid STL dimensions and patches before accepting.'); }
-    var result = { geometry: review.geometry, source: Object.assign({}, review.source, { importOptions: Object.assign({}, review.options) }) };
-    this.cancelGeometryReview();
-    return result;
-  };
-
   /** Replace engineering state that depends on the imported geometry. */
   AppController.prototype.replaceGeometry = function (geometry, source) {
     var validation = root.SpjutsimFEA.validateGeometryModel(geometry);
@@ -213,14 +151,8 @@
         !(source.sourceBytes instanceof ArrayBuffer) || source.sourceBytes.byteLength === 0) {
       throw new Error('A non-empty canonical CAD source matching the geometry format is required.');
     }
-    if (geometry.sourceFormat === 'stl' && !root.SpjutsimFEA.sameStlOptions(source.importOptions, geometry.importOptions)) {
-      throw new Error('The retained STL source must match the reviewed import options.');
-    }
-    if(!root.SpjutsimFEA.validateStlRepairSource(source,geometry))throw new Error('The repaired source history does not match the geometry.');
     this.clearEngineeringHistory();
-    this.geometrySource = { sourceName: source.sourceName, sourceFormat: source.sourceFormat, sourceBytes: source.sourceBytes,
-      importOptions: source.importOptions ? Object.assign({}, source.importOptions) : undefined,
-      repair: source.repair };
+    this.geometrySource = { sourceName: source.sourceName, sourceFormat: source.sourceFormat, sourceBytes: source.sourceBytes };
     this.document.geometry = geometry;
     this.document.selectedFaceIds = [];
     this.document.boundaryConditions = [];
@@ -249,9 +181,6 @@
         root.SpjutsimFEA.sourceFormatForFilename(source.sourceName) !== source.sourceFormat ||
         !(source.sourceBytes instanceof ArrayBuffer) || !source.sourceBytes.byteLength) {
       throw new Error('A non-empty canonical CAD source matching the replacement geometry is required.');
-    }
-    if (geometry.sourceFormat === 'stl' && !root.SpjutsimFEA.sameStlOptions(source.importOptions, geometry.importOptions)) {
-      throw new Error('The retained STL source must match the reviewed import options.');
     }
     if (!transfer || !Array.isArray(transfer.boundaryConditions) || !Array.isArray(transfer.loads)) {
       throw new Error('A completed replacement setup transfer is required.');
@@ -282,11 +211,8 @@
     }
     viewportPreferences = transfer.viewportPreferences || {};
 
-    if(!root.SpjutsimFEA.validateStlRepairSource(source,geometry))throw new Error('The repaired source history does not match the geometry.');
     this.clearEngineeringHistory();
-    this.geometrySource = { sourceName: source.sourceName, sourceFormat: source.sourceFormat, sourceBytes: source.sourceBytes,
-      importOptions: source.importOptions ? Object.assign({}, source.importOptions) : undefined,
-      repair: source.repair };
+    this.geometrySource = { sourceName: source.sourceName, sourceFormat: source.sourceFormat, sourceBytes: source.sourceBytes };
     this.document.geometry = geometry;
     this.document.material = materialValidation.value;
     this.document.boundaryConditions = supports;

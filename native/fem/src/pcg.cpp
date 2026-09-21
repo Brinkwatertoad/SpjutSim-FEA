@@ -255,8 +255,8 @@ static SolverDiagnostics solve_pcg_impl(const CsrMatrix &a,
   stats.termination = TerminationReason::iteration_limit;
   diagnostic = {ErrorCode::solver_not_converged,
                 "The solver reached its iteration limit before convergence. "
-                "No results were accepted. Check supports and mesh quality; "
-                "for STL, try surface reconstruction or a cleaner source mesh.",
+                "No results were accepted. Check supports and mesh quality, "
+                "then adjust mesh sizes or simplify the CAD geometry.",
                 {},
                 true};
   report(true);

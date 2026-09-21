@@ -26,7 +26,7 @@
 
   function summarizeModelRow(documentState) {
     var geometry = documentState.geometry;
-    if (!geometry) { return row('model', 'model', 'Import model…', 'STEP, IGES, BREP, or STL solid', 'No model'); }
+    if (!geometry) { return row('model', 'model', 'Import model…', 'STEP, IGES, or BREP solid', 'No model'); }
     return row(
       'model',
       'model',

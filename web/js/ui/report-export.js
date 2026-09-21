@@ -88,8 +88,7 @@
     });
     parameters.push(['Gravity', state.gravity.enabled ? state.gravity.accelerationMS2.map(function(v){return magnitude(v,unit('accelerationMS2'));}).join(', ') + ' (global X, Y, Z)' : 'Disabled']);
     parameters.push(['Mesh settings', Object.keys(state.meshSettings).map(function(k){return k+': '+(/SizeM$/.test(k) ? magnitude(state.meshSettings[k],unit('lengthM')) : state.meshSettings[k]);}).join('; ')], ['Solver settings', JSON.stringify(state.solveSettings)],
-      ['Model orientation', JSON.stringify(state.geometry.orientation)], ['Import settings', JSON.stringify(state.geometry.importOptions || {})],
-      ['Import metadata', JSON.stringify(state.geometry.sourceMetadata || {})],
+      ['Model orientation', JSON.stringify(state.geometry.orientation)],
       ['Image camera', 'Reset View then Fit Model; ' + (projection || 'current projection')],
       ['Deformation image shape', 'Auto ×' + number(autoScale)], ['Image color limits', 'Automatic for each field']);
     var text = 'SpjutSim FEA analysis report\n\n' + rowsText(parameters) + '\n\n' +

@@ -507,7 +507,7 @@
     this.renderActivity(documentState);
     var state = documentState.geometryImport || { status: 'idle' };
     var convergenceRunning = Boolean(documentState.convergenceStudy && documentState.convergenceStudy.status === 'running');
-    var message = 'Choose a STEP, IGES, BREP, or STL solid to begin.';
+    var message = 'Choose a STEP, IGES, or BREP solid to begin.';
     if (state.status === 'importing') {
       message = (state.progress && state.progress.userMessage) || 'Importing CAD geometry…';
     } else if (state.status === 'succeeded' && documentState.geometry) {
@@ -526,7 +526,7 @@
   };
   UIController.prototype.updateMeshSettingsFromControls = function () {
     var preset = this.meshPreset.value;
-    var settings = { preset: preset, elementType: this.meshElementType ? this.meshElementType.value : 'tet10' };
+    var settings = Object.assign({},this.controller.document.meshSettings,{ preset: preset, elementType: this.meshElementType ? this.meshElementType.value : 'tet10' });
     if (preset === 'custom') {
       var minimum = root.SpjutsimFEA.preferredToSI('lengthM',Number(this.meshMinSize.value));
       var maximum = root.SpjutsimFEA.preferredToSI('lengthM',Number(this.meshMaxSize.value));
@@ -572,12 +572,6 @@
       if (documentState.meshMetadata.quality.warning) { message += ' ' + documentState.meshMetadata.quality.warning; }
     } else if (hasGeometry) {
       message = 'Ready to generate a ' + elementLabel + ' mesh.';
-    }
-    var stlAdvice=document.getElementById('mesh-stl-advice'),geometry=documentState.geometry;
-    if(stlAdvice){
-      stlAdvice.textContent=geometry&&geometry.sourceFormat==='stl'&&root.SpjutsimFEA.stlMeshingAdvice?
-        root.SpjutsimFEA.stlMeshingAdvice(geometry.sourceMetadata.triangleCount,geometry.importOptions.surfaceMode||'original'):'';
-      stlAdvice.hidden=!stlAdvice.textContent;
     }
     if (this.meshStatus) { this.meshStatus.textContent = message; }
     if (this.generateMeshButton) { this.generateMeshButton.disabled = !hasGeometry || isGenerating || convergenceRunning; }

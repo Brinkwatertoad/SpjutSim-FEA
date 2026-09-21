@@ -45,21 +45,3 @@ python3 tools/validate-cad-corpus.py
 ```
 
 No customer, private, or externally authored CAD is included.
-
-
-Plan 29 adds 18 CC0 STL cases under `stl/`: six accepted ASCII/binary cubes,
-a thin plate, and 16/32/64-sided cylinders, plus twelve exact diagnostic rejections.
-The combined corpus has 68 entries; original CAD ranges and the historical report
-remain unchanged. `benchmarks/cad-corpus/chromium-152-stl.json` records the new run.
-Source units/grouping are explicit per entry. Cylinder solve references use their
-faceted area, with source tessellation refinement recorded separately from mesh
-convergence. `stl/manifest.json` describes fixture generation and expected topology.
-
-```sh
-python3 tools/cad-fixtures/generate-stl-fixtures.py
-python3 tools/validate-cad-corpus.py
-```
-
-The resource harness generates dense/limit cases in memory, avoiding large checked-in
-fixtures. It exercises exact byte/internal-surface bounds, excess input/work rejection,
-and fresh-worker recovery after cancellation and a simulated timeout.

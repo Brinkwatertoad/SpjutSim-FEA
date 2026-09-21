@@ -1,23 +1,18 @@
 # SpjutSim FEA
 
-SpjutSim FEA is a local-first browser application for simple static finite element analysis of a single STEP, IGES, OpenCASCADE BREP, or validated STL solid. The browser application has no runtime network or server dependency; geometry and analysis execute on the user's machine.
+SpjutSim FEA is a local-first browser application for simple static finite element analysis of a single STEP, IGES, or OpenCASCADE BREP solid. The browser application has no runtime network or server dependency; geometry and analysis execute on the user's machine.
 
 ## Development status
 
-v1 is unreleased. The approved interface, result-clarity, and bounded STL work
-is tracked in [plans 21–30](docs/plans/README.md). Plans 21–23 are implemented
-and accepted in the [combined owner review](docs/reviews/21-23-review.md) on
-2026-09-08; plans
-24–27 are implemented and accepted in the [grouped owner review](docs/reviews/24-27-followup.md) on 2026-09-10; M28 is accepted on 2026-09-11; M29 is implemented pending owner review. Plan 30 remains ahead of the final plan 20 candidate audit. No v1 acceptance is
-implied by passing automated checks.
-
-The [accepted STL contract](docs/designs/stl-import-contract.md) and
-[M29 review packet](docs/reviews/29-stl-workflow.md) describe the supported subset
-and end-to-end evidence.
+v1 is unreleased. CAD-only import is the supported scope. The owner paused STL
+on 2026-09-20; its implementation, development history and outstanding problems
+are preserved on [features/stl-import](https://github.com/Brinkwatertoad/SpjutSim-FEA/tree/features/stl-import).
+See the [archive guide](https://github.com/Brinkwatertoad/SpjutSim-FEA/blob/features/stl-import/docs/STL-DEVELOPMENT.md).
+The remaining release work is Plan 30 integrated review, then Plan 20 exact-candidate audit.
 
 ## Run locally
 
-Open `web/index.html` directly in a current Chromium desktop browser. The startup check renders the repository-local Three.js scene, initializes serial Gmsh/OpenCASCADE in two fresh disposable workers, creates a unit box in each, and starts the solver worker shell. No network requests or local server are required.
+Open `web/index.html` directly in a current Chromium desktop browser. Startup renders the local Three.js scene and checks WebAssembly availability. Gmsh and FEM workers start only when an operation needs them; full engine smoke checks are in the runtime test harness. No network requests or local server are required.
 
 For optional cross-origin-isolated HTTP mode:
 
@@ -39,6 +34,10 @@ ctest --test-dir build/native-fem
 Open `tests/browser/worker-runtime-tests.html` directly in Chromium to run the
 worker protocol-validation and lifecycle regression checks; it should report
 `Passed` without a server.
+
+Open `tests/browser/cad-import-workflow-tests.html` with local-file access enabled
+(or from the optional HTTP server) for direct import, unsupported files, overlapping
+reads, stale worker completions and replacement review.
 
 Open `tests/browser/step-import-tests.html` from the optional HTTP server to
 run the Gmsh-backed STEP, IGES, and BREP cube import checks. In the tested
@@ -94,20 +93,6 @@ equilibrium, staleness, and default-result-view checks. Open
 enabled (or from the optional HTTP server) for the full STEP cube import,
 face-authored support/load, mesh, analytical axial solve, and four-view check.
 
-For the optional supplied-funnel diagnostic, place `Better Vented Parametric Funnel.stl`
-in `tests/fixtures/stl/` and open `tests/browser/funnel-solve-tests.html` from the
-local server (or Chromium with local-file access enabled). It uses millimeters,
-original triangles, coarse Tet10, ABS, a fixed bottommost patch and 1 MPa pressure
-on the topmost patch, with an explicit two-minute trial limit. Allow about three
-minutes. `Passed` means the ill-conditioned solve reports live progress and stops
-at that budget with no accepted
-results; it does not mean the funnel has a valid solution. The user-supplied STL
-is not part of the redistributed fixture corpus.
-
-Normal analyses default to a ten-minute sparse-solve limit. Change **Solve time
-limit (minutes)** in the Checks panel for a shorter trial or a longer converging
-solve. Assembly and stress recovery are separate from this limit.
-
 Open `tests/browser/factor-of-safety-tests.html`,
 `tests/browser/convergence-tests.html`, and
 `tests/browser/convergence-runner-tests.html` directly for the pure trust and
@@ -131,30 +116,9 @@ and is documented in `benchmarks/resource/README.md`.
 
 Run `python3 tools/validate-cad-corpus.py`, then open
 `tests/browser/cad-corpus-tests.html` from the optional HTTP server (or with the
-documented local-file browser access) to audit the 68-entry corpus: the original 50 STEP/IGES/BREP cases
-plus 18 STL cases. The runner continues through deliberate failures and exports a
+documented local-file browser access) to audit the 50-entry STEP/IGES/BREP corpus. The runner continues through deliberate failures and exports a
 compact JSON report. It automatically reloads between 24-case batches to release
 terminated worker objects without a browser garbage-collection flag.
-
-Open `tests/browser/stl-import-tests.html`, `stl-workflow-tests.html`,
-`stl-mesh-solve-tests.html`, `stl-convergence-tests.html`, and
-`stl-resource-tests.html` with local-file access enabled or from the HTTP server.
-They cover full solid validation, transactional units/patch review, analytical
-Tet10 solves, remeshing/replacement, convergence, limits, and cancellation.
-`stl-reconstruction-tests.html`, `stl-surface-modes-tests.html`, and
-`mesh-quality-tests.html` cover primitive recovery, original-surface meshing,
-source/candidate contracts, holes, cancellation and local-scale quality checks.
-Run `stl-mesh-solve-tests.html?surfaceMode=reconstruct` and
-`stl-mesh-solve-tests.html?surfaceMode=original` for both new numerical paths.
-`stl-remesh-tests.html` and `stl-mesh-solve-tests.html?surfaceMode=remesh`
-check experimental parametrization, multiple surfaces per selection group,
-feature-angle identity, cancellation and numerical behavior. With the local
-funnel fixture present, `funnel-solve-tests.html?surfaceMode=remesh` runs the
-40° feature-angle/coarse-mesh trial; append `&preset=normal` or `&preset=fine`
-to compare refinement. It reports meshing/solving time, volume change, quality,
-stress and displacement; convergence alone does not establish accuracy.
-Regenerate the CC0 STL fixtures with
-`python3 tools/cad-fixtures/generate-stl-fixtures.py`.
 
 After changing files in `workers/`, regenerate the checked-in local-file worker wrappers:
 
@@ -209,7 +173,7 @@ wrangler deploy
 ```
 
 The owner approved GPL-2.0-or-later for first-party FEA and copied UI source.
-The final policy and artifact list were approved on 2026-09-07. Wrangler runs
+Final release review remains pending. Wrangler runs
 the distribution audit and serves `build/distribution/web`, including local license
 notices and exact corresponding-source archives. Do not deploy bare `web/`.
 See [the release procedure](docs/release/SOURCE.md) for rebuilding, offline
@@ -224,14 +188,14 @@ First-party SpjutSim FEA source and the UI foundation copies in this repository
 are [GPL-2.0-or-later](LICENSE), copyright (c) 2026 Brinkwatertoad, without
 warranty. Third-party materials retain their own licenses; see [NOTICE](NOTICE),
 [THIRD_PARTY.md](THIRD_PARTY.md), and the application's local Licenses page.
-The separate SpjutSim-UI-Kit repository is not relicensed by this decision.
+The separate SpjutSim-UI-Kit repository is not relicensed.
 The [distribution policy](docs/release/distribution-policy.md) records approval,
 source obligations, and final artifact approval.
 
 ## Current boundary
 
 The current vertical slice provides app/controller-owned analysis state, local
-STEP/IGES/BREP and bounded STL import and Tet4/Tet10 meshing in disposable Gmsh workers, SI-backed analysis
+STEP/IGES/BREP import and Tet4/Tet10 meshing in disposable Gmsh workers, SI-backed analysis
 authoring, exact-topology memory preflight, and the first-party FEM core compiled
 as a pinned single-threaded embedded WASM worker runtime. Solves return validated
 transferable result models with raw and smoothed stress fields, reactions,
@@ -270,68 +234,6 @@ align one selected CAD face normal to a signed global axis. Geometry orientation
 invalidates the mesh and results. Component forces, gravity, and support
 components stay in global axes; pressure and normal force follow their assigned
 surfaces. Material and opaque surface IDs are retained.
-
-Binary and ASCII STL require explicit m/mm/cm/in/ft units and a dimensions/patch
-review before installation. Import supports one closed, connected, consistently
-outward-wound, non-self-intersecting manifold solid. Normal import rejects defects
-without changing the file. For local topology or winding errors it offers **Try
-surface repair**, followed by a repaired-model preview and a change report. Review
-that candidate before importing it. Connected angle-based patches default to 40°
-(adjustable 1–179°). Choosing units automatically previews the original
-triangles; confirm the dimensions, then select **Import model**. Open **Advanced**
-to change grouping or choose **Reconstruct simple surfaces** with a maximum
-deviation. Reconstruction currently merges
-coplanar faces (including holes) and recovers full cylinders/conical frusta with
-perpendicular flat ends. Compare the original and candidate before applying.
-More complicated fitted-surface intersections and freeform regions are reported
-as unsupported; selecting the original surface preserves every triangle and can
-retain very small or low-quality elements. See the
-[simulation-surface design](docs/designs/stl-simulation-surfaces.md).
-**Remesh STL surfaces (experimental)** is a separate option that creates
-parametrized surfaces and regenerates both the surface and volume mesh. It
-retains selection groups, allowing each group to own several surfaces. It does
-not recover smooth CAD curves. The remesh feature angle defaults to 5° to retain
-more creases; the supplied funnel trial uses 40°. Changing it requires a new
-review. Coarse meshes can approximate away details, so inspect the mesh and
-compare refinement before relying on stresses. Meshing failure does not silently
-change modes or settings. Mesh/checks diagnostics warn when a patch area changes
-by more than 1%, since that can alter pressure forces. See the
-[funnel experiment](docs/reviews/29-funnel-remeshing.md) for measured limitations.
-**Review STL import settings…** in the Model editor uses explicit assignment transfer, with Cancel
-preserving the installed model. Source bytes and options reproduce patch IDs in
-fresh workers and after rigid orientation. Limits are 16 MiB, 200,000 triangles,
-512 internal geometric surfaces, 2 million intersection candidates, and 120
-seconds per STL worker operation. A file below the storage limits can still
-exceed the geometric/work limits. Existing solver memory preflight still applies.
-Detailed models (25,000+ triangles) show meshing-time advice during review and
-beside the mesh controls. This is qualitative guidance, not an estimated finish
-time: shape, mesh settings and hardware matter. Begin with Coarse and compare
-refinement; keeping original triangles can still produce a dense mesh.
-Repair can remove duplicate, zero-area or isolated stray triangles, correct
-winding and fill small flat convex holes within the selected limit (default 1%
-of the remaining part diagonal; 0 disables filling). It never moves vertices or
-joins/discards components. The repaired source must pass every solid check.
-**Discard repair** returns to the original pending source; **Download original
-STL** preserves access to the original bytes after installation via import
-settings. General shape rebuilding, intersecting/disconnected-surface repair,
-shells, multiple solids, and OBJ remain deferred.
-
-Open `tests/browser/stl-repair-tests.html` for local repair, numerical and refusal
-checks, and `stl-repair-workflow-tests.html` for the real worker/UI flow,
-source preservation, cancellation, deadlines and fresh-worker meshing. Append
-`?fixture=gargoyle` to either for the supplied file's remaining-component refusal.
-`stl-mesh-solve-tests.html?surfaceMode=original&repair=1` checks an analytical solve
-after winding repair; `stl-large-tests.html?repair=1` exercises repair at 200,000
-triangles. See the [repair design](docs/designs/stl-surface-repair.md) and
-[repair evidence](docs/reviews/29-stl-surface-repair.md).
-
-Open `tests/browser/stl-large-tests.html` to check a procedural 200,000-triangle
-cube in original/reconstruction modes and mesh the recovered surfaces in a fresh
-worker. The optional `?fixture=gargoyle` variant reads the user-supplied
-`tests/fixtures/stl/cathedral_gargoyle.stl` and verifies its nonmanifold rejection
-in all three modes. That file has 66,174 triangles and passes the size limits,
-but needs surface repair before simulation. Neither supplied STL is redistributed.
-See [capacity and usability evidence](docs/reviews/29-stl-import-usability.md).
 
 The left pane is one compact Setup sequence: Model, Material, Supports, Loads,
 and Mesh. Solve runs checks before execution; the Checks tab precedes Results. Model owns CAD import/replacement and collapses to a
@@ -495,8 +397,6 @@ or **Delete** to retain its values as Custom. Edits to a selected saved set upda
 that set automatically. This follows SpjutMath's Milestone-4 preset workflow.
 Inline load and result unit controls use the same browser-local preferences.
 Changing units converts current entries while preserving the mesh and results.
-STL **File units** and explicitly labeled file-unit reconstruction tolerance
-continue to describe the source file, independently of display preferences.
 
 For a generated report, validate ZIP checksums, XML, package relationships,
 editable tables, embedded PNGs and image proportions without additional tools:

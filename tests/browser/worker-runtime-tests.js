@@ -9,7 +9,7 @@
 
   function testResponseValidation() {
     var wrongType = api.validateWorkerResponse({
-      protocol: 3,
+      protocol: 4,
       requestId: 'diagnostics-1',
       type: 'box-smoke-result',
       result: {}
@@ -17,7 +17,7 @@
     assert(!wrongType.valid && wrongType.reason === 'unexpected-response-type', 'wrong response type was accepted');
 
     var wrongProtocol = api.validateWorkerResponse({
-      protocol: 4,
+      protocol: 3,
       requestId: 'diagnostics-1',
       type: 'diagnostics-result',
       result: {}
@@ -25,7 +25,7 @@
     assert(!wrongProtocol.valid && wrongProtocol.reason === 'invalid-envelope', 'version-mismatched response was accepted');
 
     var malformedError = api.validateWorkerResponse({
-      protocol: 3,
+      protocol: 4,
       requestId: 'diagnostics-1',
       type: 'error',
       error: { code: 'BROKEN' }
@@ -41,7 +41,7 @@
       worker = this;
       this.terminated = false;
       root.setTimeout(function () {
-        worker.onmessage({ data: { protocol: 3, type: 'ready', worker: 'solver' } });
+        worker.onmessage({ data: { protocol: 4, type: 'ready', worker: 'solver' } });
       }, 0);
     }
     SilentWorker.prototype.postMessage = function () {};
@@ -401,7 +401,7 @@
         posted = message;
         root.setTimeout(function () {
           worker.onmessage({ data: {
-            protocol: 3, requestId: message.requestId, type: 'import-result', result: validGeometry()
+            protocol: 4, requestId: message.requestId, type: 'import-result', result: validGeometry()
           } });
         }, 0);
       },
@@ -431,7 +431,7 @@
       postMessage: function (message) {
         posted = message;
         root.setTimeout(function () {
-          worker.onmessage({ data: { protocol: 3, requestId: message.requestId, type: 'mesh-result', result: validVolumeMesh() } });
+          worker.onmessage({ data: { protocol: 4, requestId: message.requestId, type: 'mesh-result', result: validVolumeMesh() } });
         }, 0);
       },
       terminate: function () {}
