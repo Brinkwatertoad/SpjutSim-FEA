@@ -1,0 +1,259 @@
+{
+  "date": "2026-09-20",
+  "implementationCommit": "5eb7a5983b9bc82f49a38b6174651f889aa79030",
+  "archiveCommit": "8562b5660fcadc8eec4f36e337e5f50102223345",
+  "platform": "Linux x86_64",
+  "headless": true,
+  "python": {
+    "passed": 77
+  },
+  "native": {
+    "passed": 8
+  },
+  "browserChecks": [
+    {
+      "browser": "Chromium 152.0.7977.75",
+      "mode": "file://",
+      "checks": [
+        {
+          "harness": "analysis-authoring",
+          "status": "Passed"
+        },
+        {
+          "harness": "assignment-draft",
+          "status": "Passed"
+        },
+        {
+          "harness": "cad-corpus",
+          "status": "Passed: 50/50"
+        },
+        {
+          "harness": "cad-import-workflow",
+          "status": "Passed"
+        },
+        {
+          "harness": "convergence-runner",
+          "status": "Passed"
+        },
+        {
+          "harness": "convergence",
+          "status": "Passed"
+        },
+        {
+          "harness": "cube-convergence",
+          "status": "Passed"
+        },
+        {
+          "harness": "cube-wasm-vertical-slice",
+          "status": "Passed"
+        },
+        {
+          "harness": "docx",
+          "status": "Passed"
+        },
+        {
+          "harness": "engineering-history",
+          "status": "Passed"
+        },
+        {
+          "harness": "factor-of-safety",
+          "status": "Passed"
+        },
+        {
+          "harness": "grouped-authoring",
+          "status": "Passed"
+        },
+        {
+          "harness": "load-entry",
+          "status": "Passed"
+        },
+        {
+          "harness": "load-unit",
+          "status": "Passed"
+        },
+        {
+          "harness": "material-strength",
+          "status": "Passed"
+        },
+        {
+          "harness": "mesh-quality",
+          "status": "Passed"
+        },
+        {
+          "harness": "preview-selection",
+          "status": "Passed"
+        },
+        {
+          "harness": "report",
+          "status": "Passed"
+        },
+        {
+          "harness": "report-workflow",
+          "status": "Passed"
+        },
+        {
+          "harness": "resource-benchmark?profile=smoke",
+          "status": "Passed: 1 records"
+        },
+        {
+          "harness": "result-formatting",
+          "status": "Passed"
+        },
+        {
+          "harness": "result-presentation",
+          "status": "Passed"
+        },
+        {
+          "harness": "result-range",
+          "status": "Passed"
+        },
+        {
+          "harness": "review-contract",
+          "status": "Passed"
+        },
+        {
+          "harness": "solve-checks-ui",
+          "status": "Passed"
+        },
+        {
+          "harness": "solve-workflow",
+          "status": "Passed"
+        },
+        {
+          "harness": "step-import",
+          "status": "Passed"
+        },
+        {
+          "harness": "tet10-mesh",
+          "status": "Passed"
+        },
+        {
+          "harness": "tet4-mesh",
+          "status": "Passed"
+        },
+        {
+          "harness": "unit-preferences",
+          "status": "Passed"
+        },
+        {
+          "harness": "validation-benchmark",
+          "status": "Passed"
+        },
+        {
+          "harness": "viewport-navigation",
+          "status": "Passed"
+        },
+        {
+          "harness": "wasm-solve-result",
+          "status": "Passed"
+        },
+        {
+          "harness": "worker-runtime",
+          "status": "Passed"
+        },
+        {
+          "harness": "workspace-layout",
+          "status": "Passed: stable pane gutters across scrollbar modes and overflow, initialized resize sequence, independent pane sizing, compact drawers, keyboard/focus and storage fallback"
+        }
+      ]
+    },
+    {
+      "browser": "Firefox 153.0",
+      "mode": "file://",
+      "checks": [
+        {
+          "harness": "cad-import-workflow",
+          "status": "Passed"
+        },
+        {
+          "harness": "step-import",
+          "status": "Passed"
+        },
+        {
+          "harness": "tet4-mesh",
+          "status": "Passed"
+        },
+        {
+          "harness": "tet10-mesh",
+          "status": "Passed"
+        },
+        {
+          "harness": "worker-runtime",
+          "status": "Passed"
+        },
+        {
+          "harness": "cube-wasm-vertical-slice",
+          "status": "Passed"
+        },
+        {
+          "harness": "preview-selection",
+          "status": "Passed"
+        },
+        {
+          "harness": "workspace-layout",
+          "status": "Passed: stable pane gutters across scrollbar modes and overflow, initialized resize sequence, independent pane sizing, compact drawers, keyboard/focus and storage fallback"
+        },
+        {
+          "harness": "report-workflow",
+          "status": "Passed"
+        }
+      ]
+    },
+    {
+      "browser": "Chromium 152.0.7977.75",
+      "mode": "HTTP",
+      "checks": [
+        {
+          "harness": "cad-import-workflow",
+          "status": "Passed"
+        },
+        {
+          "harness": "step-import",
+          "status": "Passed"
+        },
+        {
+          "harness": "cube-wasm-vertical-slice",
+          "status": "Passed"
+        },
+        {
+          "harness": "cad-corpus",
+          "status": "Passed: 50/50"
+        }
+      ]
+    }
+  ],
+  "packageChecks": [
+    {
+      "browser": "152.0.7977.75",
+      "mode": "file:// offline",
+      "startup": {
+        "workers": 0,
+        "formats": ".step,.stp,.iges,.igs,.brep",
+        "repairAssets": []
+      },
+      "imported": "generated-unit-cube-m.step: 6 faces imported.",
+      "mesh": "27202 Tet10 elements; 40667 nodes.",
+      "unsupportedRetainsMesh": true,
+      "errors": []
+    },
+    {
+      "browser": "153.0",
+      "mode": "file:// offline",
+      "startup": {
+        "workers": 0,
+        "formats": ".step,.stp,.iges,.igs,.brep",
+        "repairAssets": []
+      },
+      "imported": "generated-unit-cube-m.step: 6 faces imported.",
+      "mesh": "27202 Tet10 elements; 40667 nodes.",
+      "unsupportedRetainsMesh": true,
+      "errors": []
+    }
+  ],
+  "sha256": {
+    "web/generated/local-runtime/mesher-worker-source.js": "24cec618ed62c987902592998492d24cd78dd495d5b1f27602ab48b7f88fbfb1",
+    "web/generated/local-runtime/solver-worker-source.js": "7aa7c55f785c7cfa1f9969497fa18e185bc24f44467ec5a325cbde807c2d74ac",
+    "web/generated/local-runtime/fem-runtime-source.js": "107067eb549a027dc2e789c93cc175eef6e6091899f81e8d1ef975be264da97e"
+  },
+  "scope": "Resource smoke only; full calibration and manual M30/release acceptance remain separate."
+}

@@ -8,7 +8,8 @@ v1 is unreleased. CAD-only import is the supported scope. The owner paused STL
 on 2026-09-20; its implementation, development history and outstanding problems
 are preserved on [features/stl-import](https://github.com/Brinkwatertoad/SpjutSim-FEA/tree/features/stl-import).
 See the [archive guide](https://github.com/Brinkwatertoad/SpjutSim-FEA/blob/features/stl-import/docs/STL-DEVELOPMENT.md).
-The remaining release work is Plan 30 integrated review, then Plan 20 exact-candidate audit.
+See [CAD-only verification](docs/reviews/cad-only-import.md). The remaining release
+work is Plan 30 integrated review, then Plan 20 exact-candidate audit.
 
 ## Run locally
 
