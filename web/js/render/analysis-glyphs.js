@@ -216,19 +216,21 @@
       (draft.kind === 'support' ? supports : loads).push(preview);
     }
     supports.forEach(function (condition) {
+      var componentDirections=condition.frame ? root.SpjutsimFEA.assignmentDirections(condition,documentState.geometry) : null;
       condition.faceIds.forEach(function (faceId) {
         cachedFaceSamples(documentState, faceId).samples.forEach(function (sample) {
           descriptors.push({ type: condition.type, itemId: condition.id, preview:condition.preview === true, faceId: faceId, positionM: sample.positionM,
-            direction: sample.outwardNormal, componentDirections: condition.frame ? root.SpjutsimFEA.assignmentDirections(condition,documentState.geometry) : null, components: ['x', 'y', 'z'].filter(function (axis) { return condition.componentsM[axis] !== undefined; }) });
+            direction: sample.outwardNormal, componentDirections: componentDirections, components: ['x', 'y', 'z'].filter(function (axis) { return condition.componentsM[axis] !== undefined; }) });
         });
       });
     });
     loads.forEach(function (load) {
+      var forceDirection=load.type==='total-force' && load.direction!=='surface-normal' ? normalized(root.SpjutsimFEA.assignmentGlobalForce(load,documentState.geometry)) : null;
       load.faceIds.forEach(function (faceId) {
         cachedFaceSamples(documentState, faceId).samples.forEach(function (sample) {
           var direction = load.type === 'pressure' || load.direction === 'surface-normal'
             ? sample.outwardNormal.map(function (value) { return value * (load.type === 'pressure' ? -Math.sign(load.pressurePa) : load.sense === 'pull' ? 1 : -1); })
-            : normalized(root.SpjutsimFEA.assignmentGlobalForce(load,documentState.geometry));
+            : forceDirection;
           descriptors.push({ type: load.type, itemId: load.id, preview:load.preview === true, faceId: faceId, positionM: sample.positionM, direction: direction });
         });
       });

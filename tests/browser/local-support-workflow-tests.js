@@ -26,7 +26,7 @@
    app.createLoad({type:'total-force',forceN:[0,0,1000],frame:api.planarFaceFrame(geometry,face(0,1))});
    var authored=JSON.stringify(app.document.boundaryConditions);
    app.beginAssignmentDraft('support',app.document.boundaryConditions[0].id);
-   app.updateAssignmentDraft({definition:{type:'support',componentsM:{z:.002},frame:app.document.boundaryConditions[0].frame,preset:'sliding'}});
+   app.updateAssignmentDraft({definition:{type:'support',componentsM:{z:.002},frame:app.document.boundaryConditions[0].frame}});
    app.cancelAssignmentDraft();check(JSON.stringify(app.document.boundaryConditions)===authored,'cancel changed committed frame');
    app.rotateGeometryAroundGlobalAxis('z',37);
    check(JSON.stringify(app.document.boundaryConditions)===authored,'orientation rewrote canonical frame');
@@ -42,11 +42,36 @@
    ax.forEach(function(v,a){check(near(r.equilibrium.totalReactionN[a],-1000*v,.001),'rotated reaction component');});
    var glyph=api.buildAnalysisGlyphDescriptors(app.document).find(function(g){return g.type==='total-force';});
    check(glyph.direction.every(function(v,a){return near(v,ax[a],1e-10);}), 'local force arrow');
+   var report=api.createReportText(app.document,'cube.step',100,new Date('2026-09-23T12:00:00Z'));
+   check(report.includes('CAD-attached') && report.includes('global resultant') && report.includes('tangential motion free'),'report omitted local engineering meaning');
    var saved=await api.readProjectFile(await api.writeProjectFile(await api.createProjectSnapshot(app,{includeDerived:true})));
    var reopened=api.prepareProjectCandidate(saved,geometry);
    check(JSON.stringify(reopened.document.boundaryConditions)===authored,'project lost frames');
    check(reopened.document.results && !reopened.cacheWarning,'reopen local results');
+   // Every signed CAD normal must orient a component load arrow correctly.
+   for(var signedFace of geometry.faceIds) {
+    var signed=Object.assign({},app.document.loads[0],{faceIds:[signedFace],frame:api.planarFaceFrame(geometry,signedFace)});
+    var state=Object.assign({},app.document,{loads:[signed]}),expected=api.transformVector3(rotated.orientation.rotation,geometry.planarFaces[signedFace].normal);
+    var arrow=api.buildAnalysisGlyphDescriptors(state).find(function(g){return g.type==='total-force';});
+    check(arrow.direction.every(function(v,a){return near(v,expected[a],1e-10);}), 'signed local load arrow');
+   }
+   var malformed=api.prepareSolverInput(app.document);malformed.boundaryConditions[0].constraintFrame.axes[0]=[2,0,0];
+   var invalidSolver=new api.SolverClient(),invalidRejected=false;
+   try{await invalidSolver.preflight(malformed,app.document.analysisRevision,8);}catch(error){invalidRejected=error.diagnostic.code==='INVALID_CONSTRAINT';}finally{invalidSolver.dispose();}
+   check(invalidRejected,'worker accepted a malformed local basis');
    records.push({case:type+'-rotated-axial',displacementM:max,referenceDisplacementM:1e-6,stressPa:r.extrema.rawVonMisesMax.valuePa,referenceStressPa:1000,reactionN:r.equilibrium.totalReactionN,relativeEquilibrium:r.equilibrium.relativeResidual,nnz:solved.preflight.exactNnz});
+   app.replaceSelectedFaces([face(0,1)]);
+   var prescribedId=app.createBoundaryCondition({type:'support',componentsM:{z:1e-6},frame:api.planarFaceFrame(geometry,face(0,1))});
+   var prescribed=await solve(app);
+   check(near(prescribed.result.extrema.rawVonMisesMax.valuePa,1000,.01),'WASM nonzero local prescribed stress');
+   app.removeBoundaryCondition(prescribedId);
+   app.replaceSelectedFaces([face(1,-1)]);
+   var conflictFrame={version:1,ownership:'global',originM:[0,0,0],axes:[[1,0,0],[0,1,0],[0,0,1]].map(function(v){return api.transformVector3(rotated.orientation.rotation,v);})};
+   var conflictId=app.createBoundaryCondition({type:'support',componentsM:{x:.001},frame:conflictFrame});
+   var conflictSolver=new api.SolverClient(),conflictRejected=false;
+   try{await conflictSolver.preflight(api.prepareSolverInput(app.document),app.document.analysisRevision,8);}catch(error){conflictRejected=error.diagnostic.code==='CONSTRAINT_CONFLICT';}finally{conflictSolver.dispose();}
+   check(conflictRejected,'intersecting face constraints must conflict at shared mesh nodes');
+   app.removeBoundaryCondition(conflictId);
    var migration=api.createReplacementMigrationDraft(app.document,geometry,{sourceName:'cube.step',sourceFormat:'step',sourceBytes:bytes});
    migration.items.forEach(function(item,i){api.mapReplacementMigrationItem(migration,i,item.oldFaceIds);});
    var transfer=api.buildReplacementMigrationTransfer(migration);check(transfer.boundaryConditions[0].frame.faceId===face(0,-1),'replacement frame mapping');

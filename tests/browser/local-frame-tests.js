@@ -7,6 +7,7 @@ try{
  rejects(function(){api.validateLocalFrame(Object.assign({},frame,{axes:[[1,0,0],[1,0,0],[0,0,1]]}));},'dependent axes rejected');
  rejects(function(){api.validateLocalFrame(Object.assign({},frame,{axes:[[1,0,0],[0,1,0],[0,0,-1]]}));},'left handed axes rejected');
  rejects(function(){api.validateLocalFrame(Object.assign({},frame,{originM:[Infinity,0,0]}));},'invalid origin rejected');
+ rejects(function(){api.validateLocalFrame(Object.assign({},frame,{axes:[new Array(3),[0,1,0],[0,0,1]]}));},'sparse axes rejected');
  var g={faceIds:['plane'],orientation:api.identityRigidOrientation(),planarFaces:{plane:{version:1,originM:[0,0,0],normal:[0,0,-1]}}};
  var attached=api.planarFaceFrame(g,'plane');
  check(attached.axes[2][2]===-1,'outward normal sign preserved');
@@ -15,7 +16,7 @@ try{
  check(Math.abs(resolved.axes[2][1]-1)<1e-12,'CAD attached rotation');
  check(api.resolveLocalFrame(frame,g).axes[0][1]===1,'manual frame stays global');
  rejects(function(){api.planarFaceFrame(g,'curved');},'curved face rejected');
- var support={id:'s',name:'Local support',type:'support',faceIds:['plane'],componentsM:{z:api.displayToSI('displacementM',2,'mm')},frame:attached,preset:'sliding'};
+ var support={id:'s',name:'Local support',type:'support',faceIds:['plane'],componentsM:{z:api.displayToSI('displacementM',2,'mm')},frame:attached};
  check(api.validateBoundaryCondition(support,g.faceIds).value.componentsM.z===.002,'SI local prescription');
  check(api.validateBoundaryCondition(support,g.faceIds).value.frame.ownership==='cad','frame survives normalization');
  check(!api.validateBoundaryCondition(Object.assign({},support,{frame:Object.assign({},attached,{faceId:'missing'})}),g.faceIds).valid,'missing frame reference rejected');

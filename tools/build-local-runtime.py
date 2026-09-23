@@ -13,7 +13,7 @@ from typing import Optional
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED_PROTOCOL_VERSION = 4
+EXPECTED_PROTOCOL_VERSION = 5
 WORKERS = {
     'mesher': 'mesher-worker.js',
     'solver': 'solver-worker.js',

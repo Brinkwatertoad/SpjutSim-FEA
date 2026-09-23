@@ -1,5 +1,5 @@
 'use strict';
-var WORKER_PROTOCOL_VERSION = 4;
+var WORKER_PROTOCOL_VERSION = 5;
 var WASM_HEAP_CAP_BYTES = 3758096384;
 // Calibrated by the 36-record supported-browser matrix in benchmarks/resource/.
 var MEMORY_SAFETY_MULTIPLIER = 1.5;
@@ -79,7 +79,7 @@ function validateInput(input) {
     if (condition.frame && !condition.constraintFrame) { throw diagnostic('INVALID_CONSTRAINT','preflight','Local support directions are missing.'); }
     if (condition.constraintFrame !== undefined) {
       var frame=condition.constraintFrame, axes=frame && frame.axes;
-      if (!frame || frame.version!==1 || !Array.isArray(axes) || axes.length!==3 || axes.some(function(v){return !Array.isArray(v) || v.length!==3 || !v.every(Number.isFinite) || Math.abs(Math.hypot.apply(null,v)-1)>1e-10;})) {
+      if (!frame || frame.version!==1 || !Array.isArray(axes) || axes.length!==3 || [0,1,2].some(function(i){var v=axes[i];return !Array.isArray(v) || v.length!==3 || ![0,1,2].every(function(i){return Number.isFinite(v[i]);}) || Math.abs(Math.hypot.apply(null,v)-1)>1e-10;})) {
         throw diagnostic('INVALID_CONSTRAINT','preflight','Local support directions must form a finite unit basis.');
       }
       for(var a=0;a<3;a++)for(var b=a+1;b<3;b++)if(Math.abs(axes[a].reduce(function(sum,v,i){return sum+v*axes[b][i];},0))>1e-10)throw diagnostic('INVALID_CONSTRAINT','preflight','Local support axes must be orthogonal.');
@@ -146,18 +146,24 @@ function checkNative(Module, context, status, stage) {
 }
 
 function buildConstraints(input) {
-  var entries = [];
-  input.boundaryConditions.forEach(function (condition) {
-    var components = [[0, condition.componentsM.x], [1, condition.componentsM.y], [2, condition.componentsM.z]]
-      .filter(function (item) { return item[1] !== undefined; });
-    condition.nodeIndices.forEach(function (node) {
-      components.forEach(function (component) { entries.push([node * 3 + component[0], component[1], condition.constraintFrame ? condition.constraintFrame.axes[component[0]] : [0,1,2].map(function(a){return a===component[0]?1:0;})]); });
+  var count=0, directional=input.boundaryConditions.some(function(c){return c.constraintFrame;});
+  input.boundaryConditions.forEach(function(c){
+    count+=c.nodeIndices.length*['x','y','z'].filter(function(axis){return c.componentsM[axis]!==undefined;}).length;
+  });
+  var indices=new Uint32Array(count), values=new Float64Array(count), directions=directional?new Float64Array(count*3):null, offset=0;
+  var globalAxes=[[1,0,0],[0,1,0],[0,0,1]];
+  input.boundaryConditions.forEach(function(condition){
+    var axes=condition.constraintFrame?condition.constraintFrame.axes:globalAxes;
+    var components=['x','y','z'].map(function(axis,i){return [i,condition.componentsM[axis]];}).filter(function(c){return c[1]!==undefined;});
+    condition.nodeIndices.forEach(function(node){
+      components.forEach(function(component){
+        indices[offset]=node*3+component[0];values[offset]=component[1];
+        if(directions)directions.set(axes[component[0]],offset*3);
+        offset++;
+      });
     });
   });
-  entries.sort(function (a, b) { return a[0] - b[0]; });
-  return { indices: new Uint32Array(entries.map(function (item) { return item[0]; })),
-    valuesM: new Float64Array(entries.map(function (item) { return item[1]; })),
-    directions: input.boundaryConditions.some(function(c){return c.constraintFrame;}) ? new Float64Array(entries.flatMap(function(item){return item[2];})) : null };
+  return {indices:indices,valuesM:values,directions:directions};
 }
 
 // Match native tri6_area's three-point quadrature; normalization stays off the UI thread.

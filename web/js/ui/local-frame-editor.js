@@ -5,8 +5,8 @@
    * and reopen resolve them against the document orientation without rewriting. */
   function LocalFrameEditor(container,prefix){
     this.container=container;this.prefix=prefix;this.savedFrame=null;
-    container.innerHTML='<label for="'+prefix+'-frame-kind">Coordinate frame</label><select id="'+prefix+'-frame-kind"><option value="global">Global XYZ</option><option value="manual">Rectangular (stays global)</option><option value="cad">Planar face (follows CAD)</option></select>'+ 
-      '<fieldset id="'+prefix+'-frame-fields" hidden><legend>Rectangular frame</legend><small>Enter three orthonormal, right handed unit axes as comma-separated XYZ components. Origin does not change a direction.</small>'+ 
+    container.innerHTML='<label for="'+prefix+'-frame-kind">Coordinate frame</label><select id="'+prefix+'-frame-kind"><option value="global">Global XYZ</option><option value="manual">Rectangular (stays global)</option><option value="cad">Planar face (follows CAD)</option></select>'+
+      '<fieldset id="'+prefix+'-frame-fields" hidden><legend>Rectangular frame</legend><small>Enter three orthonormal, right handed unit axes as comma-separated XYZ components. Origin does not change a direction.</small>'+
       ['x','y','z'].map(function(axis,i){return '<label for="'+prefix+'-frame-axis-'+axis+'">Local '+axis.toUpperCase()+' axis in global XYZ</label><input id="'+prefix+'-frame-axis-'+axis+'" type="text" value="'+[0,1,2].map(function(j){return i===j?1:0;}).join(', ')+'">';}).join('')+
       ['x','y','z'].map(function(axis){return '<label for="'+prefix+'-frame-origin-'+axis+'">Origin '+axis.toUpperCase()+' (<span data-unit-label="lengthM">m</span>)</label><input id="'+prefix+'-frame-origin-'+axis+'" data-unit-quantity="lengthM" type="number" step="any" value="0">';}).join('')+'</fieldset><small id="'+prefix+'-frame-preview" role="status"></small>';
     var self=this;this.kind=this.get('kind');this.kind.addEventListener('change',function(){self.savedFrame=null;self.refresh();});

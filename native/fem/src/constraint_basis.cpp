@@ -29,8 +29,11 @@ bool build_constraint_bases(const std::vector<PrescribedDof> &constraints, Const
     // Reorthogonalize to avoid accumulated roundoff at intersecting supports.
     for(int pass=0;pass<2;++pass) for(unsigned j=0;j<b.rank;++j) {
       double projection=dot(v,b.axes[j]); value-=projection*b.values[j];
-      value_scale+=std::abs(projection*b.values[j]);
+      value_scale=std::max(value_scale,std::abs(projection*b.values[j]));
       for(int a=0;a<3;++a) v[a]-=projection*b.axes[j][a];
+    }
+    if (!std::isfinite(value)) {
+      error={ErrorCode::invalid_argument,"Prescribed local displacements exceed the finite numerical range.","Reduce the prescribed magnitudes or review nearly dependent directions.",true};return false;
     }
     double residual=std::sqrt(dot(v,v));
     if(residual<=1e-10) {
@@ -41,7 +44,11 @@ bool build_constraint_bases(const std::vector<PrescribedDof> &constraints, Const
     }
     if(b.rank==3) {error={ErrorCode::constraint_conflict,"Constraint rank exceeds three.","",true};return false;}
     for(int a=0;a<3;++a) b.axes[b.rank][a]=v[a]/residual;
-    b.values[b.rank++]=value/residual;
+    const double prescribed=value/residual;
+    if (!std::isfinite(prescribed)) {
+      error={ErrorCode::invalid_argument,"Prescribed local displacements exceed the finite numerical range.","Reduce the prescribed magnitudes or review nearly dependent directions.",true};return false;
+    }
+    b.values[b.rank++]=prescribed;
   }
   for(auto &entry:bases) {
     auto &b=entry.second; unsigned count=b.rank;

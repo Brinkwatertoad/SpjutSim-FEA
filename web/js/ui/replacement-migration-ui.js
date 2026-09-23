@@ -5,17 +5,19 @@
 
   function itemDescription(item) {
     var value, api=root.SpjutsimFEA;
+    var frame=item.original.frame;
+    var frameNote=frame ? (frame.ownership==='cad' ? ' · Local CAD frame: map to one planar face; review the rebuilt directions.' : ' · Local rectangular frame stays global.') : '';
     function quantity(v,q){return api.preferredFromSI(q,v)+' '+api.preferredUnit(q);}
     if (item.kind === 'support') {
       value = Object.keys(item.original.componentsM).map(function (axis) {
         return axis.toUpperCase() + ' = ' + quantity(item.original.componentsM[axis],'displacementM');
       }).join(', ');
-      return 'Support · ' + value + ' · ' + item.oldFaceIds.length + (item.oldFaceIds.length === 1 ? ' current face' : ' current faces');
+      return 'Support · ' + value + ' · ' + item.oldFaceIds.length + (item.oldFaceIds.length === 1 ? ' current face' : ' current faces')+frameNote;
     }
     value = item.original.type === 'pressure'
       ? quantity(item.original.pressurePa,'pressurePa') + ' surface-normal pressure'
-      : item.original.direction === 'surface-normal' ? quantity(item.original.magnitudeN,'forceN') + ' ' + item.original.sense + ' along local normals' : '[' + item.original.forceN.map(function(v){return quantity(v,'forceN');}).join(', ') + '] global total force';
-    return 'Load · ' + value + ' · ' + item.oldFaceIds.length + (item.oldFaceIds.length === 1 ? ' current face' : ' current faces');
+      : item.original.direction === 'surface-normal' ? quantity(item.original.magnitudeN,'forceN') + ' ' + item.original.sense + ' along local normals' : '[' + item.original.forceN.map(function(v){return quantity(v,'forceN');}).join(', ') + (frame ? '] local total force' : '] global total force');
+    return 'Load · ' + value + ' · ' + item.oldFaceIds.length + (item.oldFaceIds.length === 1 ? ' current face' : ' current faces')+frameNote;
   }
 
   function ReplacementMigrationUI() {
@@ -108,7 +110,7 @@
       this.summaryList.replaceChildren();
       this.draft.items.forEach(function (entry) {
         var line = document.createElement('li');
-        line.textContent = entry.name + ': ' + (entry.decision === 'mapped' ? entry.newFaceIds.length + ' replacement face(s)' : 'Dropped');
+        line.textContent = entry.name + ': ' + (entry.decision === 'mapped' ? entry.newFaceIds.length + ' replacement face(s)' + (entry.original.frame && entry.original.frame.ownership==='cad' ? '; CAD frame rebuilt on selected plane' : '') : 'Dropped');
         self.summaryList.append(line);
       });
       var automatic = document.createElement('li');

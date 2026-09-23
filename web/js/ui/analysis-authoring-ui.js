@@ -384,7 +384,11 @@
     this.componentFields.hidden = !custom;
     var planar=['sliding','symmetry'].includes(this.supportType.value);
     if(byId('support-planar-help'))byId('support-planar-help').hidden=!planar;
-    if(this.supportFrameEditor){this.supportFrameEditor.container.hidden=planar;}
+    if(this.supportFrameEditor){
+      this.supportFrameEditor.kind.disabled=planar;
+      if(planar)this.supportFrameEditor.kind.value='cad';
+      this.supportFrameEditor.refresh();
+    }
     this.renderSupportComponents();
   };
 
@@ -929,6 +933,16 @@
 
   AnalysisAuthoringUI.prototype.render = function (documentState) {
     if (!this.materialForm) { return; }
+    var frameDraft=documentState.assignmentDraft;
+    var frameFaces=frameDraft && frameDraft.kind!=='gravity' ? JSON.stringify(frameDraft.faceIds) : null;
+    var frameEditor=frameDraft && (frameDraft.kind==='support' ? this.supportFrameEditor : frameDraft.kind==='load' ? this.loadFrameEditor : null);
+    var selectionChanged=this.lastFrameDraft===frameDraft && this.lastFrameFaces!==frameFaces;
+    this.lastFrameDraft=frameDraft;this.lastFrameFaces=frameFaces;
+    // Face picking changes a CAD frame's input, just as a form change does.
+    // Store the selection first so the controller's notification cannot recurse.
+    if(selectionChanged && frameEditor && frameEditor.kind.value==='cad') {
+      this.updateDraftFromForm();return;
+    }
     this.renderMaterial(documentState);
     this.renderSupports(documentState);
     this.renderLoads(documentState);

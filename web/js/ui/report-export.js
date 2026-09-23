@@ -46,7 +46,7 @@
       var frame=api.resolveLocalFrame(item.frame,state.geometry);
       return '; Local XYZ; '+(item.frame.ownership==='cad'?'CAD-attached to '+item.frame.faceId:'manual, stays global')+
         '; global origin '+frame.originM.map(function(v){return magnitude(v,unit('lengthM'));}).join(', ')+
-        '; axes in global XYZ '+frame.axes.map(function(v){return '['+v.map(number).join(', ')+']';}).join(', ');
+        '; axes in global XYZ '+frame.axes.map(function(v){return '['+v.map(function(component){return number(component);}).join(', ')+']';}).join(', ');
     }
     state.boundaryConditions.forEach(function (support) {
       parameters.push(['Support: ' + support.name + (support.enabled === false ? ' (suppressed)' : ''), 'Faces: ' + support.faceIds.join(', ') + '; ' + Object.keys(support.componentsM).map(function (axis) { return axis + ' = ' + magnitude(support.componentsM[axis], unit('displacementM')); }).join(', ')+frameDescription(support)+(support.preset ? '; '+support.preset+'; tangential motion free; user loads are not scaled' : '')]);

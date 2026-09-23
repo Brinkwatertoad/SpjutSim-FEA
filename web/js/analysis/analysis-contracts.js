@@ -164,8 +164,8 @@
     value.type = 'support';
     if (item.preset !== undefined) {
       if (!['sliding','symmetry'].includes(item.preset) || !value.frame || value.frame.ownership !== 'cad' ||
-          !item.componentsM || Object.keys(item.componentsM).join() !== 'z') {
-        errors.push(issue('INVALID_PLANAR_SUPPORT','Sliding and symmetry require a planar CAD frame and only normal (local Z) displacement.','preset'));
+          !item.componentsM || Object.keys(item.componentsM).join() !== 'z' || item.componentsM.z !== 0) {
+        errors.push(issue('INVALID_PLANAR_SUPPORT','Sliding and symmetry require a planar CAD frame and zero normal (local Z) displacement. Use Choose components for prescribed local motion.','preset'));
       } else { value.preset = item.preset; }
     }
     value.componentsM = {};
@@ -175,7 +175,7 @@
     }
     Object.keys(item.componentsM).forEach(function (axis) {
       if (['x', 'y', 'z'].indexOf(axis) === -1) {
-        errors.push(issue('INVALID_DISPLACEMENT_COMPONENT', 'Support components must use global X, Y, or Z.', 'componentsM'));
+        errors.push(issue('INVALID_DISPLACEMENT_COMPONENT', 'Support components must use X, Y, or Z of the chosen frame.', 'componentsM'));
       }
     });
     ['x', 'y', 'z'].forEach(function (axis) {

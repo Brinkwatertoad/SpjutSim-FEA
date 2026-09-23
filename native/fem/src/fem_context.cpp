@@ -396,15 +396,16 @@ bool Context::validate_and_prepare_constraints() {
                              "Load a valid mesh before defining supports.");
     return false;
   }
+  for (const auto &c : constraints_) {
+    if (c.dof >= graph_.degree_of_freedom_count || !std::isfinite(c.value_m) ||
+        !std::all_of(c.direction.begin(),c.direction.end(),[](double v){return std::isfinite(v);})) {
+      diagnostic_ = make_error(ErrorCode::invalid_argument,"A prescribed displacement or direction is invalid.");return false;
+    }
+  }
   std::sort(constraints_.begin(), constraints_.end(),
             [](const auto &a, const auto &b) { return a.dof != b.dof ? a.dof < b.dof : a.direction < b.direction; });
   std::vector<PrescribedDof> unique;
   for (const auto &c : constraints_) {
-    if (c.dof >= graph_.degree_of_freedom_count || !std::isfinite(c.value_m)) {
-      diagnostic_ = make_error(ErrorCode::invalid_argument,
-                               "A prescribed displacement is invalid.");
-      return false;
-    }
     if (!unique.empty() && unique.back().dof == c.dof && unique.back().direction == c.direction) {
       if (unique.back().value_m != c.value_m) {
         diagnostic_ = make_error(ErrorCode::constraint_conflict,
@@ -418,7 +419,7 @@ bool Context::validate_and_prepare_constraints() {
   constraints_ = std::move(unique);
   if (!build_constraint_bases(constraints_, constraint_bases_, diagnostic_)) return false;
   elimination_constraints_.clear();
-  for (const auto &c : constraints_)
+  if (!constraint_bases_.empty()) for (const auto &c : constraints_)
     if (!constraint_bases_.count(c.dof/3)) elimination_constraints_.push_back(c);
   for (const auto &entry : constraint_bases_)
     for (unsigned a=0;a<entry.second.rank;++a)
@@ -507,7 +508,7 @@ bool Context::preflight(double device_gib, std::uint64_t cap,
   }
   memory_estimate_ =
       estimate_memory(mesh_, graph_, device_gib, cap, multiplier,
-          constraint_bases_.size() * (sizeof(ConstraintBasis) + 4*sizeof(void*) + sizeof(std::uint32_t)) +
+          constraint_bases_.size() * (sizeof(ConstraintBases::value_type) + 4*sizeof(void*)) +
           (constraints_.capacity()+elimination_constraints_.capacity())*sizeof(PrescribedDof));
   if (memory_estimate_.exceeds_wasm_cap) {
     diagnostic_ = make_error(
@@ -638,7 +639,7 @@ bool Context::solve(const SolveSettings &settings) {
     }
     std::vector<double> rhs = external;
     transform_constraint_system(matrix, rhs, constraint_bases_);
-    if (!apply_symmetric_constraints(matrix, rhs, elimination_constraints_, diagnostic_)) {
+    if (!apply_symmetric_constraints(matrix, rhs, constraint_bases_.empty() ? constraints_ : elimination_constraints_, diagnostic_)) {
       restore_graph();
       return false;
     }

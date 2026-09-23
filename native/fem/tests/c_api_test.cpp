@@ -29,6 +29,16 @@ int main() {
   require(fem_set_constraints(context, dofs.data(), values.data(),
                               static_cast<uint32_t>(dofs.size())) == 0,
           "C API constraints failed");
+  std::vector<double> directions(dofs.size()*3);
+  for (size_t i=0;i<dofs.size();i++) directions[i*3+dofs[i]%3]=1;
+  directions[0]=0;
+  require(fem_set_directional_constraints(context,dofs.data(),values.data(),directions.data(),dofs.size()) != 0,
+          "zero direction accepted by C ABI");
+  require(fem_get_last_error(context,&error)==0 && std::strcmp(error.code,"INVALID_ARGUMENT")==0,
+          "direction diagnostic missing");
+  directions[0]=1;
+  require(fem_set_directional_constraints(context,dofs.data(),values.data(),directions.data(),dofs.size()) == 0,
+          "directional C ABI rejected unit axes");
   const uint32_t face[] = {1, 3, 7, 1, 7, 5};
   const double force[] = {1000, 0, 0};
   require(fem_add_total_face_force(context, face, 2, 3, force) == 0,

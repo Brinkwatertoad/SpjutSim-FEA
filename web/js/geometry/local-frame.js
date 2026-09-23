@@ -2,11 +2,11 @@
   'use strict';
   var api=root.SpjutsimFEA=root.SpjutsimFEA||{};
   var IDENTITY=[[1,0,0],[0,1,0],[0,0,1]], TOLERANCE=1e-10;
-  function vector(v){return Array.isArray(v)&&v.length===3&&v.every(Number.isFinite);}
+  function vector(v){return Array.isArray(v)&&v.length===3&&[0,1,2].every(function(i){return Number.isFinite(v[i]);});}
   function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
   function cross(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];}
   function validateLocalFrame(frame,knownFaceIds){
-    if(!frame || frame.version!==1 || !['global','cad'].includes(frame.ownership) || !vector(frame.originM) || !Array.isArray(frame.axes) || frame.axes.length!==3 || !frame.axes.every(vector))throw Error('Enter a version 1 rectangular frame with finite SI origin and three unit axes.');
+    if(!frame || frame.version!==1 || !['global','cad'].includes(frame.ownership) || !vector(frame.originM) || !Array.isArray(frame.axes) || frame.axes.length!==3 || ![0,1,2].every(function(i){return vector(frame.axes[i]);}))throw Error('Enter a version 1 rectangular frame with finite SI origin and three unit axes.');
     var a=frame.axes;
     if(a.some(function(v){return Math.abs(dot(v,v)-1)>TOLERANCE;}) || Math.abs(dot(a[0],a[1]))>TOLERANCE || Math.abs(dot(a[0],a[2]))>TOLERANCE || Math.abs(dot(a[1],a[2]))>TOLERANCE || dot(cross(a[0],a[1]),a[2])<1-TOLERANCE)throw Error('Frame axes must be orthonormal and right handed.');
     if(frame.ownership==='cad' && (typeof frame.faceId!=='string' || !frame.faceId || (knownFaceIds && !knownFaceIds.includes(frame.faceId))))throw Error('The frame CAD face is missing. Remap or remove the assignment.');
