@@ -25,8 +25,8 @@
         icon.appendChild(path);
       }
       button.replaceChildren(icon); button.classList.add('fea-icon-button');
-      if (button.type === 'submit') {
-        var text = document.createElement('span'); text.textContent = 'Apply'; button.appendChild(text);
+      if (button.dataset.actionIntent !== 'danger') {
+        var text = document.createElement('span'); text.textContent = button.type === 'submit' ? 'Apply' : 'Cancel'; button.appendChild(text);
       }
       labelAction(button,label);
     });
@@ -312,6 +312,7 @@
       var validation = this.controller.replaceMaterial(material);
       this.materialFeedback = validation.warnings.length ? {warning:true,message:validation.warnings[0].message} : {message:'Material applied to this project.'};
       this.closeInspectorRow({restoreFocus:true,cancelEdit:false,message:'Material applied.'});
+      this.materialForm.dispatchEvent(new CustomEvent('fea-material-applied',{bubbles:true}));
     } catch (error) {
       this.materialFeedback = {error:true,message:error.message};this.render(this.controller.document);this.focusEditorError(this.materialForm,error.message);
     }

@@ -33,13 +33,18 @@
     materialTrigger.click();
     var materialApply=doc.querySelector('#material-form button[type="submit"]');
     assert(doc.querySelector('.fea-guide-target')===materialApply,'Material guide must highlight Apply');
-    materialApply.click();next.click();
+    var youngs=doc.getElementById('material-youngs'),originalYoungs=youngs.value;
+    youngs.value='-1';materialApply.click();
+    assert(doc.getElementById('setup-guide-title').textContent==='Apply a material','Failed material Apply advanced the guide');
+    youngs.value=originalYoungs;materialApply.click();
+    assert(doc.getElementById('setup-guide-title').textContent==='Add supports','Successful material Apply did not immediately advance');
     var anchor=doc.querySelector('.fea-guide-target');
     assert(anchor.id==='setup-add-support-button' && !app.document.assignmentDraft,'Support guide must point to Add without opening an editor');
     doc.querySelector('[data-setup-kind="support"] [data-setup-row-trigger]').click();
     var apply=doc.querySelector('#support-form button[type="submit"]');
     assert(apply.querySelector('svg') && apply.textContent==='Apply' && apply.getAttribute('aria-label')==='Apply support','Apply needs a check icon and visible Apply label');
     assert(doc.querySelector('.fea-guide-target')===apply,'Support guide must point to Apply in the open editor');
+    assert(doc.getElementById('cancel-support-edit').textContent==='Cancel','Cancel needs a visible label');
     assert(doc.querySelector('#remove-support-item-button svg'),'Remove needs a trash icon');
     var header=apply.closest('.fea-setup-row').querySelector('[data-setup-row-trigger]').getBoundingClientRect(),actions=apply.closest('.fea-editor-actions').getBoundingClientRect();
     assert(actions.top>=header.bottom && apply.getBoundingClientRect().left===actions.left,'Actions must sit below the header with Apply left aligned');
@@ -67,7 +72,9 @@
     next.click();
     var meshTrigger=doc.querySelector('[data-setup-kind="mesh"] [data-setup-row-trigger]');
     assert(doc.querySelector('.fea-guide-target')===meshTrigger,'Guide must highlight the Mesh row to open it');
+    assert(!doc.getElementById('setup-guide-text').textContent.includes('Tet10'),'Beginner mesh guidance mentions formulation');
     meshTrigger.click();
+    assert(!doc.getElementById('setup-guide-text').textContent.includes('Tet10'),'Open mesh guidance mentions formulation');
     assert(doc.querySelector('.fea-guide-target').id==='generate-mesh-button','Guide must highlight Generate mesh after opening Mesh');
     assert(next.disabled,'Guide permits inspecting a missing mesh');
     doc.getElementById('generate-mesh-button').click();await waitFor(()=>app.document.mesh);
@@ -76,6 +83,8 @@
     doc.querySelector('[data-view-mode="mesh"]').click();
     assert(doc.getElementById('viewport-mode').value==='mesh','Inspection did not show mesh');
     assert(!app.document.results,'Mesh instruction unexpectedly solved');
+    var selectedView=doc.querySelector('[data-view-mode="mesh"]'),viewStyle=win.getComputedStyle(selectedView);
+    assert(viewStyle.borderLeftColor==='rgba(0, 0, 0, 0)' && win.getComputedStyle(selectedView.nextElementSibling).borderLeftColor==='rgba(0, 0, 0, 0)','Selected view retains side dividers');
     next.click();assert(doc.getElementById('setup-guide-title').textContent==='Solve','Guide skipped explicit solve');
     assert(doc.getElementById('report-format').closest('.fea-report-actions'),'Reports are not grouped beside Results');
     doc.getElementById('solve-button').click();await waitFor(()=>app.document.results || app.document.solveExecution.status==='failed');

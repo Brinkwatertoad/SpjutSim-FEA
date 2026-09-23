@@ -29,7 +29,7 @@
       {title:'Apply a material',text:'Open Material to choose a material or enter its properties.',target:'[data-setup-kind="material"] [data-setup-row-trigger]'},
       {title:'Add supports',text:'Choose Add to create a support. Add as many supports as your part needs, then choose Next.',target:'#setup-add-support-button'},
       {title:'Add loads',text:'Choose Add to create a load. Add further loads if needed, then choose Next.',target:'#setup-add-load-button'},
-      {title:'Generate mesh',text:'Open Mesh, choose a density and Generate mesh. Start with the default Tet10 formulation; complicated parts may need finer settings.',target:'[data-setup-kind="mesh"] [data-setup-row-trigger]'},
+      {title:'Generate mesh',text:'Open Mesh, choose a density and Generate mesh. Start with the default density; complicated parts may need finer settings.',target:'[data-setup-kind="mesh"] [data-setup-row-trigger]'},
       {title:'Inspect the mesh',text:'Choose Mesh view, then rotate and zoom to inspect holes, small features and loaded areas. Refine the density and regenerate if needed. Visual inspection is a first check; convergence is needed to assess accuracy.',target:'[data-view-mode="mesh"]'},
       {title:'Solve',text:'Choose Solve to run checks and calculate results. Resolve any reported setup problems before continuing.',target:'#solve-button'},
       {title:'Review the results',text:'Inspect displacement, stress and warnings. Check convergence before drawing conclusions, then save your project or export a report beside Results.',target:'#toggle-results-pane'}
@@ -62,10 +62,10 @@
       document.getElementById('setup-guide-title').textContent=steps[step].title;
       var target=guideTarget(),text=steps[step].text;
       if(target && target.type==='submit'){
-        text=step===1 ? 'Choose a material or enter its properties, then click Apply. Choose Next when it is applied.' : 'Select faces and enter the '+(step===2?'support':'load')+' settings, then click Apply. You can add another afterward.';
+        text=step===1 ? 'Choose a material or enter its properties, then click Apply to continue to supports.' : 'Select faces and enter the '+(step===2?'support':'load')+' settings, then click Apply. You can add another afterward.';
         if(target.id==='apply-gravity-button'){text='Set the gravity direction and acceleration, then click Apply.';}
       }
-      if(step===4 && target && target.id==='generate-mesh-button'){text='Choose a mesh density, then click Generate mesh. Start with Tet10; complicated parts may need finer settings. When generation finishes, choose Next to inspect it.';}
+      if(step===4 && target && target.id==='generate-mesh-button'){text='Choose a mesh density, then click Generate mesh. Complicated parts may need finer settings. When generation finishes, choose Next to inspect it.';}
       if(step===7 && app.document.projectMetadata && app.document.projectMetadata.name==='Cube example'){text+=' The cube should extend by 5 nm under 1 kPa axial stress.';}
       document.getElementById('setup-guide-text').textContent=text;
       document.getElementById('setup-guide-back').disabled=step===0 || Boolean(app.document.assignmentDraft);
@@ -76,7 +76,7 @@
     function dismiss(){shown=false;dismissed=true;try{root.localStorage.setItem(guideKey,'true');}catch(error){}render();}
     document.getElementById('setup-guide-dismiss').addEventListener('click',dismiss);
     function openStep(){
-      // Only explicit guide navigation may scroll Setup. Never open an editor on the user's behalf.
+      // User-driven stage changes may reveal the next target. Never open an editor on the user's behalf.
       var target=guideTarget(),pane=document.getElementById('setup-pane');
       if(target && target.closest('#setup-pane')){
         var bounds=target.getBoundingClientRect(),paneBounds=pane.getBoundingClientRect();
@@ -88,6 +88,9 @@
     // without scrolling, so Apply/Cancel return the guide to Add rather than a detached control.
     document.getElementById('setup-pane').addEventListener('click',render);
     document.getElementById('setup-pane').addEventListener('submit',render);
+    document.getElementById('setup-pane').addEventListener('fea-material-applied',function(){
+      if(shown && step===1){step=2;openStep();}
+    });
     document.addEventListener('keydown',function(event){if(event.key==='Escape'){render();}});
     document.getElementById('setup-guide-back').addEventListener('click',function(){step=Math.max(0,step-1);openStep();});
     document.getElementById('setup-guide-next').addEventListener('click',function(){if(step===7){dismiss();return;}step++;openStep();});

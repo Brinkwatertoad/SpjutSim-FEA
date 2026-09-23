@@ -186,3 +186,23 @@ next control. This supersedes those layout details in the preceding review.
   `build/click-guide-http.json`. Whitespace validation passes.
 
 The owner approved this design; final visual acceptance remains separate.
+
+
+## Follow-up: Cancel text, material progression and view selector
+
+- Cancel now retains its × icon and adds a visible label. Apply/Cancel sizing was
+  checked with Remove at the minimum 220-pixel Setup width.
+- Successful material Apply emits a UI completion event after closing the editor;
+  the guide advances immediately to Supports. Failed validation stays on Material,
+  and a dismissed guide remains dismissed. Mesh guidance explains density and
+  refinement without naming Tet10.
+- The view selector no longer draws divider seams beside the selected segment.
+  Keyboard focus uses an underline instead of an inset box, retaining an explicit
+  focus indicator without extra vertical bars. Shared vendored styles are unchanged.
+- Regression coverage checks valid/invalid material Apply, visible Cancel text,
+  beginner mesh copy and both selected-segment edges. Visual inspection covers
+  keyboard focus and the narrow action row.
+- Verification: all 42 applicable direct-file browser harnesses pass, with project
+  resume and workspace layout also passing at 2× DPI. Records:
+  `build/guide-polish-browser.json` and `build/guide-polish-2x.json`. Whitespace
+  validation passes.

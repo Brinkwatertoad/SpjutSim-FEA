@@ -267,8 +267,9 @@ Save to material library independently stores reusable materials. Assignment opt
 solid. The example already has material, supports, load and Tet10 settings.
 A dismissible guide starts after CAD import; dismissal is remembered. Help →
 Show setup guide brings it back. The guide highlights clickable controls: an
-editor opener or Add, then Apply, then Add again for another assignment. Explicit
-Next/Back changes stages; rerenders do not scroll the pane or advance the guide.
+editor opener or Add, then Apply, then Add again for another assignment.
+Successful material Apply advances to Supports; other stages use Next/Back.
+Rerenders do not scroll the pane or advance the guide.
 The guide teaches Generate mesh, Inspect mesh,
 then Solve; the prepared cube starts at Generate mesh. Recovered projects reopen
 quietly. Mesh and solve runs generation, checks and solve on explicit request, retaining cancellation and

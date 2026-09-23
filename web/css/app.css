@@ -328,10 +328,15 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 /* One action row below the editor heading, before its fields. */
 .fea-editor-actions { display:flex; align-items:center; gap:4px; position:relative; margin-bottom:6px; }
 .fea-editor-actions button { flex:none; width:30px; height:30px; margin:0; }
-.fea-editor-actions button[type="submit"] { width:auto; gap:4px; padding-inline:8px; }
+.fea-editor-actions button:not([data-action-intent="danger"]) { width:auto; gap:3px; padding-inline:3px; font-size:12px; }
 .fea-editor-actions [data-action-intent="danger"] { margin-left:auto; }
 .fea-editor-actions button[hidden] { display:none; }
 .fea-editor-actions button:focus-visible::after { content:attr(aria-label); position:absolute; top:100%; right:0; padding:4px 8px; background:var(--ui-color-surface); color:var(--ui-color-text); border:1px solid var(--ui-color-border); border-radius:4px; white-space:nowrap; font-size:12px; }
 .fea-report-actions { display:flex; align-items:center; gap:4px; flex:none; }
 .fea-actionbar { flex-wrap:wrap; }
-@media (pointer:coarse) { .fea-editor-actions button { width:44px; height:44px; } .fea-editor-actions button[type="submit"] { width:auto; } }
+@media (pointer:coarse) { .fea-editor-actions button { width:44px; height:44px; } .fea-editor-actions button:not([data-action-intent="danger"]) { width:auto; } }
+
+/* Selected segments need no side seams; keyboard focus remains visible without a second box. */
+#view-segments > button[aria-pressed="true"],
+#view-segments > button[aria-pressed="true"] + button { border-left-color:transparent; }
+#view-segments > button:focus-visible { outline:none; text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:3px; }

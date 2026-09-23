@@ -1790,7 +1790,7 @@ and mesh settings while clearing derived data.
 
 Expanded material/support/load/gravity editors place an action row directly below
 the full-width assignment header and above fields. Left-align checkmark plus the
-visible word Apply, followed by icon-only × Cancel. Right-align shared UI Kit
+visible word Apply, followed by × and the visible word Cancel. Right-align shared UI Kit
 trash Remove with danger styling, hiding it for new items. Keep accessible labels,
 hover/focus help and adequate hit areas. Material Cancel restores committed
 properties. Put pressure sign and force-direction hints beside their relevant
@@ -1989,12 +1989,14 @@ the Model button. Start after CAD import, allow Back/Next and easy × dismissal,
 remember dismissal, and expose Help → Show setup guide. Guide display never
 steals focus or changes engineering state. Highlight an editor opener/Add while
 closed, Apply while editing, and Add again after support/load Apply or Cancel.
-These user actions change targets, not stages; routine rerenders neither scroll
-Setup nor advance the guide. Explicit Next/Back may reveal its target by scrolling
-Setup, but does not open editors or click their controls automatically.
+Successful material Apply immediately advances to Supports; failed Apply stays on
+Material. Support/load actions change targets, not stages; routine rerenders neither scroll
+Setup nor advance the guide. User-driven stage changes may reveal their target
+by scrolling Setup, but do not open editors or click controls automatically.
 Teach Import → Material → Supports → Loads → Generate mesh → Inspect mesh → Solve
-→ Review results. Mesh guidance highlights the Mesh opener, then Generate mesh;
-inspection highlights the Mesh view button and explains refinement around holes,
+→ Review results. Mesh guidance highlights the Mesh opener, then Generate mesh.
+Beginner guidance discusses density and refinement without naming element
+formulations. Inspection highlights the Mesh view button and explains refinement around holes,
 small features and loads, plus convergence. The prepared cube begins at Generate
 mesh. Recovered projects stay quiet. No
 next-step banner or routine persistence prose belongs above Model. Report and
