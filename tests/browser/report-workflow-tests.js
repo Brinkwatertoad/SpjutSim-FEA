@@ -135,6 +135,33 @@
       var custom=await api.buildAnalysisReport(app,viewport,autoScale,'zip',{title:'Bracket <&>',notes:'Review <bolt> & preload',views:['stress'],currentView:true});restored();
       var packageEntries=await api.readStoredZip(custom.blob);assert(packageEntries.size===3 && packageEntries.has('06-current-view.png'),'Customized image selection differs');
       var customText=await packageEntries.get('report.txt').blob.text();assert(customText.includes('Bracket <&>') && customText.includes('Review <bolt> & preload') && customText.includes('Current view') && customText.includes('Convergence'),'Customized report lost notes or engineering context');
+      // Change the live camera/visibility while an earlier PNG is being encoded.
+      // The optional current image and its metadata must still represent export start.
+      var currentCamera=JSON.stringify(viewport.captureViewState()),currentHidden=[positive],capturedCurrent=null;
+      viewport.setHiddenFaceIds(currentHidden);
+      var nativeCapture=viewport.captureReportView,changedDuringEncoding=false;
+      viewport.captureReportView=function(state,presentation,options){
+        if(options && options.current){capturedCurrent={camera:JSON.stringify(this.captureViewState()),hidden:Array.from(this.hiddenFaceIds)};}
+        var canvas=nativeCapture.apply(this,arguments),encode=canvas.toBlob;
+        canvas.toBlob=function(callback,type){encode.call(canvas,function(blob){
+          if(!changedDuringEncoding){changedDuringEncoding=true;viewport.orbitByPixels(70,25);viewport.setHiddenFaceIds([]);}
+          callback(blob);
+        },type);};
+        return canvas;
+      };
+      var movingReport;
+      try{movingReport=await api.buildAnalysisReport(app,viewport,autoScale,'zip',{title:'Current snapshot',notes:'',views:['stress'],currentView:true});}
+      finally{viewport.captureReportView=nativeCapture;}
+      assert(changedDuringEncoding && capturedCurrent.camera===currentCamera && capturedCurrent.hidden.join()===currentHidden.join(),
+        'Current-view capture drifted from the camera/visibility recorded at export start');
+      var movingEntries=await api.readStoredZip(movingReport.blob),movingText=await movingEntries.get('report.txt').blob.text();
+      assert(Array.from(movingEntries.keys()).join() === 'report.txt,03-part-stress-von-mises.png,06-current-view.png',
+        'The current-view snapshot must follow the selected preset images in the report');
+      assert(movingText.includes('Camera\t'+currentCamera) && movingText.includes('Hidden authoring faces\t'+positive),
+        'Current-view metadata differs from the captured image');
+      assert(JSON.stringify(viewport.captureViewState())!==currentCamera && !viewport.hiddenFaceIds.size,
+        'Export overwrote navigation performed during encoding');
+      viewport.restoreViewState(JSON.parse(view));viewport.render();restored();
       var abort=new win.AbortController(),originalCapture=viewport.captureReportView;
       viewport.captureReportView=function(){var canvas=originalCapture.apply(this,arguments);abort.abort();return canvas;};
       var cancelled=false;try{await api.buildAnalysisReport(app,viewport,autoScale,'zip',null,abort.signal);}catch(error){cancelled=error.name==='AbortError';}finally{viewport.captureReportView=originalCapture;}

@@ -229,3 +229,39 @@ The owner approved this design; final visual acceptance remains separate.
   final guide regression additionally checks hiding/restoring the overlay when its
   target scrolls out of/back into view. Records: `build/guide-faces-browser.json`
   and `build/guide-faces-2x.json` (final guide run). Whitespace validation passes.
+
+## Pre-merge review fixes, 2026-09-23
+
+- Cached results omit derived factor-of-safety arrays, ranges and extrema, then
+  recalculate them from validated stresses/material on open. A real WASM Tet4
+  rigid-translation regression produces exactly zero stress and infinite FoS,
+  round-trips the cache and selected FoS view, preserves the installed results,
+  and still rejects nonfinite physical result metadata. Snapshot preparation
+  shares the original solver arrays. The solved report-workflow cube now saves
+  29 arrays / 3,196,152 binary bytes instead of 33 / 3,379,508.
+- CAD preview curves carry validated adjacent-face IDs through worker transfer
+  and model rotation. Hide/isolate retains edges belonging to any visible face,
+  including in Model/Wireframe. Filtering reuses the existing line index buffer
+  only on visibility changes, with one CAD-edge draw call and no added triangle
+  diagonals. Tests cover exact cube outlines, restoration, repeated isolation,
+  malformed ownership and real STEP/IGES/BREP edge extraction. The local worker
+  wrapper and distribution hashes were regenerated from the changed source.
+- Current-view report capture runs synchronously with its camera/visibility
+  metadata before the first PNG encode yields. The finished report still places
+  it after the preset images. The regression changes navigation and hidden faces
+  during encoding and verifies snapshot consistency and retention of those later
+  user changes; existing cancellation/failure restoration checks still pass.
+
+The four focused harnesses failed on the original implementation for the expected
+reasons and pass with the fixes. Fresh verification passed all 42 applicable
+`file://` browser harnesses, the complete 50-case CAD corpus, 77 Python tests and
+8 native tests. Independent project/DOCX inspection, the distribution artifact
+audit and whitespace checks also pass. Local records are
+`build/review-fixes-red.json`, `build/review-fixes-focused.json`,
+`build/review-fixes-full.json` and `build/review-fixes-corpus.json`.
+
+All ten focused HTTP harnesses also pass at 2× DPI: WASM results, face access,
+STEP/IGES/BREP import, project codec/CAD/recovery/interface/resume, report workflow
+and workspace layout (`build/review-fixes-http.json`). The complete fix diff was
+reviewed for buffer ownership, invalidation, geometry-boundary validation,
+cancellation/restoration and reproducible worker packaging before integration.

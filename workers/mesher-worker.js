@@ -277,15 +277,22 @@ function triangleHasArea(positions, a, b, c, modelScaleM) {
   return nx * nx + ny * ny + nz * nz > PREVIEW_RELATIVE_TRIANGLE_AREA_SQUARED;
 }
 
-function extractFeatureEdges(gmsh) {
+function extractFeatureEdges(gmsh, surfaceTags, faceIds) {
   var positions = [];
   var indices = [];
+  var ranges = [];
+  var faceByTag = new Map(surfaceTags.map(function (tag, index) { return [tag, faceIds[index]]; }));
   var curveTags = entityTags(gmsh.model.getEntities(1));
   var curveIndex;
   for (curveIndex = 0; curveIndex < curveTags.length; curveIndex += 1) {
     var adjacencies = gmsh.model.getAdjacencies(1, curveTags[curveIndex]);
     // A periodic seam is a topological curve on only one face, not a visible CAD feature.
     if (!adjacencies || !adjacencies.upward || adjacencies.upward.length < 2) { continue; }
+    var owners = Array.from(new Set(Array.from(adjacencies.upward, function (tag) { return faceByTag.get(tag); })));
+    if (owners.some(function (id) { return !id; })) {
+      throw knownImportError('GEOMETRY_NOT_CLOSED', 'The CAD file could not be converted into a usable surface preview.', 'Feature edge references an unknown surface.');
+    }
+    var start = indices.length;
     var nodes = gmsh.model.mesh.getNodes(1, curveTags[curveIndex], true, false);
     var elements = gmsh.model.mesh.getElements(1, curveTags[curveIndex]);
     var nodeTags = nodes.nodeTags || [];
@@ -313,8 +320,9 @@ function extractFeatureEdges(gmsh) {
         indices.push(first, second);
       }
     }
+    if (indices.length > start) { ranges.push({faceIds: owners, start: start, count: indices.length - start}); }
   }
-  return { positionsM: new Float64Array(positions), indices: new Uint32Array(indices) };
+  return { positionsM: new Float64Array(positions), indices: new Uint32Array(indices), ranges: ranges };
 }
 
 function extractPreview(gmsh, surfaceTags, geometryId, modelScaleM) {
@@ -372,7 +380,7 @@ function extractPreview(gmsh, surfaceTags, geometryId, modelScaleM) {
       normals: smoothFaceNormals(positions, indices, faceRanges, modelScaleM),
       indices: new Uint32Array(indices),
       faceRanges: faceRanges,
-      featureEdges: extractFeatureEdges(gmsh)
+      featureEdges: extractFeatureEdges(gmsh, surfaceTags, faceIds)
     }
   };
 }

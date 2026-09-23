@@ -884,6 +884,8 @@
     featureEdges.setIndex(new root.THREE.BufferAttribute(new Uint32Array(preview.featureEdges.indices), 1));
     featureEdges = new root.THREE.LineSegments(featureEdges, edgeMaterial);
     featureEdges.name = 'imported-geometry-feature-edges';
+    featureEdges.userData.sourceIndices = preview.featureEdges.indices;
+    featureEdges.userData.faceRanges = preview.featureEdges.ranges;
     importedGeometry = new root.THREE.Group();
     importedGeometry.name = 'imported-geometry';
     importedGeometry.add(surfaceMesh, featureEdges);

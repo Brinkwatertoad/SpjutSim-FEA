@@ -41,6 +41,56 @@
     return documentState;
   }
 
+  async function zeroStressProjectRoundTrip() {
+    var mesh = tetraMesh();
+    mesh.nodePositionsM[8] = 0; // Unit right tetrahedron: exact linear derivatives.
+    var geometry = {
+      geometryId: 'zero-stress', sourceName: 'tetra.step', sourceFormat: 'step',
+      orientation: api.identityRigidOrientation(),
+      faceIds: mesh.boundaryFaces.faceRanges.map(function (range) { return range.faceId; }),
+      boundingBoxM: {minM: [0, 0, 0], maxM: [1, 1, 1]}, volumeM3: 1 / 6,
+      preview: {positionsM: mesh.nodePositionsM, normals: new Float32Array(12),
+        indices: mesh.boundaryFaces.triangleConnectivity, faceRanges: mesh.boundaryFaces.faceRanges,
+        featureEdges: {positionsM: new Float64Array(0), indices: new Uint32Array(0)}}
+    };
+    var app = new api.AppController({document: api.createAnalysisDocument()});
+    // The source is only packaged here; actual CAD import has separate round-trip coverage.
+    app.replaceGeometry(geometry, {sourceName: 'tetra.step', sourceFormat: 'step', sourceBytes: new Uint8Array([1]).buffer});
+    app.replaceMaterial({youngsModulusPa: 1048576, poissonsRatio: 0, tensileYieldPa: 250e6});
+    app.replaceMeshSettings({elementType: 'tet4', preset: 'normal'});
+    app.document.mesh = mesh;
+    app.replaceSelectedFaces(geometry.faceIds);
+    app.createBoundaryCondition({type: 'support', componentsM: {x: 1 / 1024, y: 0, z: 0}});
+    var solver = new api.SolverClient();
+    try {
+      var revision = app.beginSolvePreflight();
+      app.completeSolvePreflight(revision, await solver.preflight(api.prepareSolverInput(app.document), revision));
+      app.beginSolve();
+      app.completeSolve(revision, await solver.solve(revision, app.document.solveSettings, true));
+      var result = app.document.results;
+      assert(api.validateResultModel(result, revision).valid && result.extrema.rawVonMisesMax.valuePa === 0,
+        'Rigid translation must produce a valid zero-stress result');
+      assert(result.factorOfSafety.rawMinimum.value === Infinity, 'Zero-stress FoS must remain unbounded');
+      app.replaceViewportPresentation(Object.assign({}, app.document.viewportPresentation, {field: 'factorOfSafety'}));
+      var blob = await api.writeProjectFile(await api.createProjectSnapshot(app, {includeDerived: true}));
+      var saved = await api.readProjectFile(blob);
+      var restored = api.prepareProjectCandidate(saved, geometry);
+      assert(!restored.cacheWarning && restored.document.results.factorOfSafety.rawMinimum.value === Infinity,
+        'Cached zero-stress results lost their unbounded FoS');
+      assert(restored.document.viewportPresentation.field === 'factorOfSafety', 'Reopening lost the FoS view');
+      assert(restored.document.results.surfaceFields.factorOfSafety.every(function (value) { return value === 10; }),
+        'Reopened infinite FoS must retain finite capped contour values');
+      assert(restored.document.solvePreflight.status === 'idle', 'Cached results restored prepared solver state');
+      assert(app.document.results === result && result.factorOfSafety.rawMinimum.value === Infinity,
+        'Saving modified the installed results');
+      result.solverStatistics.strainEnergyJ = Infinity;
+      var rejected = false;
+      try { await api.writeProjectFile(await api.createProjectSnapshot(app, {includeDerived: true})); }
+      catch (error) { rejected = true; }
+      assert(rejected, 'Nonfinite physical result metadata must still be rejected');
+    } finally { solver.dispose(); }
+  }
+
   var documentState = analysis();
   var controller = new api.AppController({ document: documentState });
   var input = api.prepareSolverInput(documentState);
@@ -72,7 +122,7 @@
         progressStages = []; iterationProgress = [];
         return client.solve(revision, documentState.solveSettings, false);
       });
-  }).then(function (result) {
+  }).then(async function (result) {
     assert(api.validateResultModel(result, revision).valid, 'WASM result model failed runtime validation');
     assert(result.rangeMetadataVersion === 1 && result.extrema.rawVonMisesMax.locationOwner === 'solver-sample' &&
       result.extrema.displayedVonMisesMax.locationOwner === 'surface-node', 'result peak ownership was not versioned');
@@ -121,6 +171,7 @@
     assert(documentState.results === null && documentState.resultInvalidation.stale, 'engineering edit did not mark results stale');
     assert(progressStages.indexOf('assembly') >= 0 && progressStages.indexOf('solve') >= 0 && progressStages.indexOf('visualization') >= 0,
       'coarse solver progress stages were not reported');
+    await zeroStressProjectRoundTrip();
     status.textContent = 'Passed'; status.dataset.result = 'passed';
   }).catch(function (error) {
     status.textContent = error.message; status.dataset.result = 'failed'; throw error;

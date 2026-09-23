@@ -248,10 +248,10 @@
         normals: transformTriples(preview.normals, delta.rotation, Float32Array),
         indices: new Uint32Array(preview.indices),
         faceRanges: preview.faceRanges.map(function (range) { return Object.assign({}, range); }),
-        featureEdges: {
+        featureEdges: Object.assign({}, preview.featureEdges, {
           positionsM: transformTriples(preview.featureEdges.positionsM, delta.rotation, Float64Array),
           indices: new Uint32Array(preview.featureEdges.indices)
-        }
+        })
       }
     });
   }

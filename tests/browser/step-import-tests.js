@@ -41,6 +41,12 @@
     assert(bounds.minM.every(function (value) { return approximately(value, 0, 2e-7); }), format + ' lower bounds were not meter-based');
     assert(bounds.maxM.every(function (value) { return approximately(value, 1, 2e-7); }), format + ' upper bounds were not meter-based');
     assert(api.validateGeometryModel(geometry).valid, format + ' geometry did not satisfy the public contract');
+    var edges=geometry.preview.featureEdges;
+    assert(edges.ranges && edges.ranges.length===12, format + ' cube must expose ownership for its twelve CAD edges');
+    assert(edges.ranges.every(function(range){return range.faceIds.length===2 && range.faceIds.every(function(id){return geometry.faceIds.includes(id);});}),
+      format + ' CAD edge ownership does not match the adjacent faces');
+    assert(edges.ranges.reduce(function(count,range){return count+range.count;},0)===edges.indices.length,
+      format + ' edge ownership must cover all CAD segments');
   }
 
   async function rejectMeshInput() {

@@ -151,7 +151,7 @@
       "source_files": [
         {
           "path": "workers/mesher-worker.js",
-          "sha256": "eb6e839c5504b1e832be2dda0a4c5d26b1e130e9eaba57b78dfdef6e2244e346"
+          "sha256": "2f1bb1ca7f71278a06551efb9bce917bbcbb340efae2939c63c08d42a6767472"
         },
         {
           "path": "workers/solver-worker.js",
@@ -826,7 +826,7 @@
     },
     {
       "path": "web/generated/local-runtime/mesher-worker-source.js",
-      "sha256": "24cec618ed62c987902592998492d24cd78dd495d5b1f27602ab48b7f88fbfb1",
+      "sha256": "bd94271351c2cb9f135a71c8042a5b507a487e6a974863253cc6df8dd3200d40",
       "components": [
         "workers"
       ]

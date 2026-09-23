@@ -20,6 +20,7 @@
    * @typedef {Object} PolylineMesh
    * @property {Float64Array} positionsM
    * @property {Uint32Array} indices Line-segment endpoint indices.
+   * @property {{start: number, count: number, faceIds: FaceId[]}[]=} ranges Contiguous CAD-curve ranges and adjacent faces.
    */
 
   /**
@@ -136,6 +137,23 @@
     }
     for (index = 0; index < preview.featureEdges.indices.length; index += 1) {
       if (preview.featureEdges.indices[index] >= featureEdgeVertexCount) { return validation(false, 'feature-edge-index-out-of-range'); }
+    }
+    // Optional for older preview producers; current CAD imports include ownership.
+    if (preview.featureEdges.ranges !== undefined) {
+      if (!Array.isArray(preview.featureEdges.ranges)) { return validation(false, 'invalid-feature-edge-ranges'); }
+      var edgeEnd = 0, knownFaces = new Set(faceIds);
+      for (var edgeRange of preview.featureEdges.ranges) {
+        if (!edgeRange || !Number.isSafeInteger(edgeRange.start) || !Number.isSafeInteger(edgeRange.count) ||
+            edgeRange.start !== edgeEnd || edgeRange.count <= 0 || edgeRange.count % 2 !== 0 ||
+            !Array.isArray(edgeRange.faceIds) || !edgeRange.faceIds.length ||
+            new Set(edgeRange.faceIds).size !== edgeRange.faceIds.length ||
+            edgeRange.faceIds.some(function (id) { return !knownFaces.has(id); })) {
+          return validation(false, 'invalid-feature-edge-range');
+        }
+        edgeEnd += edgeRange.count;
+        if (edgeEnd > preview.featureEdges.indices.length) { return validation(false, 'feature-edge-range-overflow'); }
+      }
+      if (edgeEnd !== preview.featureEdges.indices.length) { return validation(false, 'incomplete-feature-edge-ranges'); }
     }
     for (index = 0; index < preview.indices.length; index += 1) {
       if (preview.indices[index] >= previewVertexCount) {

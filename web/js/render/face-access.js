@@ -1,6 +1,27 @@
 (function(root){
   'use strict';
   var api=root.SpjutsimFEA, prototype=api.ViewportController.prototype;
+  function updateFeatureEdges(edges, hidden) {
+    var data = edges.userData, ranges = data.faceRanges;
+    if (!ranges) { if (hidden.size) { edges.visible = false; } return; }
+    if (data.hiddenFaces === hidden) { return; }
+    var wasFiltered = data.hiddenFaces && data.hiddenFaces.size;
+    data.hiddenFaces = hidden;
+    if (!hidden.size && !wasFiltered) { return; }
+    var source = data.sourceIndices, index = edges.geometry.index, count = 0;
+    if (!hidden.size) { index.array.set(source); count = source.length; }
+    else {
+      ranges.forEach(function (range) {
+        if (range.faceIds.some(function (id) { return !hidden.has(id); })) {
+          index.array.set(source.subarray(range.start, range.start + range.count), count);
+          count += range.count;
+        }
+      });
+    }
+    // One reusable index buffer and one draw call, independent of the CAD face count.
+    edges.geometry.setDrawRange(0, count);
+    index.needsUpdate = true;
+  }
   prototype.pickFacesAtPointer=function(event){
     var mesh=this.presentation.mode==='mesh' && this.meshSurface ? this.meshSurface : this.previewMesh;
     if(!mesh){return [];}
@@ -20,9 +41,12 @@
       if(!mesh){return;}if(!mesh.material[2]){mesh.material.push(new root.THREE.MeshBasicMaterial({visible:false,side:root.THREE.DoubleSide}));}
       mesh.geometry.groups.forEach(function(group,index){var id=mesh.userData.faceIdsByRange[index];group.materialIndex=hidden.has(id)?2:this.selectedFaceIds.has(id)?1:0;},this);
     },this);
+    if(this.importedGeometry){
+      var edges=this.importedGeometry.getObjectByName('imported-geometry-feature-edges');
+      if(edges){updateFeatureEdges(edges,hidden);}
+    }
     if(hidden.size){
-      // Edge polylines have no per-face ownership. Omit them during isolation instead of showing hidden boundaries.
-      if(this.importedGeometry){var edges=this.importedGeometry.getObjectByName('imported-geometry-feature-edges');if(edges){edges.visible=false;}}
+      // Mesh lines have no CAD ownership; the face-grouped surface remains available.
       if(this.meshDisplay){this.meshDisplay.userData.lines.visible=false;}
     }
   };

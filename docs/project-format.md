@@ -54,6 +54,12 @@ before installation. Restored results never restore solve readiness. Derived
 factor of safety and convergence classification are recalculated from validated
 inputs. Unsupported or invalid optional data offers an explicit setup-only open.
 
+Writers omit FoS arrays and their derived ranges/extrema, sharing the original
+solver arrays while preparing the cache. Zero stress can legitimately produce
+infinite FoS; reopening reconstructs that value and the finite contour cap without
+relaxing finite-value validation for physical results. Earlier caches containing
+finite FoS metadata remain readable; their FoS is likewise recalculated.
+
 A convergence level can use a different mesh from the currently installed mesh.
 Such a result cannot currently be bundled with that mesh: save setup only, or
 regenerate and solve the current mesh before including results. This avoids

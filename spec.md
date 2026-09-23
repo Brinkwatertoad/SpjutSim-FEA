@@ -515,6 +515,15 @@ Use plain JavaScript objects for configuration/state and typed arrays for bulk n
 
 `FaceId` is opaque to consumers. The Gmsh implementation may derive it from OpenCASCADE/Gmsh entity tags, but other code must not depend on that encoding.
 
+Current CAD previews include `featureEdges.ranges`: contiguous, even-length
+`{start, count, faceIds}` ranges into the edge index buffer, with the adjacent
+CAD faces for each curve. Validate coverage and face references at the geometry
+boundary and preserve ownership through orientation changes. This additive
+preview metadata is optional for older producers. Visibility filtering retains
+an edge when any adjacent face is visible, updates the existing line index buffer
+only when the hidden-face set changes, and keeps one CAD-edge draw call. Model
+wireframe isolation must not introduce preview tessellation diagonals.
+
 ### 5.2 Material
 
 ```js
@@ -692,6 +701,11 @@ restoring data never restores a worker, check readiness, or a claim of new
 numerical validation. Saving does not clear engineering history or invalidate
 results. Mark dirty state using persistence changes, including metadata-only
 edits, independently of numerical analysis revision.
+
+Cached results omit derived FoS arrays, ranges, and extrema; recompute them from
+validated stresses and material on open. This preserves legitimate infinite FoS
+at zero stress without allowing nonfinite physical result metadata or copying
+the solver's bulk arrays during snapshot creation.
 
 Recovery uses the same validated setup snapshot, with prompt writes after
 committed changes. Store CAD once per source identity and update small setup
@@ -1517,6 +1531,11 @@ Export is available only for current solved results with no pending draft or run
 Default content includes model/setup parameters, units, material provenance where matched, assumptions, result and diagnostic values, warnings, and convergence status/table. Text tables use tabs between cells. Default images are assignments, mesh, von Mises stress, optional yield FoS, and Auto deformation. Each uses Reset View then Fit Model, current projection/display units and viewport resolution, automatic field limits, and clean scene output without grid/gizmo/UI chrome or transient selections.
 
 Capture restores camera, selection, probe, overlays, presentation, and animation multiplier even on failure. Revision/result changes abort a stale export. No export mutates engineering state.
+
+Capture the optional current view and its camera/visibility metadata together,
+before asynchronous image encoding permits navigation changes. Later interaction
+must neither change that snapshot nor be undone by the remaining preset captures.
+Keep the current image after the selected preset images in the finished report.
 
 **Report customization (Plan 34):** Preserve one-action export with complete defaults. An accessible options action allows a title/notes, selection of available views, and optional current-view capture; remember compact choices and offer Restore defaults. Notes remain user-authored and are escaped as text. Applicable assumptions, units, warnings, result currency, smoothing/deformation explanations, and convergence status cannot be omitted. User-selected views include their actual field, scale, limits, and clipping. Future measurement/case content is added only when those capabilities exist.
 

@@ -87,16 +87,20 @@
     if (options.currentView) {
       var presentation = Object.assign({}, state.viewportPresentation);
       presentation.deformationScale = (presentation.deformationScale || 0) * viewport.deformationAnimationMultiplier;
-      views.push({name:'06-current-view.png',presentation:presentation,current:true});
+      // Capture before the first PNG encode yields to navigation/visibility edits.
+      views.unshift({name:'06-current-view.png',presentation:presentation,current:true});
       files[0].data += '\nCurrent view\nCamera\t' + JSON.stringify(viewport.captureViewState()) + '\nDisplay, field, units, scale and limits\t' + JSON.stringify(presentation) + '\nHidden authoring faces\t' + Array.from(viewport.hiddenFaceIds || []).join(', ') + '\nClipping\tNo user section plane; camera near/far ' + viewport.camera.near + ' / ' + viewport.camera.far + '\n';
     }
+    var currentImage = null;
     for (var view of views) {
       assertCurrent();
       var canvas = viewport.captureReportView(state, view.presentation, {current:view.current === true});
       var blob = await new Promise(function (resolve, reject) { canvas.toBlob(function (value) { value ? resolve(value) : reject(Error('Could not encode a report image.')); }, 'image/png'); });
-      files.push({ name: view.name, data: blob });
+      var image = { name: view.name, data: blob };
+      if (view.current) { currentImage = image; } else { files.push(image); }
       canvas.width = 0; canvas.height = 0;
     }
+    if (currentImage) { files.push(currentImage); }
     assertCurrent();
     var archive = format === 'docx' ? await api.createReportDocx(files[0].data, files.slice(1)) : await api.createStoredZip(files);
     assertCurrent();

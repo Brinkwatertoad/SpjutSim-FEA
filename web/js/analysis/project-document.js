@@ -66,6 +66,22 @@
     for(var i=0;i<mesh.nodePositionsM.length;i++){if(Math.fround(mesh.nodePositionsM[i])!==surface.nodePositionsM[i]){return false;}}
     return boundary.every(function(value,index){return value===surface.triangleConnectivity[index];});
   }
+  function resultForCache(result) {
+    if (!result || !result.factorOfSafety) { return result; }
+    // FoS is regenerated from validated stresses/material on open. Its legitimate
+    // infinities are not JSON metadata; retain the bulk solver arrays by reference.
+    var saved = Object.assign({}, result, {
+      surfaceFields: Object.assign({}, result.surfaceFields),
+      ranges: Object.assign({}, result.ranges),
+      extrema: Object.assign({}, result.extrema)
+    });
+    delete saved.factorOfSafety;
+    delete saved.surfaceFields.factorOfSafety;
+    delete saved.ranges.factorOfSafety;
+    delete saved.extrema.rawFactorOfSafetyMinimum;
+    delete saved.extrema.displayedFactorOfSafetyMinimum;
+    return saved;
+  }
   async function createProjectSnapshot(controller,options) {
     if(!controller.geometrySource || !controller.document.geometry) { throw Error('Import a CAD model before saving a project.'); }
     if(controller.document.assignmentDraft) { throw Error('Apply or Cancel the draft before saving the project.'); }
@@ -79,7 +95,7 @@
     if(options && options.includeDerived && state.mesh) {
       if(api.engineeringBusy(state)){throw Error('Finish or cancel the current operation before saving mesh/results.');}
       if(state.results && !meshMatchesResult(state.mesh,state.results)){throw Error('The displayed result belongs to a different mesh (for example a convergence level). Save CAD/setup only, or generate and solve the current mesh before including results.');}
-      derived={mesh:state.mesh,results:state.results && state.results.analysisRevision===state.analysisRevision ? state.results : null,
+      derived={mesh:state.mesh,results:state.results && state.results.analysisRevision===state.analysisRevision ? resultForCache(state.results) : null,
         convergence:state.convergenceStudy && state.convergenceStudy.status!=='running' ? clone(Object.assign({},state.convergenceStudy,{selectedResult:null})) : null};
       manifest.cache={producer:PRODUCER,byteOrder:'little',analysisRevision:state.analysisRevision};
     }
