@@ -84,6 +84,11 @@ int fem_set_material(FemContext *context, double youngs_modulus_pa,
                      double poisson_ratio, double density_kg_m3);
 int fem_set_constraints(FemContext *context, const uint32_t *dof_indices,
                         const double *values_m, uint32_t count);
+/* Directions contains count unit vectors in global coordinates; dof/3 identifies
+ * the node. This replaces all supports, including global ones in the same call. */
+int fem_set_directional_constraints(FemContext *context, const uint32_t *dof_indices,
+                                    const double *values_m, const double *directions,
+                                    uint32_t count);
 int fem_clear_loads(FemContext *context);
 int fem_set_nodal_forces(FemContext *context, const double *forces_n,
                          uint32_t degree_of_freedom_count);

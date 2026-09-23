@@ -152,19 +152,15 @@ bool has_six_rigid_constraints(const Mesh &mesh,
         std::max(coordinate_scale, std::numeric_limits<double>::min());
     std::vector<std::array<double, 6>> rows;
     for (const auto &c : component_constraints[entry.first]) {
-      const auto node = c.dof / 3, axis = c.dof % 3;
+      const auto node = c.dof / 3;
       const double x = (mesh.node_positions_m[node * 3] - center[0]) /
                        coordinate_scale,
                    y = (mesh.node_positions_m[node * 3 + 1] - center[1]) /
                        coordinate_scale,
                    z = (mesh.node_positions_m[node * 3 + 2] - center[2]) /
                        coordinate_scale;
-      if (axis == 0)
-        rows.push_back({1, 0, 0, 0, z, -y});
-      else if (axis == 1)
-        rows.push_back({0, 1, 0, -z, 0, x});
-      else
-        rows.push_back({0, 0, 1, y, -x, 0});
+      const auto v = constraint_direction(c);
+      rows.push_back({v[0],v[1],v[2], y*v[2]-z*v[1], z*v[0]-x*v[2], x*v[1]-y*v[0]});
     }
     if (matrix_rank_6(std::move(rows)) < 6) {
       diagnostic =
@@ -401,7 +397,7 @@ bool Context::validate_and_prepare_constraints() {
     return false;
   }
   std::sort(constraints_.begin(), constraints_.end(),
-            [](const auto &a, const auto &b) { return a.dof < b.dof; });
+            [](const auto &a, const auto &b) { return a.dof != b.dof ? a.dof < b.dof : a.direction < b.direction; });
   std::vector<PrescribedDof> unique;
   for (const auto &c : constraints_) {
     if (c.dof >= graph_.degree_of_freedom_count || !std::isfinite(c.value_m)) {
@@ -409,7 +405,7 @@ bool Context::validate_and_prepare_constraints() {
                                "A prescribed displacement is invalid.");
       return false;
     }
-    if (!unique.empty() && unique.back().dof == c.dof) {
+    if (!unique.empty() && unique.back().dof == c.dof && unique.back().direction == c.direction) {
       if (unique.back().value_m != c.value_m) {
         diagnostic_ = make_error(ErrorCode::constraint_conflict,
                                  "Two supports prescribe different values on "
@@ -420,6 +416,13 @@ bool Context::validate_and_prepare_constraints() {
       unique.push_back(c);
   }
   constraints_ = std::move(unique);
+  if (!build_constraint_bases(constraints_, constraint_bases_, diagnostic_)) return false;
+  elimination_constraints_.clear();
+  for (const auto &c : constraints_)
+    if (!constraint_bases_.count(c.dof/3)) elimination_constraints_.push_back(c);
+  for (const auto &entry : constraint_bases_)
+    for (unsigned a=0;a<entry.second.rank;++a)
+      elimination_constraints_.push_back({entry.first*3+a,entry.second.values[a]});
   diagnostic_ = {};
   return true;
 }
@@ -503,7 +506,9 @@ bool Context::preflight(double device_gib, std::uint64_t cap,
     }
   }
   memory_estimate_ =
-      estimate_memory(mesh_, graph_, device_gib, cap, multiplier);
+      estimate_memory(mesh_, graph_, device_gib, cap, multiplier,
+          constraint_bases_.size() * (sizeof(ConstraintBasis) + 4*sizeof(void*) + sizeof(std::uint32_t)) +
+          (constraints_.capacity()+elimination_constraints_.capacity())*sizeof(PrescribedDof));
   if (memory_estimate_.exceeds_wasm_cap) {
     diagnostic_ = make_error(
         ErrorCode::memory_limit_exceeded,
@@ -632,7 +637,8 @@ bool Context::solve(const SolveSettings &settings) {
       }
     }
     std::vector<double> rhs = external;
-    if (!apply_symmetric_constraints(matrix, rhs, constraints_, diagnostic_)) {
+    transform_constraint_system(matrix, rhs, constraint_bases_);
+    if (!apply_symmetric_constraints(matrix, rhs, elimination_constraints_, diagnostic_)) {
       restore_graph();
       return false;
     }
@@ -649,6 +655,7 @@ bool Context::solve(const SolveSettings &settings) {
       settings.on_phase(SolvePhase::solve);
     Results result;
     result.solver = solver;
+    restore_global_displacement(u, constraint_bases_);
     result.displacement_m = std::move(u);
     result.displacement_magnitude_m.resize(mesh_.node_positions_m.size() / 3);
     result.reaction_n.assign(dofs, 0.0);
@@ -740,16 +747,24 @@ bool Context::solve(const SolveSettings &settings) {
     }
     std::vector<unsigned char> constrained(dofs, 0);
     for (const auto &c : constraints_)
-      constrained[c.dof] = 1;
+      if (!constraint_bases_.count(c.dof/3)) constrained[c.dof] = 1;
+    for (const auto &entry : constraint_bases_) {
+      const auto node=entry.first*3;
+      for (unsigned a=0;a<entry.second.rank;++a) {
+        double projection=0;
+        for(int i=0;i<3;++i) projection+=entry.second.axes[a][i]*(internal[node+i]-external[node+i]);
+        for(int i=0;i<3;++i) result.reaction_n[node+i]+=entry.second.axes[a][i]*projection;
+      }
+    }
     double force_scale = 0;
     for (std::uint32_t i = 0; i < dofs; ++i) {
       result.total_applied_force_n[i % 3] += external[i];
       force_scale += std::abs(external[i]);
       if (constrained[i]) {
         result.reaction_n[i] = internal[i] - external[i];
-        result.total_reaction_n[i % 3] += result.reaction_n[i];
-        force_scale += std::abs(result.reaction_n[i]);
       }
+      result.total_reaction_n[i % 3] += result.reaction_n[i];
+      force_scale += std::abs(result.reaction_n[i]);
     }
     double balance2 = 0;
     for (int a = 0; a < 3; ++a) {

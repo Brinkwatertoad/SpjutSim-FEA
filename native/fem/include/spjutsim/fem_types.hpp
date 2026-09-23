@@ -68,6 +68,8 @@ struct Material {
 struct PrescribedDof {
   std::uint32_t dof = 0;
   double value_m = 0.0;
+  // Zero means the legacy global dof axis; otherwise a unit global direction.
+  std::array<double, 3> direction{};
 };
 
 enum class SurfaceLoadType { pressure, total_force };

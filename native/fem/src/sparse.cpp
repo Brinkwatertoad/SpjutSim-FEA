@@ -187,7 +187,7 @@ void csr_multiply(const CsrMatrix &matrix, const std::vector<double> &x,
 
 MemoryEstimate estimate_memory(const Mesh &mesh, const CsrGraph &graph,
                                double device_gib, std::uint64_t cap,
-                               double multiplier) {
+                               double multiplier, std::uint64_t constraint_bytes) {
   MemoryEstimate e;
   e.node_count = mesh.node_positions_m.size() / 3;
   const auto arity = nodes_per_element(mesh);
@@ -220,7 +220,7 @@ MemoryEstimate estimate_memory(const Mesh &mesh, const CsrGraph &graph,
       (2 * e.degree_of_freedom_count + e.node_count + 15 * e.element_count +
        15 * samples_per_element * e.element_count) *
       sizeof(double);
-  e.runtime_overhead_bytes = kRuntimeOverhead;
+  e.runtime_overhead_bytes = kRuntimeOverhead + constraint_bytes;
   const auto sparse_structure =
       e.mesh_storage_bytes + e.matrix_index_bytes + e.row_pointer_bytes;
   const auto graph_phase = sparse_structure + e.graph_bytes;

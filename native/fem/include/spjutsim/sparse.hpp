@@ -22,5 +22,6 @@ MemoryEstimate
 estimate_memory(const Mesh &, const CsrGraph &,
                 double device_memory_gib_hint = 0.0,
                 std::uint64_t wasm_heap_cap_bytes = kDefaultWasmHeapCapBytes,
-                double safety_multiplier = kDefaultMemorySafetyMultiplier);
+                double safety_multiplier = kDefaultMemorySafetyMultiplier,
+                std::uint64_t constraint_storage_bytes = 0);
 } // namespace spjutsim::fem

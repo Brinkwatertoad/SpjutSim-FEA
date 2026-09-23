@@ -1,3 +1,4 @@
+#include <cmath>
 #include "spjutsim/fem_c_api.h"
 
 #include "spjutsim/fem_context.hpp"
@@ -111,6 +112,22 @@ int fem_set_constraints(FemContext *c, const uint32_t *dofs,
     constraints.reserve(count);
     for (uint32_t i = 0; i < count; ++i)
       constraints.push_back({dofs[i], values[i]});
+    return status(c->implementation.set_constraints(std::move(constraints)));
+  });
+}
+int fem_set_directional_constraints(FemContext *c, const uint32_t *dofs,
+                                    const double *values, const double *directions, uint32_t count) {
+  if (!c || (count && (!dofs || !values || !directions))) return -1;
+  return guarded(c, [&]() {
+    std::vector<PrescribedDof> constraints;
+    constraints.reserve(count);
+    for (uint32_t i=0;i<count;++i) {
+      const std::array<double,3> axis{directions[i*3],directions[i*3+1],directions[i*3+2]};
+      // An explicit direction must never use the legacy zero-vector sentinel.
+      const double norm=axis[0]*axis[0]+axis[1]*axis[1]+axis[2]*axis[2];
+      if (!std::isfinite(norm) || std::abs(norm-1)>2e-10) return -1;
+      constraints.push_back({dofs[i],values[i],axis});
+    }
     return status(c->implementation.set_constraints(std::move(constraints)));
   });
 }

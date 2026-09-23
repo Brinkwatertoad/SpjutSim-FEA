@@ -2,6 +2,7 @@
 
 #include "spjutsim/fem_types.hpp"
 #include "spjutsim/sparse.hpp"
+#include "spjutsim/constraint_basis.hpp"
 
 namespace spjutsim::fem {
 
@@ -38,6 +39,8 @@ private:
   Material material_;
   Loads loads_;
   std::vector<PrescribedDof> constraints_;
+  ConstraintBases constraint_bases_;
+  std::vector<PrescribedDof> elimination_constraints_;
   CsrGraph graph_;
   MemoryEstimate memory_estimate_;
   Results results_;
