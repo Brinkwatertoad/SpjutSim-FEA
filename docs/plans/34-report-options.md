@@ -14,7 +14,7 @@
 
 ## Dependencies and boundaries
 
-- Follows Plans 28–33. Preserve existing report format control and toolbar arrangement.
+- Follows Plans 28–33. Preserve existing report format control. Group format, Export and options beside Solve/Results, as requested in the owner follow-up.
 - Default one-action export remains complete. No report designer, external Office dependency or required template selection.
 - Persistent probes/case comparisons are integrated by their later plans, not simulated here.
 

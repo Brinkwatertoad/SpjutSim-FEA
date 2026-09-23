@@ -124,3 +124,34 @@ visual owner walkthrough is still pending.
 Recovery persists committed state promptly, but cannot guarantee the last edit
 survives a crash during a write or unavailable/cleared browser storage. No unload
 prompt is used. Mesh/results and unapplied drafts remain outside automatic recovery.
+
+## Follow-up: stable guide and compact editor headers
+
+The owner requested explicit mesh instruction, stable guide anchors, compact
+Apply/Cancel/Remove actions and reports beside Solve/Results. After reviewing the
+first compact layout, the owner approved sharing the expanded assignment header
+with its name and moving explanations beside their fields.
+
+- The opening panel and explicit Help guide no longer compete. Guide stages use
+  stable section headings and explicit navigation; Apply on Supports/Loads keeps
+  the stage and position. The prepared example starts at Generate mesh, followed
+  by inspection in Mesh view and a separate Solve step.
+- Material, support, load and gravity headers use accessible checkmark Apply,
+  × Cancel and shared UI Kit trash Remove. Remove is hidden for new items. Material
+  cancellation restores committed properties. Field hints follow pressure,
+  surface-normal or component inputs; report controls stay together beside Results.
+- Regression checks cover starting guidance, support/load Apply, header geometry,
+  contextual hints, material Cancel and explicit mesh → inspect → solve progression.
+  The solved example retains the 1 kPa stress and −1,000 N reaction checks above.
+- Visual checks cover dark/light palettes and 280/220-pixel Setup widths. At the
+  minimum width, header names truncate while the Name field retains the full value.
+  Evidence: `build/guide-header-load.png`, `build/guide-header-narrow.png`,
+  `build/guide-header-light.png`, and `build/guide-empty.png`.
+
+- Final verification: all 42 applicable direct-file browser harnesses pass, plus
+  five HTTP/2× DPI harnesses (project resume/interface, grouped authoring, workspace
+  layout and report workflow), 77 Python tests and eight native tests. Shared icon
+  generation check and whitespace validation pass. Browser records:
+  `build/guide-actions-browser.json` and `build/guide-actions-http.json`.
+
+Design approval does not replace the remaining owner walkthrough of the final UI.

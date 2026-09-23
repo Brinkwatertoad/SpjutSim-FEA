@@ -15,7 +15,7 @@
 ## Dependencies and boundaries
 
 - Follows Plans 30–31. Does not introduce load cases or advanced physics.
-- Preserve toolbar arrangement and current Stress/Deformation interaction.
+- Preserve toolbar commands and current Stress/Deformation interaction. The owner-approved follow-up groups report controls beside Solve/Results.
 - Remove the top View menu only after its full command/keyboard paths are verified elsewhere.
 - No separate Simple/Advanced application or duplicate forms.
 - Pull feature-local accessibility, resize, cancel/retry and novice walkthrough checks forward from former Plan 30.
@@ -41,14 +41,14 @@ The shared execution, evidence, performance, and review rules in [the plan index
 
 ### 2. Make editing and feedback consistent
 
-- [x] Use Apply for setup commits, Save project for files and Save to material library for catalog persistence. Preserve existing transactions, unique-name validation and focus return.
+- [x] Use Apply for setup commits, Save project for files and Save to material library for catalog persistence. Use checkmark Apply, × Cancel and shared trash Remove in the expanded assignment header; contextual field hints replace opening paragraphs. Preserve existing transactions, unique-name validation and focus return without scrolling the guide.
 - [x] Place field errors beside controls and assignment errors within the editor; focus the first invalid field on failed Apply. Coalesce announcements and avoid validation noise during incomplete typing.
-- [x] Use a dismissible viewport guide pointing at the next control, with remembered dismissal and Help reenable; lead Results with displacement/stress/available FoS/convergence and retain visible warnings.
+- [x] Use a dismissible viewport guide pointing at stable section headings or toolbar controls, with explicit progression that stays put during support/load Apply, remembered dismissal and Help reenable; lead Results with displacement/stress/available FoS/convergence and retain visible warnings.
 - [x] Add Duplicate and explicitly named Suppress/Include controls for assignments in contextual options, with model-owned enabled state, history, persistence, rank/preflight and report updates. Keep Show/hide presentation distinct. Suppressed definitions remain visible and do not enter numerical inputs. Add regression tests before extending this public contract.
 
 ### 3. Improve starting and running a check
 
-- [x] Offer Import CAD… and Open Cube Example directly in an empty viewport without a placeholder solid. Apply the cube's recommended setup before displaying Mesh and solve guidance. Guide dismissal is remembered; recovered projects stay quiet. Loading an example never silently solves.
+- [x] Offer Import CAD… and Open Cube Example directly in an empty viewport without a placeholder solid. Apply the cube's recommended setup before displaying Generate mesh guidance. Teach explicit generation, inspection in Mesh view, and then Solve. Guide dismissal is remembered; recovered projects stay quiet. Loading an example never silently solves.
 - [x] Offer explicit Mesh and solve when setup is valid but no current mesh exists. Reuse generation → checks → solve with stage progress, cancellation, late-reply guards, worker disposal and unchanged memory confirmations.
 - [x] Retain independent Generate mesh and Run checks only. Test cancellation at every stage, setup edits blocked appropriately, failed-stage retry and no automatic continuation after a cancelled request.
 

@@ -120,7 +120,7 @@
       assert(app.document.viewportPresentation.deformationScale>0 && app.document.viewportPresentation.deformationScale!==oldScale,'Auto deformation scale did not follow new result');
       fill('deformation-mode','user');fill('deformation-scale','37');
       click('[data-setup-kind="gravity"] [data-setup-row-trigger]');
-      assert(doc.getElementById('apply-gravity-button').textContent==='Apply','Existing gravity does not offer Apply');
+      assert(doc.getElementById('apply-gravity-button').getAttribute('aria-label')==='Apply gravity','Existing gravity does not offer Apply');
       fill('gravity-direction','-x');click('#cancel-gravity-edit');
       assert(app.document.gravity.accelerationMS2[1]>0 && app.document.results===result && app.document.viewportPresentation.mode==='deformation','Cancel gravity changed solved state');
       click('[data-setup-kind="gravity"] [data-setup-row-trigger]');fill('gravity-direction','+z');click('#apply-gravity-button');

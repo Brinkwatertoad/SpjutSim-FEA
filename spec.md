@@ -1733,8 +1733,9 @@ This is not a validity proof; it is a warning that geometric nonlinearity may ma
 
 ### 15.1 Main shell and workspace
 
-Preserve the SpjutSim UI foundation and current action-bar arrangement: Setup,
-Undo, Redo, Save, report format/Export, Solve, and Results. Setup/Results retain
+Preserve the SpjutSim UI foundation. Keep Setup, Undo, Redo and Save on the left;
+group Solve, Results and report format/Export/options on the right. Keep report
+controls together when the toolbar wraps. Setup/Results retain
 their labels and Truss action icons; toggles use accent and selection-text roles.
 The Setup toggle replaces a duplicate pane title. Runtime activity and short
 outcomes appear at the right of the menubar; routine history prose stays hidden.
@@ -1786,6 +1787,14 @@ prevent using a valid material in the current analysis. See Sections 3 and 5.2.
 Mesh is one expandable row with preset/count summary, generation/regeneration,
 and deletion. Deleting a mesh preserves source, material, assignments, gravity,
 and mesh settings while clearing derived data.
+
+Expanded material/support/load/gravity editors place compact actions at the right
+of the assignment header: checkmark Apply, × Cancel, and shared UI Kit trash
+Remove. Keep accessible labels, hover/focus help and separate destructive spacing;
+hide Remove for new items. Material Cancel restores committed properties. The name
+remains on the left, with fields starting directly below; do not reserve an empty
+action row. Put pressure sign and force-direction hints beside their relevant
+fields and hide them with those fields.
 
 **Editing language:** use Apply for engineering edits, Save project for
 persistence, and Save to material library for catalog storage. Distinguish the
@@ -1973,11 +1982,17 @@ Tet10 mesh settings already applied. Its 1 m cube uses E = 200 GPa, ν = 0.3;
 expected axial stress is 1 kPa, axial extension 5 nm. Examples are deliberately
 loaded offline and never silently solved. No placeholder solid is shown.
 
-A small guide in the viewport points to the relevant control from beside Setup
-or below toolbar actions. Start after CAD import, allow Back/Next and easy ×
-dismissal, remember dismissal, and expose Help → Show setup guide. Guide display
+A small guide in the viewport points to stable Setup section headings or toolbar
+actions, never to moving Apply buttons. The opening panel appears alone; explicitly
+starting Help guidance on an empty project replaces it with guidance pointing to
+Model. Start after CAD import, allow Back/Next and easy × dismissal, remember dismissal, and expose Help → Show setup guide. Guide display
 never steals focus or changes engineering state. User-requested step navigation
-can open the corresponding existing editor. Recovered projects stay quiet. No
+can open the corresponding existing editor. Applying supports or loads does not
+advance the guide or scroll focus back to a collapsed row. Teach Import → Material
+→ Supports → Loads → Generate mesh → Inspect mesh → Solve → Review results.
+Mesh generation uses the existing Mesh tool; inspection switches to Mesh view and
+explains refinement around holes, small features and loads, plus convergence. The
+prepared cube begins at Generate mesh. Recovered projects stay quiet. No
 next-step banner or routine persistence prose belongs above Model. Report and
 mesh options use shared UI Kit SVGs with 20px icons, 30px desktop targets and 44px
 coarse-pointer targets.

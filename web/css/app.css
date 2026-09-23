@@ -323,3 +323,18 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 @media (pointer:coarse) { .fea-icon-button, .fea-guide-dismiss { min-width:44px; min-height:44px; } }
 
 .fea-guide-target { outline:2px solid var(--ui-color-accent, #387bff); outline-offset:2px; }
+
+/* Actions remain form controls while occupying the expanded row's header. */
+.fea-setup-row-editing { position:relative; }
+.fea-setup-row-editing > .fea-setup-row-button { width:calc(100% - 114px); min-height:38px; grid-template-columns:14px minmax(0,1fr); align-items:center; }
+.fea-setup-row-editing > .fea-setup-row-button strong { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fea-setup-row-editing > .fea-setup-row-button .fea-setup-row-summary,
+.fea-setup-row-editing > .fea-setup-row-button .fea-setup-row-meta { display:none; }
+.fea-editor-actions { display:flex; align-items:center; gap:4px; position:absolute; top:4px; right:6px; z-index:2; }
+.fea-editor-actions button { flex:none; width:30px; height:30px; margin:0; }
+.fea-editor-actions [data-action-intent="danger"] { margin-left:8px; }
+.fea-editor-actions button[hidden] { display:none; }
+.fea-editor-actions button:focus-visible::after { content:attr(aria-label); position:absolute; top:100%; right:0; padding:4px 8px; background:var(--ui-color-surface); color:var(--ui-color-text); border:1px solid var(--ui-color-border); border-radius:4px; white-space:nowrap; font-size:12px; }
+.fea-report-actions { display:flex; align-items:center; gap:4px; flex:none; }
+.fea-actionbar { flex-wrap:wrap; }
+@media (pointer:coarse) { .fea-editor-actions button { width:44px; height:44px; } .fea-setup-row-editing > .fea-setup-row-button { width:calc(100% - 156px); min-height:52px; } }

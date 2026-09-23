@@ -3,6 +3,31 @@
 
   function byId(id) { return document.getElementById(id); }
 
+  // Keep SVG children intact when an editor's accessible action label changes.
+  function labelAction(button, label) {
+    if (!button) { return; }
+    if (!button.closest('.fea-editor-actions')) { button.textContent = label; return; }
+    button.setAttribute('aria-label', label); button.title = label;
+  }
+  function initializeEditorActions() {
+    document.querySelectorAll('.fea-editor-actions button').forEach(function(button) {
+      var label = button.textContent.trim(), icon;
+      if (button.dataset.actionIntent === 'danger') {
+        icon = root.PortableUIIcons.createIcon('delete', {document:document,size:20});
+      } else {
+        icon = document.createElementNS('http://www.w3.org/2000/svg','svg');
+        icon.setAttribute('viewBox','0 0 24 24'); icon.setAttribute('fill','none');
+        icon.setAttribute('stroke','currentColor'); icon.setAttribute('stroke-width','2');
+        icon.setAttribute('stroke-linecap','round'); icon.setAttribute('stroke-linejoin','round');
+        icon.setAttribute('aria-hidden','true');
+        var path = document.createElementNS(icon.namespaceURI,'path');
+        path.setAttribute('d',button.type === 'submit' ? 'M5 12l4 4L19 6' : 'M6 6l12 12M18 6L6 18');
+        icon.appendChild(path);
+      }
+      button.replaceChildren(icon); button.classList.add('fea-icon-button'); labelAction(button,label);
+    });
+  }
+
   function AnalysisAuthoringUI(controller) {
     var storage = null;
     this.controller = controller;
@@ -98,6 +123,8 @@
   AnalysisAuthoringUI.prototype.start = function () {
     var self = this;
     if (!this.materialForm) { return; }
+    initializeEditorActions();
+    if (byId('cancel-material-edit')) { byId('cancel-material-edit').addEventListener('click',function(){self.closeInspectorRow({restoreFocus:true,cancelEdit:true});}); }
     this.materialForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveMaterial(); });
     if (this.materialCatalogSelect) {
       this.materialCatalogSelect.addEventListener('change', function () { self.selectMaterialCatalogEntry(); });
@@ -218,7 +245,7 @@
     var submit = this.materialForm && this.materialForm.querySelector('button[type="submit"]');
     var details = this.materialCatalogDetails;
     Array.from(this.materialForm ? this.materialForm.querySelectorAll('input') : []).forEach(function (input) { input.readOnly = Boolean(factory); });
-    if (submit) { submit.textContent = 'Apply material'; }
+    if (submit) { labelAction(submit, 'Apply material'); }
     if (byId('save-material-library-button')) { byId('save-material-library-button').hidden = Boolean(entry); }
     if (this.replaceSavedMaterialButton) { this.replaceSavedMaterialButton.hidden = !entry || entry.layer !== 'user'; }
     if (this.removeSavedMaterialButton) { this.removeSavedMaterialButton.hidden = !entry || entry.layer !== 'user'; }
@@ -338,6 +365,7 @@
       if (!this.materialCatalogSelect || this.materialCatalogSelect.value === 'custom') { this.writeMaterialFields(material); }
     }
     this.removeMaterialButton.disabled = !material;
+    this.removeMaterialButton.hidden = !material;
     setFeedback(this.materialStatus, this.materialFeedback, material
       ? (material.name || 'Unnamed material') + ' · ' + root.SpjutsimFEA.preferredFromSI('youngsModulusPa', material.youngsModulusPa) + ' ' + root.SpjutsimFEA.preferredUnit('youngsModulusPa')
       : 'No material defined.');
@@ -435,7 +463,7 @@
       byId('support-' + axis + '-enabled').checked = value !== undefined;
       byId('support-' + axis).value = value === undefined ? '' : String(root.SpjutsimFEA.preferredFromSI('displacementM', value));
     });
-    this.supportForm.querySelector('button[type="submit"]').textContent = 'Apply';
+    labelAction(this.supportForm.querySelector('button[type="submit"]'), 'Apply support');
     this.cancelSupportEdit.hidden = false;
     this.renderSupportType();
   };
@@ -445,7 +473,7 @@
     this.supportForm.reset();
     if (byId('support-name')) { byId('support-name').value = 'Support ' + this.controller.nextSupportNameSequence; }
     this.supportType.value = this.lastSupportType;
-    this.supportForm.querySelector('button[type="submit"]').textContent = 'Apply support';
+    labelAction(this.supportForm.querySelector('button[type="submit"]'), 'Apply support');
     this.cancelSupportEdit.hidden = true;
     this.removeSupportItemButton.hidden = true;
     this.renderSupportType();
@@ -567,7 +595,7 @@
     byId('load-pressure').value = String(root.SpjutsimFEA.siToDisplay('pressurePa', item.pressurePa === undefined ? 1e6 : item.pressurePa, this.loadUnits.pressurePa));
     var unit = this.loadUnits.forceN;
     ['x', 'y', 'z'].forEach(function (axis, index) { byId('load-f' + axis).value = root.SpjutsimFEA.siToDisplay('forceN', item.forceN ? item.forceN[index] : (index===1?1:0), unit); });
-    this.loadForm.querySelector('button[type="submit"]').textContent = 'Apply';
+    labelAction(this.loadForm.querySelector('button[type="submit"]'), 'Apply load');
     this.cancelLoadEdit.hidden = false;
     this.renderLoadType();
   };
@@ -580,7 +608,7 @@
     this.syncLoadUnits();
     if (byId('load-name')) { byId('load-name').value = 'Load ' + this.controller.nextLoadNameSequence; }
     this.loadType.value = this.lastLoadType;
-    this.loadForm.querySelector('button[type="submit"]').textContent = 'Apply load';
+    labelAction(this.loadForm.querySelector('button[type="submit"]'), 'Apply load');
     this.cancelLoadEdit.hidden = true;
     this.removeLoadItemButton.hidden = true;
     this.renderLoadType();
@@ -626,7 +654,7 @@
       byId('gravity-direction').value = nonzero.length===1 ? (gravity.accelerationMS2[nonzero[0]]<0?'-':'+')+'xyz'[nonzero[0]] : 'custom';
       ['x','y','z'].forEach(function(axis,i){byId('gravity-'+axis).value=String(root.SpjutsimFEA.preferredFromSI('accelerationMS2',gravity.accelerationMS2[i]));});
     }
-    byId('apply-gravity-button').textContent = documentState.gravity.enabled ? 'Apply' : 'Apply gravity';
+    labelAction(byId('apply-gravity-button'), 'Apply gravity');
     byId('remove-gravity-button').hidden = !documentState.gravity.enabled;
     setFeedback(this.gravityStatus,this.gravityFeedback,documentState.gravity.enabled ? 'Gravity is active.' : 'Apply to add gravity to the calculation.');
   };
@@ -763,6 +791,10 @@
       this.controller.cancelAssignmentDraft();
       if (kind === 'support') { this.resetSupportForm(false); }
       if (kind === 'load') { this.resetLoadForm(false); }
+      if (kind === 'material') {
+        if (this.materialCatalogSelect) { this.materialCatalogSelect.value = 'custom'; }
+        this.writeMaterialFields(this.controller.document.material); this.materialFeedback = null;
+      }
     }
     this.returnEditorsToStash();
     this.activeInspectorKind = null;
@@ -775,7 +807,7 @@
       var selector = '[data-setup-kind="' + kind + '"][data-item-id="' + itemId + '"] [data-setup-row-trigger]';
       var target = document.querySelector(selector);
       if (!target) { target = kind === 'support' ? this.addSupportButton : (kind === 'load' || kind === 'gravity' ? this.addLoadButton : null); }
-      if (target) { target.focus(); }
+      if (target) { target.focus({preventScroll:true}); }
     }
   };
 
@@ -832,6 +864,7 @@
       var active = self.activeInspectorKind === definition.kind && self.activeInspectorItemId === definition.itemId;
       var editorId = 'setup-editor-' + definition.kind + '-' + definition.itemId;
       item.className = 'fea-setup-row';
+      item.classList.toggle('fea-setup-row-editing', active && ['material','support','load','gravity'].indexOf(definition.kind) !== -1);
       item.dataset.setupRow = '';
       item.dataset.setupKind = definition.kind;
       item.dataset.itemId = definition.itemId;

@@ -34,6 +34,10 @@
       revision=app.document.analysisRevision;doc.getElementById('save-material-library-button').click();
       assert(app.document.analysisRevision===revision && app.document.material.youngsModulusPa===200e9,'Saving to the library changed the active material');
       doc.getElementById('material-form').dispatchEvent(new win.Event('submit',{bubbles:true,cancelable:true}));assert(app.document.material.youngsModulusPa===100e9,'Apply did not use the saved material');
+      doc.querySelector('[data-setup-kind="material"] [data-setup-row-trigger]').click();
+      doc.getElementById('material-youngs').value='150';doc.getElementById('cancel-material-edit').click();
+      doc.querySelector('[data-setup-kind="material"] [data-setup-row-trigger]').click();
+      assert(Number(doc.getElementById('material-youngs').value)===100 && app.document.material.youngsModulusPa===100e9,'Material Cancel retained unapplied properties');
       document.getElementById('test-status').textContent='Passed';
     }catch(e){document.getElementById('test-status').textContent='Failed: '+e.message;console.error(e);}
   });

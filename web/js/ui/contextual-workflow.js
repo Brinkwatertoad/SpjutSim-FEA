@@ -7,7 +7,7 @@
     if(!state.material){return 1;}
     if(!state.boundaryConditions.some(function(item){return item.enabled!==false;})){return 2;}
     if(!state.loads.some(function(item){return item.enabled!==false;}) && !state.gravity.enabled && !api.hasPrescribedDisplacement(state)){return 3;}
-    return state.results ? 5 : 4;
+    return state.results ? 7 : state.mesh ? 5 : 4;
   }
   function applyCubeExample(app){
     var geometry=app.document.geometry;
@@ -25,18 +25,18 @@
     var guide=document.getElementById('setup-guide'),step=0,shown=false,dismissed=false,highlighted=null,previous=app.document.geometry && app.document.geometry.geometryId;
     try{dismissed=root.localStorage.getItem(guideKey)==='true';}catch(error){}
     var steps=[
-      {title:'Import a part',text:'Import one CAD solid, or open the prepared cube example.',target:'#empty-import'},
-      {title:'Apply a material',text:'Choose a material or enter its properties, then Apply.',target:'[data-setup-kind="material"] [data-setup-row-trigger]'},
-      {title:'Add supports',text:'Select faces and apply the constraints your part needs. Add more supports as needed, then choose Next.',target:'#setup-add-support-button'},
-      {title:'Add loads',text:'Select faces, choose a load and Apply. Add further loads if needed, then choose Next.',target:'#setup-add-load-button'},
-      {title:'Mesh and solve',text:'Use the default Tet10 mesh to begin. Mesh and solve runs checks before solving. The cube example should extend by 5 nm under 1 kPa axial stress.',target:'#solve-button'},
-      {title:'Review the results',text:'Inspect displacement, stress and warnings. Check convergence before drawing conclusions, then save your project or export a report.',target:'#toggle-results-pane'}
+      {title:'Import a part',text:'Open Model to import a CAD solid. Dismiss this guide to use the opening panel or prepared cube example.',target:'#setup-guide-model'},
+      {title:'Apply a material',text:'Choose a material or enter its properties, then use the checkmark to Apply.',target:'#setup-guide-material'},
+      {title:'Add supports',text:'Select faces and apply the constraints your part needs. Add more supports as needed, then choose Next.',target:'#setup-guide-support'},
+      {title:'Add loads',text:'Select faces, choose a load and Apply. Add further loads if needed, then choose Next.',target:'#setup-guide-load'},
+      {title:'Generate mesh',text:'Open Mesh, choose a density and Generate mesh. Start with the default Tet10 formulation; complicated parts may need finer settings.',target:'#setup-guide-mesh'},
+      {title:'Inspect the mesh',text:'Rotate and zoom to inspect holes, small features and loaded areas. Refine the density and regenerate if needed. Visual inspection is a first check; convergence is needed to assess accuracy.',target:'#setup-guide-mesh'},
+      {title:'Solve',text:'Choose Solve to run checks and calculate results. Resolve any reported setup problems before continuing.',target:'#solve-button'},
+      {title:'Review the results',text:'Inspect displacement, stress and warnings. Check convergence before drawing conclusions, then save your project or export a report beside Results.',target:'#toggle-results-pane'}
     ];
     function position(){
       if(!shown){return;}
       var selector=steps[step].target;
-      var form=step===1 ? document.getElementById('material-form') : step===2 ? document.getElementById('support-form') : step===3 ? document.getElementById('load-form') : null;
-      if(form && form.getClientRects().length){selector='#'+form.id+' button[type=submit]';}
       var target=document.querySelector(selector),viewport=document.getElementById('viewport').getBoundingClientRect();
       if(!target || !target.getClientRects().length){guide.hidden=true;return;}
       guide.hidden=false;
@@ -50,33 +50,39 @@
       guide.style.setProperty('--guide-arrow-top',Math.max(15,Math.min(guide.offsetHeight-15,rect.top+rect.height/2-parseFloat(guide.style.top)))+'px');
     }
     function render(){
+      document.getElementById('empty-workflow').hidden=Boolean(app.document.geometry) || app.projectOpening || shown;
       guide.hidden=!shown;if(!shown){if(highlighted){highlighted.classList.remove('fea-guide-target');highlighted=null;}return;}
       document.getElementById('setup-guide-title').textContent=steps[step].title;
       var text=steps[step].text;
-      if(step===4 && (!app.document.projectMetadata || app.document.projectMetadata.name!=='Cube example')){text=text.split(' The cube example')[0];}
+      if(step===7 && app.document.projectMetadata && app.document.projectMetadata.name==='Cube example'){text+=' The cube should extend by 5 nm under 1 kPa axial stress.';}
       document.getElementById('setup-guide-text').textContent=text;
       document.getElementById('setup-guide-back').disabled=step===0 || Boolean(app.document.assignmentDraft);
-      document.getElementById('setup-guide-next').textContent=step===5?'Done':'Next';
-      document.getElementById('setup-guide-next').disabled=Boolean(app.document.assignmentDraft) || (step<4 && nextGuideStep(app.document)<=step) || (step===4 && !app.document.results);
+      document.getElementById('setup-guide-next').textContent=step===7?'Done':'Next';
+      document.getElementById('setup-guide-next').disabled=Boolean(app.document.assignmentDraft) || (step<4 && nextGuideStep(app.document)<=step) || ((step===4 || step===5) && !app.document.mesh) || (step===6 && !app.document.results);
       position();
     }
     function dismiss(){shown=false;dismissed=true;try{root.localStorage.setItem(guideKey,'true');}catch(error){}render();}
     document.getElementById('setup-guide-dismiss').addEventListener('click',dismiss);
     function openStep(){
-      var kind=step===1?'material':step===2?'support':step===3?'load':null;
+      var kind=step===1?'material':step===2?'support':step===3?'load':step===4 || step===5?'mesh':null;
       if(kind){
         var trigger=document.querySelector('[data-setup-kind="'+kind+'"] [data-setup-row-trigger]');
         if(trigger && trigger.getAttribute('aria-expanded')!=='true'){trigger.click();}
-        if(trigger){trigger.scrollIntoView({block:'nearest'});}
+        var heading=document.querySelector(steps[step].target),pane=document.getElementById('setup-pane');
+        if(heading){
+          var bounds=heading.getBoundingClientRect(),paneBounds=pane.getBoundingClientRect();
+          if(bounds.top<paneBounds.top || bounds.bottom>paneBounds.bottom){pane.scrollTop+=bounds.top-paneBounds.top-12;}
+        }
       }
+      if(step===5 && app.document.mesh){document.querySelector('[data-view-mode="mesh"]').click();}
       render();
     }
     document.getElementById('setup-guide-back').addEventListener('click',function(){step=Math.max(0,step-1);openStep();});
-    document.getElementById('setup-guide-next').addEventListener('click',function(){if(step===5){dismiss();return;}step++;openStep();});
+    document.getElementById('setup-guide-next').addEventListener('click',function(){if(step===7){dismiss();return;}step++;openStep();});
     document.querySelector('[data-ui-menu-action="walkthrough"]').addEventListener('click',function(){
       dismissed=false;try{root.localStorage.setItem(guideKey,'false');}catch(error){}
       step=nextGuideStep(app.document);shown=true;
-      if(document.getElementById('toggle-setup-pane').getAttribute('aria-expanded')==='false'){document.getElementById('toggle-setup-pane').click();}render();
+      if(document.getElementById('toggle-setup-pane').getAttribute('aria-expanded')==='false'){document.getElementById('toggle-setup-pane').click();}openStep();
     });
     document.getElementById('empty-import').addEventListener('click',function(){document.getElementById('import-step-input').click();});
     document.getElementById('load-example').addEventListener('click',function(){importCadFile(new File([api.EXAMPLE_CUBE_STEP],'example-cube.step'),{example:true});});
@@ -88,14 +94,13 @@
     viewport.addEventListener('drop',function(event){event.preventDefault();if(event.dataTransfer.files.length===1 && !api.engineeringBusy(app.document) && !app.document.assignmentDraft){importCadFile(event.dataTransfer.files[0]);}});
     app.subscribe(function(state,change){
       if(change==='solve-progress' || change==='convergence-progress'){return;}
-      document.getElementById('empty-workflow').hidden=Boolean(state.geometry) || app.projectOpening;
       var geometryId=state.geometry && state.geometry.geometryId;
       if(geometryId!==previous){
         previous=geometryId;
         shown=Boolean(state.geometry && !dismissed && change!=='project-open');step=nextGuideStep(state);
       }
       if(change==='project-open' || change==='project-new'){shown=false;}
-      if(change==='example-ready' && !dismissed){shown=true;step=4;}
+      if(change==='example-ready' && !dismissed){shown=true;step=4;openStep();}
       var info=api.modelInformation(state),detail=document.getElementById('model-information');
       detail.textContent=info.dimensionsM ? 'Dimensions: '+info.dimensionsM.map(function(v){return api.formatResultMagnitude(v,api.preferredUnit('displacementM'));}).join(' × ')+' · CAD volume: '+(info.volumeM3===null?'Unavailable':api.formatResultMagnitude(info.volumeM3,api.preferredUnit('volumeM3')))+' · Mass: '+(info.massKg===null?'Supply density':api.formatResultMagnitude(info.massKg,api.preferredUnit('massKg'))) : '';
       render();

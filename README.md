@@ -257,15 +257,18 @@ pick-through, hide/isolate and Show all for Model/Mesh faces; assignment rows lo
 existing loads/supports. Visibility never removes faces from the analysis.
 The options icon directly on the Mesh row opens formulation settings, including
 Tet4; Tet10 remains the default. Nondefault settings remain in the row summary. The duplicate View menu is removed; signed views,
-Fit, Reset and Perspective remain at the viewport. The toolbar arrangement and
-Stress/Deformation interaction are retained.
+Fit, Reset and Perspective remain at the viewport. Report controls sit together
+beside Solve/Results. Stress/Deformation interaction is retained.
 
-Setup editors use Apply; Save to material library independently stores reusable
-materials. Assignment options include Duplicate and Suppress/Include. The empty viewport offers Import CAD… and Open Cube Example, with no placeholder
+Expanded setup headers pair the assignment name with compact Apply (✓), Cancel
+(×) and Remove (trash) actions. Field hints follow the selected load type.
+Save to material library independently stores reusable materials. Assignment options include Duplicate and Suppress/Include. The empty viewport offers Import CAD… and Open Cube Example, with no placeholder
 solid. The example already has material, supports, load and Tet10 settings.
 A dismissible guide starts after CAD import; dismissal is remembered. Help →
-Show setup guide brings it back. Recovered projects reopen quietly. Mesh and solve runs
-generation, checks and solve on explicit request, retaining cancellation and
+Show setup guide brings it back. Stable section anchors and explicit Next/Back
+keep support/load editing in place. The guide teaches Generate mesh, Inspect mesh,
+then Solve; the prepared cube starts at Generate mesh. Recovered projects reopen
+quietly. Mesh and solve runs generation, checks and solve on explicit request, retaining cancellation and
 independent Generate mesh/Run checks actions. Rebuild the embedded example with
 `python3 tools/build-examples.py` when its source fixture changes.
 
