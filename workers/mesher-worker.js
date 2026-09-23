@@ -329,6 +329,7 @@ function extractPreview(gmsh, surfaceTags, geometryId, modelScaleM) {
   var positions = [];
   var indices = [];
   var faceIds = [];
+  var planarFaces = {};
   var faceRanges = [];
   var surfaceIndex;
   for (surfaceIndex = 0; surfaceIndex < surfaceTags.length; surfaceIndex += 1) {
@@ -370,11 +371,28 @@ function extractPreview(gmsh, surfaceTags, geometryId, modelScaleM) {
     if (indices.length === start) {
       throw knownImportError('GEOMETRY_NOT_CLOSED', 'The CAD file could not be converted into a usable surface preview.', 'Surface has no triangle elements.');
     }
+    // CAD type is authoritative: a coarse tessellation alone cannot prove planarity.
+    var entityType = gmsh.model.getType(2, surfaceTag);
+    if (entityType.entityType === 'Plane' || entityType === 'Plane') {
+      var pa=indices[start]*3, pb=indices[start+1]*3, pc=indices[start+2]*3;
+      var u=[positions[pb]-positions[pa],positions[pb+1]-positions[pa+1],positions[pb+2]-positions[pa+2]];
+      var v=[positions[pc]-positions[pa],positions[pc+1]-positions[pa+1],positions[pc+2]-positions[pa+2]];
+      var normal=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]], norm=Math.hypot.apply(null,normal);
+      normal=normal.map(function(value){return value/norm;});
+      var origin=positions.slice(pa,pa+3), tolerance=modelScaleM*1e-9;
+      var planar=true;
+      for(var pi=start;pi<indices.length;pi++) {
+        var offset=indices[pi]*3;
+        if(Math.abs((positions[offset]-origin[0])*normal[0]+(positions[offset+1]-origin[1])*normal[1]+(positions[offset+2]-origin[2])*normal[2])>tolerance) { planar=false; break; }
+      }
+      if(planar)planarFaces[faceId]={version:1,originM:origin,normal:normal};
+    }
     faceIds.push(faceId);
     faceRanges.push({ faceId: faceId, start: start, count: indices.length - start });
   }
   return {
     faceIds: faceIds,
+    planarFaces: planarFaces,
     preview: {
       positionsM: new Float64Array(positions),
       normals: smoothFaceNormals(positions, indices, faceRanges, modelScaleM),
@@ -429,6 +447,7 @@ function importGeometry(gmsh, message) {
       sourceFormat: message.sourceFormat,
       orientation: { rotation: [1, 0, 0, 0, 1, 0, 0, 0, 1], operations: [] },
       faceIds: preview.faceIds,
+      planarFaces: preview.planarFaces,
       boundingBoxM: box,
       volumeM3: volume,
       preview: preview.preview

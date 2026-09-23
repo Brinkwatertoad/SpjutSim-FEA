@@ -41,13 +41,20 @@
         var provenance = catalog.metadata.fieldProvenance[key]; parameters.push(['Source: ' + key, provenance.label + ' — ' + provenance.url]);
       });
     }
+    function frameDescription(item) {
+      if(!item.frame)return '';
+      var frame=api.resolveLocalFrame(item.frame,state.geometry);
+      return '; Local XYZ; '+(item.frame.ownership==='cad'?'CAD-attached to '+item.frame.faceId:'manual, stays global')+
+        '; global origin '+frame.originM.map(function(v){return magnitude(v,unit('lengthM'));}).join(', ')+
+        '; axes in global XYZ '+frame.axes.map(function(v){return '['+v.map(number).join(', ')+']';}).join(', ');
+    }
     state.boundaryConditions.forEach(function (support) {
-      parameters.push(['Support: ' + support.name + (support.enabled === false ? ' (suppressed)' : ''), 'Faces: ' + support.faceIds.join(', ') + '; ' + Object.keys(support.componentsM).map(function (axis) { return axis + ' = ' + magnitude(support.componentsM[axis], unit('displacementM')); }).join(', ')]);
+      parameters.push(['Support: ' + support.name + (support.enabled === false ? ' (suppressed)' : ''), 'Faces: ' + support.faceIds.join(', ') + '; ' + Object.keys(support.componentsM).map(function (axis) { return axis + ' = ' + magnitude(support.componentsM[axis], unit('displacementM')); }).join(', ')+frameDescription(support)+(support.preset ? '; '+support.preset+'; tangential motion free; user loads are not scaled' : '')]);
     });
     state.loads.forEach(function (load) {
       var value = load.type === 'pressure' ? magnitude(load.pressurePa, unit('pressurePa')) + ' (positive inward)' : load.direction === 'surface-normal'
-        ? magnitude(load.magnitudeN, unit('forceN')) + ' normal, ' + load.sense : load.forceN.map(function (v) { return magnitude(v, unit('forceN')); }).join(', ') + ' (global X, Y, Z)';
-      parameters.push(['Load: ' + load.name + (load.enabled === false ? ' (suppressed)' : ''), value + '; Faces: ' + load.faceIds.join(', ')]);
+        ? magnitude(load.magnitudeN, unit('forceN')) + ' normal, ' + load.sense : load.forceN.map(function (v) { return magnitude(v, unit('forceN')); }).join(', ') + (load.frame ? ' (local X, Y, Z)' : ' (global X, Y, Z)');
+      parameters.push(['Load: ' + load.name + (load.enabled === false ? ' (suppressed)' : ''), value + frameDescription(load) + (load.frame ? '; global resultant '+api.assignmentGlobalForce(load,state.geometry).map(function(v){return magnitude(v,unit('forceN'));}).join(', ') : '') + '; Faces: ' + load.faceIds.join(', ')]);
     });
     parameters.push(['Gravity', state.gravity.enabled ? state.gravity.accelerationMS2.map(function(v){return magnitude(v,unit('accelerationMS2'));}).join(', ') + ' (global X, Y, Z)' : 'Disabled']);
     parameters.push(['Mesh settings', Object.keys(state.meshSettings).map(function(k){return k+': '+(/SizeM$/.test(k) ? magnitude(state.meshSettings[k],unit('lengthM')) : state.meshSettings[k]);}).join('; ')], ['Solver settings', JSON.stringify(state.solveSettings)],

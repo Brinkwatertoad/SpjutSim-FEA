@@ -1,7 +1,8 @@
 (function (root) {
   'use strict';
   var api=root.SpjutsimFEA, identities=new WeakMap();
-  var PRODUCER='spjutsim-fea/cad-face-map-1/mesh-1/result-2';
+  var LEGACY_PRODUCER='spjutsim-fea/cad-face-map-1/mesh-1/result-2';
+  var PRODUCER=LEGACY_PRODUCER+'/local-frame-1';
   function clone(value) { return value===undefined ? undefined : JSON.parse(JSON.stringify(value)); }
   function setupDefinition(controller) {
     var state=controller.document;
@@ -30,12 +31,13 @@
     return identities.get(buffer);
   }
   function validateProjectManifest(manifest) {
-    if(!manifest || manifest.format!=='SpjutSim-FEA' || manifest.version!==1 || manifest.producer!==PRODUCER) { throw Error('Unsupported project version or CAD identity producer. Open with the producing app version.'); }
+    if(!manifest || manifest.format!=='SpjutSim-FEA' || manifest.version!==1 || ![PRODUCER,LEGACY_PRODUCER].includes(manifest.producer)) { throw Error('Unsupported project version or CAD identity producer. Open with the producing app version.'); }
     var source=manifest.source;
     if(!source || typeof source.name!=='string' || api.sourceFormatForFilename(source.name)!==source.format || !/^[a-f0-9]{64}$/.test(source.identity) || typeof source.geometryId!=='string' || !Array.isArray(source.faces) || !source.faces.length || source.faces.length>100000) { throw Error('Invalid project CAD identity.'); }
     var ids=new Set();source.faces.forEach(function(face){if(!face || typeof face.id!=='string' || !face.id || ids.has(face.id) || !Number.isSafeInteger(face.count) || face.count<=0 || !Number.isInteger(face.crc) || face.crc<0 || face.crc>0xffffffff){throw Error('Invalid project face evidence.');}ids.add(face.id);});
     var setup=manifest.setup;
     if(!setup || !Array.isArray(setup.loads) || !Array.isArray(setup.boundaryConditions) || setup.loads.length+setup.boundaryConditions.length>10000 || !api.validateRigidOrientation(setup.orientation).valid) { throw Error('Invalid saved setup.'); }
+    if(manifest.producer===LEGACY_PRODUCER && setup.loads.concat(setup.boundaryConditions).some(function(item){return item && (item.frame!==undefined || item.preset!==undefined);})) { throw Error('Legacy project producer cannot contain local frame definitions.'); }
     var provenance=setup.materialProvenance;
     if(provenance !== null && provenance !== undefined) {
       if(typeof provenance !== 'object' || typeof provenance.notes !== 'string' ||

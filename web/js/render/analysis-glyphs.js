@@ -195,11 +195,11 @@
     if (draft.definition.type === 'total-force' && draft.definition.direction === 'surface-normal') {
       text += quantity(draft.definition.magnitudeN,'forceN') + ' distributed by area, ' + draft.definition.sense + ' along each local normal. Opposing directions can cancel in the net force.';
     } else if (draft.definition.type === 'total-force' && draft.definition.forceN && draft.definition.forceN.every(Number.isFinite)) {
-      text += quantity(Math.hypot.apply(Math,draft.definition.forceN),'forceN') + ' total across selection; global [ ' + draft.definition.forceN.map(function(v){return quantity(v,'forceN');}).join(', ') + ' ]. Adding faces redistributes this total.';
+      text += quantity(Math.hypot.apply(Math,draft.definition.forceN),'forceN') + ' total across selection; ' + (draft.definition.frame ? 'local' : 'global') + ' [ ' + draft.definition.forceN.map(function(v){return quantity(v,'forceN');}).join(', ') + ' ]. Adding faces redistributes this total.';
     } else if (draft.definition.type === 'pressure' && Number.isFinite(draft.definition.pressurePa)) {
       text += quantity(draft.definition.pressurePa,'pressurePa') + ' constant inward pressure on every selected face.';
     } else if (draft.kind === 'support') {
-      text += 'Prescribed global displacement: ' + Object.keys(draft.definition.componentsM || {}).map(function(axis){return axis.toUpperCase() + ' = ' + quantity(draft.definition.componentsM[axis],'displacementM');}).join(', ') + '.';
+      text += 'Prescribed ' + (draft.definition.frame ? 'local' : 'global') + ' displacement: ' + Object.keys(draft.definition.componentsM || {}).map(function(axis){return axis.toUpperCase() + ' = ' + quantity(draft.definition.componentsM[axis],'displacementM');}).join(', ') + '.';
     }
     return text + ' Preview arrows show direction, not magnitude.';
   }
@@ -219,7 +219,7 @@
       condition.faceIds.forEach(function (faceId) {
         cachedFaceSamples(documentState, faceId).samples.forEach(function (sample) {
           descriptors.push({ type: condition.type, itemId: condition.id, preview:condition.preview === true, faceId: faceId, positionM: sample.positionM,
-            direction: sample.outwardNormal, components: ['x', 'y', 'z'].filter(function (axis) { return condition.componentsM[axis] !== undefined; }) });
+            direction: sample.outwardNormal, componentDirections: condition.frame ? root.SpjutsimFEA.assignmentDirections(condition,documentState.geometry) : null, components: ['x', 'y', 'z'].filter(function (axis) { return condition.componentsM[axis] !== undefined; }) });
         });
       });
     });
@@ -228,7 +228,7 @@
         cachedFaceSamples(documentState, faceId).samples.forEach(function (sample) {
           var direction = load.type === 'pressure' || load.direction === 'surface-normal'
             ? sample.outwardNormal.map(function (value) { return value * (load.type === 'pressure' ? -Math.sign(load.pressurePa) : load.sense === 'pull' ? 1 : -1); })
-            : normalized(load.forceN);
+            : normalized(root.SpjutsimFEA.assignmentGlobalForce(load,documentState.geometry));
           descriptors.push({ type: load.type, itemId: load.id, preview:load.preview === true, faceId: faceId, positionM: sample.positionM, direction: direction });
         });
       });

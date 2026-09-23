@@ -192,12 +192,12 @@
     gravityValidation = root.SpjutsimFEA.validateGravity(transfer.gravity, materialValidation.value);
     if (!gravityValidation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(gravityValidation)); }
     supports = transfer.boundaryConditions.map(function (item) {
-      var validation = root.SpjutsimFEA.validateBoundaryCondition(item, geometry.faceIds);
+      var validation = root.SpjutsimFEA.validateBoundaryCondition(item, geometry.faceIds, geometry);
       if (!validation.valid) { throw new Error('Invalid selected CAD faces for replacement support: ' + root.SpjutsimFEA.firstValidationMessage(validation)); }
       return validation.value;
     });
     loads = transfer.loads.map(function (item) {
-      var validation = root.SpjutsimFEA.validateLoad(item, geometry.faceIds);
+      var validation = root.SpjutsimFEA.validateLoad(item, geometry.faceIds, geometry);
       if (!validation.valid) { throw new Error('Invalid selected CAD faces for replacement load: ' + root.SpjutsimFEA.firstValidationMessage(validation)); }
       return validation.value;
     });
@@ -363,7 +363,7 @@
       name: definition.name === undefined ? 'Support ' + this.nextSupportNameSequence : definition.name,
       faceIds: this.document.selectedFaceIds.slice()
     });
-    var validation = root.SpjutsimFEA.validateBoundaryCondition(candidate, this.document.geometry && this.document.geometry.faceIds);
+    var validation = root.SpjutsimFEA.validateBoundaryCondition(candidate, this.document.geometry && this.document.geometry.faceIds, this.document.geometry);
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
     this.recordEngineeringEdit('support',null,validation.value,'Add support',this.document.boundaryConditions.length);
     this.document.boundaryConditions.push(validation.value);
@@ -384,7 +384,7 @@
       type: definition.type === undefined ? existing.type : definition.type,
       faceIds: definition.faceIds === undefined ? existing.faceIds.slice() : definition.faceIds
     });
-    var validation = root.SpjutsimFEA.validateBoundaryCondition(candidate, this.document.geometry && this.document.geometry.faceIds);
+    var validation = root.SpjutsimFEA.validateBoundaryCondition(candidate, this.document.geometry && this.document.geometry.faceIds, this.document.geometry);
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
     if (root.SpjutsimFEA.sameEngineeringDefinition(existing,validation.value)) { return; }
     var previousDefinition = Object.assign({},existing,{name:''});
@@ -418,7 +418,7 @@
       name: definition.name === undefined ? 'Load ' + this.nextLoadNameSequence : definition.name,
       faceIds: this.document.selectedFaceIds.slice()
     });
-    var validation = root.SpjutsimFEA.validateLoad(candidate, this.document.geometry && this.document.geometry.faceIds);
+    var validation = root.SpjutsimFEA.validateLoad(candidate, this.document.geometry && this.document.geometry.faceIds, this.document.geometry);
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
     this.recordEngineeringEdit('load',null,validation.value,'Add load',this.document.loads.length);
     this.document.loads.push(validation.value);
@@ -438,7 +438,7 @@
       type: definition.type === undefined ? existing.type : definition.type,
       faceIds: definition.faceIds === undefined ? existing.faceIds.slice() : definition.faceIds
     });
-    var validation = root.SpjutsimFEA.validateLoad(candidate, this.document.geometry && this.document.geometry.faceIds);
+    var validation = root.SpjutsimFEA.validateLoad(candidate, this.document.geometry && this.document.geometry.faceIds, this.document.geometry);
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
     if (root.SpjutsimFEA.sameEngineeringDefinition(existing,validation.value)) { return; }
     var previousDefinition = Object.assign({},existing,{name:''});

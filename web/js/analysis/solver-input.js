@@ -113,24 +113,27 @@
       material: materialValidation.value,
       constraintStability: constraintStability,
       boundaryConditions: documentState.boundaryConditions.filter(function(item){return item.enabled !== false;}).map(function (condition) {
-        var validated = root.SpjutsimFEA.validateBoundaryCondition(condition, knownFaceIds);
+        var validated = root.SpjutsimFEA.validateBoundaryCondition(condition, knownFaceIds, documentState.geometry);
         var surface;
         if (!validated.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validated)); }
         surface = selectedBoundary(mesh, condition.faceIds);
         return Object.assign({}, validated.value, {
           boundaryTriangleConnectivity: surface.triangleConnectivity,
-          nodeIndices: surface.nodeIndices
+          nodeIndices: surface.nodeIndices,
+          constraintFrame: condition.frame ? {version:1,axes:root.SpjutsimFEA.assignmentDirections(condition,documentState.geometry)} : undefined
         });
       }),
       loads: documentState.loads.filter(function(item){return item.enabled !== false;}).map(function (load) {
-        var validated = root.SpjutsimFEA.validateLoad(load, knownFaceIds);
+        var validated = root.SpjutsimFEA.validateLoad(load, knownFaceIds, documentState.geometry);
         var surface;
         if (!validated.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validated)); }
         surface = selectedBoundary(mesh, load.faceIds);
+        var force = load.type === 'total-force' && load.direction !== 'surface-normal' ? root.SpjutsimFEA.assignmentGlobalForce(load,documentState.geometry) : null;
         return Object.assign({}, validated.value, surface, {
+          forceN: force || undefined,
           equivalentNodalForcesN: load.direction === 'surface-normal' && load.type === 'total-force' ? null : load.type === 'pressure'
             ? equivalentPressureForces(surface, load.pressurePa)
-            : equivalentTotalForce(surface, load.forceN)
+            : equivalentTotalForce(surface, force)
         });
       }),
       gravity: gravityValidation.value

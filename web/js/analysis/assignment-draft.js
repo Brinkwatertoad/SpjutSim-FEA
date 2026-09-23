@@ -18,11 +18,11 @@
       return gravity.valid ? {valid:true,value:gravity.value} : {valid:false,message:api.firstValidationMessage(gravity)};
     }
     var candidate = Object.assign({}, draft.definition, {id:draft.itemId || 'preview',name:draft.definition.name === undefined ? 'Preview' : draft.definition.name,faceIds:draft.faceIds});
-    var validation = (draft.kind === 'support' ? api.validateBoundaryCondition : api.validateLoad)(candidate,state.geometry && state.geometry.faceIds);
+    var validation = (draft.kind === 'support' ? api.validateBoundaryCondition : api.validateLoad)(candidate,state.geometry && state.geometry.faceIds,state.geometry);
     if (!validation.valid) { return {valid:false,message:api.firstValidationMessage(validation),errors:validation.errors}; }
     if (draft.kind === 'support') {
       var conflict = state.boundaryConditions.some(function (item) {
-        return item.enabled !== false && candidate.enabled !== false && item.id !== draft.itemId && item.faceIds.some(function (id) { return draft.faceIds.indexOf(id) >= 0; }) &&
+        return JSON.stringify(item.frame) === JSON.stringify(candidate.frame) && item.enabled !== false && candidate.enabled !== false && item.id !== draft.itemId && item.faceIds.some(function (id) { return draft.faceIds.indexOf(id) >= 0; }) &&
           ['x','y','z'].some(function (axis) { return item.componentsM[axis] !== undefined && candidate.componentsM[axis] !== undefined && item.componentsM[axis] !== candidate.componentsM[axis]; });
       });
       if (conflict) { return {valid:false,message:'Conflicting prescribed components share a face. Edit the existing support or choose other faces.'}; }

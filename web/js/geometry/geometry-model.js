@@ -197,6 +197,14 @@
     if (model.volumeM3 !== undefined && (!Number.isFinite(model.volumeM3) || model.volumeM3 <= 0)) {
       return validation(false, 'invalid-volume');
     }
+    if (model.planarFaces !== undefined) {
+      if (!model.planarFaces || typeof model.planarFaces !== 'object' || Array.isArray(model.planarFaces) ||
+          Object.keys(model.planarFaces).some(function(id) {
+            var plane=model.planarFaces[id];
+            return !model.faceIds.includes(id) || !plane || plane.version!==1 || !validFiniteVector(plane.originM) ||
+              !validFiniteVector(plane.normal) || Math.abs(Math.hypot.apply(null,plane.normal)-1)>1e-10;
+          })) { return validation(false,'invalid-planar-descriptor'); }
+    }
     preview = validatePreview(model.preview, model.faceIds);
     return preview.valid ? validation(true) : preview;
   }

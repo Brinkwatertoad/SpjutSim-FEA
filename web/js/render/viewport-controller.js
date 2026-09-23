@@ -1176,6 +1176,7 @@
         descriptor.components.forEach(function (axis) {
           var axisDirection = axis === 'x' ? new root.THREE.Vector3(1, 0, 0) :
             (axis === 'y' ? new root.THREE.Vector3(0, 1, 0) : new root.THREE.Vector3(0, 0, 1));
+          if (descriptor.componentDirections) { axisDirection.fromArray(descriptor.componentDirections[['x','y','z'].indexOf(axis)]); }
           object.add(cylinderConeArrow(axisDirection, position, glyphLength * 0.52, supportColor, 'support-axis-' + axis));
         });
       } else {

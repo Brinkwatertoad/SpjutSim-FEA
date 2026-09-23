@@ -123,7 +123,7 @@
     return result(errors.length ? null : faceIds.slice(), errors);
   }
 
-  function validateNamedItem(item, kind, knownFaceIds) {
+  function validateNamedItem(item, kind, knownFaceIds, geometry) {
     var errors = [];
     var faces = validateKnownFaceIds(item && item.faceIds, knownFaceIds);
     var value = {};
@@ -134,6 +134,14 @@
     else { value.id = item.id; }
     if (typeof item.name !== 'string' || item.name.trim().length === 0) { errors.push(issue('ITEM_NAME_REQUIRED', 'Enter a name for this ' + kind + '.', 'name')); }
     else { value.name = item.name.trim(); }
+    if (item.frame !== undefined) {
+      try {
+        value.frame = root.SpjutsimFEA.validateLocalFrame(item.frame, knownFaceIds);
+        if (value.frame.ownership==='cad' && (!item.faceIds || !item.faceIds.includes(value.frame.faceId))) { throw Error('The CAD frame face must belong to this assignment.'); }
+        if (geometry) { root.SpjutsimFEA.resolveLocalFrame(value.frame,geometry); }
+      }
+      catch (error) { errors.push(issue('INVALID_LOCAL_FRAME', error.message, 'frame')); }
+    }
     value.enabled = item.enabled !== false;
     if (item.enabled !== undefined) {
       if (typeof item.enabled !== 'boolean') { errors.push(issue('INVALID_ENABLED', 'Choose Include or Suppress.', 'enabled')); }
@@ -144,8 +152,8 @@
     return { errors: errors, value: value };
   }
 
-  function validateBoundaryCondition(item, knownFaceIds) {
-    var base = validateNamedItem(item, 'support', knownFaceIds);
+  function validateBoundaryCondition(item, knownFaceIds, geometry) {
+    var base = validateNamedItem(item, 'support', knownFaceIds, geometry);
     var value = base.value;
     var constrainedCount = 0;
     var errors = base.errors;
@@ -154,6 +162,12 @@
       return result(value, errors);
     }
     value.type = 'support';
+    if (item.preset !== undefined) {
+      if (!['sliding','symmetry'].includes(item.preset) || !value.frame || value.frame.ownership !== 'cad' ||
+          !item.componentsM || Object.keys(item.componentsM).join() !== 'z') {
+        errors.push(issue('INVALID_PLANAR_SUPPORT','Sliding and symmetry require a planar CAD frame and only normal (local Z) displacement.','preset'));
+      } else { value.preset = item.preset; }
+    }
     value.componentsM = {};
     if (!item.componentsM || typeof item.componentsM !== 'object' || Array.isArray(item.componentsM)) {
       errors.push(issue('DISPLACEMENT_COMPONENT_REQUIRED', 'Enable and enter at least one support component.', 'componentsM'));
@@ -187,8 +201,8 @@
     return finiteVector(vector) && Math.hypot(vector[0], vector[1], vector[2]) > 0;
   }
 
-  function validateLoad(item, knownFaceIds) {
-    var base = validateNamedItem(item, 'load', knownFaceIds);
+  function validateLoad(item, knownFaceIds, geometry) {
+    var base = validateNamedItem(item, 'load', knownFaceIds, geometry);
     var value = base.value;
     var errors = base.errors;
     if (!item || (item.type !== 'pressure' && item.type !== 'total-force')) {
@@ -196,6 +210,9 @@
       return result(value, errors);
     }
     value.type = item.type;
+    if (item.frame && (item.type !== 'total-force' || item.direction === 'surface-normal')) {
+      errors.push(issue('INVALID_LOCAL_FRAME','A rectangular frame applies only to component forces.','frame'));
+    }
     if (item.type === 'pressure') {
       if (!Number.isFinite(item.pressurePa) || item.pressurePa === 0) {
         errors.push(issue('INVALID_PRESSURE', 'Pressure must be a finite, non-zero value.', 'pressurePa'));

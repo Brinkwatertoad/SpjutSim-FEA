@@ -76,6 +76,16 @@ function validateInput(input) {
         typeof condition.componentsM !== 'object' || Array.isArray(condition.componentsM)) {
       throw diagnostic('INVALID_CONSTRAINT', 'preflight', 'A support has invalid global components.');
     }
+    if (condition.frame && !condition.constraintFrame) { throw diagnostic('INVALID_CONSTRAINT','preflight','Local support directions are missing.'); }
+    if (condition.constraintFrame !== undefined) {
+      var frame=condition.constraintFrame, axes=frame && frame.axes;
+      if (!frame || frame.version!==1 || !Array.isArray(axes) || axes.length!==3 || axes.some(function(v){return !Array.isArray(v) || v.length!==3 || !v.every(Number.isFinite) || Math.abs(Math.hypot.apply(null,v)-1)>1e-10;})) {
+        throw diagnostic('INVALID_CONSTRAINT','preflight','Local support directions must form a finite unit basis.');
+      }
+      for(var a=0;a<3;a++)for(var b=a+1;b<3;b++)if(Math.abs(axes[a].reduce(function(sum,v,i){return sum+v*axes[b][i];},0))>1e-10)throw diagnostic('INVALID_CONSTRAINT','preflight','Local support axes must be orthogonal.');
+      var handed=axes[0][0]*(axes[1][1]*axes[2][2]-axes[1][2]*axes[2][1])-axes[0][1]*(axes[1][0]*axes[2][2]-axes[1][2]*axes[2][0])+axes[0][2]*(axes[1][0]*axes[2][1]-axes[1][1]*axes[2][0]);
+      if(handed<1-1e-10)throw diagnostic('INVALID_CONSTRAINT','preflight','Local support basis must be right handed.');
+    }
     ['x', 'y', 'z'].forEach(function (axis) {
       if (condition.componentsM[axis] === undefined) { return; }
       componentCount += 1;
@@ -141,12 +151,13 @@ function buildConstraints(input) {
     var components = [[0, condition.componentsM.x], [1, condition.componentsM.y], [2, condition.componentsM.z]]
       .filter(function (item) { return item[1] !== undefined; });
     condition.nodeIndices.forEach(function (node) {
-      components.forEach(function (component) { entries.push([node * 3 + component[0], component[1]]); });
+      components.forEach(function (component) { entries.push([node * 3 + component[0], component[1], condition.constraintFrame ? condition.constraintFrame.axes[component[0]] : [0,1,2].map(function(a){return a===component[0]?1:0;})]); });
     });
   });
   entries.sort(function (a, b) { return a[0] - b[0]; });
   return { indices: new Uint32Array(entries.map(function (item) { return item[0]; })),
-    valuesM: new Float64Array(entries.map(function (item) { return item[1]; })) };
+    valuesM: new Float64Array(entries.map(function (item) { return item[1]; })),
+    directions: input.boundaryConditions.some(function(c){return c.constraintFrame;}) ? new Float64Array(entries.flatMap(function(item){return item[2];})) : null };
 }
 
 // Match native tri6_area's three-point quadrature; normalization stays off the UI thread.
@@ -194,7 +205,9 @@ function loadAnalysis(Module, input) {
     constraints = buildConstraints(input);
     withWasmArray(Module, constraints.indices, function (dofs) {
       withWasmArray(Module, constraints.valuesM, function (values) {
-        checkNative(Module, context, Module._fem_set_constraints(context, dofs, values, constraints.indices.length), 'preflight');
+        if (constraints.directions) {
+          withWasmArray(Module,constraints.directions,function(directions){checkNative(Module,context,Module._fem_set_directional_constraints(context,dofs,values,directions,constraints.indices.length),'preflight');});
+        } else { checkNative(Module, context, Module._fem_set_constraints(context, dofs, values, constraints.indices.length), 'preflight'); }
       });
     });
     checkNative(Module, context, Module._fem_clear_loads(context), 'preflight');

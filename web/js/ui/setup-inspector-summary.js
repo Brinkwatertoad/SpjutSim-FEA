@@ -52,6 +52,7 @@
       return axis.toUpperCase() + ' ' + quantity(item.componentsM[axis],'displacementM');
     }).join(' · ');
     if (fixed) { components = 'Fixed · X, Y, Z'; }
+    if (item.frame) { components = (item.preset ? item.preset.charAt(0).toUpperCase()+item.preset.slice(1)+' · Normal Z' : 'Local · '+components) + (item.frame.ownership==='cad' ? ' · CAD' : ' · Global frame'); }
     return row('support', item.id, item.name, components, faceCountText(item.faceIds));
   }
 
@@ -64,6 +65,7 @@
     } else {
       summary = 'Force · [' + item.forceN.map(function(v){return formatNumber(root.SpjutsimFEA.preferredFromSI('forceN',v));}).join(', ') + '] ' + root.SpjutsimFEA.preferredUnit('forceN');
     }
+    if (item.frame) { summary += ' · Local '+(item.frame.ownership==='cad'?'CAD':'frame'); }
     return row('load', item.id, item.name, summary, faceCountText(item.faceIds));
   }
 

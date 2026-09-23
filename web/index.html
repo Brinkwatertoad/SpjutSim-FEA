@@ -108,9 +108,11 @@
               <form id="support-form" novalidate>
                 <div class="fea-editor-actions"><button class="ui-button-primary" type="submit">Apply support</button><button id="cancel-support-edit" type="button" hidden>Cancel edit</button><button id="remove-support-item-button" type="button" data-action-intent="danger" hidden>Remove support</button></div>
                 <label for="support-name">Name</label><input id="support-name" type="text" maxlength="160" required>
-                <label for="support-type">Preset</label><select id="support-type"><option value="fixed">Fixed (X, Y, Z = 0)</option><option value="custom">Choose components</option></select>
+                <label for="support-type">Preset</label><select id="support-type"><option value="fixed">Fixed (X, Y, Z = 0)</option><option value="custom">Choose components</option><option value="sliding">Planar sliding</option><option value="symmetry">Planar symmetry</option></select>
+                <div id="support-frame-editor"></div>
+                <small id="support-planar-help" hidden>Normal motion is restrained; both tangential directions remain free. Symmetry requires symmetric geometry and loading. Loads are not automatically scaled.</small>
                 <fieldset id="support-component-fields" hidden>
-                  <legend>Global constrained components (<span data-unit-label="displacementM">mm</span>)</legend>
+                  <legend><span id="support-coordinate-label">Global</span> constrained components (<span data-unit-label="displacementM">mm</span>)</legend>
                   <label class="fea-component"><input id="support-ux-enabled" type="checkbox"><span>Ux</span><input data-unit-quantity="displacementM" id="support-ux" type="number" step="any" aria-label="Ux displacement in millimeters"></label>
                   <label class="fea-component"><input id="support-uy-enabled" type="checkbox"><span>Uy</span><input data-unit-quantity="displacementM" id="support-uy" type="number" step="any" aria-label="Uy displacement in millimeters"></label>
                   <label class="fea-component"><input id="support-uz-enabled" type="checkbox"><span>Uz</span><input data-unit-quantity="displacementM" id="support-uz" type="number" step="any" aria-label="Uz displacement in millimeters"></label>
@@ -127,7 +129,7 @@
                 <div id="force-mode-fields"><label for="load-force-mode">Direction</label><select id="load-force-mode"><option value="normal">Surface normal</option><option value="components">Components</option></select></div>
                 <div id="normal-force-fields"><div class="fea-unit-label"><label for="load-magnitude">Magnitude</label> (<select id="load-force-unit" class="fea-inline-unit" data-load-unit="forceN" aria-label="Force input unit"><option>N</option><option>kN</option><option>lbf</option><option>kip</option></select>)</div><input data-unit-quantity="forceN" id="load-magnitude" aria-describedby="load-normal-help" type="number" step="any" min="0" value="1"><label for="load-sense">Direction along normal</label><select id="load-sense"><option value="push">Push inward</option><option value="pull">Pull outward</option></select><small id="load-normal-help">Distributed by area along each face’s local normal.</small></div>
                 <fieldset id="force-fields" aria-describedby="load-components-help" hidden><legend>Total force vector (<select id="load-vector-unit" class="fea-inline-unit" data-load-unit="forceN" aria-label="Force input unit"><option>N</option><option>kN</option><option>lbf</option><option>kip</option></select>)</legend>
-                  <small id="load-components-help">Components use global axes.</small>
+                  <small id="load-components-help">Components use the selected coordinate frame.</small><div id="load-frame-editor"></div>
                   <label for="load-fx">Fx</label><input data-unit-quantity="forceN" id="load-fx" type="number" step="any" value="0">
                   <label for="load-fy">Fy</label><input data-unit-quantity="forceN" id="load-fy" type="number" step="any" value="1">
                   <label for="load-fz">Fz</label><input data-unit-quantity="forceN" id="load-fz" type="number" step="any" value="0">
@@ -360,7 +362,8 @@
   <script src="js/geometry/geometry-model.js"></script>
   <script src="js/mesh/volume-mesh.js"></script>
   <script src="js/mesh/mesh-display.js"></script>
-  <script src="js/analysis/analysis-contracts.js"></script>
+  <script src="js/geometry/local-frame.js"></script>
+<script src="js/analysis/analysis-contracts.js"></script>
   <script src="js/analysis/constraint-stability.js"></script>
   <script src="js/analysis/material-catalog.js"></script>
   <script src="js/analysis/replacement-migration.js"></script>
@@ -390,6 +393,7 @@
   <script src="js/render/viewport-controller.js"></script>
 <script src="js/render/face-access.js"></script>
   <script src="js/ui/setup-inspector-summary.js"></script>
+  <script src="js/ui/local-frame-editor.js"></script>
   <script src="js/ui/analysis-authoring-ui.js"></script>
   <script src="js/ui/result-formatting.js"></script>
 <script src="js/ui/unit-preferences.js"></script>

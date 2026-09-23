@@ -44,7 +44,7 @@
   /** Restore a deleted item with its original identity/order; never rewind ID/name allocators. */
   prototype.restoreHistoryAssignment = function (kind,item,index) {
     var items=kind === 'support' ? this.document.boundaryConditions : this.document.loads;
-    var validation=(kind === 'support' ? api.validateBoundaryCondition : api.validateLoad)(item,this.document.geometry && this.document.geometry.faceIds);
+    var validation=(kind === 'support' ? api.validateBoundaryCondition : api.validateLoad)(item,this.document.geometry && this.document.geometry.faceIds,this.document.geometry);
     if (!validation.valid) { throw new Error(api.firstValidationMessage(validation)); }
     if (items.some(function(existing){return existing.id===item.id;})) { throw new Error('The assignment identifier already exists.'); }
     items.splice(Math.min(index,items.length),0,validation.value);

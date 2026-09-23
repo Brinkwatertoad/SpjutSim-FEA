@@ -27,6 +27,7 @@
   }
 
   function observationRow(position, axis) {
+    if (Array.isArray(axis)) { return [axis[0],axis[1],axis[2],position[1]*axis[2]-position[2]*axis[1],position[2]*axis[0]-position[0]*axis[2],position[0]*axis[1]-position[1]*axis[0]]; }
     if (axis === 'x') { return [1, 0, 0, 0, position[2], -position[1]]; }
     if (axis === 'y') { return [0, 1, 0, -position[2], 0, position[0]]; }
     if (axis === 'z') { return [0, 0, 1, position[1], -position[0], 0]; }
@@ -157,6 +158,7 @@
     var constrainedPoints = new Set();
     documentState.boundaryConditions.forEach(function (support) {
       if (support.enabled === false) { return; }
+      var directions=support.frame ? root.SpjutsimFEA.assignmentDirections(support,geometry) : null;
       support.faceIds.forEach(function (faceId) {
         var range = rangeForFace(ranges, faceMap, faceId);
         if (!range) { throw new Error('Support stability could not find CAD face ' + faceId + '.'); }
@@ -165,10 +167,11 @@
           ['x', 'y', 'z'].forEach(function (axis) {
             var key;
             if (support.componentsM[axis] === undefined) { return; }
-            key = pointIndex + ':' + axis;
+            var direction=directions ? directions[['x','y','z'].indexOf(axis)] : axis;
+            key = pointIndex + ':' + JSON.stringify(direction);
             if (!observationKeys.has(key)) {
               observationKeys.add(key);
-              observations.push({ pointIndex: pointIndex, axis: axis });
+              observations.push({ pointIndex: pointIndex, axis: direction });
             }
           });
         });

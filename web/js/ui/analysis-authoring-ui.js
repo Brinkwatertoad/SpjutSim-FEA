@@ -80,6 +80,8 @@
     this.activeInspectorFocusReturn = null;
     this.editingSupportId = null;
     this.editingLoadId = null;
+    this.supportFrameEditor = byId('support-frame-editor') && new root.SpjutsimFEA.LocalFrameEditor(byId('support-frame-editor'),'support');
+    this.loadFrameEditor = byId('load-frame-editor') && new root.SpjutsimFEA.LocalFrameEditor(byId('load-frame-editor'),'load');
     this.lastSupportType = this.supportType ? this.supportType.value : 'fixed';
     this.lastLoadType = this.loadType ? this.loadType.value : 'total-force';
     try { storage = root.localStorage; } catch (error) { storage = null; }
@@ -380,6 +382,9 @@
   AnalysisAuthoringUI.prototype.renderSupportType = function () {
     var custom = this.supportType.value === 'custom';
     this.componentFields.hidden = !custom;
+    var planar=['sliding','symmetry'].includes(this.supportType.value);
+    if(byId('support-planar-help'))byId('support-planar-help').hidden=!planar;
+    if(this.supportFrameEditor){this.supportFrameEditor.container.hidden=planar;}
     this.renderSupportComponents();
   };
 
@@ -396,7 +401,9 @@
       componentsM: {},
       faceIds: (this.controller.document.assignmentDraft ? this.controller.document.assignmentDraft.faceIds : this.controller.document.selectedFaceIds).slice()
     };
-    if (this.supportType.value === 'fixed') {
+    var planar=['sliding','symmetry'].includes(this.supportType.value);
+    if (planar) { support.componentsM={z:0};support.preset=this.supportType.value; }
+    else if (this.supportType.value === 'fixed') {
       support.componentsM = { x: 0, y: 0, z: 0 };
     } else {
       ['ux', 'uy', 'uz'].forEach(function (axis) {
@@ -405,6 +412,7 @@
         }
       });
     }
+    if(this.supportFrameEditor){var frame=this.supportFrameEditor.read(this.controller.document.geometry,support.faceIds,planar);if(frame)support.frame=frame;}
     if (byId('support-name')) { support.name = byId('support-name').value; }
     return support;
   };
@@ -462,7 +470,8 @@
     this.editingSupportId = id;
     if (byId('support-name')) { byId('support-name').value = item.name; }
     this.controller.selectBoundaryCondition(id);
-    this.supportType.value = ['x', 'y', 'z'].every(function (axis) { return item.componentsM[axis] === 0; }) ? 'fixed' : 'custom';
+    if(this.supportFrameEditor)this.supportFrameEditor.set(item.frame);
+    this.supportType.value = item.preset || (['x', 'y', 'z'].every(function (axis) { return item.componentsM[axis] === 0; }) ? 'fixed' : 'custom');
     ['ux', 'uy', 'uz'].forEach(function (axis) {
       var value = item.componentsM[axis.slice(1)];
       byId('support-' + axis + '-enabled').checked = value !== undefined;
@@ -476,6 +485,7 @@
   AnalysisAuthoringUI.prototype.resetSupportForm = function (renderNow) {
     this.editingSupportId = null;
     this.supportForm.reset();
+    if(this.supportFrameEditor)this.supportFrameEditor.set(null);
     if (byId('support-name')) { byId('support-name').value = 'Support ' + this.controller.nextSupportNameSequence; }
     this.supportType.value = this.lastSupportType;
     labelAction(this.supportForm.querySelector('button[type="submit"]'), 'Apply support');
@@ -553,6 +563,7 @@
     } else {
       load.forceN = ['fx', 'fy', 'fz'].map(function (axis) { return root.SpjutsimFEA.displayToSI('forceN', readNumber('load-' + axis, axis.toUpperCase() + ' force'), forceUnit); });
     }
+    if(this.loadFrameEditor && load.forceN){var frame=this.loadFrameEditor.read(this.controller.document.geometry,load.faceIds,false);if(frame)load.frame=frame;}
     if (byId('load-name')) { load.name = byId('load-name').value; }
     return load;
   };
@@ -595,6 +606,7 @@
     this.controller.selectLoad(id);
     this.loadType.value = item.type;
     if(byId('load-force-mode'))byId('load-force-mode').value=item.direction==='surface-normal' && item.type==='total-force' ? 'normal' : 'components';
+    if(this.loadFrameEditor)this.loadFrameEditor.set(item.frame);
     if(byId('load-magnitude'))byId('load-magnitude').value=root.SpjutsimFEA.siToDisplay('forceN', item.magnitudeN || 1, this.loadUnits.forceN);
     if(byId('load-sense'))byId('load-sense').value=item.sense || 'push';
     byId('load-pressure').value = String(root.SpjutsimFEA.siToDisplay('pressurePa', item.pressurePa === undefined ? 1e6 : item.pressurePa, this.loadUnits.pressurePa));
@@ -608,6 +620,7 @@
   AnalysisAuthoringUI.prototype.resetLoadForm = function (renderNow) {
     this.editingLoadId = null;
     this.loadForm.reset();
+    if(this.loadFrameEditor)this.loadFrameEditor.set(null);
     byId('load-pressure').value = root.SpjutsimFEA.siToDisplay('pressurePa', 1e6, this.loadUnits.pressurePa);
     ['load-magnitude','load-fy'].forEach(function (id) { if (byId(id)) { byId(id).value = root.SpjutsimFEA.siToDisplay('forceN', 1, this.loadUnits.forceN); } }, this);
     this.syncLoadUnits();
@@ -923,6 +936,11 @@
     this.renderModelOrientation(documentState);
     this.renderSetupInspector(documentState);
     var draft = documentState.assignmentDraft;
+    if (this.supportFrameEditor) {
+      this.supportFrameEditor.preview(draft && draft.kind==='support' ? draft.definition : null,documentState.geometry);
+      byId('support-coordinate-label').textContent=this.supportFrameEditor.kind.value==='global'?'Global':'Local';
+    }
+    if (this.loadFrameEditor) { this.loadFrameEditor.preview(draft && draft.kind==='load' ? draft.definition : null,documentState.geometry); }
     if (draft) {
       var status = draft.kind === 'gravity' ? this.gravityStatus : draft.kind === 'support' ? this.supportStatus : this.loadStatus;
       var summary = root.SpjutsimFEA.describeAssignmentDraft ? root.SpjutsimFEA.describeAssignmentDraft(documentState) : '';

@@ -74,9 +74,20 @@
     return draft.items[itemIndex];
   }
 
+  function mappedDefinition(original,faceIds,geometry) {
+    var candidate=Object.assign({},cloneValue(original),{faceIds:faceIds.slice()});
+    if(original.frame && original.frame.ownership==='cad') {
+      if(faceIds.length!==1)throw migrationError('INVALID_REPLACEMENT_FRAME','Map a CAD-attached frame to exactly one planar face, or drop the assignment.');
+      candidate.frame=root.SpjutsimFEA.planarFaceFrame(geometry,faceIds[0]);
+    }
+    return candidate;
+  }
+
   function mapReplacementMigrationItem(draft, itemIndex, faceIds) {
     var item = migrationItem(draft, itemIndex);
-    item.newFaceIds = validateNewFaces(draft, faceIds);
+    var validated=validateNewFaces(draft,faceIds);
+    mappedDefinition(item.original,validated,draft.newGeometry);
+    item.newFaceIds = validated;
     item.decision = 'mapped';
     return item;
   }
@@ -110,10 +121,10 @@
       var candidate;
       var validation;
       if (item.decision === 'dropped') { dropped.push({ kind: item.kind, id: item.id, name: item.name }); return; }
-      candidate = Object.assign({}, cloneValue(item.original), { faceIds: item.newFaceIds.slice() });
+      candidate = mappedDefinition(item.original,item.newFaceIds,draft.newGeometry);
       validation = item.kind === 'support'
-        ? root.SpjutsimFEA.validateBoundaryCondition(candidate, draft.newGeometry.faceIds)
-        : root.SpjutsimFEA.validateLoad(candidate, draft.newGeometry.faceIds);
+        ? root.SpjutsimFEA.validateBoundaryCondition(candidate, draft.newGeometry.faceIds,draft.newGeometry)
+        : root.SpjutsimFEA.validateLoad(candidate, draft.newGeometry.faceIds,draft.newGeometry);
       if (!validation.valid) { throw migrationError('INVALID_REPLACEMENT_MAPPING', root.SpjutsimFEA.firstValidationMessage(validation)); }
       (item.kind === 'support' ? supports : loads).push(validation.value);
     });
@@ -130,11 +141,12 @@
     var current=state(draft.oldGeometry),replacement=state(draft.newGeometry);
     draft.items.forEach(function(item){
       current[item.kind==='support'?'boundaryConditions':'loads'].push(item.original);
-      if(item.decision==='mapped')replacement[item.kind==='support'?'boundaryConditions':'loads'].push(Object.assign({},item.original,{faceIds:item.newFaceIds}));
+      if(item.decision==='mapped')replacement[item.kind==='support'?'boundaryConditions':'loads'].push(mappedDefinition(item.original,item.newFaceIds,draft.newGeometry));
     });
     var active=draft.items[activeIndex];
     if(active && selectedFaceIds.length){
-      var candidate=Object.assign({},active.original,{faceIds:selectedFaceIds});
+      var candidate;
+      try { candidate=mappedDefinition(active.original,selectedFaceIds,draft.newGeometry); } catch(error) { return {current:current,replacement:replacement}; }
       var validation=(active.kind==='support'?root.SpjutsimFEA.validateBoundaryCondition:root.SpjutsimFEA.validateLoad)(candidate,draft.newGeometry.faceIds);
       replacement.assignmentDraft={kind:active.kind,itemId:active.id,validation:validation};
     }
