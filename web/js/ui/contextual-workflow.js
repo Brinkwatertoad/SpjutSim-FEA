@@ -23,6 +23,9 @@
   }
   function bindContextualWorkflow(app,ui,importCadFile){
     var guide=document.getElementById('setup-guide'),step=0,shown=false,dismissed=false,highlighted=null,previous=app.document.geometry && app.document.geometry.geometryId;
+    var highlight=document.createElement('div');
+    highlight.id='setup-guide-highlight';highlight.className='fea-guide-highlight';highlight.hidden=true;
+    highlight.setAttribute('aria-hidden','true');document.body.appendChild(highlight);
     try{dismissed=root.localStorage.getItem(guideKey)==='true';}catch(error){}
     var steps=[
       {title:'Import a part',text:'Open Model to import a CAD solid. Dismiss this guide to use the opening panel or prepared cube example.',target:'[data-setup-kind="model"] [data-setup-row-trigger]'},
@@ -34,35 +37,55 @@
       {title:'Solve',text:'Choose Solve to run checks and calculate results. Resolve any reported setup problems before continuing.',target:'#solve-button'},
       {title:'Review the results',text:'Inspect displacement, stress and warnings. Check convergence before drawing conclusions, then save your project or export a report beside Results.',target:'#toggle-results-pane'}
     ];
+    function needsFaces(){
+      var draft=app.document.assignmentDraft;
+      return Boolean(draft && ((step===2 && draft.kind==='support') || (step===3 && draft.kind==='load')) && draft.faceIds.length===0);
+    }
+    function clearHighlight(){
+      highlight.hidden=true;
+      if(highlighted){highlighted.classList.remove('fea-guide-target');highlighted=null;}
+    }
     function guideTarget(){
       var form=step===1 ? document.getElementById('material-form') : step===2 ? document.getElementById('support-form') : step===3 ? document.getElementById(app.document.assignmentDraft && app.document.assignmentDraft.kind==='gravity' ? 'gravity-form' : 'load-form') : null;
-      if(form && form.getClientRects().length){return form.querySelector('button[type=submit]');}
+      if(form && form.getClientRects().length){return needsFaces() ? document.getElementById('viewport') : form.querySelector('button[type=submit]');}
       var generate=document.getElementById('generate-mesh-button');
       if(step===4 && generate.getClientRects().length){return generate;}
       return document.querySelector(steps[step].target);
     }
     function position(){
-      if(!shown){return;}
+      if(!shown){clearHighlight();return;}
       var target=guideTarget(),viewport=document.getElementById('viewport').getBoundingClientRect();
-      if(!target || !target.getClientRects().length){guide.hidden=true;return;}
+      if(!target || !target.getClientRects().length){guide.hidden=true;clearHighlight();return;}
+      var rect=target.getBoundingClientRect(),pane=target.closest('#setup-pane');
+      if(pane){
+        var paneBounds=pane.getBoundingClientRect();
+        if(rect.top<paneBounds.top || rect.bottom>paneBounds.bottom){guide.hidden=true;clearHighlight();return;}
+      }
       guide.hidden=false;
-      if(highlighted!==target){if(highlighted){highlighted.classList.remove('fea-guide-target');}highlighted=target;highlighted.classList.add('fea-guide-target');}
-      var rect=target.getBoundingClientRect(),width=Math.min(270,Math.max(180,viewport.width-24));
-      var beside=Boolean(target.closest('#setup-pane'));
-      var left=Math.max(viewport.left+12,Math.min(beside ? viewport.left+12 : rect.left+rect.width/2-width/2,viewport.right-width-12));
+      if(highlighted!==target){clearHighlight();highlighted=target;highlighted.classList.add('fea-guide-target');}
+      var picking=target.id==='viewport',width=Math.min(270,Math.max(180,viewport.width-24));
+      // Render the ring at document level so all four sides survive clipped controls.
+      highlight.hidden=picking;
+      if(!picking){
+        highlight.style.left=(rect.left-4)+'px';highlight.style.top=(rect.top-4)+'px';
+        highlight.style.width=(rect.width+8)+'px';highlight.style.height=(rect.height+8)+'px';
+      }
+      var beside=Boolean(pane);
+      var left=Math.max(viewport.left+12,Math.min(beside || picking ? viewport.left+12 : rect.left+rect.width/2-width/2,viewport.right-width-12));
       guide.style.width=width+'px';guide.style.left=left+'px';
-      guide.style.top=Math.max(viewport.top+12,Math.min(beside ? rect.top : rect.bottom+16,viewport.bottom-guide.offsetHeight-12))+'px';
-      guide.dataset.arrow=beside?'left':'up';
+      guide.style.top=Math.max(viewport.top+12,Math.min(picking ? viewport.top+(viewport.height-guide.offsetHeight)/2 : beside ? rect.top : rect.bottom+16,viewport.bottom-guide.offsetHeight-12))+'px';
+      guide.dataset.arrow=picking?'right':beside?'left':'up';
       guide.style.setProperty('--guide-arrow-left',Math.max(15,Math.min(width-20,rect.left+rect.width/2-left))+'px');
       guide.style.setProperty('--guide-arrow-top',Math.max(15,Math.min(guide.offsetHeight-15,rect.top+rect.height/2-parseFloat(guide.style.top)))+'px');
     }
     function render(){
       document.getElementById('empty-workflow').hidden=Boolean(app.document.geometry) || app.projectOpening || shown;
-      guide.hidden=!shown;if(!shown){if(highlighted){highlighted.classList.remove('fea-guide-target');highlighted=null;}return;}
-      document.getElementById('setup-guide-title').textContent=steps[step].title;
+      guide.hidden=!shown;if(!shown){clearHighlight();return;}
+      document.getElementById('setup-guide-title').textContent=needsFaces() ? 'Select '+(step===2?'support':'load')+' faces' : steps[step].title;
       var target=guideTarget(),text=steps[step].text;
+      if(needsFaces()){text='Click faces on the model to select them. Click a selected face again to deselect it.';}
       if(target && target.type==='submit'){
-        text=step===1 ? 'Choose a material or enter its properties, then click Apply to continue to supports.' : 'Select faces and enter the '+(step===2?'support':'load')+' settings, then click Apply. You can add another afterward.';
+        text=step===1 ? 'Choose a material or enter its properties, then click Apply to continue to supports.' : 'Adjust the '+(step===2?'support':'load')+' settings or select more faces, then click Apply. You can add another afterward.';
         if(target.id==='apply-gravity-button'){text='Set the gravity direction and acceleration, then click Apply.';}
       }
       if(step===4 && target && target.id==='generate-mesh-button'){text='Choose a mesh density, then click Generate mesh. Complicated parts may need finer settings. When generation finishes, choose Next to inspect it.';}

@@ -316,6 +316,7 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 .fea-setup-guide::before { content:''; position:absolute; width:10px; height:10px; background:var(--ui-color-surface); transform:rotate(45deg); }
 .fea-setup-guide[data-arrow="left"]::before { left:-6px; top:var(--guide-arrow-top,20px); border-left:1px solid var(--ui-color-border); border-bottom:1px solid var(--ui-color-border); }
 .fea-setup-guide[data-arrow="up"]::before { left:var(--guide-arrow-left,24px); top:-6px; border-left:1px solid var(--ui-color-border); border-top:1px solid var(--ui-color-border); }
+.fea-setup-guide[data-arrow="right"]::before { right:-6px; top:var(--guide-arrow-top,20px); border-right:1px solid var(--ui-color-border); border-top:1px solid var(--ui-color-border); }
 .fea-guide-dismiss { position:absolute; right:5px; top:5px; min-width:30px; min-height:30px; font-size:22px; padding:0; }
 .fea-guide-actions { display:flex; justify-content:space-between; gap:8px; }
 .fea-project-notice { position:fixed; bottom:14px; left:50%; transform:translateX(-50%); max-width:calc(100vw - 32px); padding:8px 42px 8px 12px; z-index:25; border:1px solid var(--ui-color-border); border-radius:8px; background:var(--ui-color-surface); color:var(--ui-color-text); box-shadow:0 3px 14px #0003; }
@@ -323,7 +324,8 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 #dismiss-project-notice { position:absolute; right:4px; top:4px; min-width:30px; min-height:30px; }
 @media (pointer:coarse) { .fea-icon-button, .fea-guide-dismiss { min-width:44px; min-height:44px; } }
 
-.fea-guide-target { outline:2px solid var(--ui-color-accent, #387bff); outline-offset:2px; }
+.fea-guide-highlight { position:fixed; z-index:11; pointer-events:none; border:2px solid var(--ui-color-accent, #387bff); border-radius:6px; box-shadow:0 0 0 1px var(--ui-color-surface); }
+.fea-guide-highlight[hidden] { display:none; }
 
 /* One action row below the editor heading, before its fields. */
 .fea-editor-actions { display:flex; align-items:center; gap:4px; position:relative; margin-bottom:6px; }
@@ -335,8 +337,3 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 .fea-report-actions { display:flex; align-items:center; gap:4px; flex:none; }
 .fea-actionbar { flex-wrap:wrap; }
 @media (pointer:coarse) { .fea-editor-actions button { width:44px; height:44px; } .fea-editor-actions button:not([data-action-intent="danger"]) { width:auto; } }
-
-/* Selected segments need no side seams; keyboard focus remains visible without a second box. */
-#view-segments > button[aria-pressed="true"],
-#view-segments > button[aria-pressed="true"] + button { border-left-color:transparent; }
-#view-segments > button:focus-visible { outline:none; text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:3px; }

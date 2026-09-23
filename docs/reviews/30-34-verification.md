@@ -206,3 +206,26 @@ The owner approved this design; final visual acceptance remains separate.
   resume and workspace layout also passing at 2× DPI. Records:
   `build/guide-polish-browser.json` and `build/guide-polish-2x.json`. Whitespace
   validation passes.
+
+
+## Follow-up: face-selection guidance and an unclipped highlight
+
+- Empty support/load drafts now point into the model with a face-selection prompt.
+  Selecting faces changes the target to Apply; removing the last face restores
+  the selection prompt. Existing assignments with faces and gravity skip picking.
+- The guide ring now renders as a noninteractive document-level overlay, so the
+  Model/Mesh selector cannot clip its top and bottom edges. It follows resize and
+  pane scrolling and disappears with hidden targets or guide dismissal.
+- The preceding selector-divider and keyboard-underline changes were reverted.
+  The visual defect was the guide outline being clipped, not the selector's
+  normal dividers or keyboard-focus styling.
+- Regression coverage includes both assignment kinds, deselection, gravity,
+  overlay geometry/click-through and dismissal. Actual viewport clicks were also
+  exercised, followed by mesh generation, inspection and resize tracking. Visual
+  evidence: `build/guide-face-picking.png`, `build/guide-face-picked.png`, and
+  `build/guide-selector-ring.png`.
+- Verification: all 42 applicable direct-file browser harnesses pass; focused
+  guide, grouped-authoring and workspace-layout checks also pass at 2× DPI. The
+  final guide regression additionally checks hiding/restoring the overlay when its
+  target scrolls out of/back into view. Records: `build/guide-faces-browser.json`
+  and `build/guide-faces-2x.json` (final guide run). Whitespace validation passes.

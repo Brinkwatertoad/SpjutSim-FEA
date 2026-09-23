@@ -1988,7 +1988,14 @@ starting Help guidance on an empty project replaces it with guidance pointing to
 the Model button. Start after CAD import, allow Back/Next and easy × dismissal,
 remember dismissal, and expose Help → Show setup guide. Guide display never
 steals focus or changes engineering state. Highlight an editor opener/Add while
-closed, Apply while editing, and Add again after support/load Apply or Cancel.
+closed. For support/load drafts with no faces, point into the model and instruct
+face selection. Highlight Apply once at least one face is selected; return to face
+selection if all faces are deselected. Existing assignments with faces and gravity
+skip this picking phase. Highlight Add again after support/load Apply or Cancel.
+Draw a separate, noninteractive highlight ring at document level around the full
+button so clipped controls cannot hide its top/bottom edges. Keep the selector's
+normal dividers and keyboard-focus styling. Hide the ring during model picking,
+when its target is hidden/scrolled out of view, and when the guide is dismissed.
 Successful material Apply immediately advances to Supports; failed Apply stays on
 Material. Support/load actions change targets, not stages; routine rerenders neither scroll
 Setup nor advance the guide. User-driven stage changes may reveal their target
