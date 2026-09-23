@@ -43,7 +43,7 @@ revision; presentation-only changes do not mark an engineering project dirty.
 
 ## Optional cache
 
-The producer currently is `spjutsim-fea/cad-face-map-1/mesh-1/result-2`.
+The producer currently is `spjutsim-fea/cad-face-map-1/mesh-1/result-2/local-frame-1`.
 `cache` records producer, little-endian byte order, analysis revision, a canonical
 source/setup fingerprint, mesh-descriptor SHA-256, and `data`. Each binary
 reference declares `$array`, `type`, element `length`, and SHA-256. Supported types
@@ -134,3 +134,12 @@ This Python inspection checks ZIP entries, CRCs, source identity and binary
 metadata; application import additionally validates geometry, setup and cache
 semantics. See [implementation evidence](reviews/30-34-verification.md) for tested
 CAD formats, execution modes, numerical checks and remaining owner review.
+
+Local support and component-force definitions optionally retain a version-1
+`frame` with SI origin, orthonormal right-handed axes, ownership (`global` or
+`cad`), and a planar `faceId` for CAD ownership. CAD frame coordinates remain in
+the canonical imported orientation; the stored model orientation resolves them
+on reopen. All frame fields participate in setup fingerprints and local recovery.
+The previous producer without `/local-frame-1` remains readable for global-only
+setup; its cached results are discarded. New projects require the new producer
+so older applications cannot silently erase local constraint/load meaning.

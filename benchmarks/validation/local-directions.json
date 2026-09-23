@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-23",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "browser": "Chromium 151.0.7922.34",
+  "nativeBuild": "GCC 13.3.0; CMake Release; x86_64",
+  "runtimeSha256": "a87290a8343af3cb1de9a8b7514a66736a80486f25e2123f06eca061971854d8",
+  "sourceSha256": {
+    "native/fem/src/constraint_basis.cpp": "a53d59c697d0c66350f072638f12f67e981c7a8ed67fc9425c487bc1db02689a",
+    "native/fem/src/fem_context.cpp": "7b9a5cb99a8c32ba05676887511ac1fc1c0680c546acae40c9e5708fa781e0b6",
+    "native/fem/tests/local_constraint_test.cpp": "9604902ac3564e3b631920ae60ae44e1e657d5e8097c7708de6508d5b53c3a59",
+    "native/fem/tests/local_symmetry_test.cpp": "6228ec45ca5e2a76ddabab8c1a1e733df206ba87c471ad15dcb61bfbe870c46b",
+    "tests/browser/local-support-workflow-tests.js": "60ee7ab1f4ae09695c382a809791b1ccc39d03e2f1261c92708239e7f34fda4a",
+    "workers/solver-worker.js": "ea1e2418aea9934d69753cb1ca6e87d855e8cf1dd336042698002542c393098f",
+    "workers/mesher-worker.js": "aa47f2dda9a76c27cfad425b99faae0e82b944c04a2d910fa1744e04924f73ed"
+  },
+  "criteria": {
+    "nativeDisplacementAbsoluteM": 1e-13,
+    "nativeStressRelative": 1e-07,
+    "nativeEnergyRelative": 1e-07,
+    "nativeEquilibriumRelative": 1e-09,
+    "wasmDisplacementAbsoluteM": 1e-11,
+    "wasmStressAbsolutePa": 0.01,
+    "wasmEquilibriumRelative": 1e-07
+  },
+  "nativeSymmetry": [
+    {
+      "element": "tet4",
+      "half": 0,
+      "rotated": 0,
+      "maxDisplacementErrorM": 2.846030702774449e-19,
+      "stressPa": 1000.0000000002647,
+      "energyJ": 0.0005,
+      "equilibrium": 2.9977219734408914e-14
+    },
+    {
+      "element": "tet4",
+      "half": 0,
+      "rotated": 1,
+      "maxDisplacementErrorM": 5.293955920339377e-22,
+      "stressPa": 999.9999999999999,
+      "energyJ": 0.0004999999999999997,
+      "equilibrium": 1.7437506220716434e-16
+    },
+    {
+      "element": "tet4",
+      "half": 1,
+      "rotated": 0,
+      "maxDisplacementErrorM": 4.235164736271502e-22,
+      "stressPa": 1000.0000000000003,
+      "energyJ": 0.00025000000000000006,
+      "equilibrium": 1.2049147729066774e-16
+    },
+    {
+      "element": "tet4",
+      "half": 1,
+      "rotated": 1,
+      "maxDisplacementErrorM": 3.1763735522036263e-22,
+      "stressPa": 999.9999999999999,
+      "energyJ": 0.00024999999999999995,
+      "equilibrium": 1.2353482186529189e-16
+    },
+    {
+      "element": "tet10",
+      "half": 0,
+      "rotated": 0,
+      "maxDisplacementErrorM": 2.390379916710839e-18,
+      "stressPa": 1000.0000000018795,
+      "energyJ": 0.000500000000000003,
+      "equilibrium": 1.6971128623289148e-13
+    },
+    {
+      "element": "tet10",
+      "half": 0,
+      "rotated": 1,
+      "maxDisplacementErrorM": 3.8131305703020466e-18,
+      "stressPa": 1000.0000000031384,
+      "energyJ": 0.0004999999999999949,
+      "equilibrium": 6.213162622897758e-13
+    },
+    {
+      "element": "tet10",
+      "half": 1,
+      "rotated": 0,
+      "maxDisplacementErrorM": 1.2450325533454147e-18,
+      "stressPa": 1000.0000000010956,
+      "energyJ": 0.0002499999999999959,
+      "equilibrium": 2.1328103682095764e-13
+    },
+    {
+      "element": "tet10",
+      "half": 1,
+      "rotated": 1,
+      "maxDisplacementErrorM": 1.838485012015459e-18,
+      "stressPa": 1000.0000000031077,
+      "energyJ": 0.000249999999999999,
+      "equilibrium": 1.687187682721785e-12
+    }
+  ],
+  "basisBenchmark": {
+    "basisNodes": 100000,
+    "basisPayloadBytesPerNode": 104,
+    "globalMs": 0.17997,
+    "localMs": 17.861394
+  },
+  "wasmAxial": [
+    {
+      "launch": "local-support-workflow",
+      "cases": [
+        {
+          "case": "tet4-rotated-axial",
+          "displacementM": 1.000000000000717e-06,
+          "referenceDisplacementM": 1e-06,
+          "stressPa": 1000.0000000041155,
+          "referenceStressPa": 1000,
+          "reactionN": [
+            -798.6355100472874,
+            -601.8150231522546,
+            -2.073162291168196e-11
+          ],
+          "relativeEquilibrium": 7.407187282403434e-14,
+          "nnz": 47808,
+          "referenceReactionN": [
+            -798.6355100472929,
+            -601.8150231520483,
+            0
+          ]
+        },
+        {
+          "case": "tet10-rotated-axial",
+          "displacementM": 1.0000000000020244e-06,
+          "referenceDisplacementM": 1e-06,
+          "stressPa": 1000.0000000068928,
+          "referenceStressPa": 1000,
+          "reactionN": [
+            -798.6355100471632,
+            -601.8150231522617,
+            -3.500949597113375e-10
+          ],
+          "relativeEquilibrium": 1.5348915306357472e-13,
+          "nnz": 629010,
+          "referenceReactionN": [
+            -798.6355100472929,
+            -601.8150231520483,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "launch": "http:local-support-workflow",
+      "cases": [
+        {
+          "case": "tet4-rotated-axial",
+          "displacementM": 1.000000000000717e-06,
+          "referenceDisplacementM": 1e-06,
+          "stressPa": 1000.0000000041155,
+          "referenceStressPa": 1000,
+          "reactionN": [
+            -798.6355100472874,
+            -601.8150231522546,
+            -2.073162291168196e-11
+          ],
+          "relativeEquilibrium": 7.407187282403434e-14,
+          "nnz": 47808,
+          "referenceReactionN": [
+            -798.6355100472929,
+            -601.8150231520483,
+            0
+          ]
+        },
+        {
+          "case": "tet10-rotated-axial",
+          "displacementM": 1.0000000000020244e-06,
+          "referenceDisplacementM": 1e-06,
+          "stressPa": 1000.0000000068928,
+          "referenceStressPa": 1000,
+          "reactionN": [
+            -798.6355100471632,
+            -601.8150231522617,
+            -3.500949597113375e-10
+          ],
+          "relativeEquilibrium": 1.5348915306357472e-13,
+          "nnz": 629010,
+          "referenceReactionN": [
+            -798.6355100472929,
+            -601.8150231520483,
+            0
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "Full section spans y=-0.5..0.5 m; symmetry half spans y=0..0.5 m. Both use 1000 Pa outward traction on x=1 m. Total forces are 1000 N and 500 N; expected strain energies 0.0005 J and 0.00025 J.",
+    "Native rotation composes 0.41 rad X and 0.63 rad Z; browser CAD rotates 37 degrees about Z. E=1e9 Pa, nu=0.25.",
+    "Basis payload excludes tree nodes; preflight accounts for map value plus four pointer widths per affected node. Timing is one measured run, not a performance guarantee."
+  ]
+}

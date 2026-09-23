@@ -1,8 +1,8 @@
 # Plan 35: Local directions and planar sliding/symmetry supports
 
-> **For agentic workers:** Use superpowers:executing-plans in the current agent. Follow repository AGENTS.md; do not dispatch subagents. This document plans future implementation and does not authorize publication.
+> **For agentic workers:** Use superpowers:executing-plans in the current agent. Follow repository AGENTS.md; do not dispatch subagents. Implementation of this plan does not authorize publication.
 
-**Status:** Planned — pre-v1
+**Status:** Implemented — pending owner walkthrough ([evidence](../reviews/35-local-directions-and-supports.md))
 
 **Goal:** Let users express loads and restraints relative to a part or planar face with physically correct local constraints.
 
@@ -35,24 +35,24 @@ The shared execution, evidence, performance, and review rules in [the plan index
 
 ### 1. Define frames and authoring semantics
 
-- [ ] Add tests for orthonormal/right-handed bases, invalid axes, normal sign, unit conversion and global/CAD-attached orientation rules.
-- [ ] Define a versioned frame reference plus local force/support components; show both entered local components and a compact global direction preview.
-- [ ] Add planar sliding/symmetry presets constraining normal motion with tangential freedom. Explain symmetry assumptions without scaling user loads automatically.
-- [ ] Extend history, suppression, persistence, remeshing and replacement mapping to all new references before enabling the UI.
+- [x] Add tests for orthonormal/right-handed bases, invalid axes, normal sign, unit conversion and global/CAD-attached orientation rules.
+- [x] Define a versioned frame reference plus local force/support components; show both entered local components and a compact global direction preview.
+- [x] Add planar sliding/symmetry presets constraining normal motion with tangential freedom. Explain symmetry assumptions without scaling user loads automatically.
+- [x] Extend history, suppression, persistence, remeshing and replacement mapping to all new references before enabling the UI.
 
 ### 2. Implement exact local constraints
 
-- [ ] Add failing native tests for rotated prescribed displacement, local/global overlap, dependent equal constraints and incompatible constraints on shared nodes.
-- [ ] Build a rank-revealing independent constraint basis per affected node; use an orthogonal congruence or equivalent verified elimination preserving symmetry and PCG's SPD assumptions. Do not use a penalty constant or round to a global axis.
-- [ ] Transform loads/displacements consistently and recover reactions in global coordinates. Update rigid-mode checks using actual local directions.
-- [ ] Validate the C ABI/worker schema, exact topology/memory preflight and stale-reply behavior; rebuild WASM and local worker wrappers reproducibly.
+- [x] Add failing native tests for rotated prescribed displacement, local/global overlap, dependent equal constraints and incompatible constraints on shared nodes.
+- [x] Build a rank-revealing independent constraint basis per affected node; use an orthogonal congruence or equivalent verified elimination preserving symmetry and PCG's SPD assumptions. Do not use a penalty constant or round to a global axis.
+- [x] Transform loads/displacements consistently and recover reactions in global coordinates. Update rigid-mode checks using actual local directions.
+- [x] Validate the C ABI/worker schema, exact topology/memory preflight and stale-reply behavior; rebuild WASM and local worker wrappers reproducibly.
 
 ### 3. Verify rotational equivalence and usability
 
-- [ ] Solve a rotated axial cube/bar with corresponding local constraints/force and compare with its global-axis equivalent using existing Section 16 displacement/stress/equilibrium criteria.
-- [ ] Compare a valid symmetry half-model against the full-model solution with explicitly scaled geometry/loading; test a tangential free mode remains underconstrained.
-- [ ] Verify Tet4/Tet10, nonzero prescribed values, conflicting intersecting faces, cancel/undo/reopen and load-arrow orientation on all signed axes.
-- [ ] Benchmark per-node basis storage/work and confirm existing global-only cases avoid unnecessary transforms.
+- [x] Solve a rotated axial cube/bar with corresponding local constraints/force and compare with its global-axis equivalent using existing Section 16 displacement/stress/equilibrium criteria.
+- [x] Compare a valid symmetry half-model against the full-model solution with explicitly scaled geometry/loading; test a tangential free mode remains underconstrained.
+- [x] Verify Tet4/Tet10, nonzero prescribed values, conflicting intersecting faces, cancel/undo/reopen and load-arrow orientation on all signed axes.
+- [x] Benchmark per-node basis storage/work and confirm existing global-only cases avoid unnecessary transforms.
 
 ## Verification and acceptance
 

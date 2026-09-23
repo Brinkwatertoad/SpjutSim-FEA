@@ -55,8 +55,8 @@
       "rawVonMisesMaxPa": 1000.0000079844727,
       "minimumFactorOfSafety": 249999.99800388183,
       "iterations": 261,
-      "solveDurationMs": 49.12,
-      "estimatedPeakBytes": 110164734,
+      "solveDurationMs": 51.615,
+      "estimatedPeakBytes": 110226174,
       "peakLocationM": [
         0.6770713386323061,
         0.959074710581554,
@@ -101,8 +101,8 @@
       "rawVonMisesMaxPa": 1000.0000071004514,
       "minimumFactorOfSafety": 249999.99822488715,
       "iterations": 359,
-      "solveDurationMs": 149.515,
-      "estimatedPeakBytes": 121379610,
+      "solveDurationMs": 159.785,
+      "estimatedPeakBytes": 121502490,
       "peakLocationM": [
         0.09846800794233052,
         0.012645866682104797,

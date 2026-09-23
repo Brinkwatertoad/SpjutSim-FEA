@@ -73,7 +73,7 @@ The product should favor **useful, defensible engineering feedback over solver f
 - Browser-local material and unit libraries; DOCX and text/PNG ZIP reports.
 - Portable save/open with optional mesh/results and lightweight local recovery.
 - Model volume/mass, easier viewport selection, discoverable advanced controls, consistent editing language, contextual errors, onboarding, and report options with complete defaults.
-- **Planned:** local directions, planar sliding/symmetry supports, bearing loads, distributed moments, and offset forces.
+- **Implemented:** local directions and planar sliding/symmetry supports. **Planned:** bearing loads, distributed moments, and offset forces.
 
 ### 2.2 Deferred until after v1.0
 
@@ -179,7 +179,7 @@ tools pane.
 
 The user selects one or more CAD faces and adds:
 
-- a support constraining any nonempty subset of global X/Y/Z translation, with
+- a support constraining any nonempty subset of global or local X/Y/Z translation, with
   zero or nonzero prescribed displacement per enabled component;
 - pressure;
 - distributed total force;
@@ -737,7 +737,7 @@ with O/S; New has no shortcut. No beforeunload warning is installed. Download st
 not verified disk persistence. Browser/origin storage limitations and allocation
 costs are documented with the file format.
 
-### 5.7 Planned engineering extensions and invalidation
+### 5.7 Local frames and planned engineering extensions
 
 Plans 35–37 extend support/load definitions through the same controller,
 assignment draft, history, project validation, worker protocol, and report paths.
@@ -753,8 +753,45 @@ assignment draft, history, project validation, worker protocol, and report paths
 - Distributed moments and offset forces declare target faces, resultant force,
   resultant moment, reference point, and the chosen load-distribution model.
 
-These are planned schemas, not valid existing worker payloads. Exact schemas
-are versioned and tested within the owning plan. Missing/incompatible references
+Local frames and planar supports are implemented; bearing/moment/offset schemas
+remain planned. A support or component force optionally carries:
+
+```js
+frame: { version: 1, ownership: 'global', originM: [0, 0, 0],
+         axes: [[1, 0, 0], [0, 1, 0], [0, 0, 1]] }
+// CAD-attached: ownership: 'cad', faceId: an assigned, validated planar FaceId.
+// axes contains the three local unit axes, expressed in canonical CAD coordinates
+// for CAD ownership, or global coordinates for manual/global ownership.
+```
+
+Axes must be finite, orthonormal, and right handed (dimensionless tolerance
+1e-10); origins are finite SI meters. Components retain their existing SI fields
+(`componentsM`, `forceN`), now interpreted in that frame. Absent `frame` retains
+legacy global behavior. Origin does not change a force or displacement direction.
+The editor shows entered local values and their resolved global directions/resultant.
+`preset: 'sliding' | 'symmetry'` requires a planar CAD frame and exactly
+`componentsM: {z: 0}`. Choose components permits nonzero local displacements.
+Tangential motion is free; no loads are automatically scaled for symmetry.
+
+`GeometryModel.planarFaces[FaceId] = {version: 1, originM, normal}` stores
+canonical CAD coordinates, unchanged by display/model rotation. Descriptors
+require the CAD backend's Plane classification and a coplanarity check of the
+outward-oriented surface preview (distance tolerance 1e-9 times model size).
+Curved or unrecognized surfaces have no descriptor and are rejected for this
+feature. CAD frames follow the current orientation; manual frames stay global.
+Reopen revalidates descriptors against imported source. Replacement requires
+mapping each CAD-attached assignment to one planar face or dropping it; the
+replacement basis is regenerated and previewed before the transfer is accepted.
+
+Worker protocol 5 prevents old workers from silently interpreting local components
+as global. Support projection adds `constraintFrame: {version: 1, axes}` with axes
+resolved in global coordinates; total forces are transformed to global before
+transfer. The worker independently validates the basis. The additive C ABI entry
+`fem_set_directional_constraints` replaces all constraints with explicit unit
+global directions, node index `dof / 3`, and SI prescribed values. Legacy global
+calls remain supported. Project producer `/local-frame-1` prevents older apps
+from dropping frame meaning; legacy global-only projects still open, with old
+cached results discarded. Exact schemas are versioned and tested. Missing/incompatible references
 block use or enter explicit review. Preflight, constraint rank, equilibrium,
 history replay and optional cached-result fingerprints include the new inputs.
 
@@ -842,8 +879,8 @@ face with no stable normal is rejected.
 Orientation transforms preview positions, normals, feature edges, and final
 mesh coordinates without changing opaque `FaceId` values or mutating canonical
 source bytes. It invalidates mesh, preflight, and results. Material, supports,
-loads, gravity, and selections remain attached and expressed in the global
-coordinate frame.
+loads, gravity, and selections retain their definitions. Manual/global frames
+stay global; CAD-attached frames resolve through the new orientation.
 
 ### 6.6 Replacing an authored model
 
@@ -1031,7 +1068,7 @@ Use uniform pressure ±magnitude/selected area, positive for Push and negative f
 Pull. Opposing local normals may cancel. In the solver worker, Tri3 uses triangle
 area and Tri6 uses the same three-point surface quadrature as native `tri6_area`.
 This normalization then calls the unchanged native pressure integration. The
-surface-load record (introduced in protocol 2, retained in protocol 4) adds optional normal magnitude/sense; normal loads
+surface-load record (introduced in protocol 2, retained in protocol 5) adds optional normal magnitude/sense; normal loads
 omit the preview-only equivalent nodal force array (`null`). No native API or
 WASM binary change is needed. Malformed magnitudes and degenerate areas fail
 with actionable errors.
@@ -1048,7 +1085,7 @@ and therefore requires density.
 
 ### 8.6 Component supports
 
-Every support constrains any nonempty subset of global X, Y, and Z displacement
+Every support constrains any nonempty subset of global or declared local X, Y, and Z displacement
 at every unique node belonging to its selected geometric faces. Each enabled
 component carries a finite prescribed value in meters. Fixed is an authoring
 shortcut for `{x: 0, y: 0, z: 0}`, not a separate engineering data type.
@@ -1066,15 +1103,31 @@ Acceptable v1 strategies:
 
 Do not use a large penalty factor as the default constraint method.
 
-### 8.8 Local supports and additional loads — planned
+### 8.8 Local supports and planned additional loads
 
-Plans 35–37 must preserve the symmetric positive-definite system assumed by PCG
+Local supports preserve the symmetric positive-definite system assumed by PCG
 for a valid constrained linear-elastic model. A local constraint is a linear
 condition on nodal translation, not an approximate choice of the nearest global
 component. Resolve intersecting local/global constraints per node, rejecting
 inconsistent prescribed values and retaining independent constraint directions.
 Test rigid-mode removal, transformed displacements, reaction recovery and
 equilibrium in global coordinates.
+
+Directional constraints use a deterministic per-node orthonormal basis built by
+two-pass modified Gram–Schmidt with a dimensionless independence threshold of
+1e-10. Dependent conditions are rejected when the prescribed residual exceeds
+1e-12 m plus 1e-10 times the largest projected prescribed-value scale (one picometer
+absolute floor accommodates floating-point projection, not a penalty stiffness).
+Exact duplicate legacy DOFs retain strict prescribed-value conflict checks.
+Affected 3×3 CSR blocks undergo `Qᵀ K Q`; loads use `Qᵀ f`, then symmetric
+row/column elimination applies the independent prescriptions. Solved displacement
+is restored with `Q u`; recovery uses the original physical element matrices.
+Global reactions project `K u - f` onto each node's constrained subspace.
+The CSR topology/nnz does not change. Preflight includes basis/tree storage and
+constraint buffers. Global-only cases allocate no bases and bypass congruence.
+Only affected nodes own bases; transformation uses a stack 3×3 block, without
+another global stiffness matrix. Basis work is O(C log B), congruence O(nnz log B)
+with C constraints and B affected nodes; no penalty constants or axis rounding.
 
 Bearing loading distributes compression on the loaded region of supported
 cylindrical faces to produce the requested transverse resultant. The initial
@@ -1718,8 +1771,8 @@ Examples:
 
 ### 14.3 Underconstraint detection
 
-Construct observations of Tx, Ty, Tz, Rx, Ry, and Rz from every enabled global
-support component at its constrained points. Center and scale coordinates, then
+Construct observations of Tx, Ty, Tz, Rx, Ry, and Rz from every enabled global or local
+support direction at its constrained points. Center and scale coordinates, then
 compute a deterministic rank and nullspace with an explicit tolerance. Before
 meshing, use deterministic samples of selected preview faces and label the
 result provisional. After meshing, recompute from actual unique constrained
@@ -2173,6 +2226,16 @@ the signs of compared displacement/reaction components, and recompute relative
 errors from the recorded actual and reference values. A structurally valid
 failure record does not satisfy release acceptance.
 
+Plan 35 acceptance also requires Tet4/Tet10 rotated axial and full/half symmetry
+benchmarks: displacement ≤1%, stress ≤1%, strain energy ≤3%, and global reaction
+balance ≤0.1%. The checked-in tests apply stricter patch tolerances (1e-13 m
+absolute displacement, 1e-7 relative stress/energy, 1e-9 equilibrium native;
+1e-11 m displacement, 0.01 Pa stress, 1e-7 equilibrium WASM). Symmetry half-model
+geometry and total applied load are explicitly halved, with equal traction.
+See `benchmarks/validation/local-directions.json` and the Plan 35 review for
+fresh numerical and basis-storage/work evidence. Direct matrix tests verify
+symmetry and congruence energy preservation, separate from PCG convergence.
+
 ### 16.3 Regression fixtures
 
 Each solver/mesher release should run a fixed corpus containing:
@@ -2296,7 +2359,7 @@ When the generic UI foundation changes:
 
 Worker APIs should be versioned, coarse-grained, and represented as plain JavaScript objects plus transferable buffers.
 
-The current worker envelope protocol is version 4, as defined in
+The current worker envelope protocol is version 5, as defined in
 `web/js/workers/worker-protocol.js`. Mesher requests provide source bytes,
 format/name, geometry identity, orientation/settings, and expected face identity
 for the operation. Solver preparation transfers the validated mesh/material/
@@ -2562,7 +2625,7 @@ evidence.
 - [ ] Model volume/mass and viewport selection improvements pass unit, draft, keyboard and file-mode checks.
 - [ ] Contextual advanced controls preserve active-setting visibility; View-menu removal preserves all commands; editing/status language is consistent.
 - [ ] Default reports remain complete, and optional customization preserves numerical context and capture restoration.
-- [ ] Local directions and sliding/symmetry supports pass native/WASM constraint, rotation and reaction benchmarks.
+- [x] Local directions and sliding/symmetry supports pass native/WASM constraint, rotation and reaction benchmarks (Plan 35; owner walkthrough pending).
 - [ ] Bearing loads and moment/offset forces pass integrated force/moment, convergence and resource checks.
 - [ ] Integrated post-change regression and owner usability review M38 are accepted.
 - [ ] Task 20 binds all required evidence to the exact final candidate after the pre-v1 plans and accepted M38; release authorization is recorded.

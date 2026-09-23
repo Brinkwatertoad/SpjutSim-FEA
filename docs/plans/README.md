@@ -1,10 +1,10 @@
 # Development plans
 
 **Status:** v1 is unreleased. The original static-analysis workflow and Plans
-21–34 are implemented. M21–M27 have recorded owner acceptance; Plans 28–34 have
+21–35 are implemented. M21–M27 have recorded owner acceptance; Plans 28–34 have
 implementation verification and remain part of final integrated review.
 The owner approved the planning scope and implementation through Plan 34 on
-2026-09-22. Plans 35 onward remain planned; automated verification does not imply
+2026-09-22. Plan 35 was implemented on 2026-09-23 at the owner’s request; Plans 36 onward remain planned. Automated verification does not imply
 owner acceptance. [Batch evidence](../reviews/30-34-verification.md).
 
 **Pre-v1 order:** **30 → 31 → 32 → 33 → 34 → 35 → 36 → 37 → 38 → 20**.
@@ -24,7 +24,7 @@ the current supported product; STL is archived.
 | [32 — Contextual workflow](32-contextual-workflow.md) | Implemented; [verification](../reviews/32-contextual-workflow.md) | Direct mesh options, View-menu removal, contextual guide, prepared example, explicit Mesh and solve, duplicate/suppress assignments |
 | [33 — Model information/selection](33-model-information-and-selection.md) | Implemented; [verification](../reviews/33-model-information-and-selection.md) | Volume/mass without solving, small/obscured-face access, hide/isolate |
 | [34 — Report options](34-report-options.md) | Implemented; [verification](../reviews/34-report-options.md) | Complete defaults plus optional notes and selected/current views |
-| [35 — Local directions/supports](35-local-directions-and-supports.md) | Planned | Local frames and physically correct planar sliding/symmetry constraints |
+| [35 — Local directions/supports](35-local-directions-and-supports.md) | Implemented; [verification](../reviews/35-local-directions-and-supports.md), owner walkthrough pending | Local frames and physically correct planar sliding/symmetry constraints |
 | [36 — Bearing loads](36-bearing-loads.md) | Planned | Validated transverse loading on supported cylindrical bands |
 | [37 — Moments/offset forces](37-moments-and-offset-forces.md) | Planned | Declared surface distribution, force/moment balance and offset load reference |
 | [38 — Final usability](38-integrated-usability-and-pre-release-regression.md) | Planned | Integrated workflow, resource/compatibility regression, owner acceptance |

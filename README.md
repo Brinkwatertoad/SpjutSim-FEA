@@ -89,6 +89,14 @@ editing, keyboard/focus behavior, controller invalidation, boundary projection,
 surface integration, rigid model/selected-face orientation, and six-face
 glyph-orientation checks. It should report `Passed` without a server.
 
+Open `tests/browser/local-frame-tests.html`, `tests/browser/local-support-ui-tests.html`, and
+`tests/browser/local-support-workflow-tests.html` with
+local-file access enabled or from the HTTP server. They verify frame validation,
+editor previews/cancel, rotated Tet4/Tet10 analytical solves, nonzero prescribed
+motion, intersecting-face conflicts, signed glyphs, project reopen, replacement,
+undo/suppression and curved-face rejection. Native CTest includes local constraint
+and full/half symmetry benchmarks. See [Plan 35 evidence](docs/reviews/35-local-directions-and-supports.md).
+
 Open `tests/browser/wasm-solve-result-tests.html` directly in Chromium to run
 the embedded FEM worker preflight/solve, transferable result-contract, progress,
 equilibrium, staleness, and default-result-view checks. Open
@@ -203,8 +211,11 @@ option. CAD import/meshing and the first-party FEM solver run in separate dispos
 workers. Both direct-local and optional HTTP modes use the validated serial runtimes.
 
 The Setup pane contains Model, Material, Supports, Loads and Mesh. Supports constrain
-global displacement components, including nonzero prescribed values. Loads include
-pressure, total global force, area-distributed normal force and gravity. Drafts
+global or local displacement components, including nonzero prescribed values.
+Rectangular manual frames stay global; planar CAD frames follow model rotation.
+Planar sliding/symmetry presets restrain normal motion and leave tangential motion
+free. Symmetry requires appropriate geometry/loading; loads are not scaled automatically. Loads include
+pressure, total global/local force, area-distributed normal force and gravity. Drafts
 preview changes; Apply/Save commits and Cancel/Escape preserves the prior analysis.
 Existing rows locate/edit their assignments. Model orientation supports axis rotation
 and selected-face alignment; replacing CAD uses explicit face-mapping review.
