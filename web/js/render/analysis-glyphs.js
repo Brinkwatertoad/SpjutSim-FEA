@@ -209,8 +209,8 @@
     var descriptors = [];
     if (!surface) { return descriptors; }
     var draft = documentState.assignmentDraft;
-    var supports = documentState.boundaryConditions.filter(function (item) { return (!documentState.viewportPresentation || documentState.viewportPresentation.showSupports !== false) && (!draft || item.id !== draft.itemId); });
-    var loads = documentState.loads.filter(function (item) { return (!documentState.viewportPresentation || documentState.viewportPresentation.showLoads !== false) && (!draft || item.id !== draft.itemId); });
+    var supports = documentState.boundaryConditions.filter(function (item) { return item.enabled !== false && (!documentState.viewportPresentation || documentState.viewportPresentation.showSupports !== false) && (!draft || item.id !== draft.itemId); });
+    var loads = documentState.loads.filter(function (item) { return item.enabled !== false && (!documentState.viewportPresentation || documentState.viewportPresentation.showLoads !== false) && (!draft || item.id !== draft.itemId); });
     if (draft && draft.kind !== 'gravity' && draft.validation.valid) {
       var preview = Object.assign({},draft.validation.value,{id:'assignment-preview',preview:true});
       (draft.kind === 'support' ? supports : loads).push(preview);

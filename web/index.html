@@ -22,7 +22,7 @@
       <nav class="ui-menu-bar" id="application-menu" aria-label="Application menus">
         <div class="ui-menu-group" data-ui-menu-group data-open="false">
           <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">File</button>
-          <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="import-step">Import CAD…</button>
+          <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-project-new data-ui-menu-action="new-project">New</button><button type="button" role="menuitem" data-project-open data-ui-menu-action="open-project"><span>Open…</span><span data-project-shortcut="o" class="ui-menu-shortcut"></span></button><button type="button" role="menuitem" data-project-save data-ui-menu-action="save-project"><span>Save project…</span><span data-project-shortcut="s" class="ui-menu-shortcut"></span></button><button type="button" role="menuitem" data-recovery-manage data-ui-menu-action="manage-recovery">Local recovery</button><button type="button" role="menuitem" data-ui-menu-action="import-step">Import CAD…</button>
             <button type="button" role="menuitem" data-ui-menu-action="settings"><span>Settings…</span><span class="ui-menu-shortcut" aria-hidden="true"></span></button>
           </div>
         </div>
@@ -31,23 +31,8 @@
           <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="undo" data-history-action="undo" disabled><span data-history-label>Undo</span><span class="ui-menu-shortcut" aria-hidden="true">Ctrl+Z</span></button><button type="button" role="menuitem" data-ui-menu-action="redo" data-history-action="redo" disabled><span data-history-label>Redo</span><span class="ui-menu-shortcut" aria-hidden="true">Ctrl+Y</span></button></div>
         </div>
         <div class="ui-menu-group" data-ui-menu-group data-open="false">
-          <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">View</button>
-          <div class="ui-menu-list" role="menu">
-            <button type="button" role="menuitem" data-ui-menu-action="fit-view">Fit model</button>
-            <button type="button" role="menuitem" data-ui-menu-action="reset-view">Reset view</button>
-            <button type="button" role="menuitem" data-ui-menu-action="camera-+x">View from +X · YZ plane</button>
-            <button type="button" role="menuitem" data-ui-menu-action="camera--x">View from −X · YZ plane</button>
-            <button type="button" role="menuitem" data-ui-menu-action="camera-+y">View from +Y · XZ plane</button>
-            <button type="button" role="menuitem" data-ui-menu-action="camera--y">View from −Y · XZ plane</button>
-            <button type="button" role="menuitem" data-ui-menu-action="camera-+z">View from +Z · XY plane</button>
-            <button type="button" role="menuitem" data-ui-menu-action="camera--z">View from −Z · XY plane</button>
-            <button type="button" role="menuitemradio" aria-checked="true" data-ui-menu-action="projection-orthographic">Orthographic</button>
-            <button type="button" role="menuitemradio" aria-checked="false" data-ui-menu-action="projection-perspective">Perspective</button>
-          </div>
-        </div>
-        <div class="ui-menu-group" data-ui-menu-group data-open="false">
           <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">Help</button>
-          <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="about">About</button></div>
+          <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="about">About</button><button type="button" role="menuitem" data-ui-menu-action="walkthrough">Show setup guide</button></div>
         </div>
       </nav>
       <div class="fea-activity" role="status" aria-live="polite"><span id="app-status">Starting…</span><span id="activity-spinner" class="fea-spinner" aria-hidden="true" hidden></span></div>
@@ -57,9 +42,10 @@
       <div class="fea-shell-actions">
         <button type="button" id="undo-button" data-history-action="undo" disabled title="Undo setup edit" aria-label="Undo"><svg class="fea-action-icon" data-action-icon="undo" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="10 6 5 11 10 16"/><path d="M6 11h8c3.5 0 5 2 5 5"/></svg></button>
         <button type="button" id="redo-button" data-history-action="redo" disabled title="Redo setup edit" aria-label="Redo"><svg class="fea-action-icon" data-action-icon="redo" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="14 6 19 11 14 16"/><path d="M18 11h-8c-3.5 0-5 2-5 5"/></svg></button>
-        <button type="button" data-placeholder="save" disabled title="Save — not implemented yet" aria-label="Save — not implemented yet"><svg class="fea-action-icon" data-action-icon="save" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h9.5L18 7.5V19H6z"/><path d="M9 5v5h6V5"/><path d="M8.5 14h7M8.5 17h7"/></svg></button>
+        <button type="button" id="save-project-button" data-project-save disabled title="Save project (Ctrl+S)" aria-label="Save project"><svg class="fea-action-icon" data-action-icon="save" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h9.5L18 7.5V19H6z"/><path d="M9 5v5h6V5"/><path d="M8.5 14h7M8.5 17h7"/></svg></button>
         <select id="report-format" aria-label="Report format"><option value="docx">Word report</option><option value="zip">Text + images ZIP</option></select>
         <button type="button" id="export-report-button" disabled title="Download analysis report" aria-label="Download analysis report"><svg class="fea-action-icon" data-action-icon="export" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10"/><polyline points="8 10 12 14 16 10"/><rect x="5" y="16" width="14" height="4" rx="1"/></svg></button>
+        <button id="report-options-button" type="button" aria-label="Report options" title="Report options"></button>
       </div>
       <span id="solve-readiness" hidden></span>
       <button id="cancel-solve-button" type="button" hidden>Cancel</button>
@@ -68,7 +54,6 @@
     </div>
     <main class="fea-workspace">
       <aside id="setup-pane" class="fea-tools" aria-label="Setup">
-        <p id="history-status" class="fea-help" role="status" aria-live="polite">Import, replacement, and removal clear Undo/Redo history.</p>
         <section id="setup-inspector" class="fea-setup-inspector" aria-label="Setup assignments">
           <p id="setup-inspector-status" class="fea-visually-hidden" role="status" aria-live="polite"></p>
           <div class="fea-setup-group"><h2>Model</h2><ul id="setup-inspector-model-list" class="fea-setup-list"></ul></div>
@@ -77,7 +62,7 @@
           <div class="fea-setup-group"><div class="fea-setup-group-heading"><h2>Loads</h2><button id="setup-add-load-button" type="button">Add</button><button id="setup-gravity-button" type="button">Gravity…</button></div><ul id="setup-inspector-load-list" class="fea-setup-list"></ul></div>
           <div class="fea-setup-group"><h2>Mesh</h2><ul id="setup-inspector-mesh-list" class="fea-setup-list"></ul></div>
           <div id="setup-inspector-form-stash" hidden>
-            <div id="model-editor">
+            <div id="model-editor"><p id="model-information" class="fea-help"></p>
               <button id="import-step-button" type="button">Import or replace model…</button>
               <input id="import-step-input" type="file" accept=".step,.stp,.iges,.igs,.brep" hidden>
               <p id="geometry-status">Choose a STEP, IGES, or BREP solid to begin.</p>
@@ -109,8 +94,8 @@
                   <label for="material-ultimate-tensile">Ultimate tensile (<span data-unit-label="strengthPa">MPa</span>)</label><input data-unit-quantity="strengthPa" id="material-ultimate-tensile" type="number" min="0" step="any">
                   <label for="material-ultimate-compressive">Ultimate compressive (<span data-unit-label="strengthPa">MPa</span>)</label><input data-unit-quantity="strengthPa" id="material-ultimate-compressive" type="number" min="0" step="any">
                 </details>
-                <button class="ui-button-primary" type="submit">Save custom material</button>
-                <button id="replace-saved-material-button" type="button" hidden>Replace saved material</button>
+                <button class="ui-button-primary" type="submit">Apply material</button><button id="save-material-library-button" type="button">Save to material library</button>
+                <button id="replace-saved-material-button" type="button" hidden>Save to material library</button>
                 <button id="remove-saved-material-button" type="button" data-action-intent="danger" hidden>Remove saved material</button>
                 <button id="remove-material-button" type="button" data-action-intent="danger">Remove active material</button>
               </form>
@@ -165,11 +150,6 @@
               <p id="gravity-status" role="status" aria-live="polite">Gravity is off.</p>
             </div>
             <div id="mesh-editor">
-              <label for="mesh-element-type">Element</label>
-              <select id="mesh-element-type">
-                <option value="tet10" selected>Tet10 (production)</option>
-                <option value="tet4">Tet4 (debug/reference)</option>
-              </select>
               <label for="mesh-preset">Density</label>
               <select id="mesh-preset">
                 <option value="coarse">Coarse</option><option value="normal" selected>Normal</option>
@@ -198,7 +178,7 @@
             <button type="button" data-view-mode="model">Model</button><button type="button" data-view-mode="mesh">Mesh</button><button type="button" data-view-mode="stress">Stress</button><button type="button" data-view-mode="deformation">Deformation</button>
           </div>
           <details id="display-popover" class="fea-display-popover"><summary>Display</summary><div class="fea-display-options">
-          <label class="fea-overlay-check" for="perspective-toggle"><input id="perspective-toggle" type="checkbox" role="switch"> Perspective</label>
+          <fieldset class="fea-face-access"><legend>Face access</legend><button id="pick-through-start" type="button">Select through…</button><button id="hide-selected-faces" type="button">Hide selected</button><button id="isolate-selected-faces" type="button">Isolate selected</button><button id="show-all-faces" type="button">Show all</button><p class="fea-help">Temporary Model/Mesh visibility; hidden faces still participate in analysis.</p></fieldset><label class="fea-overlay-check" for="perspective-toggle"><input id="perspective-toggle" type="checkbox" role="switch"> Perspective</label>
           <label for="display-style">Style</label>
           <select id="display-style"><option value="shaded">Shaded</option><option value="shaded-edges" selected>Shaded with part edges</option><option value="wireframe">Wireframe</option></select>
           <label class="fea-overlay-check" for="mesh-overlay"><input id="mesh-overlay" type="checkbox" disabled> Mesh overlay</label>
@@ -233,6 +213,8 @@
           </div>
         </div>
         <p id="assignment-preview-indicator" class="fea-draft-indicator" role="status" hidden>Preview · click faces to toggle · Apply or Cancel in Setup</p>
+        <section id="pick-through-panel" class="fea-pick-through" hidden aria-label="Select through faces"><p id="pick-through-status" role="status"></p><button id="pick-through-next" type="button">Next face</button><button id="pick-through-confirm" type="button">Select face</button><button id="pick-through-cancel" type="button">Cancel</button></section><section id="empty-workflow" class="fea-empty-workflow"><h2>Open a part</h2><p>Import a STEP, IGES or BREP solid, or drop one here.</p><div class="fea-empty-actions"><button id="empty-import" type="button">Import CAD…</button><button id="load-example" type="button">Open Cube Example</button></div><p class="fea-help">The cube includes material, supports, load and mesh settings, ready to solve.</p></section>
+        <aside id="setup-guide" class="fea-setup-guide" hidden aria-labelledby="setup-guide-title"><button id="setup-guide-dismiss" class="fea-guide-dismiss" type="button" aria-label="Dismiss setup guide" title="Dismiss setup guide">×</button><strong id="setup-guide-title"></strong><p id="setup-guide-text"></p><div class="fea-guide-actions"><button id="setup-guide-back" type="button">Back</button><button id="setup-guide-next" type="button">Next</button></div></aside>
         <div class="fea-gizmo-bounds" role="group" aria-label="Camera orientation">
           <button type="button" data-view-orientation="+x" aria-label="View from +X · YZ plane" title="View from +X · YZ plane"></button>
           <button type="button" data-view-orientation="-x" aria-label="View from -X · YZ plane" title="View from -X · YZ plane"></button>
@@ -357,6 +339,13 @@
       <footer class="fea-replacement-actions"><button id="replacement-migration-back" type="button">Back</button><span></span><button id="replacement-migration-drop" type="button" data-action-intent="danger">Drop item</button><button id="replacement-migration-map" class="ui-button-primary" type="button">Use selected faces</button><button id="replacement-migration-apply" class="ui-button-primary" type="button" hidden>Apply replacement</button></footer>
     </section>
   </div>
+  <dialog id="mesh-options-dialog" class="fea-project-dialog" aria-labelledby="mesh-options-title"><form method="dialog"><h2 id="mesh-options-title">Mesh options</h2><label for="mesh-element-type">Element formulation</label><select id="mesh-element-type"><option value="tet10">Tet10 — recommended</option><option value="tet4">Tet4 — reference / comparison</option></select><p class="fea-help">Tet10 is the production default. Changing formulation invalidates the current mesh and results.</p><button value="close">Close</button></form></dialog>
+  <dialog id="recovery-dialog" class="fea-project-dialog" aria-labelledby="recovery-title"><h2 id="recovery-title">Local recovery</h2><ul id="recovery-list"></ul><button id="clear-recovery" type="button">Clear stored recovery</button><form method="dialog"><button>Close</button></form></dialog>
+  <div id="project-notice" class="fea-project-notice" hidden><p id="project-status" role="status"></p><p id="recovery-status" role="status"></p><button id="cancel-project-open" type="button" hidden>Cancel open</button><button id="retry-recovery" type="button" hidden>Retry recovery</button><button id="dismiss-project-notice" type="button" aria-label="Dismiss notification">×</button></div>
+  <input id="project-file-input" type="file" accept=".spjutsim-fea,.step,.stp,.iges,.igs,.brep" hidden>
+  <dialog id="report-options-dialog" class="fea-project-dialog" aria-labelledby="report-options-title"><form method="dialog"><h2 id="report-options-title">Report options</h2><label for="report-title">Title</label><input id="report-title" maxlength="160"><label for="report-notes">Notes</label><textarea id="report-notes" maxlength="10000" rows="4"></textarea><fieldset><legend>Images</legend><label><input type="checkbox" data-report-view="assignments"> Part, loads and supports</label><label><input type="checkbox" data-report-view="mesh"> Mesh</label><label><input type="checkbox" data-report-view="stress"> Stress</label><label><input type="checkbox" data-report-view="factorOfSafety"> Factor of safety</label><p id="report-fos-availability" class="fea-help"></p><label><input type="checkbox" data-report-view="deformation"> Auto deformation</label><label><input id="report-current-view" type="checkbox"> Also capture current view</label></fieldset><p class="fea-help">Setup, units, warnings and convergence are always included.</p><div class="fea-dialog-actions"><button id="report-restore-defaults" type="button">Restore defaults</button><button value="cancel">Cancel</button><button value="apply">Apply</button></div></form></dialog>
+  <dialog id="save-project-dialog" class="fea-project-dialog" aria-labelledby="save-project-title"><form method="dialog"><h2 id="save-project-title">Save project</h2><p>Includes CAD and the complete committed setup.</p><label><input id="project-include-cache" type="checkbox"> Include mesh and results (larger file)</label><div class="fea-dialog-actions"><button value="cancel">Cancel</button><button value="save">Save project</button></div></form></dialog>
+  <dialog id="project-question-dialog" class="fea-project-dialog" aria-label="Project changes"><p></p><div class="fea-dialog-actions"></div></dialog>
   <script src="ui/color-schemes.js"></script>
   <script src="js/ui/fea-color-schemes.js"></script>
   <script src="ui/custom-select.js"></script>
@@ -387,10 +376,20 @@
 <script src="js/analysis/app-controller.js"></script>
 <script src="js/analysis/assignment-draft.js"></script>
 <script src="js/analysis/engineering-history.js"></script>
+<script src="js/io/zip.js"></script>
+<script src="js/analysis/project-document.js"></script>
+<script src="js/io/project-file.js"></script>
+<script src="js/analysis/project-recovery.js"></script>
+<script src="js/analysis/project-workflow.js"></script>
+<script src="js/ui/project-ui.js"></script>
+<script src="js/ui/contextual-workflow.js"></script>
+<script src="examples/cube.js"></script>
+
   <script src="js/render/viewport-navigation.js"></script>
   <script src="js/render/analysis-glyphs.js"></script>
   <script src="js/render/deformation-animation.js"></script>
   <script src="js/render/viewport-controller.js"></script>
+<script src="js/render/face-access.js"></script>
   <script src="js/ui/setup-inspector-summary.js"></script>
   <script src="js/ui/analysis-authoring-ui.js"></script>
   <script src="js/ui/result-formatting.js"></script>
@@ -400,8 +399,11 @@
   <script src="js/ui/workspace-layout.js"></script>
   <script src="js/ui/result-legend.js"></script>
 <script src="js/ui/legend-layout.js"></script>
+<script src="ui/action-icons.js"></script>
 <script src="js/ui/ui-controller.js"></script>
 <script src="js/render/report-capture.js"></script>
+
+<script src="js/ui/report-options.js"></script>
 <script src="js/ui/report-export.js"></script>
 <script src="js/ui/report-docx.js"></script>
   <script src="generated/local-runtime/gmsh-runtime-source-part-001.js"></script>

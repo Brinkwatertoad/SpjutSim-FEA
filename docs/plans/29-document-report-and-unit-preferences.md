@@ -1,4 +1,6 @@
-# Document reports and preferred units
+# Plan 29: Document reports and preferred units
+
+Formerly Plan 32. Implementation is complete; the linked verification records its original scope. Renumbered on 2026-09-22 without changing historical evidence.
 
 Spec tracking: required
 
@@ -18,4 +20,4 @@ Spec tracking: required
 - [x] Browser integration and regression coverage, full applicable suites, final diff review.
 Delivery: commit coherent chunks and push `feat/material-load-units-report` (no merge/deploy).
 
-Verification and final review: [Plan 32 review](../reviews/32-document-report-and-unit-preferences.md).
+Verification and final review: [Plan 29 review](../reviews/29-document-report-and-unit-preferences.md).

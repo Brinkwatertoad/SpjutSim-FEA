@@ -10,19 +10,20 @@
   var poundForceN = 0.45359237 * 9.80665;
   var UNIT_SCALES = Object.freeze({Pa:1,kPa:1e3,MPa:1e6,GPa:1e9,psi:poundForceN/0.0254**2,ksi:poundForceN*1000/0.0254**2,
     m:1,mm:1e-3,'µm':1e-6,in:0.0254,ft:0.3048,N:1,kN:1e3,lbf:poundForceN,kip:poundForceN*1000,
-    'kg/m³':1,'lbm/in³':0.45359237/0.0254**3,'m/s²':1,'in/s²':0.0254,'ft/s²':0.3048,J:1,'in·lbf':poundForceN*0.0254});
+    'kg/m³':1,'lbm/in³':0.45359237/0.0254**3,'m/s²':1,'in/s²':0.0254,'ft/s²':0.3048,'m³':1,'cm³':1e-6,'mm³':1e-9,'in³':0.000016387064,kg:1,g:0.001,lbm:0.45359237,J:1,'in·lbf':poundForceN*0.0254});
   var stressUnits = ['Pa','kPa','MPa','GPa','psi','ksi'], lengthUnits = ['m','mm','in'];
   var UNIT_CHOICES = Object.freeze({youngsModulusPa:stressUnits,strengthPa:stressUnits,stressPa:stressUnits,
     pressurePa:['MPa','Pa','psi','ksi'], forceN:['N','kN','lbf','kip'],densityKgM3:['kg/m³','lbm/in³'],
-    displacementM:lengthUnits,lengthM:lengthUnits,accelerationMS2:['m/s²','in/s²','ft/s²'],energyJ:['J','in·lbf']});
+    displacementM:lengthUnits,lengthM:lengthUnits,accelerationMS2:['m/s²','in/s²','ft/s²'],volumeM3:['m³','cm³','mm³','in³'],massKg:['kg','g','lbm'],energyJ:['J','in·lbf']});
   var SI_UNITS = Object.freeze({youngsModulusPa:'GPa',strengthPa:'MPa',stressPa:'MPa',pressurePa:'MPa',forceN:'N',
-    densityKgM3:'kg/m³',displacementM:'mm',lengthM:'m',accelerationMS2:'m/s²',energyJ:'J'});
+    densityKgM3:'kg/m³',displacementM:'mm',lengthM:'m',accelerationMS2:'m/s²',volumeM3:'cm³',massKg:'kg',energyJ:'J'});
   var USCS_UNITS = Object.freeze({youngsModulusPa:'ksi',strengthPa:'ksi',stressPa:'psi',pressurePa:'psi',forceN:'lbf',
-    densityKgM3:'lbm/in³',displacementM:'in',lengthM:'in',accelerationMS2:'in/s²',energyJ:'in·lbf'});
+    densityKgM3:'lbm/in³',displacementM:'in',lengthM:'in',accelerationMS2:'in/s²',volumeM3:'in³',massKg:'lbm',energyJ:'in·lbf'});
   var preferredUnits = SI_UNITS;
   var DISPLAY_UNITS = Object.freeze(Object.fromEntries(Object.keys(SI_UNITS).map(function(key){return [key,Object.freeze({symbol:SI_UNITS[key],siPerDisplayUnit:UNIT_SCALES[SI_UNITS[key]]})];})));
   var LOAD_INPUT_UNITS = Object.freeze(Object.fromEntries(['pressurePa','forceN'].map(function(key){return [key,Object.freeze(Object.fromEntries(UNIT_CHOICES[key].map(function(unit){return [unit,UNIT_SCALES[unit]];})))];})));
   function validatePreferredUnits(units) {
+    if (units && units.volumeM3 === undefined && units.massKg === undefined) { units = Object.assign({volumeM3: units.lengthM === 'in' ? 'in³' : 'cm³', massKg: units.lengthM === 'in' ? 'lbm' : 'kg'}, units); }
     if (!units || Object.keys(units).length !== Object.keys(SI_UNITS).length) { throw Error('Invalid preferred units.'); }
     Object.keys(SI_UNITS).forEach(function(key){if(UNIT_CHOICES[key].indexOf(units[key])<0)throw Error('Unsupported unit for '+key+'.');});
     return Object.freeze(Object.assign({},units));
@@ -133,6 +134,11 @@
     else { value.id = item.id; }
     if (typeof item.name !== 'string' || item.name.trim().length === 0) { errors.push(issue('ITEM_NAME_REQUIRED', 'Enter a name for this ' + kind + '.', 'name')); }
     else { value.name = item.name.trim(); }
+    value.enabled = item.enabled !== false;
+    if (item.enabled !== undefined) {
+      if (typeof item.enabled !== 'boolean') { errors.push(issue('INVALID_ENABLED', 'Choose Include or Suppress.', 'enabled')); }
+      else { value.enabled = item.enabled; }
+    }
     if (!faces.valid) { errors = errors.concat(faces.errors); }
     else { value.faceIds = faces.value; }
     return { errors: errors, value: value };

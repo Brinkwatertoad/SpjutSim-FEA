@@ -1,0 +1,61 @@
+(async function () {
+  'use strict';
+  var api = SpjutsimFEA;
+  function assert(ok, message) { if (!ok) { throw Error(message); } }
+  async function rejects(action, message) { var failed = false; try { await action(); } catch (e) { failed = true; } assert(failed, message); }
+  try {
+    assert(typeof api.createProjectSnapshot === 'function', 'Portable project snapshot is missing');
+    var app = new api.AppController({document: api.createAnalysisDocument()});
+    app.replaceGeometry(api.assignmentTestGeometry('project-cube'), {sourceName:'cube.step', sourceFormat:'step', sourceBytes:new Uint8Array([83,84,69,80]).buffer});
+    app.replaceMaterial({name:'Steel',youngsModulusPa:200e9,poissonsRatio:0.3,densityKgM3:7800});
+    app.replaceSelectedFaces(['face-x+']); var id = app.createLoad({type:'total-force',forceN:[100,0,0]});
+    app.rotateGeometryAroundGlobalAxis('z',37);
+    var snapshot = await api.createProjectSnapshot(app);
+    window.testProjectBlob = await api.writeProjectFile(snapshot);
+    var read = await api.readProjectFile(window.testProjectBlob);
+    assert(read.manifest.setup.loads[0].forceN[0] === 100 && read.source.sourceBytes.byteLength === 4, 'Source/setup round trip changed physical data');
+    assert(!JSON.stringify(read.manifest).includes('assignmentDraft'), 'Draft state leaked into project');
+    var geometry = api.assignmentTestGeometry('project-cube');
+    var replacementApp=new api.AppController({document:api.createAnalysisDocument()});replacementApp.replaceGeometryWithSetup(app.document.geometry,app.geometrySource,snapshot.manifest.setup);
+    var replacementFile=await api.readProjectFile(await api.writeProjectFile(await api.createProjectSnapshot(replacementApp)));
+    api.prepareProjectCandidate(replacementFile,geometry);
+    var candidate = api.prepareProjectCandidate(read, geometry);
+    var target = new api.AppController({document:api.createAnalysisDocument()});
+    target.installProject(candidate);
+    assert(target.document.loads[0].id === id && target.document.selectedFaceIds.length === 0 && !target.document.solvePreflight.result, 'Open lost IDs or restored transient state');
+    assert(Math.abs(target.document.geometry.preview.positionsM[3]-Math.cos(37*Math.PI/180)) < 1e-12, 'Orientation not restored');
+    var revision=target.document.analysisRevision;
+    target.markProjectSaved(target.projectRevision);
+    target.renameAssignment('load',id,'End force');
+    assert(target.projectDirty && target.document.analysisRevision===revision, 'Rename must mark unsaved without invalidating numerical state');
+    var savedRevision=target.projectRevision;target.replaceLoad(id,{type:'total-force',forceN:[200,0,0]});target.markProjectSaved(savedRevision);
+    assert(target.projectDirty,'Saving an earlier snapshot cleared later edits');
+    var dirtyRevision=target.projectRevision;target.replaceSelectedFaces(['face-x-']);target.notify('solve-progress');
+    assert(target.projectRevision===dirtyRevision,'Selection/progress dirtied project');
+    var bad=structuredClone(read);bad.manifest.version=999;
+    await rejects(()=>api.prepareProjectCandidate(bad,geometry),'Unknown version accepted');
+    bad=structuredClone(read);bad.manifest.setup.loads[0].faceIds=['missing'];
+    await rejects(()=>api.prepareProjectCandidate(bad,geometry),'Invalid face reference accepted');
+    bad=structuredClone(read);bad.manifest.setup.materialProvenance={notes:'Broken source',fieldProvenance:{youngsModulusPa:null}};
+    await rejects(()=>api.prepareProjectCandidate(bad,geometry),'Malformed material provenance accepted');
+    var swapped=api.assignmentTestGeometry('project-cube');swapped.preview.faceRanges[0].faceId='face-x+';swapped.preview.faceRanges[1].faceId='face-x-';
+    await rejects(()=>api.prepareProjectCandidate(read,swapped),'Equal face count with changed mapping accepted');
+    await rejects(()=>api.readProjectFile(new Blob([new Uint8Array([1,2,3])])),'Truncated archive accepted');
+    await rejects(()=>api.createStoredZip([{name:'../escape',data:'bad'}]),'Unsafe entry path accepted');
+    await rejects(()=>api.createStoredZip([{name:'same',data:'a'},{name:'same',data:'b'}]),'Duplicate entry accepted');
+    var bytes=new Uint8Array(await testProjectBlob.arrayBuffer());bytes[40]^=1;
+    await rejects(()=>api.readProjectFile(new Blob([bytes])),'Corrupt archive accepted');
+    app.document.mesh=api.assignmentTestMesh();app.document.meshSettings={preset:'normal',elementType:'tet4'};
+    app.document.results={analysisRevision:app.document.analysisRevision,originalSurface:{nodePositionsM:new Float32Array(3)},meshStatistics:{elementCount:1}};
+    await rejects(()=>api.createProjectSnapshot(app,{includeDerived:true}),'Incompatible displayed result was offered as a reusable cache');app.document.results=null;
+    var cached=await api.readProjectFile(await api.writeProjectFile(await api.createProjectSnapshot(app,{includeDerived:true})));
+    var restored=api.prepareProjectCandidate(cached,geometry);
+    assert(restored.document.mesh.nodePositionsM instanceof Float64Array,'Cached mesh did not retain binary type');
+    cached.derived.convergence={status:'running',levels:null};
+    assert(api.prepareProjectCandidate(cached,geometry).cacheWarning,'Invalid cached convergence was installed');
+    cached.derived.convergence=null;
+    cached.manifest.cache.fingerprint='stale';
+    assert(api.prepareProjectCandidate(cached,geometry).cacheWarning && !api.prepareProjectCandidate(cached,geometry).document.mesh,'Stale cache not downgraded to setup');
+    document.getElementById('test-status').textContent='Passed';
+  } catch (error) { document.getElementById('test-status').textContent='Failed: '+error.message; console.error(error); }
+}());

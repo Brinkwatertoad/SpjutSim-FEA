@@ -31,11 +31,13 @@ needs broader evidence; every “Pending” row keeps the release closed.
 | Representative/problematic CAD corpus size | Pass | 50 CC0 fixtures: 34 accepted across three formats and 16 classified rejections |
 | Gmsh distribution rights | Pass | `distribution-policy.md`, `artifact-manifest.json`, `SOURCE.md`; owner approval on 2026-09-07 and successful staged-source audit with `--require-approved` |
 
-## Revised pre-v1 gates — status updated 2026-09-20
+## Revised pre-v1 gates — planning scope updated 2026-09-22
 
 The Pass rows above record the earlier evidence scope and are not exact-candidate
 release certification. M21–M27 acceptance is recorded below. The owner removed
-STL from main and v1 on 2026-09-20; M30 and Task 20 remain open.
+STL from main and v1 on 2026-09-20. The 2026-09-22 planning update renumbered
+completed Plans 31/32 to 28/29, added pre-v1 Plans 30–37, and moved the former
+integrated Plan 30 to 38. The subsequent implementation of Plans 30–34 has [fresh verification](../reviews/30-34-verification.md); owner review remains pending and historical Pass claims are unchanged.
 
 | Area | Status | Required evidence |
 | --- | --- | --- |
@@ -46,10 +48,16 @@ STL from main and v1 on 2026-09-20; M30 and Task 20 remain open.
 | Transactional assignment previews | Accepted 2026-09-10 | [M24–M27 review](../reviews/24-27-followup.md) |
 | Setup and explicitly triggered solve checks | Accepted 2026-09-10 | [M24–M27 review](../reviews/24-27-followup.md) |
 | Bounded engineering undo/redo | Accepted 2026-09-10 | [M24–M27 review](../reviews/24-27-followup.md) |
-| Integrated usability and changed-path regression | Pending | Task 30 complete applicable suites and owner M30 |
-| Exact final candidate | Pending | Task 20 audit after accepted Tasks 21–27 and 30 |
+| Material/load-unit/report and DOCX/unit preferences | Implemented; historical verification | [Plan 28](../reviews/28-material-units-and-report.md), [Plan 29](../reviews/29-document-report-and-unit-preferences.md); include in final integration |
+| Portable projects and lightweight recovery | Implemented; owner review pending | Plans 30–31, malformed/cancelled/overlapping open, safe face identity, optional caches and storage failures |
+| Contextual workflow, model information and selection | Implemented; owner review pending | Plans 32–33, simple/expanded keyboard paths, View command preservation, volume/mass, selection and cancellation |
+| Optional report customization with complete defaults | Implemented; owner review pending | Plan 34, DOCX/ZIP content, numerical context and scene restoration |
+| Local directions and sliding/symmetry supports | Planned | Plan 35 native/WASM rotation, constraint consistency and reactions |
+| Bearing loads and moments/offset forces | Planned | Plans 36–37 quadrature/resultants, analytical/reference convergence and memory |
+| Integrated usability and changed-path regression | Pending | Plan 38 complete applicable suites and owner M38 |
+| Exact final candidate | Pending | Task 20 audit after the completed pre-v1 sequence and accepted M38 |
 
-The project must not be tagged or described as v1.0-ready while any Pending or
+The project must not be tagged or described as v1.0-ready while any Planned, Pending or
 Changes requested row that maps to section 26 remains unresolved.
 
 Historical evidence ownership: Task 16 owns numerical and
@@ -58,4 +66,5 @@ Task 18 owns browser/resource/PCG calibration, Task 19 owns distribution rights,
 and Task 20 reruns and binds the complete acceptance record to one candidate.
 
 The revised execution and mandatory manual review schedule is in
-`../plans/README.md`. Complete Tasks 21–27 and 30 before final Task 20 acceptance.
+`../plans/README.md`. Review Plans 30–34, implement Plans 35–37 and obtain final Plan 38 acceptance before Task 20.
+Post-v1 Plans 39–46 are not release gates.

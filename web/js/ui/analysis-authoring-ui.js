@@ -102,6 +102,7 @@
     if (this.materialCatalogSelect) {
       this.materialCatalogSelect.addEventListener('change', function () { self.selectMaterialCatalogEntry(); });
     }
+    if (byId('save-material-library-button')) { byId('save-material-library-button').addEventListener('click',function(){self.saveMaterialToLibrary();}); }
     if (this.replaceSavedMaterialButton) {
       this.replaceSavedMaterialButton.addEventListener('click', function () { self.replaceSavedMaterial(); });
     }
@@ -217,14 +218,15 @@
     var submit = this.materialForm && this.materialForm.querySelector('button[type="submit"]');
     var details = this.materialCatalogDetails;
     Array.from(this.materialForm ? this.materialForm.querySelectorAll('input') : []).forEach(function (input) { input.readOnly = Boolean(factory); });
-    if (submit) { submit.textContent = factory ? 'Apply material' : (entry ? 'Apply saved material' : 'Save custom material'); }
+    if (submit) { submit.textContent = 'Apply material'; }
+    if (byId('save-material-library-button')) { byId('save-material-library-button').hidden = Boolean(entry); }
     if (this.replaceSavedMaterialButton) { this.replaceSavedMaterialButton.hidden = !entry || entry.layer !== 'user'; }
     if (this.removeSavedMaterialButton) { this.removeSavedMaterialButton.hidden = !entry || entry.layer !== 'user'; }
     if (!details) { return; }
     details.replaceChildren();
     if (!entry) {
       var customNote = document.createElement('p');
-      customNote.textContent = 'Custom materials are validated in base SI units and saved only in this browser.';
+      customNote.textContent = 'Apply uses these properties in this project. Save to material library keeps a separate reusable browser copy.';
       details.append(customNote);
       return;
     }
@@ -275,24 +277,25 @@
     var selectedId = this.materialCatalogSelect ? this.materialCatalogSelect.value : 'custom';
     var entry = selectedId !== 'custom' && this.materialCatalog ? this.materialCatalog.get(selectedId) : null;
     try {
-      var material = entry ? this.materialCatalog.materialSnapshot(selectedId) : this.readMaterial();
-      var validation;
-      var saved;
-      if (!entry && this.materialCatalog) { this.materialCatalog.assertUniqueName(material.name); }
-      validation = this.controller.replaceMaterial(material);
-      if (!entry && this.materialCatalog) {
-        saved = this.materialCatalog.saveUser(validation.value);
-        this.renderMaterialCatalogOptions();
-        this.materialCatalogSelect.value = saved.entry.id;
-        this.renderMaterialCatalogSelection();
-      }
-      this.materialFeedback = validation.warnings.length
-        ? { warning: true, message: validation.warnings[0].message }
-        : (saved && saved.storageWarning ? { warning: true, message: saved.storageWarning } : { message: entry ? 'Material applied as an analysis snapshot.' : 'Custom material saved and applied in SI units.' });
-      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: 'Material saved.' });
+      var material = entry && entry.layer === 'factory' ? this.materialCatalog.materialSnapshot(selectedId) : this.readMaterial();
+      var validation = this.controller.replaceMaterial(material);
+      this.materialFeedback = validation.warnings.length ? {warning:true,message:validation.warnings[0].message} : {message:'Material applied to this project.'};
+      this.closeInspectorRow({restoreFocus:true,cancelEdit:false,message:'Material applied.'});
     } catch (error) {
-      this.materialFeedback = { error: true, message: error.message };
-      this.render(this.controller.document);
+      this.materialFeedback = {error:true,message:error.message};this.render(this.controller.document);this.focusEditorError(this.materialForm,error.message);
+    }
+  };
+
+  AnalysisAuthoringUI.prototype.saveMaterialToLibrary = function () {
+    try {
+      var validation = root.SpjutsimFEA.validateIsotropicMaterial(this.readMaterial());
+      if (!validation.valid) { throw Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
+      var saved = this.materialCatalog.saveUser(validation.value);
+      this.renderMaterialCatalogOptions();this.materialCatalogSelect.value = saved.entry.id;this.renderMaterialCatalogSelection();
+      this.materialFeedback = saved.storageWarning ? {warning:true,message:saved.storageWarning} : {message:'Saved to material library. Apply to use it in this project.'};
+      this.renderMaterial(this.controller.document);
+    } catch (error) {
+      this.materialFeedback = {error:true,message:error.message};this.renderMaterial(this.controller.document);this.focusEditorError(this.materialForm,error.message);
     }
   };
 
@@ -301,9 +304,10 @@
       var id = this.materialCatalogSelect.value;
       var material = this.readMaterial();
       this.materialCatalog.assertUniqueName(material.name, id);
-      var validation = this.controller.replaceMaterial(material);
+      var validation = root.SpjutsimFEA.validateIsotropicMaterial(material);
+      if (!validation.valid) { throw Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
       var result = this.materialCatalog.replaceUser(id, validation.value);
-      this.materialFeedback = result.storageWarning ? { warning: true, message: result.storageWarning } : { message: 'Saved material explicitly replaced and applied.' };
+      this.materialFeedback = result.storageWarning ? { warning: true, message: result.storageWarning } : { message: 'Saved material updated. Apply to use it in this project.' };
       if (validation.warnings.length) { this.materialFeedback = { warning: true, message: validation.warnings[0].message }; }
       this.renderMaterialCatalogOptions();
       this.render(this.controller.document);
@@ -372,6 +376,23 @@
     return support;
   };
 
+  AnalysisAuthoringUI.prototype.focusEditorError = function (form, message) {
+    if (!form) { return; }
+    var draft = this.controller.document.assignmentDraft;
+    if (draft) { draft.showErrors = true; }
+    var field = Array.from(form.querySelectorAll('input, select')).find(function(input){return !input.disabled && input.getClientRects().length && !input.validity.valid;});
+    var errors = draft && draft.validation.errors || [];
+    var key = errors.length && errors[0].field;
+    var ids = {name:form.id === 'support-form' ? 'support-name' : 'load-name',pressurePa:'load-pressure',magnitudeN:'load-magnitude',forceN:'load-fx','componentsM.x':'support-ux','componentsM.y':'support-uy','componentsM.z':'support-uz'};
+    if (!field && ids[key]) { field = byId(ids[key]); }
+    if (!field || !field.getClientRects().length) { field = form; form.tabIndex = -1; }
+    var id = field.id + '-error';
+    var previous = byId(id); if (previous) { previous.remove(); }
+    var note = document.createElement('p'); note.id = id; note.className = 'fea-field-error'; note.textContent = message;
+    field.setAttribute('aria-invalid','true');field.setAttribute('aria-describedby',id);field.insertAdjacentElement('afterend',note);field.focus();
+    field.addEventListener('input',function(){field.removeAttribute('aria-invalid');field.removeAttribute('aria-describedby');note.remove();},{once:true});
+  };
+
   AnalysisAuthoringUI.prototype.saveSupport = function () {
     try {
       var support = this.readSupport();
@@ -380,10 +401,11 @@
       this.controller.commitAssignmentDraft();
       this.supportFeedback = { message: this.editingSupportId ? 'Support updated.' : 'Support added.' };
       this.resetSupportForm(false);
-      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: 'Support saved.' });
+      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: 'Support applied.' });
     } catch (error) {
       this.supportFeedback = { error: true, message: error.message };
       this.render(this.controller.document);
+      this.focusEditorError(this.supportForm, error.message);
     }
   };
 
@@ -413,7 +435,7 @@
       byId('support-' + axis + '-enabled').checked = value !== undefined;
       byId('support-' + axis).value = value === undefined ? '' : String(root.SpjutsimFEA.preferredFromSI('displacementM', value));
     });
-    this.supportForm.querySelector('button[type="submit"]').textContent = 'Save changes';
+    this.supportForm.querySelector('button[type="submit"]').textContent = 'Apply';
     this.cancelSupportEdit.hidden = false;
     this.renderSupportType();
   };
@@ -510,10 +532,11 @@
       this.controller.commitAssignmentDraft();
       this.loadFeedback = { message: this.editingLoadId ? 'Load updated.' : 'Load added.' };
       this.resetLoadForm(false);
-      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: 'Load saved.' });
+      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: 'Load applied.' });
     } catch (error) {
       this.loadFeedback = { error: true, message: error.message };
       this.render(this.controller.document);
+      this.focusEditorError(this.loadForm, error.message);
     }
   };
 
@@ -544,7 +567,7 @@
     byId('load-pressure').value = String(root.SpjutsimFEA.siToDisplay('pressurePa', item.pressurePa === undefined ? 1e6 : item.pressurePa, this.loadUnits.pressurePa));
     var unit = this.loadUnits.forceN;
     ['x', 'y', 'z'].forEach(function (axis, index) { byId('load-f' + axis).value = root.SpjutsimFEA.siToDisplay('forceN', item.forceN ? item.forceN[index] : (index===1?1:0), unit); });
-    this.loadForm.querySelector('button[type="submit"]').textContent = 'Save changes';
+    this.loadForm.querySelector('button[type="submit"]').textContent = 'Apply';
     this.cancelLoadEdit.hidden = false;
     this.renderLoadType();
   };
@@ -589,6 +612,7 @@
     } catch (error) {
       this.gravityFeedback = {error:true,message:error.message};
       this.render(this.controller.document);
+      this.focusEditorError(this.gravityForm, error.message);
     }
   };
 
@@ -602,7 +626,7 @@
       byId('gravity-direction').value = nonzero.length===1 ? (gravity.accelerationMS2[nonzero[0]]<0?'-':'+')+'xyz'[nonzero[0]] : 'custom';
       ['x','y','z'].forEach(function(axis,i){byId('gravity-'+axis).value=String(root.SpjutsimFEA.preferredFromSI('accelerationMS2',gravity.accelerationMS2[i]));});
     }
-    byId('apply-gravity-button').textContent = documentState.gravity.enabled ? 'Save changes' : 'Apply gravity';
+    byId('apply-gravity-button').textContent = documentState.gravity.enabled ? 'Apply' : 'Apply gravity';
     byId('remove-gravity-button').hidden = !documentState.gravity.enabled;
     setFeedback(this.gravityStatus,this.gravityFeedback,documentState.gravity.enabled ? 'Gravity is active.' : 'Apply to add gravity to the calculation.');
   };
@@ -708,6 +732,7 @@
       } catch (error) { this.announceSetup(error.message); }
     }
     this.render(this.controller.document);
+    if (selectedItem) { this.controller.notify('locate-assignment'); }
   };
 
   AnalysisAuthoringUI.prototype.updateDraftFromForm = function () {
@@ -791,7 +816,7 @@
         kind: this.activeInspectorKind, itemId: 'new',
         primaryText: this.activeInspectorKind === 'support' ? 'New support' : 'New load',
         secondaryText: this.activeInspectorKind === 'support' ? 'Selected CAD faces' : 'Pressure or total force',
-        metaText: 'Not saved', ariaLabel: this.activeInspectorKind === 'support' ? 'New support' : 'New load'
+        metaText: 'Not applied', ariaLabel: this.activeInspectorKind === 'support' ? 'New support' : 'New load'
       });
     }
     definitions.forEach(function (definition) {
@@ -826,6 +851,26 @@
       editorHost.dataset.setupEditorHost = '';
       editorHost.hidden = !active;
       item.append(trigger, editorHost);
+      if (['support','load'].indexOf(definition.kind) >= 0 && definition.itemId !== 'new') {
+        var assignment = (definition.kind === 'support' ? documentState.boundaryConditions : documentState.loads).find(function(entry){return entry.id === definition.itemId;});
+        if (assignment.enabled === false) { meta.textContent += ' · Suppressed'; }
+        var options = document.createElement('details'), disclosure = document.createElement('summary');
+        options.className = 'fea-assignment-options';disclosure.textContent = '⋯';disclosure.title = 'Assignment options';disclosure.setAttribute('aria-label','Options for ' + definition.primaryText);options.appendChild(disclosure);
+        [['Duplicate',function(){self.controller.duplicateAssignment(definition.kind,definition.itemId);}],
+          [assignment.enabled === false ? 'Include in analysis' : 'Suppress from analysis',function(){self.controller.setAssignmentIncluded(definition.kind,definition.itemId,assignment.enabled === false);}]].forEach(function(action){
+          var button = document.createElement('button');button.type='button';button.textContent=action[0];button.disabled=Boolean(documentState.assignmentDraft) || root.SpjutsimFEA.engineeringBusy(documentState);
+          button.addEventListener('click',function(){action[1]();});options.appendChild(button);
+        });item.appendChild(options);
+      }
+      if (definition.kind === 'mesh') {
+        var meshOptions = document.createElement('button');
+        meshOptions.type = 'button'; meshOptions.className = 'fea-mesh-options fea-icon-button';
+        meshOptions.setAttribute('data-mesh-options',''); meshOptions.setAttribute('aria-label','Mesh options'); meshOptions.title = 'Mesh options';
+        meshOptions.appendChild(root.PortableUIIcons.createIcon('settings',{document:document,size:20}));
+        meshOptions.disabled = !documentState.geometry || root.SpjutsimFEA.engineeringBusy(documentState) || Boolean(documentState.assignmentDraft);
+        meshOptions.addEventListener('click',function(){document.getElementById('mesh-options-dialog').showModal();});
+        item.appendChild(meshOptions);
+      }
       list.append(item);
     });
     if (this.activeInspectorKind) { this.mountInlineEditor(this.activeInspectorKind, this.activeInspectorItemId); }
@@ -844,8 +889,8 @@
     if (draft) {
       var status = draft.kind === 'gravity' ? this.gravityStatus : draft.kind === 'support' ? this.supportStatus : this.loadStatus;
       var summary = root.SpjutsimFEA.describeAssignmentDraft ? root.SpjutsimFEA.describeAssignmentDraft(documentState) : '';
-      status.textContent = 'Preview · ' + (draft.kind === 'gravity' ? '' : draft.faceIds.length + ' face(s). ') + summary + (draft.validation.valid ? '' : ' ' + (draft.definition.inputError || draft.validation.message));
-      status.classList.toggle('fea-error', !draft.validation.valid);
+      status.textContent = 'Preview · ' + (draft.kind === 'gravity' ? '' : draft.faceIds.length + ' face(s). ') + summary + (draft.validation.valid || !draft.showErrors ? '' : ' ' + (draft.definition.inputError || draft.validation.message));
+      status.classList.toggle('fea-error', !draft.validation.valid && draft.showErrors === true);
       (draft.kind === 'gravity' ? byId('cancel-gravity-edit') : draft.kind === 'support' ? this.cancelSupportEdit : this.cancelLoadEdit).hidden = false;
     }
   };

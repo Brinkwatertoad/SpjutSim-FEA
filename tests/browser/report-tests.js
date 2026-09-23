@@ -22,6 +22,12 @@
     state.results.factorOfSafety={};views=api.reportViewPresets(state,123);
     assert(views.length===5&&views[4].presentation.deformationScale===123&&views[4].presentation.deformationMode==='auto','Auto deformation preset missing');
     assert(views[0].presentation.showLoads&&views[0].presentation.showSupports&&!views[2].presentation.showLoads,'Assignment visibility wrong');
+    assert(typeof api.validateReportOptions === 'function','Report options are missing');
+    var defaults=api.validateReportOptions(null);
+    assert(defaults.title==='SpjutSim FEA analysis report' && defaults.views===null && !defaults.currentView,'Default report changed');
+    assert(api.validateReportOptions({title:4}).views===null,'Invalid options did not restore complete defaults');
+    var options=api.validateReportOptions({title:'Check <&>',notes:'Notes <&>',views:['stress'],currentView:true});
+    assert(options.title==='Check <&>' && options.views.length===1 && options.currentView,'Valid customization lost');
     window.reportTestZip=zip;
     document.getElementById('test-status').textContent='Passed';
   }catch(e){document.getElementById('test-status').textContent='Failed: '+e.message;}

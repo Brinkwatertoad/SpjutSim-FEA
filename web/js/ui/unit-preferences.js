@@ -10,7 +10,7 @@
       var ids=new Set(),names=new Set(['si','uscs','custom']);
       data.records.forEach(function(r){
         if(!r||!/^preset:[\w-]{1,80}$/.test(r.id)||ids.has(r.id)||typeof r.name!=='string'||!r.name.trim()||r.name.length>80||names.has(r.name.toLowerCase()))throw Error('Invalid preset');
-        ids.add(r.id);names.add(r.name.toLowerCase());api.validatePreferredUnits(r.units);
+        ids.add(r.id);names.add(r.name.toLowerCase());r.units=api.validatePreferredUnits(r.units);
       });
       var units=api.validatePreferredUnits(data.units), record=builtins[data.active]||data.records.find(function(r){return r.id===data.active;});
       this.active=record && Object.keys(units).every(function(k){return record.units[k]===units[k];}) ? data.active : 'custom';

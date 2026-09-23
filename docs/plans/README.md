@@ -1,141 +1,159 @@
-# Near-term development plans
+# Development plans
 
-Tasks 01–10 established the portable geometry path and the first trusted Tet4
-browser vertical slice. Task 11 then consolidated the priority authoring and
-presentation work. Its feature packages and compact-Mesh/delete-mesh regression
-follow-up are complete.
+**Status:** v1 is unreleased. The original static-analysis workflow and Plans
+21–34 are implemented. M21–M27 have recorded owner acceptance; Plans 28–34 have
+implementation verification and remain part of final integrated review.
+The owner approved the planning scope and implementation through Plan 34 on
+2026-09-22. Plans 35 onward remain planned; automated verification does not imply
+owner acceptance. [Batch evidence](../reviews/30-34-verification.md).
 
-Task 12 and Task 13's implementation make Tet10 the production mesh/solve path.
-Task 14 and Task 15 provide the implemented Milestone 4 trust and convergence
-workflow. The original feature path is complete through Task 15. Tasks 16–19
-supplied
-validation, corpus, resource, and distribution evidence. **v1.0 remains
-unreleased:** the owner approved the interface/result improvement sequence
-on 2026-09-07. Tasks 21–27 and 30 and their manual reviews now precede Task 20
-candidate acceptance; passing older gates does not waive this work.
+**Pre-v1 order:** **30 → 31 → 32 → 33 → 34 → 35 → 36 → 37 → 38 → 20**.
 
-1. [x] [Complete the portable runtime foundation](01-portable-runtime-foundation.md)
-2. [x] [Prove the Gmsh local-runtime path](02-gmsh-local-runtime-spike.md)
-3. [x] [Implement STEP import and the geometry contract](03-step-import-and-geometry.md)
-4. [x] [Render geometry and select CAD faces](04-preview-rendering-and-face-selection.md)
-5. [x] [Generate and extract a Tet4 mesh](05-tet4-mesh-extraction.md)
-6. [x] [Complete viewport navigation and settings](06-viewport-navigation-and-settings.md)
-7. [x] [Validate and render CAD and mesh surfaces](07-surface-and-mesh-visualization.md)
-8. [x] [Author material, supports, and loads](08-material-support-and-load-authoring.md)
-9. [x] [Implement the trusted Tet4 solver and preflight model](09-trusted-tet4-solver-and-preflight.md)
-10. [x] [Integrate WASM solve and first result views](10-wasm-solve-and-result-views.md)
-11. [x] [Complete priority release features](11-priority-release-features.md)
-12. [x] [Generate production Tet10 meshes](12-production-tet10-meshing.md)
-13. [x] [Solve Tet10 models and calibrate resource use](13-tet10-solver-and-resource-calibration.md) — completed; Task 18 records the calibrated browser evidence
-14. [x] [Complete factor-of-safety and result trust views](14-factor-of-safety-and-result-trust.md)
-15. [ ] [Deliver convergence, validation, and the v1.0 release gate](15-convergence-validation-and-v1-release.md) — workflow, validation, corpus, resources, and distribution complete; Tasks 21–27 and 30 improvements/manual reviews and Task 20 candidate acceptance remain open (see `../release/v1-acceptance-audit.md`)
-16. [x] [Complete the reference validation matrix](16-reference-validation-matrix.md)
-17. [x] [Establish the release CAD regression corpus](17-cad-regression-corpus.md)
-18. [x] [Calibrate browser resources and production solver settings](18-browser-resource-calibration.md)
-19. [x] [Resolve distribution licensing and artifact compliance](19-distribution-licensing-decision.md) — GPL path and final policy/artifact list approved; staged audit passes
-20. [ ] [Audit and produce the v1.0 release candidate](20-v1-release-candidate.md) — final audit after accepted Task 30; preliminary checks may be reused only within their documented scope
+**Post-v1:** Plans **39–46**, with dependencies stated per plan. Advanced studies
+and additional physics do not gate v1. Static single-solid CAD analysis remains
+the current supported product; STL is archived.
 
-Each task should leave the repository usable from both `file://` and the
-optional HTTP server.
+## Pre-v1 delivery
 
-Do not mark Task 15 or Task 20 complete merely because features exist. Tasks
-16–19 own the remaining evidence that closes Task 13/15 carry-forward items.
-Benchmark-dependent choices—quality warning thresholds, memory safety factor,
-solver/preconditioner tuning, browser support, and any threaded WASM build—are
-resolved only from the measurements named in Tasks 16–18. Task 19 requires an
-explicit copyright-holder distribution decision; Task 20 consumes all four
-records and must remain blocked while any Section 26 gate is unchecked.
+| Plan | Status | Deliverable |
+| --- | --- | --- |
+| [28 — Material/load units/reports](28-material-units-and-report.md) | Implemented; [verification](../reviews/28-material-units-and-report.md) | Sourced bulk material strengths, inline load units, dimensions, ZIP reports |
+| [29 — DOCX and preferred units](29-document-report-and-unit-preferences.md) | Implemented; [verification](../reviews/29-document-report-and-unit-preferences.md) | Editable DOCX, SI/USCS/custom preferences, Settings sizing |
+| [30 — Portable projects](30-portable-projects.md) | Implemented; [verification](../reviews/30-portable-projects.md) | CAD + complete setup by default, opt-in mesh/results, safe transactional open |
+| [31 — Local recovery](31-local-recovery.md) | Implemented; [verification](../reviews/31-local-recovery.md) | Automatic reopen, prompt committed setup recovery, source deduplication, File → New |
+| [32 — Contextual workflow](32-contextual-workflow.md) | Implemented; [verification](../reviews/32-contextual-workflow.md) | Direct mesh options, View-menu removal, contextual guide, prepared example, explicit Mesh and solve, duplicate/suppress assignments |
+| [33 — Model information/selection](33-model-information-and-selection.md) | Implemented; [verification](../reviews/33-model-information-and-selection.md) | Volume/mass without solving, small/obscured-face access, hide/isolate |
+| [34 — Report options](34-report-options.md) | Implemented; [verification](../reviews/34-report-options.md) | Complete defaults plus optional notes and selected/current views |
+| [35 — Local directions/supports](35-local-directions-and-supports.md) | Planned | Local frames and physically correct planar sliding/symmetry constraints |
+| [36 — Bearing loads](36-bearing-loads.md) | Planned | Validated transverse loading on supported cylindrical bands |
+| [37 — Moments/offset forces](37-moments-and-offset-forces.md) | Planned | Declared surface distribution, force/moment balance and offset load reference |
+| [38 — Final usability](38-integrated-usability-and-pre-release-regression.md) | Planned | Integrated workflow, resource/compatibility regression, owner acceptance |
+| [20 — Exact candidate](20-v1-release-candidate.md) | Pending prerequisites | Bind complete evidence to the final artifact and obtain release authorization |
 
-## Approved pre-v1 implementation sequence
+The basic interface remains one workspace with contextual advanced/options
+controls. Options icons need accessible names, focus/hover explanations and
+descriptive menu contents. Active settings stay visible in compact summaries.
+Keep the toolbar arrangement and current Stress/Deformation interaction.
+Remove the duplicate top View menu while preserving its accessible commands.
+No long CAD-face list is planned; existing assignment rows locate assignments.
 
-Execute in the current agent, following repository AGENTS.md. Implementation and
-acceptance status are recorded separately below. Each package includes nontrivial regression tests,
-documentation, one complete-diff review, the complete applicable suites from the
-repository README, and the manual checkpoint below. Do not create tests that
-merely mirror implementation or turn each mechanical step into an approval gate.
+Every pre-v1 feature includes its own usability, failure and performance checks.
+The former integrated Plan 30 no longer carries all first-use/resize/keyboard/
+cancel/retry work until the end: Plans 30–34 own it for their workflows, and
+35–37 own new numerical/authoring validation. Plan 38 tests the combination.
 
-21. [x] [Responsive workspace and overlays](21-responsive-workspace-and-overlays.md) — implemented and M21 accepted 2026-09-08
-22. [x] [Stress extrema and result clarity](22-stress-extrema-and-result-clarity.md) — implemented and M22 accepted 2026-09-08
-23. [x] [Orthographic camera and interactive gizmo](23-orthographic-camera-and-view-gizmo.md) — implemented and M23 accepted 2026-09-08
-24. [x] [Contextual display controls and stress legend](24-display-controls-and-stress-legend.md) — implemented and accepted 2026-09-10
-25. [x] [Support/load preview authoring](25-support-and-load-preview-authoring.md) — implemented and accepted 2026-09-10
-26. [x] [Setup workflow and solve checks](26-setup-workflow-and-solve-checks.md) — implemented and accepted 2026-09-10
-27. [x] [Engineering edit undo/redo](27-engineering-edit-undo-and-redo.md) — implemented and accepted 2026-09-10
-28–29. STL development paused and archived; see [the branch guide](../STL-DEVELOPMENT.md).
-30. [ ] [Integrated usability and pre-release regression](30-integrated-usability-and-pre-release-regression.md)
+## Post-v1 continuation
 
-The remaining execution order is **30 → 20**. M21–M27 are accepted.
-The owner removed STL from main and v1 on 2026-09-20; M28–M29 are archived,
-not pending release gates. No compatibility layer or dormant repair runtime remains.
+These are prepared plans, not shipping capabilities or new v1 release gates.
+Execution follows v1 acceptance. Shared numerical/runtime changes must preserve
+the validated static workflow. Dependencies permit later reordering if explicitly
+chosen; this table is a readable continuation, not permission to run agents in
+parallel.
 
-## Manual review schedule
+| Plan | First deliverable | Key dependency/limit |
+| --- | --- | --- |
+| [39 — Load cases/comparison](39-load-cases-and-comparison.md) | Named static cases/material alternatives and compact comparison | Shared compatible meshes; bounded full-result retention |
+| [40 — Persistent measurements](40-persistent-measurements.md) | Pinned physical locations, relative displacement, support resultants | Stable source anchors, explicit stress interpolation and overlap attribution |
+| [41 — Local mesh controls](41-local-mesh-controls.md) | Manual face refinement/transition and quality inspection | Pinned metrics for convergence; no automatic error-based adaptation |
+| [42 — Interior inspection](42-interior-result-inspection.md) | One result section plane with validated interior sampling | Explicit topology retention/interpolation; presentation only |
+| [43 — Shell analysis](43-shell-analysis.md) | Explicit midsurface/thickness with a validated static shell formulation | Formulation/rank/locking decision before production integration |
+| [44 — Orthotropic materials](44-orthotropic-materials.md) | Homogeneous directional solid elasticity and material axes | Independent of shell delivery; no guessed print allowables or isotropic FoS |
+| [45 — Modal analysis](45-modal-analysis.md) | Constrained isotropic solid frequencies/mode shapes | Mass/eigensolver evidence; no damping, prestress or transient response |
+| [46 — Thermal expansion](46-thermal-expansion.md) | Uniform prescribed-temperature isotropic static response | Explicit reference temperature/units; no heat-transfer solve |
 
-The owner's 2026-09-07 instruction to accomplish a few plans before a manual
-check authorizes one implementation batch for **21–23**, including parallel
-assistance. This overrides those plans' per-package stop/no-subagent notes for
-this batch only. [The combined review packet](../reviews/21-23-review.md) records the owner’s 2026-09-08 acceptance of M21, M22, and M23. The owner subsequently requested plans **24–27** as one implementation batch,
-with manual checks after the group and commits along the way. These four plans
-were executed in the current agent without subagents. Their per-package stops
-are replaced by [the grouped review and follow-up](../reviews/24-27-followup.md);
-The owner approved M24–M27 on 2026-09-10 with the final imperial-unit and toolbar
-adjustments, implemented in `0ed6e31`. M30 and Task 20 remain open.
+Plans 43–46 contain concrete formulation/contract decisions as their first work,
+then implementation and validation tasks. An unvalidated algorithm is not
+silently selected to make a plan appear complete. Acceptance of one physics/domain
+does not validate combinations such as orthotropic shells or prestressed modes.
 
-This is a milestone schedule, not calendar appointments or automated reminders.
-M21–M27 are **Accepted**; M30 is **Pending**. Reserve review time when the preceding implementation
-is ready, not before a runnable result exists. At each checkpoint (or the end of an explicitly authorized batch), the agent must
-stop, provide the review packet, and wait for the owner's explicit acceptance
-before starting the next plan. Automated checks are necessary but cannot approve
-usability on the owner's behalf. Corrections and focused rechecks belong to the
-same checkpoint. Silence is not acceptance.
+Onshape integration, elastic supports, broader bearing distributions, calibrated
+print profiles, automatic geometry simplification and full contact/nonlinear
+physics remain future candidates outside this committed sequence. Revisit them
+through explicit scoped planning if the owner requests them.
 
-| Gate | Scheduled after | Owner exercise | Suggested time | Record to create at execution |
-| --- | --- | --- | --- | --- |
-| M21 | Plan 21 | Resize/zoom, split/collapse panes, overlay visibility | 10 min | `docs/reviews/21-workspace.md` |
-| M22 | Plan 22 | Read peaks/FoS, explain smoothing, locate peak | 15 min | `docs/reviews/22-result-clarity.md` |
-| M23 | Plan 23 | Six views, animated reset, projection switching, picking | 15 min | `docs/reviews/23-camera.md` |
-| M24 | Plan 24 | View/field/shape controls, mesh toggle, legend ranges | 15 min | `docs/reviews/24-27-review.md` |
-| M25 | Plan 25 | Add/edit/toggle/preview/Apply/Cancel assignments | 20 min | `docs/reviews/24-27-review.md` |
-| M26 | Plan 26 | Setup → explicit checks → solve, errors and recovery | 20 min | `docs/reviews/24-27-review.md` |
-| M27 | Plan 27 | Undo/redo with text fields, drafts, and stale results | 10 min | `docs/reviews/24-27-review.md` |
-| M30 | Plan 30 | Combined workflow and final usability acceptance | 30–45 min | `docs/reviews/30-integrated-usability.md` |
+## Execution and review rules
 
-### Review packet and record template
+- Follow repository AGENTS.md and execute in the current agent. No subagents or
+  new dependencies without the applicable explicit authorization.
+- Read the plan and relevant specification sections together. The spec owns
+  requirements/contracts; the index owns sequence/status; reviews own evidence.
+- Use TDD for changed nontrivial behavior, numerical methods, persistence,
+  invalidation and worker protocols. Do not write trivial implementation-mirroring
+  tests or require a review gate for each mechanical step.
+- Each task is an independently useful deliverable. Record meaningful file/
+  interface changes, keep diffs focused, preserve unrelated work, and commit
+  coherent chunks only when execution instructions authorize commits.
+- Preserve SI engineering state, exact face/reference ownership, validated
+  Tet4/Tet10 behavior, diagnostics, deterministic tolerances, coarse versioned
+  workers, separate mesher/solver lifetimes and preflight memory limits.
+- Preserve dependency-free classic browser scripts and direct `file://` startup.
+  Build/package worker/WASM changes reproducibly; never hand-edit generated or
+  vendored assets. Follow README for build/test commands.
+- Measure affected paths against representative baselines. Avoid repeated
+  serialization, full-mesh passes, DOM updates, duplicate bulk arrays and retained
+  workers/GPU resources. Record peak memory as well as elapsed time.
+- Keep first-party source readable and cohesive; consolidate actual duplicate
+  ownership where touched. Do not turn feature delivery into an unrelated rewrite.
+- Run focused tests during work, then the complete applicable suites and one final
+  complete-diff review. Broaden/repeat checks for new changes or concrete failures.
+- Each plan includes an owner walkthrough with fresh implementation evidence.
+  Supply a runnable packet and record the actual response; do not equate automated
+  tests with manual acceptance. The owner may explicitly group checkpoints.
+- Final Plan 38 acceptance is followed by Task 20's exact-candidate audit.
+  Tagging/deployment/publication still require explicit authorization.
 
-Create the record only when implementing the package. Do not prefill acceptance,
-fabricate review dates, or mark the plan complete before the owner's response.
-The implementer supplies the reproducible starting point and expected behavior;
-the owner supplies the usability decision.
+## Review packet
+
+Create review records when implementing the relevant plan, not during planning.
+Each new plan supplies its future `docs/reviews/NN-name.md` location.
 
 ```markdown
-# Mxx: Package review
+# Plan NN review
 
 - Status: Pending owner review / Changes requested / Accepted
 - Implementation commit or exact working-tree description:
 - Browser/platform and app path/URL:
 - Fixtures and starting setup:
-- Automated checks run, results, and evidence paths:
-- Short walkthrough (use the plan's named review steps):
-- Expected engineering values/behavior:
+- Automated checks, numerical/resource evidence and their scope:
+- Short owner walkthrough and expected values/behavior:
 - Before/after images where useful:
 - Known limitations and open issues:
-- Owner response and date (leave unrecorded until received):
-- Follow-up fixes, recheck evidence, and final decision:
+- Owner response/date (record only when received):
+- Follow-up fixes, recheck evidence and final decision:
 ```
 
-## Reusing Plan 20 checks
+## Established foundation and historical evidence
 
-Run useful Plan 20 checks during these packages, including direct-local startup,
-keyboard/focus, cancellation, worker disposal, numerical regression, resource,
-and distribution checks. Record their commit/browser/artifact scope. Prior
-records remain historical evidence; changes to their inputs invalidate the
-corresponding candidate claim. Plan 30 repeats integrated acceptance, and Plan
-20 finally binds the complete audit to the exact accepted artifact. No early
-version-status change, v1 tag, or publication follows from a partial pass.
+| Plans | Status/evidence |
+| --- | --- |
+| [01](01-portable-runtime-foundation.md), [02](02-gmsh-local-runtime-spike.md), [03](03-step-import-and-geometry.md), [04](04-preview-rendering-and-face-selection.md), [05](05-tet4-mesh-extraction.md) | Portable runtime, CAD import/picking and Tet4 meshing implemented |
+| [06](06-viewport-navigation-and-settings.md), [07](07-surface-and-mesh-visualization.md), [08](08-material-support-and-load-authoring.md), [09](09-trusted-tet4-solver-and-preflight.md), [10](10-wasm-solve-and-result-views.md), [11](11-priority-release-features.md) | Navigation, authoring, native/WASM workflow and priority fixes implemented |
+| [12](12-production-tet10-meshing.md), [13](13-tet10-solver-and-resource-calibration.md), [14](14-factor-of-safety-and-result-trust.md) | Production Tet10, calibrated resources and result trust implemented |
+| [15](15-convergence-validation-and-v1-release.md) | Convergence/validation implemented; its overall v1 release gate remains open |
+| [16](16-reference-validation-matrix.md), [17](17-cad-regression-corpus.md), [18](18-browser-resource-calibration.md), [19](19-distribution-licensing-decision.md) | Numerical/CAD/resource/distribution evidence recorded; changed inputs require revalidation |
+| [21](21-responsive-workspace-and-overlays.md), [22](22-stress-extrema-and-result-clarity.md), [23](23-orthographic-camera-and-view-gizmo.md) | Implemented and owner accepted 2026-09-08; [combined review](../reviews/21-23-review.md) |
+| [24](24-display-controls-and-stress-legend.md), [25](25-support-and-load-preview-authoring.md), [26](26-setup-workflow-and-solve-checks.md), [27](27-engineering-edit-undo-and-redo.md) | Implemented and owner accepted 2026-09-10; [follow-up review](../reviews/24-27-followup.md) |
 
+Historical owner instructions authorized grouped 21–23 and 24–27 review. They
+do not authorize parallel execution or automatic acceptance of the new sequence.
+Task 19's GPL/source-accompaniment approval and historical staged checks remain
+evidence within their recorded scope; the final artifact still needs Task 20.
 
-## Additional owner-requested improvements
+## Numbering and history
 
-31. [x] [Material strengths, load units, and report export](31-material-units-and-report.md)
-    — implemented with sourced bulk defaults, inline load conversion, original
-    dimensions and local ZIP reports; see [verification](../reviews/31-material-units-and-report.md).
-    This independent request does not change the outstanding M30/v1 gates.
+On 2026-09-22 the owner requested this reorganization:
+
+| Former identity | Current identity |
+| --- | --- |
+| 31 — Material/load units/report | 28, including its linked review record |
+| 32 — DOCX/preferred units | 29, including its linked review record |
+| 30 — Integrated usability | 38, expanded to cover the new pre-v1 sequence |
+| 28–29 — STL work | Archived branch only; these historical IDs are not current Plans 28/29 |
+
+STL was removed from main/v1 on 2026-09-20. Its
+[archive guide](https://github.com/Brinkwatertoad/SpjutSim-FEA/blob/features/stl-import/docs/STL-DEVELOPMENT.md)
+and branch retain the original development/problem history. Historical
+`build/plan31-*` paths, commit hashes and test counts in verification records
+are preserved, not relabeled as new runs. The chronological spec amendments are
+in [requirements history](../reviews/requirements-history.md); current thematic
+requirements are in [spec.md](../../spec.md).

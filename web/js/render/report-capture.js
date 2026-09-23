@@ -30,25 +30,25 @@
     ctx.textAlign = 'right';
     ctx.fillText(field === 'factorOfSafety' && range.clipped ? api.formatResultNumber(range.maximum) + '+' : api.formatResultNumber(range.maximum / definition[2]), x + rampWidth, rampY + 21);
     ctx.textAlign = 'left';
-    var note = presentation.mode === 'deformation' ? 'Auto shape ×' + api.formatResultNumber(presentation.deformationScale)
+    var note = presentation.mode === 'deformation' ? (presentation.deformationMode === 'auto' ? 'Auto shape ×' : 'Shape ×') + api.formatResultNumber(presentation.deformationScale)
       : field === 'factorOfSafety' ? 'Unaveraged minimum FoS: ' + api.formatResultNumber(state.results.factorOfSafety.rawMinimum.value)
       : 'Smoothed surface; scale to unaveraged peak';
     ctx.fillText(note, x, rampY + 49);
   }
   // Capture one preset synchronously; asynchronous PNG encoding happens after restoration.
-  api.ViewportController.prototype.captureReportView = function (state, presentation) {
+  api.ViewportController.prototype.captureReportView = function (state, presentation, options) {
     var saved = { view: this.captureViewState(), camera: this.camera.clone(), presentation: this.presentation,
       selected: Array.from(this.selectedFaceIds), probe: this.selectedResultPoint, overlay: this.analysisOverlayState,
-      multiplier: this.deformationAnimationMultiplier };
+      multiplier: this.deformationAnimationMultiplier, hiddenFaces:Array.from(this.hiddenFaceIds || []) };
     var grid = this.scene.getObjectByName('reference-grid'), gridVisible = grid && grid.visible;
     try {
       this.clearPeakMarker();
       this.setSelectedFaceIds([]);
+      if (this.setHiddenFaceIds && (!options || !options.current)) { this.setHiddenFaceIds([]); }
       this.deformationAnimationMultiplier = 1;
       this.setPresentation(presentation);
       this.setAnalysisOverlay(Object.assign({}, state, { viewportPresentation: presentation, assignmentDraft: null }));
-      this.resetView({ animate: false });
-      this.fitCurrentModel({ animate: false });
+      if (!options || !options.current) { this.resetView({ animate: false }); this.fitCurrentModel({ animate: false }); }
       if (grid) { grid.visible = false; }
       var canvas = document.createElement('canvas');
       canvas.width = this.canvas.width; canvas.height = this.canvas.height + 128;
@@ -63,6 +63,7 @@
       this.setPresentation(saved.presentation);
       this.setAnalysisOverlay(saved.overlay);
       this.setSelectedFaceIds(saved.selected);
+      if (this.setHiddenFaceIds) { this.setHiddenFaceIds(saved.hiddenFaces); }
       this.selectResultPoint(saved.probe);
       this.restoreViewState(saved.view);
       this.camera.position.copy(saved.camera.position); this.camera.up.copy(saved.camera.up); this.camera.quaternion.copy(saved.camera.quaternion);

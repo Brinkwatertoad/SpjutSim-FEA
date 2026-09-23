@@ -19,10 +19,10 @@
     }
     var candidate = Object.assign({}, draft.definition, {id:draft.itemId || 'preview',name:draft.definition.name === undefined ? 'Preview' : draft.definition.name,faceIds:draft.faceIds});
     var validation = (draft.kind === 'support' ? api.validateBoundaryCondition : api.validateLoad)(candidate,state.geometry && state.geometry.faceIds);
-    if (!validation.valid) { return {valid:false,message:api.firstValidationMessage(validation)}; }
+    if (!validation.valid) { return {valid:false,message:api.firstValidationMessage(validation),errors:validation.errors}; }
     if (draft.kind === 'support') {
       var conflict = state.boundaryConditions.some(function (item) {
-        return item.id !== draft.itemId && item.faceIds.some(function (id) { return draft.faceIds.indexOf(id) >= 0; }) &&
+        return item.enabled !== false && candidate.enabled !== false && item.id !== draft.itemId && item.faceIds.some(function (id) { return draft.faceIds.indexOf(id) >= 0; }) &&
           ['x','y','z'].some(function (axis) { return item.componentsM[axis] !== undefined && candidate.componentsM[axis] !== undefined && item.componentsM[axis] !== candidate.componentsM[axis]; });
       });
       if (conflict) { return {valid:false,message:'Conflicting prescribed components share a face. Edit the existing support or choose other faces.'}; }
@@ -69,6 +69,7 @@
     if (patch.definition !== undefined) {
       var definition = copy(patch.definition);
       if (definition.name === undefined && draft.definition.name !== undefined) { definition.name = draft.definition.name; }
+      if (definition.enabled === undefined && draft.definition.enabled !== undefined) { definition.enabled = draft.definition.enabled; }
       delete definition.id; delete definition.faceIds;
       draft.definition = definition;
     }

@@ -1,4 +1,6 @@
-# Material strengths, load units, and report export
+# Plan 28: Material strengths, load units, and report export
+
+Formerly Plan 31. Implementation is complete; the linked verification records its original scope. Renumbered on 2026-09-22 without changing historical evidence.
 
 Spec tracking: required — tracked in spec.md.
 
@@ -36,4 +38,4 @@ Validation includes conversion round trips, signed forces, invalid/blank input,
 reopening/saving loads, preference persistence, unavailable FoS, snapshot/restoration
 on capture failure, ZIP CRC/readback, file:// loading, and solved numerical regression.
 
-Completed verification: [results and limitations](../reviews/31-material-units-and-report.md).
+Completed verification: [results and limitations](../reviews/28-material-units-and-report.md).

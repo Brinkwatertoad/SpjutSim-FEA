@@ -1,4 +1,6 @@
-# Material, load-unit, and report verification
+# Plan 28: Material, load-unit, and report verification
+
+Numbering note (2026-09-22): formerly Plan 31. Historical commit IDs, artifact paths, test counts, and limitations below retain their original meaning. References to M29/M30 in the original record mean the former STL/final-usability gates, not the current Plan 29.
 
 Implementation complete on `feat/material-load-units-report`. This records
 engineering verification; it does not claim owner acceptance of M29/M30 or v1.

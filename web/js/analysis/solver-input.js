@@ -112,7 +112,7 @@
       mesh: mesh,
       material: materialValidation.value,
       constraintStability: constraintStability,
-      boundaryConditions: documentState.boundaryConditions.map(function (condition) {
+      boundaryConditions: documentState.boundaryConditions.filter(function(item){return item.enabled !== false;}).map(function (condition) {
         var validated = root.SpjutsimFEA.validateBoundaryCondition(condition, knownFaceIds);
         var surface;
         if (!validated.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validated)); }
@@ -122,7 +122,7 @@
           nodeIndices: surface.nodeIndices
         });
       }),
-      loads: documentState.loads.map(function (load) {
+      loads: documentState.loads.filter(function(item){return item.enabled !== false;}).map(function (load) {
         var validated = root.SpjutsimFEA.validateLoad(load, knownFaceIds);
         var surface;
         if (!validated.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validated)); }

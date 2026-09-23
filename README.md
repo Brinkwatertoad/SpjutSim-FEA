@@ -8,8 +8,10 @@ v1 is unreleased. CAD-only import is the supported scope. The owner paused STL
 on 2026-09-20; its implementation, development history and outstanding problems
 are preserved on [features/stl-import](https://github.com/Brinkwatertoad/SpjutSim-FEA/tree/features/stl-import).
 See the [archive guide](https://github.com/Brinkwatertoad/SpjutSim-FEA/blob/features/stl-import/docs/STL-DEVELOPMENT.md).
-See [CAD-only verification](docs/reviews/cad-only-import.md). The remaining release
-work is Plan 30 integrated review, then Plan 20 exact-candidate audit.
+See [CAD-only verification](docs/reviews/cad-only-import.md).
+The [plan index](docs/plans/README.md) schedules new pre-v1 work in Plans 30–37,
+final usability review in Plan 38, and the exact-candidate audit in Plan 20.
+Plans 39–46 prepare post-v1 capabilities and do not gate this release.
 
 ## Run locally
 
@@ -193,212 +195,124 @@ The separate SpjutSim-UI-Kit repository is not relicensed.
 The [distribution policy](docs/release/distribution-policy.md) records approval,
 source obligations, and final artifact approval.
 
-## Current boundary
+## Current capabilities
 
-The current vertical slice provides app/controller-owned analysis state, local
-STEP/IGES/BREP import and Tet4/Tet10 meshing in disposable Gmsh workers, SI-backed analysis
-authoring, exact-topology memory preflight, and the first-party FEM core compiled
-as a pinned single-threaded embedded WASM worker runtime. Solves return validated
-transferable result models with raw and smoothed stress fields, reactions,
-equilibrium and solver diagnostics. The workspace has persistent Setup/Results width preferences, visible pane
-toggles, and keyboard/pointer splitters. A separate action bar below the menubar
-places Tools and engineering Undo/Redo on the left and Solve beside Results on
-the right. Save remains a disabled placeholder; Export downloads the solved analysis report. Disclosure triangles inside both panels match
-Truss. Solve opens Checks, runs preflight, and continues to Results when the
-check passes. Large-memory confirmation and cancellation remain available. Empty Results starts collapsed. Below
-1000 CSS pixels one pane is active at a time; below 680 pixels panes become
-explicitly opened drawers over a full-width canvas. View defaults to
-an orthographic three-face view. The 3D display Perspective switch preserves the
-view angle and apparent scale. The cube icon resets the view with a brief
-interruptible animation. Gizmo circles and negative labels appear on hover or
-keyboard focus (always on no-hover devices); labels respect arrow depth.
+The implemented app supports one homogeneous isotropic CAD solid under small-strain
+linear-static loading. Tet10 is the production default; Tet4 remains a reference
+option. CAD import/meshing and the first-party FEM solver run in separate disposable
+workers. Both direct-local and optional HTTP modes use the validated serial runtimes.
 
-The viewport supports Model, Mesh, Stress,
-and Deformation presentation (including legends, scale modes, mesh overlay, and
-approximate probes), defaults to von Mises stress after solve, and disposes stale
-result resources after upstream engineering edits. The result headline and
-yield FoS use unaveraged recovery samples; contour extrema use only nodes
-referenced by the rendered boundary. The von Mises legend and colors use zero
-to the whole-model sample peak; surface maximum/smoothing detail lives in a
-tooltip and the Results panel. Stress smoothing remains the within-element
-sample mean followed by the unweighted adjacent-element mean. Locate peak marks
-the actual interior recovery sample in undeformed coordinates, through the
-surface if necessary. Sample maxima are not exact continuum maxima. Small
-numbers remain visible in scientific notation. Deformation view includes a
-Truss-compatible Play/Stop animation, an exaggeration slider, and a live scale
-readout; animation is presentation-only and returns to the selected full scale
-when stopped.
+The Setup pane contains Model, Material, Supports, Loads and Mesh. Supports constrain
+global displacement components, including nonzero prescribed values. Loads include
+pressure, total global force, area-distributed normal force and gravity. Drafts
+preview changes; Apply/Save commits and Cancel/Escape preserves the prior analysis.
+Existing rows locate/edit their assignments. Model orientation supports axis rotation
+and selected-face alignment; replacing CAD uses explicit face-mapping review.
 
-The compact Model editor can rotate the part around a global X, Y, or Z axis by
-an adjustable angle (90 degrees by default), reset the imported orientation, or
-align one selected CAD face normal to a signed global axis. Geometry orientation
-invalidates the mesh and results. Component forces, gravity, and support
-components stay in global axes; pressure and normal force follow their assigned
-surfaces. Material and opaque surface IDs are retained.
+Solve runs constraint/memory checks before execution and retains cancellation,
+the WASM cap and high-memory confirmation. Engineering edits invalidate dependent
+results; presentation and assignment renames preserve them. Undo/Redo retains bounded
+setup definitions, not meshes/results, and clears after source import/replacement.
 
-The left pane is one compact Setup sequence: Model, Material, Supports, Loads,
-and Mesh. Solve runs checks before execution; the Checks tab precedes Results. Model owns CAD import/replacement and collapses to a
-small source/face/orientation summary; Material expands independently directly
-beneath it. Importing over an active model opens a side-by-side transfer flow.
-Each old support/load is highlighted in order while the user maps replacement
-faces or explicitly drops the item. Material, gravity, mesh/solve settings, and
-orientation transfer automatically, and the replacement is installed only
-after the completed summary is accepted.
+Model/Mesh/Stress/Deformation views include signed camera controls, independent
+projection/style/mesh-overlay choices, movable/resizable legends, contour limits
+and approximate point probes. Deformation supports Auto/user scale and animation.
+The first solve opens von Mises; later solves retain compatible view choices while
+resetting color limits to Auto. Locate peak marks the actual recovery sample,
+including an interior location.
 
-Every support uses one component-based global-coordinate contract. The Fixed
-editor preset sets X, Y, and Z displacement to zero; Choose components permits
-any one-, two-, or three-axis combination and finite nonzero prescribed values.
-The compact Supports group continuously reports provisional preview or exact
-mesh rank across Tx/Ty/Tz/Rx/Ry/Rz, explicitly identifying free or coupled rigid
-motion. Native solver diagnostics remain the final singularity check.
+Results distinguish unaveraged solver peaks from smoothed boundary contours.
+Yield FoS uses the smaller available yield strength, with an independently capped
+contour. Global mesh convergence tracks displacement/energy separately from peak
+stress stability. One solve or a smooth contour does not establish safety.
 
-Tet10 is the production default. Quadratic meshes preserve six-node boundary
-faces for load integration and use a separate linear-triangle subdivision for
-viewport display and picking. Tet4 remains available as a debug/reference
-option. The native/WASM result contract retains four Tet10 recovery samples per
-element alongside separately named element-averaged smoothing fields.
+File → Settings provides navigation bindings, SI/USCS/custom unit preferences and
+FEA Classic/Light/Dark/Vivid themes. Custom unit sets support Save copy, name-based
+save/rename, automatic updates to an active saved set and Delete to Custom.
+All engineering values remain SI; unit changes convert current entries without
+invalidating results. Material source/limitations remain visible; see
+[polymer strength evidence](docs/material-strengths.md).
 
-When a tensile or compressive yield strength is supplied, completed results add
-a von-Mises-yield factor of safety. Raw recovery-sample and approximate smoothed
-surface minima remain separately labeled; the FoS contour is capped at 10 for
-color mapping without changing the engineering values. Result summaries state
-the linear-elastic, small-strain, static, single-isotropic-solid assumptions and
-report single solves as `Not studied` for convergence.
+After solving, use the existing report format control and Export icon for an editable
+DOCX or text/PNG ZIP. Both include setup/results/diagnostics/convergence and clean
+reset/fitted scene images: assignments, mesh, stress, optional FoS and Auto deformation.
+Captures restore the user's scene and abort on stale results. Validate a DOCX with:
 
-Loads and supports are shown at deterministic, area-aware samples across their
-actual selected surfaces. Load-arrow tips touch the surface; all vector arrows
-use thin cylinder shafts with cone heads. Default load/support roles are red and
-green. A compact labeled, theme-colored XYZ triad remains fixed and fully inside
-the lower-left viewport corner while rotating with the camera; its pixel-space
-layout preserves label proportions across resize and aspect-ratio changes.
+```sh
+python3 tests/validate_report_docx.py path/to/report.docx
+```
 
-File → Settings → Appearance provides FEA Classic, Light Mode, Dark Mode, and Vivid
-schemes using the UI Kit portable color contract. Scheme changes apply live to
-the interface and semantic viewport colors, persist locally when storage is
-available, and support portable version-3 JSON import/export. Imported schemes
-that omit FEA-specific load, support, or XYZ roles receive the documented FEA
-Classic fallbacks.
+Save project (Ctrl/Cmd+S) downloads a `.spjutsim-fea` file containing CAD and
+committed setup. Include mesh/results is opt-in. File → Open (Ctrl/Cmd+O) accepts
+CAD or a project file. Project opening validates
+source and face identity before replacing the current analysis. Local recovery
+writes committed setup promptly and automatically reopens the previous part.
+File → Local recovery offers older copies; live-tab conflicts and failures are
+reported. File → New resets the project while preserving preferences/libraries
+and a recoverable previous setup. New has no keyboard shortcut. Reload/close
+never shows an unsaved-site warning; storage failure does not disable manual saving. See [the format and limits](docs/project-format.md).
 
-See `spec.md` for the product specification and `UI_FOUNDATION.md` for the UI-kit provenance pin.
+Model shows CAD volume and density-derived mass before meshing. Display offers
+pick-through, hide/isolate and Show all for Model/Mesh faces; assignment rows locate
+existing loads/supports. Visibility never removes faces from the analysis.
+The options icon directly on the Mesh row opens formulation settings, including
+Tet4; Tet10 remains the default. Nondefault settings remain in the row summary. The duplicate View menu is removed; signed views,
+Fit, Reset and Perspective remain at the viewport. The toolbar arrangement and
+Stress/Deformation interaction are retained.
 
-Display controls use Model/Mesh/Stress/Deformation segments with contextual field
-and deformation controls. Display contains independent mesh overlay, shaded/part-edge/
-wireframe styles, units, vertical/horizontal legend, and Automatic/Manual limits.
-Range lock retains SI limits for the same field across results; field changes reset
-incompatible limits. Compact style/orientation preferences persist locally.
+Setup editors use Apply; Save to material library independently stores reusable
+materials. Assignment options include Duplicate and Suppress/Include. The empty viewport offers Import CAD… and Open Cube Example, with no placeholder
+solid. The example already has material, supports, load and Tet10 settings.
+A dismissible guide starts after CAD import; dismissal is remembered. Help →
+Show setup guide brings it back. Recovered projects reopen quietly. Mesh and solve runs
+generation, checks and solve on explicit request, retaining cancellation and
+independent Generate mesh/Run checks actions. Rebuild the embedded example with
+`python3 tools/build-examples.py` when its source fixture changes.
 
-Support/load editors now preview changes before Apply/Save. Click faces to toggle
-without Shift; background clicks preserve the draft. Cancel/Escape restores the
-previous available view and leaves a completed solve intact. Dirty drafts stay
-open until Apply or Cancel. The preview reports selection area, global direction,
-and the distinction between constant pressure and total force across all faces.
-Run `tests/browser/assignment-draft-tests.html` for transactional regression checks.
+The options button beside Export adds title/notes, selected preset images and an
+optional current view. Defaults remain complete; mandatory engineering context
+cannot be omitted. Export becomes Cancel export while capturing and restores the
+scene on completion, cancellation or failure. Validate project archives with:
 
-Checks remain available through View checks and the Checks output tab; stale
-reports are labeled with their setup revision. Numerical edits require a new
-check; camera/display changes and assignment renaming preserve readiness. A
-completed, failed, or cancelled solve gets a fresh check on the next Solve
-because its worker has been disposed. Run checks only remains in the Checks tab. `tests/browser/solve-checks-ui-tests.html`
-covers report currency, setup links, memory gates, and draft blocking.
+```sh
+python3 tests/validate_project_file.py path/to/project.spjutsim-fea
+```
 
-Engineering Undo/Redo covers committed support/load add, edit, delete, and rename;
-material, gravity, mesh settings; and rigid model orientation. Toolbar and Edit
-menu actions show the available edit. History retains at most 50 small definitions
-and 2 MiB of serialized data, with no source, mesh, result, or worker snapshots.
-Undoing engineering values clears stale results and requires a new check;
-orientation and mesh-setting changes also require remeshing. Renames preserve
-valid results. Import, replacement, and removal clear history. Undo/Redo is
-unavailable during assignment previews or worker execution. Ctrl/Cmd+Z and the
-platform Redo shortcut leave text fields, modals, and Settings to their own undo.
+Plans 30–34 are implemented with [verification and remaining owner checks](docs/reviews/30-34-verification.md).
+Practical supports/loads (35–37) and final usability review (38) remain planned;
+advanced studies/physics remain post-v1. See [the plan index](docs/plans/README.md).
 
-Open `tests/browser/engineering-history-tests.html` for command, invalidation,
-identity, memory-bound, and shortcut regressions. Open
-`tests/browser/grouped-authoring-tests.html` from the optional HTTP server or in
-Chromium with local-file access enabled to exercise the real app through import,
-Tet10 meshing, preview/Apply/Cancel, check-then-solve, legends at four viewport
-sizes, rename/undo, and stale-check recovery. The
-[grouped M24–M27 review packet](docs/reviews/24-27-review.md) supplies the owner
-checks; automated passes do not constitute manual acceptance.
+## Documentation and focused browser checks
 
+[spec.md](spec.md) defines thematic requirements and numerical/architectural limits.
+[docs/plans](docs/plans/README.md) owns delivery status and review checkpoints.
+[Review records](docs/reviews/requirements-history.md) preserve historical changes,
+commits, tests and owner acceptance. [UI_FOUNDATION.md](UI_FOUNDATION.md) records
+the UI foundation provenance pin.
 
-The M24–M27 manual-review corrections are accepted in the
-[combined review](docs/reviews/24-27-followup.md). Deformation opens with Auto scale.
-Editing either color limit selects Manual. Drag the legend title or use its
-arrow keys to move it; drag the bottom-right handle or use its arrow keys to
-resize it. Both orientations remember their own size/position and stay within
-the central viewport. Clicking a result selects the actual surface point with
-interpolated values and a nearby detail label. Locate peak selects an internal
-recovery sample through the same interface; background-click/Escape clears it.
+In addition to the test commands/harnesses above, open these browser harnesses
+with the documented local-file access or optional HTTP server:
 
-Force defaults to a magnitude of 1 N along local surface normals, with Push/Pull.
-Components default to [0, 1, 0] N. Pressure defaults to 1 MPa. Normal magnitude is
-distributed by area; opposing normal directions can cancel in the resultant.
-Its normalization uses the native integration rule on solver faces in the worker,
-then calls the existing pressure kernel. `review-contract-tests.html` covers
-normal-force validation, flat/curved Tri6 normalization, and glyph spacing.
-The grouped harness compares a normal-force Tet10 solve with its vector equivalent.
-Gravity has a separate Loads editor with direction, Apply/Save, Cancel edit, and Remove gravity,
-and independent arrow visibility in Display. Enabling it shows an arrow in its
-chosen direction; disabling removes it. Successful assignment Apply/Save clears
-face selection. Transfer setup uses nearly the whole screen and shows original,
-mapped, and active preview assignments on the two models. The top-right status
-shows the current operation with an activity icon; routine history text below
-Setup is hidden.
+- `assignment-draft-tests.html`, `engineering-history-tests.html`,
+  `solve-checks-ui-tests.html` and `grouped-authoring-tests.html` cover committed
+  edits, cancellation, stale checks, history and the actual grouped workflow.
+- `review-contract-tests.html` covers normal-force integration and glyph contracts.
+- `material-strength-tests.html`, `load-unit-tests.html`, `load-entry-tests.html`
+  and `unit-preferences-tests.html` cover material provenance and physical-value
+  preservation through unit/editing changes.
+- `docx-tests.html`, `report-tests.html` and `report-workflow-tests.html` cover
+  packages, actual solved captures/downloads, restoration and stale export.
 
-New solves retain the chosen view, field, and deformation settings while resetting
-color limits to Auto. Display contains Perspective and separate support/load/gravity
-arrow visibility. File → Settings → Controls allows middle-button rotation or pan.
-Help → About contains application information and license notices. Empty Supports
-and Loads rows open their corresponding editors directly.
+All are under `tests/browser/`. Automated passes do not substitute for the
+owner walkthrough required by the applicable plan.
 
-Result display units include psi/ksi for stress and inch for displacement, with
-SI storage unchanged. Legends, manual limits, point details, and Results summaries
-follow the selected units. Fit model is the icon below-left of the view gizmo;
-it animates to fit while preserving the viewing angle. Setup/Results and the
-history/save/export toolbar use the Truss icons, and Edit shows Ctrl+Z/Ctrl+Y.
+- `project-file-tests.html`, `project-workflow-tests.html`, `project-recovery-tests.html`
+  cover portable validation, atomic open, stale operations and real IndexedDB failures.
+- `project-interface-tests.html` and `project-cad-tests.html` exercise the actual UI,
+  STEP/IGES/BREP round trips, cached reopen and a fresh analytical solve.
+- `contextual-workflow-tests.html`, `model-information-tests.html` and
+  `face-access-tests.html` cover suppression, prescribed displacement readiness,
+  volume/mass, units and viewport selection.
 
-Load entry starts with **Force**. Unit dropdowns beside pressure and force labels
-convert the current values and remember MPa/Pa/psi/ksi and N/kN/lbf/kip choices in
-this browser. Analysis storage remains SI. Results starts with the original,
-undeformed part's X × Y × Z bounding dimensions in the study's global axes, using
-the selected result length unit. Check these dimensions for import-unit mistakes.
-The [polymer yield references](docs/material-strengths.md) document the bulk PLA
-and ABS defaults and their limits.
-
-
-After solving, choose **Word report** and use the **Export** icon for a single
-`.docx` with editable tables and embedded images. Open it in Word or Google Docs
-to edit or copy formatted content. No additional libraries, Node modules, or
-runtime downloads are needed; FEA writes the Office Open XML package directly.
-Choose **Text + images ZIP** for the original archive option. It contains UTF-8 `report.txt` (tab-delimited Results, diagnostics and convergence
-rows, plus material, support/load, import, mesh and solver parameters) and named
-PNGs of loads/supports, mesh, von Mises stress, yield FoS when available, and
-Auto deformation. Captures use Reset View then Fit Model, automatic color ranges,
-the current projection and result units, and the viewport's resolution. They omit
-controls, the grid, selection and probes; each relevant image includes a legend.
-Your view is restored after each capture. Export is unavailable during active
-operations or assignment previews and aborts if the analysis changes. PDF export
-and editable project saving remain future work.
-
-`tests/browser/material-strength-tests.html`, `load-unit-tests.html`,
-`load-entry-tests.html`, `unit-preferences-tests.html`, `docx-tests.html`,
-`report-tests.html`, and `report-workflow-tests.html`
-cover bulk-yield provenance, conversions and editing, ZIP structure/checksums,
-report text, actual solved captures, download, restoration and stale export.
-Open them in headless Chromium with local-file access or via the optional server,
-as with the other browser harnesses.
-
-
-Settings uses a preferred 840 × 720 px size, capped only to fit smaller screens.
-The **Units** tab offers **SI** (default), **USCS**, and named custom sets. USCS
-uses ksi for materials, psi for stress/pressure, in for dimensions, and lbf for
-force. The remaining roles use lbm/in³, in/s², and in·lbf. Edit any role to make a
-custom set; edit its name to save or rename it, use **Save copy** to duplicate it,
-or **Delete** to retain its values as Custom. Edits to a selected saved set update
-that set automatically. This follows SpjutMath's Milestone-4 preset workflow.
-Inline load and result unit controls use the same browser-local preferences.
-Changing units converts current entries while preserving the mesh and results.
-
-For a generated report, validate ZIP checksums, XML, package relationships,
-editable tables, embedded PNGs and image proportions without additional tools:
-`python3 tests/validate_report_docx.py path/to/report.docx`.
+`project-resume-tests.html` covers prepared-example equilibrium, automatic reopen,
+New/empty restoration, guide dismissal, mesh options placement and Open/Save shortcuts.

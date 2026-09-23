@@ -276,3 +276,50 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 #settings-dialog .ui-settings-hub-content { min-height: 0; min-width: 0; overflow: hidden; }
 #settings-dialog [role="tabpanel"] { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-gutter: stable; }
 #report-format { max-width: 150px; }
+
+.fea-project-dialog { max-width: min(34rem, 90vw); color: var(--text, #f2f3f5); background: var(--surface, #202329); border: 1px solid var(--ui-color-border, #777); border-radius: .5rem; padding: 1.2rem; }
+.fea-project-dialog::backdrop { background: #0008; }
+.fea-dialog-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }
+#recovery-list { padding-left: 1rem; }
+#recovery-list button { margin: .25rem; }
+
+.fea-empty-workflow { position:absolute; left:50%; top:45%; transform:translate(-50%,-50%); max-width:30rem; width:80%; padding:1rem; border-radius:.5rem; background:var(--surface, #202329); z-index:3; }
+.fea-empty-workflow[hidden] { display:none; }
+.fea-options summary, .fea-assignment-options summary { cursor:pointer; min-height:28px; padding:.25rem; }
+.fea-assignment-options { padding:0 .4rem; } .fea-assignment-options button { margin:.2rem; }
+.fea-field-error { color:var(--ui-color-danger, #b42318); font-size:.85em; }
+
+#report-options-dialog label { display:block; margin:.35rem 0; }
+#report-title, #report-notes { width:100%; box-sizing:border-box; }
+
+.fea-pick-through { position:absolute; bottom:1rem; left:1rem; z-index:5; max-width:calc(100% - 2rem); padding:.5rem; border:1px solid var(--border); border-radius:4px; background:var(--surface); }
+.fea-face-access button { margin:.2rem; }
+.fea-setup-row:has(.fea-assignment-options) { position:relative; }
+.fea-assignment-options { position:absolute; bottom:1px; left:1px; z-index:2; padding:0; }
+.fea-assignment-options summary { list-style:none; min-width:30px; text-align:center; }
+.fea-assignment-options[open] { background:var(--surface, #202329); border:1px solid var(--border, #777); border-radius:4px; box-shadow:0 3px 10px #0005; }
+.fea-assignment-options[open] button { display:block; }
+
+/* Shared UI Kit action geometry; SVG drawings come from its generated catalog. */
+.fea-icon-button { display:inline-flex; align-items:center; justify-content:center; min-width:30px; min-height:30px; padding:4px; border-radius:8px; }
+.fea-icon-button svg { width:20px; height:20px; flex:none; }
+[data-setup-kind="mesh"] { position:relative; }
+.fea-mesh-options { position:absolute; top:8px; right:6px; }
+[data-setup-kind="mesh"] > .fea-setup-row-button { padding-right:42px; }
+.fea-empty-workflow { background:var(--ui-color-surface); color:var(--ui-color-text); border:1px solid var(--ui-color-border); }
+.fea-empty-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.fea-setup-guide { position:fixed; box-sizing:border-box; z-index:12; padding:14px; border:1px solid var(--ui-color-border); border-radius:8px; background:var(--ui-color-surface); color:var(--ui-color-text); box-shadow:0 3px 14px #0003; font-size:13px; }
+.fea-setup-guide[hidden], .fea-project-notice[hidden] { display:none; }
+.fea-setup-guide strong { display:block; padding-right:28px; }
+.fea-setup-guide p { margin:8px 0 12px; }
+.fea-setup-guide::before { content:''; position:absolute; width:10px; height:10px; background:var(--ui-color-surface); transform:rotate(45deg); }
+.fea-setup-guide[data-arrow="left"]::before { left:-6px; top:var(--guide-arrow-top,20px); border-left:1px solid var(--ui-color-border); border-bottom:1px solid var(--ui-color-border); }
+.fea-setup-guide[data-arrow="up"]::before { left:var(--guide-arrow-left,24px); top:-6px; border-left:1px solid var(--ui-color-border); border-top:1px solid var(--ui-color-border); }
+.fea-guide-dismiss { position:absolute; right:5px; top:5px; min-width:30px; min-height:30px; font-size:22px; padding:0; }
+.fea-guide-actions { display:flex; justify-content:space-between; gap:8px; }
+.fea-project-notice { position:fixed; bottom:14px; left:50%; transform:translateX(-50%); max-width:calc(100vw - 32px); padding:8px 42px 8px 12px; z-index:25; border:1px solid var(--ui-color-border); border-radius:8px; background:var(--ui-color-surface); color:var(--ui-color-text); box-shadow:0 3px 14px #0003; }
+.fea-project-notice p:empty { display:none; }
+#dismiss-project-notice { position:absolute; right:4px; top:4px; min-width:30px; min-height:30px; }
+@media (pointer:coarse) { .fea-icon-button, .fea-guide-dismiss { min-width:44px; min-height:44px; } }
+
+.fea-guide-target { outline:2px solid var(--ui-color-accent, #387bff); outline-offset:2px; }

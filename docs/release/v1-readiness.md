@@ -1,7 +1,8 @@
 # v1.0 readiness evidence
 
-Status: **Unreleased — M21–M27 accepted; CAD-only scope verified,
-M30 integrated acceptance and Task 20 candidate audit remain open.**
+Status: **Unreleased — M21–M27 accepted; Plans 28–34 implemented/verified;
+CAD-only scope verified. Owner review of 30–34, implementation of 35–37, final M38 acceptance and Task 20
+exact-candidate audit remain open.**
 
 The acceptance audit records the production Tet10 `file://` vertical slice,
 five-case analytical/reference matrix, 50-part CAD corpus, and supported-browser
@@ -15,7 +16,9 @@ manifest require a fresh final release review; the CAD-only package is audited
 separately without claiming renewed publication approval.
 
 The owner removed STL from main and v1 on 2026-09-20; the archived work is
-linked from `../STL-DEVELOPMENT.md`. Complete M30 integrated review, then
+on [the archived branch](https://github.com/Brinkwatertoad/SpjutSim-FEA/tree/features/stl-import).
+Complete the pre-v1 sequence in [the plan index](../plans/README.md), obtain
+M38 integrated acceptance, then
 run Task 20 against the final candidate, including the rebuilt Gmsh artifact,
 before claiming v1.0 readiness. Task 19's focused rebuild/startup checks do
 not replace the complete candidate acceptance matrix.
@@ -25,3 +28,7 @@ See `distribution-policy.md`, `artifact-manifest.json`, `SOURCE.md`, and
 package.
 
 No unchecked gate in `spec.md` section 26 should be interpreted as passing.
+
+Post-v1 Plans 39–46 are prepared continuation plans and are not v1 release gates.
+
+Plans 30–34 working-tree verification is recorded in [the batch review](../reviews/30-34-verification.md). This is not an exact release-candidate audit.

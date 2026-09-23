@@ -1,6 +1,6 @@
 # Local Web FEA — Development Specification
 
-**Status:** v1 feature implementation and validation, calibration, corpus, and distribution gates complete; Task 20 candidate acceptance remains open
+**Status:** Unreleased. The original static-analysis workflow and Plans 21–34 are implemented; the additional pre-v1 work in [the plan index](docs/plans/README.md), final usability acceptance, and Task 20 candidate audit remain open.
 **Target:** v1.0 local-first browser application  
 **Primary use case:** Simple static finite element simulations on homogeneous, single-body mechanical parts  
 **Primary CAD sources:** STEP, IGES, and OpenCASCADE BREP
@@ -8,8 +8,10 @@
 **Solver:** First-party C++/WebAssembly FEM + sparse PCG solver, executed locally in a Web Worker  
 **Frontend:** Plain JavaScript + internalized SpjutSim UI foundation + Three.js; classic-script-compatible baseline for direct local-file execution  
 **Frontend build pipeline:** None for normal browser-source development; no React, TypeScript, Vite, npm, or Node runtime dependency  
-**Baseline execution:** Direct local `file://` launch where supported by the tested browser; optional local/static HTTP mode enables threaded WASM acceleration  
-**v1.0 release bar:** Result post-processing and mesh-convergence workflow complete and validated
+**Baseline execution:** Direct local `file://` launch on tested desktop browsers; optional local/static HTTP uses the same serial workers. Threaded WASM is deferred.
+**v1.0 release bar:** Validated static analysis and convergence, completed pre-v1 plans, owner usability acceptance, and exact-candidate audit.
+
+This document states product and technical requirements. **Planned** sections are approved requirements awaiting implementation; their status is tracked in [docs/plans/README.md](docs/plans/README.md). Historical fixes are integrated thematically here; chronology and evidence belong in [docs/reviews](docs/reviews/requirements-history.md). Major section numbers are retained for existing references.
 
 ---
 
@@ -51,7 +53,7 @@ The product should favor **useful, defensible engineering feedback over solver f
 - Desktop web application implemented with plain HTML/CSS/JavaScript.
 - SpjutSim UI foundation incorporated directly into the repository.
 - No React, TypeScript, Vite, npm, or runtime Node.js requirement.
-- Direct-local-file-capable application distribution, plus optional static HTTP serving for enhanced/threaded mode.
+- Direct-local-file-capable application distribution and optional static HTTP serving with the same serial workers.
 - Local STEP (`.step`, `.stp`), IGES (`.iges`, `.igs`), and OpenCASCADE BREP (`.brep`) import.
 - One closed solid body per analysis.
 - Homogeneous isotropic linear-elastic material.
@@ -68,6 +70,10 @@ The product should favor **useful, defensible engineering feedback over solver f
 - Pre-solve memory estimate and user warning system.
 - Global mesh-convergence study.
 - Warnings for likely underconstraint, poor mesh quality, and likely stress singularities.
+- Browser-local material and unit libraries; DOCX and text/PNG ZIP reports.
+- Portable save/open with optional mesh/results and lightweight local recovery.
+- Model volume/mass, easier viewport selection, discoverable advanced controls, consistent editing language, contextual errors, onboarding, and report options with complete defaults.
+- **Planned:** local directions, planar sliding/symmetry supports, bearing loads, distributed moments, and offset forces.
 
 ### 2.2 Deferred until after v1.0
 
@@ -80,7 +86,8 @@ The product should favor **useful, defensible engineering feedback over solver f
 - Bonded/contact interfaces between bodies.
 - Shell, beam, truss, or cohesive elements.
 - Explicit modeling of infill or print roads.
-- Adaptive local error-based mesh refinement.
+- Load cases/comparison, persistent measurements/probes, and manually controlled local mesh sizing (sequenced post-v1 in Plans 39–41).
+- Adaptive local error-based mesh refinement; distinct from manual local sizing.
 - Remote/cloud solve service.
 - GPU/WebGPU sparse solver.
 - Parasolid import.
@@ -121,7 +128,7 @@ The application:
 - enumerates geometric faces and creates a renderable surface preview;
 - computes basic geometric statistics such as bounding box and volume if available.
 
-If import or healing fails, the user receives a specific import error and no simulation state is created.
+If import or healing fails, report a specific error and retain any previously installed analysis. Commit a new model only after validation and any required replacement review.
 
 ### Step 2 — Material
 
@@ -167,19 +174,6 @@ The active model and material have adjacent rows in the compact setup inspector.
 Selecting either row opens its corresponding single editor in place; the
 application must not expose competing import or material forms elsewhere in the
 tools pane.
-
-The material-library architecture should follow the established SpjutSim-Truss
-pattern: immutable checked-in factory records, stable IDs, base-SI values,
-source metadata, a separately persisted validated User layer, and exact
-analysis/document snapshots. The reviewed Truss records provide a starting
-point for Steel A36 and Aluminum 6061-T6, but the active catalog/schema does not
-contain Poisson's ratio or any of the requested polymer records. The repository's
-legacy `Material_properties.csv` includes some additional metal fields, but its
-own specification marks that file unaudited and its values conflict with the
-active catalog; it is not an authoritative FEA source. Every enabled FEA
-built-in must therefore have a project-reviewed source for all supplied
-properties. Provenance from a partial Truss record must not be presented as
-support for added fields.
 
 ### Step 3 — Boundary conditions and loads
 
@@ -270,7 +264,7 @@ The result panel reports extrema and their locations, reaction totals, mesh stat
 
 The user can request a convergence study. The app solves a sequence of globally refined meshes, subject to memory limits, and plots convergence of selected metrics.
 
-A result can then be labeled converged, unconverged, or indeterminate according to Section 12.
+A result can then be labeled converged, unconverged, or indeterminate according to Section 13.
 
 ---
 
@@ -397,7 +391,7 @@ Required lifecycle:
 
 If remeshing is requested, recreate the mesher worker and re-import the canonical CAD source bytes. Keep the original source bytes and explicit format in application state if memory permits, otherwise retain a file handle/reference and request access as needed.
 
-### 4.6 Runtime modes: direct local files and optional HTTP acceleration
+### 4.6 Runtime modes: direct local files and optional HTTP
 
 v1 should support two execution modes.
 
@@ -423,35 +417,13 @@ If the current browser cannot execute the supported local-file worker path, the 
 
 Direct-local behavior is an explicit compatibility test target, not an assumption. The primary v1 browser is only considered supported when the full import -> mesh -> solve path has been exercised from `file://`.
 
-#### Mode B — Local/static HTTP high-performance mode (optional)
+#### Mode B — Local/static HTTP (optional)
 
-Threaded WASM builds may use browser shared memory/pthreads. These require `SharedArrayBuffer` and cross-origin isolation in normal web deployment.
+`tools/serve.py` serves local static assets with correct MIME types and COOP/COEP headers. It performs no simulation computation and receives no geometry upload. Cross-origin isolation is detected, but both v1 modes use the validated serial workers. Its absence is not a startup failure.
 
-When threaded mode is enabled, the serving environment should provide at least:
+Threading is a post-v1 optimization. Any future `threaded-hosted` artifact must be separately built, licensed, modeled for peak memory, and numerically/browser validated. It would require `SharedArrayBuffer` and cross-origin isolation; portable mode must never attempt to start pthreads as a capability probe. No UI or documentation may advertise an unimplemented acceleration path.
 
-```http
-Cross-Origin-Opener-Policy: same-origin
-Cross-Origin-Embedder-Policy: require-corp
-```
-
-The application should detect `crossOriginIsolated` and expose threaded acceleration only when the environment supports it. Lack of cross-origin isolation is **not** a startup failure; it selects the portable single-threaded path.
-
-Any future threaded Gmsh target is a separate `threaded-hosted` artifact. It may reuse a pinned upstream browser package, but it must never be loaded or feature-detected by attempting to start pthreads in portable mode.
-
-Provide an optional repository-local Python server, e.g. `tools/serve.py`, for developers/users who want the HTTP/threaded mode. It should:
-
-- serve the static web tree;
-- supply correct MIME types for `.js` and `.wasm`;
-- emit COOP/COEP headers;
-- perform no application computation and receive no geometry upload.
-
-Example optional command:
-
-```bash
-python tools/serve.py
-```
-
-A conventional static host may provide the same headers for hosted/threaded use. The application architecture must not require such hosting for the baseline local distribution.
+Run the optional server with `python3 tools/serve.py`. Conventional static hosting may provide the same headers, but hosting is not required for the baseline distribution.
 
 ### 4.6.1 File-safe packaging strategy
 
@@ -586,6 +558,10 @@ Validation:
 - for ordinary engineering solids, UI should warn on values outside approximately `0 <= nu < 0.5` rather than silently rejecting mathematically valid exotic values;
 - all supplied strengths/density must be positive.
 
+Catalog architecture uses immutable factory records, stable opaque IDs, SI values, per-field source/revision metadata, a validated browser-local user library, and independent analysis snapshots. Built-in supplied properties require reviewed evidence; partial or unaudited external catalogs are not authority for added fields. Catalog updates never mutate applied materials. User-created entries default source metadata to User.
+
+PLA includes 62 MPa tensile yield and 70.8 MPa compressive yield; ABS includes 46.1 MPa compressive yield. These bulk reference values retain mixed-source limitations and do not represent certified printed-part allowables. See [material strength evidence](docs/material-strengths.md). TPU's small-strain limitations remain visible.
+
 ### 5.3 Boundary-condition model
 
 Use plain component-based support objects and discriminated load objects:
@@ -683,6 +659,95 @@ Requirements:
 - use assertions aggressively in native debug/test builds;
 - avoid expensive deep validation of large arrays on every internal function call once a trusted boundary has been crossed.
 
+### 5.6 Portable projects and recovery — Plans 30–31
+
+A project defaults to embedded CAD plus the complete committed engineering setup:
+source name/format/bytes and identity metadata, orientation, material snapshot
+and provenance, supports, loads, gravity, mesh/solve settings, names/IDs, and
+project metadata. A user can explicitly include compatible mesh/results and
+convergence data. Transient drafts, workers, prepared preflight, undo buffers,
+DOM state, and global browser libraries are not saved. Compact project display
+choices may be retained separately from global preferences.
+
+Use a versioned manifest with binary entries for source and optional typed
+arrays, reusing or extracting the existing stored-ZIP packaging where appropriate.
+Declare byte counts, typed-array layouts, units, dependency fingerprints, and
+producer/protocol/schema identities. Validate limits and entries before large
+allocations; reject unknown required versions, malformed references, nonfinite
+engineering values, truncated buffers, and invalid connectivity. No JSON/base64
+expansion of large numerical arrays is required.
+
+Open is transactional. Decode and validate in isolation, import the embedded
+source, and validate face identity before replacing the current analysis.
+Exact source bytes and matching face count alone do not establish a safe mapping.
+Require matching per-face identity evidence; ambiguous/revised-engine mappings
+use explicit replacement review or fail without changing the installed project.
+Never silently guess assignment targets or alter load/support meaning.
+
+Optional mesh/results are reusable only when source/orientation, definitions,
+mesh/solver settings, numerical schemas, and producer compatibility all match.
+Otherwise explain which cached data cannot be used and reopen validated setup
+without it. Restored results are read-only derived state until a relevant edit;
+restoring data never restores a worker, check readiness, or a claim of new
+numerical validation. Saving does not clear engineering history or invalidate
+results. Mark dirty state using persistence changes, including metadata-only
+edits, independently of numerical analysis revision.
+
+Recovery uses the same validated setup snapshot, with prompt writes after
+committed changes. Store CAD once per source identity and update small setup
+records; exclude mesh/results, undo, and half-entered drafts. Startup automatically reopens the previous part/setup. Manual recovery copies
+and discard remain under File; conflicts or failures are shown without silently
+replacing another active tab.
+Maintain bounded records and transactional replacement so interrupted writes
+leave a usable prior snapshot. Handle quota/unavailable storage and competing
+tabs explicitly, while retaining manual portable save/open on `file://` and HTTP.
+Browser recovery is best effort and never reported as a saved portable file.
+
+Version 1 uses the bounded stored-ZIP format in [docs/project-format.md](docs/project-format.md):
+2 GiB archive, 512 MiB CAD, 512 MiB total decoded cache, 8 MiB manifest/directory,
+2,048 entries. Source SHA-256 and canonical ordered per-face tessellation evidence
+must match. Dispose the CAD worker before cache allocation; keep the installed
+project until candidate validation completes. Cache results must match the actual
+saved mesh; a displayed convergence result from another mesh requires setup-only
+save or a fresh solve on the current mesh. No prepared check is restored.
+
+Recovery coalesces synchronous changes into a next-task write, retains four records
+and at most 512 MiB referenced CAD, and uses source-keyed Blobs plus transactional
+owner/generation checks. Browser Web Locks coordinate record reuse across reloads
+and protect live tabs. When full, retirement of the oldest unlocked record and
+the new snapshot share one transaction. Automatic restore reuses a record; manual
+Open copy creates an independent unsaved working copy. File → New waits for the
+latest committed recovery, resets the analysis and records an empty startup state
+while preserving preferences/libraries. Open/Save use Ctrl on PC and Cmd on Mac
+with O/S; New has no shortcut. No beforeunload warning is installed. Download status describes a request,
+not verified disk persistence. Browser/origin storage limitations and allocation
+costs are documented with the file format.
+
+### 5.7 Planned engineering extensions and invalidation
+
+Plans 35–37 extend support/load definitions through the same controller,
+assignment draft, history, project validation, worker protocol, and report paths.
+
+- Local rectangular frames use validated orthonormal axes and explicit origin/
+  ownership. A direction may be global or tied to a supported CAD reference;
+  rotation/replacement has a documented transformation and repair rule.
+- Planar sliding/symmetry constrains normal translation while tangential motion
+  remains free. Symmetry means the modeled symmetry assumption; it does not
+  automatically scale loads or represent arbitrary contact.
+- Bearing loads declare their cylindrical faces, axis, transverse resultant,
+  distribution and sign; the application explains the approximation.
+- Distributed moments and offset forces declare target faces, resultant force,
+  resultant moment, reference point, and the chosen load-distribution model.
+
+These are planned schemas, not valid existing worker payloads. Exact schemas
+are versioned and tested within the owning plan. Missing/incompatible references
+block use or enter explicit review. Preflight, constraint rank, equilibrium,
+history replay and optional cached-result fingerprints include the new inputs.
+
+Load cases, persistent measurements, and local sizing are post-v1 schema
+extensions. Their plans evolve persistence with explicit migration/rejection
+rules; collapsed UI never excludes active engineering data.
+
 ## 6. CAD Import and Geometry Handling
 
 ### 6.1 Supported input
@@ -748,7 +813,7 @@ For a given imported geometry instance:
 
 A remesh must not invalidate face selections.
 
-v1 does **not** promise that face identifiers survive editing/re-exporting the source CAD model. A future project-file format may add geometric-signature remapping.
+Face identifiers are not promised to survive editing/re-exporting source CAD. Project reopen must validate the embedded source and face identity before installing assignments; an ambiguous mapping must enter explicit review or fail safely. Never silently attach a saved load/support to the nearest face. See Section 5.6.
 
 ### 6.5 Model orientation
 
@@ -765,6 +830,16 @@ mesh coordinates without changing opaque `FaceId` values or mutating canonical
 source bytes. It invalidates mesh, preflight, and results. Material, supports,
 loads, gravity, and selections remain attached and expressed in the global
 coordinate frame.
+
+### 6.6 Replacing an authored model
+
+Importing over an authored model opens a side-by-side transfer review. The old view highlights each referenced support/load; the replacement view lets the user map faces or explicitly drop the assignment. Material, gravity, mesh/solve settings, and orientation transfer. The full replacement is installed only after the completed summary is accepted; cancellation preserves the old analysis. Use nearly the available viewport for the two views and show original, mapped, and current-preview glyphs in their respective views.
+
+### 6.7 Model information and selection — Plan 33
+
+Show undeformed bounding dimensions and validated CAD volume in Model, with mass equal to volume times active density when both are available. Missing volume or density is shown as unavailable, never zero. No solve is required; changing presentation or units does not invalidate results. Retain original dimensions in Results and include volume/mass in reports.
+
+Improve small/obscured-face picking directly in the viewport. A contextual pick-through action may cycle the distinct CAD faces under the pointer; temporary Model/Mesh hide/isolate is presentation-only and has an obvious Show all action. Existing support/load rows locate assigned faces. Do not add a long CAD-face catalog. Draft toggle/background/Escape behavior remains as specified in Section 15.6.
 
 ---
 
@@ -976,6 +1051,32 @@ Acceptable v1 strategies:
 - symmetric row/column modification with consistent RHS adjustment.
 
 Do not use a large penalty factor as the default constraint method.
+
+### 8.8 Local supports and additional loads — planned
+
+Plans 35–37 must preserve the symmetric positive-definite system assumed by PCG
+for a valid constrained linear-elastic model. A local constraint is a linear
+condition on nodal translation, not an approximate choice of the nearest global
+component. Resolve intersecting local/global constraints per node, rejecting
+inconsistent prescribed values and retaining independent constraint directions.
+Test rigid-mode removal, transformed displacements, reaction recovery and
+equilibrium in global coordinates.
+
+Bearing loading distributes compression on the loaded region of supported
+cylindrical faces to produce the requested transverse resultant. The initial
+plan explicitly bounds supported cylinder geometry and load distribution;
+it is not a contact/friction/bolt-preload model. Verify integrated resultant,
+moment, direction, and Tet4/Tet10 boundary quadrature.
+
+A moment/offset load uses a documented surface-traction distribution with the
+requested force and moment about its reference point. An offset force produces
+the moment `(applicationPoint - referencePoint) × force`. It does not silently
+rigidize the surface. Degenerate target regions fail actionably. Tests verify
+force and moment balance, reference-point invariance, and mesh convergence;
+the UI/report names the loading idealization.
+
+New formulation work requires native and WASM analytical evidence, not only
+glyph orientation or a visually plausible contour.
 
 ---
 
@@ -1327,9 +1428,7 @@ retain uncapped engineering FoS independently of the contour mapping.
 
 The von Mises legend and color mapping span zero to the whole-model unaveraged
 solver-sample peak. This presentation range is separate from boundary-only range
-metadata; the smoothed surface may never reach the top color. Keep the visible
-legend to “von Mises (MPa)” and its endpoints. Put the surface maximum and
-smoothing explanation in the legend tooltip and Results details.
+metadata; the smoothed surface may never reach the top color. Keep the legend title concise and use the selected stress unit. Put the surface maximum and smoothing explanation in the legend tooltip and Results details; adaptive ticks follow Section 11.5.
 
 ### 11.4 Deformed shape
 
@@ -1356,16 +1455,15 @@ a smooth cosine round trip from full deformation through undeformed and back in
 Deformation view or current results become unavailable, and never mutates the
 analysis document or revision.
 
-### 11.5 Color maps
+### 11.5 Color maps and legends
 
-Each result field needs:
+Each field has an explicit SI range and a unit-labeled legend. Numerical extrema remain unclipped. Manual bounds are finite and strictly ordered; an automatic locked uniform range may have equal endpoints. Values beyond a displayed range use endpoint colors, with clipping indicated. FoS retains its capped mapping and `10+` label.
 
-- scalar range;
-- legend with units;
-- min/max values;
-- optional automatic percentile clipping for visualization only.
+`viewportPresentation.colorRange` contains `{mode, field, locked, minimum?, maximum?}`. It is presentation state, separate from numerical ranges. Editing either bound chooses Manual. Changing to an incompatible field resets the limits; unit conversion preserves compatible physical limits. A new solve resets limits to Automatic and unlocked.
 
-If clipping is used to make the plot readable, clearly indicate it and keep reported extrema unclipped.
+The legend defaults to vertical, using two to seven height-aware labels; horizontal uses endpoints. Drag the title or use its arrow keys to move it; drag the corner handle or use its arrow keys to resize. Validate and persist compact per-orientation positions/sizes and clamp them to the central viewport. The color ramp fills the available legend dimension.
+
+Use unlit contour materials with sRGB-to-linear vertex conversion so viewport and legend agree. Report captures use the same color function and explicit linear-to-sRGB output conversion. UI themes do not alter numerical colormaps.
 
 ### 11.6 Picking and probes
 
@@ -1388,6 +1486,7 @@ click, or result invalidation clears it.
 
 A completed analysis summary should include:
 
+- undeformed bounding dimensions in the study global axes, using selected length units;
 - mesh element type;
 - nodes/elements/DOFs;
 - solve residual and iterations;
@@ -1410,6 +1509,16 @@ sum(applied external forces) + sum(reactions) ~= 0
 ```
 
 Report a normalized force-balance residual. Large imbalance is a solver/post-processing failure and must invalidate the result.
+
+### 11.9 Reports
+
+Export is available only for current solved results with no pending draft or running operation. DOCX is the default; text/PNG ZIP remains available. Both consume shared result-summary/report content and a dependency-free stored ZIP packager. DOCX provides editable tables, headings, descriptive image text, and correctly proportioned embedded PNGs.
+
+Default content includes model/setup parameters, units, material provenance where matched, assumptions, result and diagnostic values, warnings, and convergence status/table. Text tables use tabs between cells. Default images are assignments, mesh, von Mises stress, optional yield FoS, and Auto deformation. Each uses Reset View then Fit Model, current projection/display units and viewport resolution, automatic field limits, and clean scene output without grid/gizmo/UI chrome or transient selections.
+
+Capture restores camera, selection, probe, overlays, presentation, and animation multiplier even on failure. Revision/result changes abort a stale export. No export mutates engineering state.
+
+**Report customization (Plan 34):** Preserve one-action export with complete defaults. An accessible options action allows a title/notes, selection of available views, and optional current-view capture; remember compact choices and offer Restore defaults. Notes remain user-authored and are escaped as text. Applicable assumptions, units, warnings, result currency, smoothing/deformation explanations, and convergence status cannot be omitted. User-selected views include their actual field, scale, limits, and clipping. Future measurement/case content is added only when those capabilities exist.
 
 ---
 
@@ -1622,397 +1731,311 @@ This is not a validity proof; it is a warning that geometric nonlinearity may ma
 
 ## 15. UI/UX Requirements
 
-### 15.1 Main shell
+### 15.1 Main shell and workspace
 
-Use the internalized SpjutSim UI shell as the baseline application chrome:
+Preserve the SpjutSim UI foundation and current action-bar arrangement: Setup,
+Undo, Redo, Save, report format/Export, Solve, and Results. Setup/Results retain
+their labels and Truss action icons; toggles use accent and selection-text roles.
+The Setup toggle replaces a duplicate pane title. Runtime activity and short
+outcomes appear at the right of the menubar; routine history prose stays hidden.
 
-```text
-+-------------------------------------------------------------------+
-| App title/status                      | File/View/etc menus       |
-+-------------------------------------------------------------------+
-| Tools | Undo Redo Save Export              | Solve | Results        |
-+----------------------+--------------------------------------------+
-| Setup pane           | Canvas / Results layout                    |
-|  Model               | +---------------------+------------------+  |
-|  Material            | |                     | Results          |  |
-|  Supports            | |    Three.js         | / Convergence    |  |
-|  Loads               | |    viewport         | / Diagnostics    |  |
-|  Mesh                | |                     |                  |  |
-|                      | +---------------------+------------------+  |
-+----------------------+--------------------------------------------+
-```
+The duplicate top View menu is removed. Keep File, Edit, and Help. Fit/reset,
+signed views, and projection remain accessible through labeled, focusable
+viewport controls. Preserve keyboard access and reduced-motion behavior before
+removing the duplicate menu path. Save is functional through Plan 30; no
+other toolbar simplification is requested.
 
-The UI foundation already models a tools pane and a canvas/results area with resizable split behavior. Preserve the concepts of results modes (`hidden`, `split`, `expanded`), responsive stacking, a user-adjustable split ratio, and an active results tab.
+Workspace preferences are separate from engineering state. Persist validated
+version-1 pane widths/collapse choices: Setup 220–520 CSS pixels, Results 260–520,
+and at least 320 pixels for the viewport in desktop split mode. Below 1000 pixels
+only one pane is active; below 680 pixels drawers overlay the full-width canvas
+and start closed on entry. Empty Results starts collapsed. Explicit output
+commands may open it; ordinary redraws preserve the user's choice.
 
-The app-owned workspace controller persists version-1 width/collapse preferences
-independently of the analysis document. Setup widths are bounded to 220–520 CSS
-pixels and Results to 260–520, while retaining at least 320 pixels for the
-viewport in desktop split mode. Below 1000 pixels only one pane is active;
-below 680 pixels drawers overlay the full-width canvas and start closed upon
-entering that compact mode. Empty Results starts collapsed. Explicit output
-commands may open it; redraws preserve the user's choice. The UI controller's
-`showOutputPanel(panelId)` selects a known output tab and opens the pane.
-A shared CSS gizmo rectangle is measured by the renderer. Result legend/probe
-share a separate bounded area on the right; short-window actions scroll above
-it. A drawer may temporarily cover these areas until dismissed.
+Canvas/grid children shrink to available space. Panes scroll independently with
+stable native gutters. Setup/Results share a 17px right inset, subtracting the
+measured gutter with a 2px minimum padding for wide scrollbars. Bounded gizmo,
+controls, legend, and probe areas remain usable through resize, browser zoom,
+and high DPI; temporary drawer overlap is allowed. Narrow-window robustness
+does not imply mobile support.
 
-The menubar places File/Edit/View menus immediately after the app title and runtime
-status at the far right. Solve retains its accent background.
-A separate action bar immediately below the menubar contains Tools on the left,
-engineering Undo/Redo, a disabled Save placeholder and solved-report Export, and Solve immediately left of
-Results on the right. Use Truss-style right/down disclosure triangles inside
-the Tools and Results panels. Solve opens Checks and runs preflight if no current
-prepared worker exists, then continues automatically when permitted. Execution
-still requires a current valid check and retains high-memory confirmation. Import, mesh completion,
-form edits, presentation, and opening reports do not start checks. Cancellation,
-model edits, failed checks, and the WASM cap prevent solving. Worker identity
-guards reject late replies from cancelled/replaced requests even at the same
-analysis revision. Explicit convergence studies retain per-level checks.
+`showOutputPanel(panelId)` opens a known output tab. Tabs are Checks, Results,
+Convergence, and Diagnostics. Checks prioritize actionable repairs,
+constraint/memory readiness, and setup links; detailed topology/runtime values
+are expandable. Numerical results belong in the output pane.
 
-Recommended result tabs for v1:
+### 15.2 Setup and editing
 
-- Results;
-- Convergence;
-- Checks (explicit preflight report);
-- Diagnostics.
+Setup is one fixed sequence: Model, Material, Supports, Loads, Mesh. Compact
+summaries show source/format/face count, material E/density, and assignment
+names/values/units/face counts. Model summaries omit orientation status;
+Poisson's ratio remains in the material editor. An ordinary setup fits together
+without page scrolling. Support/load names align left with defining values/components on the right. Empty groups offer Add support… / Add load… rows.
 
-The exact tab names may change, but numerical results and convergence should live in the results pane rather than competing with geometry/material setup controls.
+A row opens its single editor in place. Move the existing form node between
+its stash and active row; do not clone forms or create competing editors.
+Material expands independently beneath Model. Apply, cancel, removal, and Escape
+return focus to the logical row or Add action. Escape closes the editor before
+ordinary face deselection. Expanded editors may have bounded internal overflow.
 
-### 15.2 Tools pane organization
+Material selection previews properties and provenance. Applying a material stores
+a snapshot. The user library has unique case-insensitive names, immutable factory
+entries, and explicit user-entry replacement/removal. Storage failure does not
+prevent using a valid material in the current analysis. See Sections 3 and 5.2.
 
-Use ordinary semantic HTML controls enhanced by the internal UI helpers where useful.
+Mesh is one expandable row with preset/count summary, generation/regeneration,
+and deletion. Deleting a mesh preserves source, material, assignments, gravity,
+and mesh settings while clearing derived data.
 
-The whole left pane is **Setup**, without a nested Setup subpanel. Its fixed
-top-to-bottom order is Model, Material, Supports, Loads, and Mesh. Solve runs
-checks before execution; the output pane places Checks before Results. Model owns CAD import/replacement and orientation; clicking the empty
-Model row opens the file chooser, while an imported model collapses to a compact
-source/format/face/orientation summary. Material is a separate adjacent compact
-row whose existing editor expands in place. Supports and Loads follow.
-A typical model with a material, a few supports, and a few simple loads must fit
-together in the normal tools-pane viewport without requiring page scrolling.
-Each compact row includes the engineering value/components, display units, and
-face count needed to understand ordinary setup at a glance. Support/load names
-are left-aligned with their defining components or value right-aligned on the
-same line.
+**Editing language:** use Apply for engineering edits, Save project for
+persistence, and Save to material library for catalog storage. Distinguish the
+library action from applying the active material. Preserve draft transactions,
+unique-name safeguards, and existing keyboard/focus behavior.
 
-Selecting a row opens its editor directly in that row. Compact Add actions open
-the same support or load form in place. The UI moves the single form node
-between the inactive form stash and active row; it must not clone forms or
-expose separate Material/Supports/Loads/Mesh editing sections. Task 25 introduces
-one controller-owned transient assignment draft separate from committed
-engineering state; the UI must not keep another parallel copy.
-Save, cancel, delete, and Escape return focus to the logical row or Add action.
-Escape closes the inline editor before it clears transient face selection.
+**Assignment options:** Duplicate copies a small committed definition
+with a fresh ID/name. Suppress/Include controls calculation participation;
+suppressed items remain visible and serializable, are excluded from rank checks
+and solver inputs, and are labeled in reports. Show/hide controls only glyph
+visibility. These changes follow ordinary history, revision and project-schema
+rules, including face-reference repair during geometry replacement.
 
-Mesh is a single expandable row after Loads. It summarizes element/node counts
-after generation and offers modify/regenerate and delete actions in its one
-editor. Solve opens Checks during preflight and Results during execution.
-Run checks only remains in the Checks tab; reports are never appended below Setup.
-Expanded editors may use their own bounded overflow when necessary, but
-collapsed setup summaries remain compact and readable.
+### 15.3 Settings and discoverable advanced controls
 
-The analysis state model remains authoritative. Controls render the state and dispatch commands; they do not own the engineering model.
+Settings is reached through File and Ctrl/Cmd+, using the existing hub. Its
+preferred size is 840 × 720 CSS pixels, capped to the viewport; active tab content
+scrolls internally. Controls, Units, and Appearance contain preferences.
+Engineering material/load/support/mesh inputs remain with their setup editors.
 
-Use the copied custom-select enhancement for select-heavy controls such as units, mesh preset, result field, and deformation display mode when appropriate. Native controls must remain the underlying semantic source.
+Use one interface with contextual options/advanced disclosures.
+The Mesh row has a directly accessible options button; there is no global
+advanced-controls enabling step. Formulation changes use the existing mesh
+validation/invalidation path. Compact options icons must have meaningful
+accessible names, hover/focus explanations, visible focus, keyboard activation,
+and adequate hit areas. Menus name the available capabilities; icon color alone
+must not encode state. Do not rely on hover-only discovery.
 
-#### 15.2.1 Material authoring
+Common setup remains immediately usable. Tet10 stays the production default;
+Tet4/debug formulation belongs under advanced mesh controls. Active nondefault
+settings remain summarized when controls collapse. Opening a project exposes
+the controls necessary to understand its active definitions. Warnings, assumptions,
+and result validity remain visible regardless of disclosure preference.
+Do not maintain separate simple/advanced data models, validators, or forms.
 
-The Material tool starts on **Custom**, followed by the built-in entries Steel
-(ASTM A36), Aluminum (6061-T6), PLA, ABS, ASA, PETG, TPU, and Nylon and then
-user-saved entries.
-Selecting an entry renders all properties and source/limitation notes before it
-is applied. Custom material fields use the same units and validation as the
-active analysis material. Saving a custom material requires a non-empty unique
-name, adds it to browser-local catalog storage, selects it, and applies a
-snapshot to the analysis. Replacing or deleting a user entry must be explicit;
-built-in entries cannot be modified or deleted. User-created entries default
-their Source metadata to `User`, following the SpjutSim-Truss convention.
+Future capabilities expose contextual entry points: load cases by Loads,
+Pin measurement at a probe, and Local refinement in Mesh. Once created, their
+active data stays visible. A load/support type that is physically common may
+remain in the ordinary selector despite a complex numerical implementation.
 
-Material authoring is reached by selecting the compact Material row immediately
-below Model. Applying or removing a material updates that row immediately and
-announces the outcome.
+### 15.4 Appearance
 
-#### 15.2.2 Support and load authoring
+Resolve semantic colors from the shared theme contract: background, geometry,
+hover, selection, load, support, and XYZ axes. The shared eight authored roles
+are `appBackground`, `surface`, `text`, `accent`, `danger`,
+`canvasBackground`, `canvasGeometry`, and `selection`. FEA adds
+`load`, `support`, `axisX`, `axisY`, and `axisZ`.
 
-The compact inspector presents support and load rows with clear empty states and
-adjacent Add actions. Selecting a row opens its add/edit form directly beneath
-that row. Gravity remains a separate body-load control but appears in the Loads
-group when enabled; it is not part of the face-load collection.
-
-On creation, the controller assigns a stable default display name using a
-per-category monotonically increasing sequence: `Support 1`, `Support 2`, ... and `Load 1`, `Load 2`, .... Deleting an
-item does not reuse its number, and editing an item's type does not rename it.
-Task 26 implements optional descriptive renaming while preserving stable item IDs
-and non-reused automatic numbering. Renaming alone is metadata-only and does
-not invalidate numerical results. Names remain part of the analysis item
-contract for diagnostics and future document serialization.
-
-Support and surface-load type controls remember their last authoring choice
-independently. Adding an item, cancelling an edit, selecting an existing item,
-or rerendering the UI must not reset either control to a hard-coded default.
-The remembered values are UI preferences; at minimum they persist for the
-current application session. While editing, the form shows the item's actual
-type, then restores the remembered authoring type when returning to add mode.
-
-### 15.3 Settings
-
-Use the existing SpjutSim settings dialog/hub pattern for application preferences rather than analysis inputs.
-
-Appropriate settings include:
-
-- display units;
-- appearance/color scheme;
-- viewport navigation bindings, direction, and sensitivity;
-- help/tooltips enabled;
-- tools auto-collapse behavior;
-- developer/diagnostic options when enabled.
-
-Material properties, loads, supports, and mesh settings are analysis-document data and should **not** be hidden in the global Settings dialog.
-
-### 15.4 UI color roles
-
-Extend the existing UI token system rather than hard-coding simulation colors in Three.js or individual widgets.
-
-At minimum preserve/use semantic roles for:
-
-- canvas background;
-- geometry;
-- hover;
-- selection;
-- tension;
-- compression;
-- load;
-- support.
-
-Three.js materials/glyphs should obtain these colors from resolved application theme values so viewport semantics remain consistent with the rest of the UI.
-
-Color-scheme data uses the copied SpjutSim UI Kit portable library contract.
-Ship FEA Classic (the original FEA appearance), Light Mode, Dark Mode, and Vivid
-as ordered factory schemes. Persist one active scheme identifier plus the
-versioned library overlay; corrupt or unavailable storage falls back safely and
-must not prevent in-memory use.
-
-The shared eight authored roles are `appBackground`, `surface`, `text`,
-`accent`, `danger`, `canvasBackground`, `canvasGeometry`, and `selection`.
-Resolve derived roles through the portable contract. The `fea` extension
-namespace requires `load`, `support`, `axisX`, `axisY`, and `axisZ`; portable
-imports that omit them receive deterministic FEA Classic fallbacks. Appearance
-settings select schemes and import/export strict portable version-3 documents
-using the `.spjutsim-color-scheme.json` suffix. Applying a scheme updates CSS
-roles and therefore causes the viewport's theme observer to rebuild semantic
-Three.js materials. Numerical result colormaps remain unchanged.
-
-Result contour colormaps are separate from UI theme roles; they must remain numerically meaningful and include a legend.
+Ship FEA Classic, Light Mode, Dark Mode, and Vivid. Persist the active scheme and
+versioned library overlay; corrupt/unavailable storage permits in-memory use.
+Portable version-3 scheme import/export uses `.spjutsim-color-scheme.json`.
+Missing FEA roles receive documented Classic fallbacks. Apply changes live to
+CSS and viewport materials; numerical contour colors remain unchanged.
 
 ### 15.5 Viewport navigation and presentation
 
-The default viewport controls are:
+Defaults are orthographic projection and an equal-angle three-face pose.
+Reset view uses a cube icon without an Iso label. The signed gizmo provides
+±X/±Y/±Z commands with deterministic pole-safe up vectors. Positive labels remain
+visible; negative labels/circles appear on hover or focus, and always on no-hover
+devices. Gizmo labels respect arrow depth.
 
-- left-button drag rotates/orbits the camera; a click without a drag remains
-  available for face selection;
-- right-button drag pans in the camera plane and suppresses the browser context
-  menu only over the viewport;
-- mouse wheel and touchpad/touch pinch zoom toward or away from the model;
-- arrow keys rotate the camera application-wide unless an editable control,
-  modal, menu, or arrow-navigated widget owns the event.
+Default left drag rotates, right drag pans, wheel/pinch zooms, and arrow keys
+rotate unless a control/modal/menu owns the event. Camera gestures preserve face
+selection. Suppress the browser context menu only for viewport pan interaction;
+clean up pointer capture/cancellation. Rotate/pan can each use any mouse button;
+choosing an occupied binding swaps the other one. Hints follow bindings.
+Controls settings also allow reverse zoom, sensitivity changes and reset.
 
-Default projection is orthographic and default orientation is equal-angle
-isometric internally; present the default three-face pose with a cube icon
-labelled “Reset view”, without an “Iso” label. View commands select ±X/±Y/±Z with
-deterministic pole-safe up vectors through the View menu and signed gizmo.
-Positive labels remain visible; reveal circles and negative labels only while
-the general gizmo area is hovered or contains keyboard focus (always on no-hover
-devices). Render labels with depth testing against the gizmo arrows. The 3D
-display controls include a Perspective on/off switch independent of angle. Switching
-projection preserves target and visible scale using `2*d*tan(fov/2)` and the
-orthographic zoom on the inverse switch. Navigation preferences use version 2;
-version-1 records retain their bindings and sensitivities. View transitions last
-180 ms, are immediate under reduced-motion, and cancel on navigation. Fit
-preserves orientation; importing geometry establishes a fresh reset pose. Reset
-uses the same 180 ms eased transition for orientation, target, and scale, with
-reduced-motion and navigation cancellation behavior.
+Perspective is an independent Display switch. Projection changes preserve target
+and apparent scale using `2*d*tan(fov/2)` and corresponding orthographic zoom.
+Fit preserves angle; its Truss zoom-to-fit icon sits below-left of the gizmo opposite Reset. Import establishes a fresh reset pose. Fit/reset/signed-view
+transitions last 180 ms, honor reduced motion, and cancel on navigation.
+Navigation preference version 2 retains valid version-1 bindings/sensitivities.
 
-Camera navigation must preserve the current face selection. Provide fit/reset
-view, bounded zoom, pole-safe orbiting, pointer-capture cleanup, and usable
-mouse, trackpad, and touch behavior. Open Settings with `Control+,` or
-`Command+,` and use the SpjutSim settings hub pattern. At minimum, Controls
-settings must allow rotate/pan mouse bindings to be swapped without conflicts,
-zoom direction to be reversed, and navigation sensitivity to be adjusted or
-reset. Arrow handling must respect cancelled events and standard widget
-keyboard conventions; ordinary command-button focus does not disable rotation.
+Model/Mesh/Stress/Deformation remain the primary modes, with contextual options
+beneath the centered primary row. Keep the existing field/shape interaction;
+combined stress-on-deformed-shape controls are not a committed change. Styles are
+shaded, shaded with CAD part edges, and wireframe; model wireframe never exposes
+preview tessellation edges. Styles apply across every available mode; Mesh offers element wireframe or edges over a shaded surface. Mesh overlay is independent in result views.
+Normalize the legacy `lines` style to `shaded-edges`.
 
-The main viewport exposes explicit presentation modes for **Model**, **Mesh**,
-**Stress**, and **Deformation** as their data becomes available. A separate
-display-style control must apply to every available presentation mode. Model
-mode wireframe must show only CAD feature edges, never preview-tessellation
-edges; its shaded style shows those feature edges over the shaded surface. Mesh
-mode supports element wireframe or element edges over a shaded surface. An
-optional mesh overlay may also be used in compatible result modes. After a
-successful mesh, default to Mesh mode. After a successful solve, default to a
-color-coded von Mises Stress mode. Stress and deformation views must clearly
-identify the active scalar field, units, contour range, and deformation scale;
-switching views must not mutate engineering results.
+A successful independent mesh generation opens Mesh. The first solve opens von Mises stress. Later solves preserve the previously
+selected mode/field/deformation mode/user scale through engineering edits,
+drafts, and remeshing; incompatible/unavailable fields fall back explicitly.
+Deformation opens with Auto scale; Auto recomputes for the current result.
+New results reset contour limits to Automatic/unlocked. Convergence result
+updates use the same rule. View changes never mutate numerical results.
+Section 11 defines contours, legends, animation, and probe accuracy.
 
-### 15.6 Face selection
+### 15.6 Face selection and assignment transactions
 
-The viewport must support:
+Normal picking supports click, additive selection, and selected-face highlighting.
+Existing support/load rows locate their CAD faces. In a face-selection mode,
+background click clears ordinary selection even with a modifier; a pan/orbit
+gesture does not. Escape clears selection only after higher-priority controls
+have declined it. Clicking other UI controls does not clear faces.
+The Model editor has no separate face list or Clear selection control.
 
-- click face;
-- shift-click/additive selection;
-- clear selection;
-- selected-face highlight;
-- selecting the faces associated with an existing BC from the analysis tree/tools pane.
-- selecting the faces associated with an existing support or load from the
-  compact setup inspector.
+`assignmentDraft` is the sole controller-owned support/load/gravity transaction:
+kind, optional item ID, face IDs, SI definition, base revision, geometry identity,
+dirty state, and validation feedback. Commands begin/update/toggle/commit/cancel
+the draft; the UI does not own a second engineering copy.
 
-Outside the Task 25 assignment draft interaction, in a face-selection
-presentation mode, a primary-button click on viewport background (no model
-face hit) clears the complete current face selection,
-including when a selection modifier is held. A pointer gesture classified as
-orbit/pan must not clear selection.
-Pressing `Escape` also clears the complete face selection when the event has not
-already been consumed by a higher-priority interaction such as a modal, menu,
-or other dismissible overlay. These actions change only transient selected
-`FaceId` state: they do not delete supports/loads, leave edit mode, invalidate
-mesh/results, or clear a result probe. Clicking outside the viewport on other
-application controls does not clear faces.
+Draft clicks toggle faces, hover previews candidates, background clicks preserve
+the set, and Escape cancels. Apply validates values, face ownership, revision,
+and conflicting prescribed components before one commit/invalidation. Native
+mesh checks remain authoritative for shared-node conflicts between faces.
+No-op Apply and Cancel preserve revision, mesh, checks, and results.
+Apply clears transient selected faces. Dirty drafts require Apply/Cancel before
+changing editing tasks, checking, solving, or starting convergence. Authoring
+uses a selectable view; Cancel restores the prior available presentation.
+Editing suppresses duplicate old glyphs.
 
-During an assignment draft, plain clicks toggle faces, background clicks preserve
-the set, Clear selection empties it, and Escape cancels the draft before normal
-selection clearing. Hover and glyph previews do not commit engineering changes.
-Apply/Save validates and commits once; Cancel preserves committed definitions and
-results. See Section 15.11.
+Assignment IDs are stable; default Support/Load numbering increases monotonically
+and is never reused. Trimmed nonempty names can be changed without invalidating
+numerical results. Adding/editing restores appropriate remembered type choices;
+editing an existing item always shows its actual type.
 
-The preview mesh must preserve a face-to-triangle map for picking.
+Initial Force is surface-normal magnitude 1 N with Push/Pull. Component force
+defaults to [0, 1, 0] N; pressure defaults to 1 MPa. Explain constant pressure
+versus total force across all selected faces, including cancellation of opposing
+normal directions. Gravity uses the same transaction with no face selection,
+global components/presets, Apply, Cancel, and Remove. Gravity arrow visibility
+is separate from calculation enablement; enabling it restores its arrow.
 
 ### 15.7 Loads/support glyphs
 
-Distribute support and load glyphs deterministically over each selected face
-using triangle area and viewport-relative spacing, with one through twelve
-samples per usable face. Barycentric sample positions lie on actual preview or
-mesh triangles; do not use a face bounding-box center.
+Use deterministic samples on actual surfaces, retaining local normals.
+Planar faces use regular grids; curved/trimmed faces use bounded area-stratified
+candidates and farthest-point spacing. Area and face span determine coverage,
+including thin faces. Use at least six samples per nondegenerate face, target
+spacing one quarter of the model's largest extent, and a 128-sample face cap.
+The cap may exceed the spacing target. Cache per geometry/mesh; reuse unchanged
+resources and coalesce overlay updates to one animation frame.
 
-Load and gravity arrows use thin cylindrical shafts and conical heads. A load
-arrow's tip touches its sampled surface point and its shaft extends opposite the
-applied direction. Pressure follows each triangle's inward local normal; total
-force keeps its normalized global direction. Support glyphs use the same
-primitive family and show the enabled global X/Y/Z components. Glyph count and
-size are visual only and never encode magnitude.
-
-The default semantic load color is red and support color is green. Resolve both
-through theme roles and dispose replaced geometry/material resources.
+Arrows use thin cylinders and cone heads; load-arrow tips touch the surface.
+Pressure and normal force follow local normals; component force/support glyphs
+follow their defined directions. Count and size never encode magnitude.
+Loads default red and supports green via theme roles. Display separately controls
+load/support/gravity visibility; active valid previews remain visible. Dispose
+replaced geometry/material resources.
 
 ### 15.7.1 Viewport axis triad
 
-Render labeled X/Y/Z axes in a dedicated orthographic overlay at a fixed viewport
-corner. Apply inverse camera rotation so the triad follows view orientation but
-does not move with model pan, fit, or zoom. Clear depth between the model and
-overlay passes, exclude the overlay from geometry/result picking, and resolve
-X/Y/Z colors from semantic theme roles. Lay out the overlay in screen pixels so resizing or canvas
-aspect ratio cannot stretch the labels. All three arrow tails meet at one point;
-the complete rotated arrows and label boxes must remain inside the viewport.
-Use 30-pixel axes, 21-pixel square label sprites, and a safe corner inset large
-enough to preserve a small margin at every tested rotation and viewport size.
-Task 23 adds separate signed-axis navigation hit targets, hover/focus descriptions,
-and equivalent keyboard-accessible view commands; these never select model faces.
+A labeled XYZ triad uses a dedicated orthographic overlay at the lower-left,
+inverse camera rotation, cleared depth, and no picking participation. Layout
+uses screen pixels: 30px axes, 21px square labels, and a safe inset keeping all
+tails/heads/labels within bounds at every rotation. Navigation gizmo hit targets
+are separate and never select model faces.
 
 ### 15.8 Units
 
-Provide a small unit-display preference, while storing SI internally.
+Engineering state, worker input, results, and stored contour limits remain SI.
+All numerical fields show adjacent units. One validated browser-local preference
+owner supplies SI/USCS and named custom sets to authoring, summaries, probes,
+convergence, and reports; inline force/pressure/result controls update that owner.
+Do not resurrect separate load-unit persistence.
 
-Recommended defaults for mechanical CAD:
+Mechanical SI defaults use mm, N, MPa strength/stress, GPa modulus, and kg/m³.
+USCS uses inches, lbf, psi pressure/stress, and ksi material properties.
+Force input offers N/kN/lbf/kip; pressure MPa/Pa/psi/ksi; result stress
+Pa/kPa/MPa/GPa/psi/ksi; displacement m/mm/in. Conversion uses the international
+pound and inch with standard gravity:
+`1 psi = 0.45359237 * 9.80665 / 0.0254² Pa` and `1 in = 0.0254 m`.
 
-- geometry/displacement: mm
-- force: N
-- stress/strength: MPa
-- modulus: GPa
-- density: kg/m^3
+Changing units converts existing physical values atomically, preserves blank
+draft fields, rejects invalid conversions without partial updates, and never
+changes source-file interpretation, engineering revision, mesh, or valid results.
+Display small values in scientific notation; do not round stored SI values.
 
-Input controls must show units adjacent to values.
+Custom sets support Save copy, name-based save/rename, updates to the active saved
+set, and Delete retaining current values as Custom. Names are unique. Invalid
+stored preferences fall back safely; unavailable storage leaves session choices
+usable and reports persistence failure.
 
-### 15.9 Help, tooltips, and accessibility
+### 15.9 Help, contextual feedback, and accessibility
 
-Use the internal tooltip/help primitives for concise control explanations and optional expanded engineering definitions. This is particularly useful for terms such as Poisson's ratio, mesh quality, von Mises stress, convergence, and memory estimates.
+Preserve semantic HTML and ARIA state for menus, tabs, switches, dialogs,
+disclosures, and listboxes. Native inputs remain the semantic basis of enhanced
+controls. Keyboard focus and reduced-motion support are required throughout.
 
-Maintain semantic roles/ARIA state for menus, tabs, switches, dialogs, and listboxes as the UI foundation currently does. Keyboard interaction must remain usable after simulation-specific controls are added.
+The empty viewport offers CAD import/drop and an explained local cube example with material, three component symmetry supports, a 1,000 N axial load and normal
+Tet10 mesh settings already applied. Its 1 m cube uses E = 200 GPa, ν = 0.3;
+expected axial stress is 1 kPa, axial extension 5 nm. Examples are deliberately
+loaded offline and never silently solved. No placeholder solid is shown.
 
-### 15.10 No silent solver actions
+A small guide in the viewport points to the relevant control from beside Setup
+or below toolbar actions. Start after CAD import, allow Back/Next and easy ×
+dismissal, remember dismissal, and expose Help → Show setup guide. Guide display
+never steals focus or changes engineering state. User-requested step navigation
+can open the corresponding existing editor. Recovered projects stay quiet. No
+next-step banner or routine persistence prose belongs above Model. Report and
+mesh options use shared UI Kit SVGs with 20px icons, 30px desktop targets and 44px
+coarse-pointer targets.
 
-Changing geometry, material, BCs, loads, or mesh settings invalidates dependent results.
+Use concise contextual explanations for terms such as Poisson's ratio, von Mises,
+mesh quality, convergence, and memory. Field errors belong beside their inputs;
+assignment failures belong in the active editor; worker progress uses shared
+status. Link cross-cutting errors to the repair location. A failed Apply focuses
+the first invalid field; avoid repetitive alerts while a number is being typed.
 
-The UI must clearly mark results stale and require a new solve.
+Group readiness identifies the next useful action. Results lead with displacement,
+stress, available yield FoS, and convergence, with numerical detail expandable.
+Warnings remain visible. Do not duplicate the same error across multiple panels.
 
-### 15.11 Approved pre-v1 usability improvement sequence
+### 15.10 Solve workflow and history
 
-Approved on 2026-09-07. **Tasks 21–23 implemented and accepted 2026-09-08;
-Tasks 24–27 accepted 2026-09-10; STL archived by owner request 2026-09-20;
-Task 30 planned.** Tasks 21–27 and 30 in
-`docs/plans/README.md` schedule independent delivery and mandatory owner reviews.
-These requirements refine the earlier UI descriptions where behavior changes.
-They preserve the numerical, worker, dependency, and direct-local requirements.
+`solveReadiness(document)` owns check/solve readiness and actionable explanations.
+Solve opens Checks, prepares preflight, and continues when valid, opening Results during execution. A current
+prepared worker, matching revision, memory cap, and required >=8 GiB confirmation
+remain mandatory. Import, mesh completion, edits, display changes, and opening
+reports do not independently trigger checks. Disposed/failed/cancelled workers
+require fresh checks on retry. Ignore late replies from replaced workers even
+at the same analysis revision.
 
-- **Workspace (21):** Canvas/grid children shrink to available width and height.
-  Side panes scroll independently, resize/collapse with accessible controls, and
-  keep useful model space. Native stable gutters keep content width unchanged as
-  overflow starts or stops. Setup and Results share a 17px right inset, subtracting
-  the measured native gutter from padding with a 2px minimum margin for wider
-  scrollbars; overlay scrollbars receive the same total inset. Empty output is
-  initially collapsed. Gizmo, legend,
-  probe, and controls have nonoverlapping bounded locations across desktop resize,
-  browser zoom, and high-DPI changes; narrow-window robustness is not mobile support.
-- **Result clarity (22):** Headline peak von Mises and yield FoS use unaveraged
-  recovery samples. The contour is explicitly a smoothed surface field with
-  boundary-only extrema and units. The quiet von Mises key/colors span zero to
-  the model sample peak; tooltip/details explain smoothing. Locate peak distinguishes
-  an interior sample from a surface location. Show convergence/singularity context;
-  sampled peaks and contour appearance alone do not establish physical safety.
-  Use consistent engineering-unit formatting without rounding stored SI values.
-- **Camera (23):** Orthographic projection and isometric orientation are defaults.
-  Perspective has an independent display switch. Signed ±X/±Y/±Z views and a
-  graphical animated Reset view have gizmo and keyboard/menu paths. Preserve apparent scale/target when changing
-  projection; exact principal views must avoid pole ambiguity. Camera transitions
-  respect reduced motion and never rotate engineering geometry or invalidate results.
-- **Display (24):** Model/Mesh/Stress/Deformation use a compact primary selector
-  and contextual options. Shaded, shaded-with-part-edges, and wireframe are separate
-  from mesh overlay; mesh lines can be turned off in shaded result views. Default
-  result presentation is a clean contour. Legend/contour colors remain consistent.
-  The key defaults to vertical with about five to seven ticks when space permits;
-  horizontal uses endpoints only. Manual/automatic ranges and field-specific range
-  locks are presentation-only, validate bounds, and visibly identify clipping and
-  the FoS cap (`10+`).
-- **Assignments (25):** A single controller-owned transient support/load draft
-  drives the inline form and preview. Plain clicks toggle draft faces, hover shows
-  candidates, and background clicks preserve selection. Apply/Save validates and
-  commits once; Cancel/Escape preserves prior engineering state. Editing suppresses
-  duplicate old glyphs. Dirty drafts require an explicit disposition before switching
-  editing tasks or checking/solving. Clearly distinguish total force across all
-  selected faces from constant pressure; glyph count/size does not encode magnitude.
-- **Setup/checks (26):** Preserve the editable setup sequence with readable group
-  readiness and optional assignment names. Solve runs checks first; Checks precedes Results.
-  Preflight is explicitly user-triggered; its report opens in Checks, prioritizing
-  actionable findings and memory/stability above expandable solver detail. Engineering
-  changes require a new check; presentation and metadata-only changes do not.
-  Preserve mandatory memory/cap/confirmation and revision gates, including explicit
-  study-internal convergence checks.
-- **History (27):** Undo/redo committed setup definitions and rigid orientation,
-  with native text undo and draft cancellation retaining separate ownership. Store
-  at most 50 compact commands / 2 MiB of definition data, not numerical buffers.
-  Validate/invalidate normally during undo; never restore stale result snapshots or
-  old analysis revisions. Clear history on source import/replacement/removal; worker
-  execution and active drafts disable engineering history commands. Mesh generation,
-  solve, and convergence are not replayable commands.
-- **Scope amendment (2026-09-20):** The owner removed STL from main and v1.
-  Development history, experiments and unresolved problems are retained on
-  [features/stl-import](https://github.com/Brinkwatertoad/SpjutSim-FEA/tree/features/stl-import).
-  M28–M29 no longer gate release; M30 integrated review and Task 20 remain.
-- **Manual acceptance (active plans):** Every plan ends in its named owner checkpoint.
-  Provide a working review packet after automated checks, record the actual response,
-  and wait before starting the next plan. The owner's 2026-09-07 execution
-  instruction authorizes batching implementation of 21–23 before a combined
-  M21–M23 review, accepted by the owner on 2026-09-08.
-  Task 30 checks the integrated workflow;
-  only then may Task 20 freeze/audit the candidate. Old passing records do not certify
-  changed behavior. Tagging/publication still require explicit owner authorization.
+`lastSolveCheck` retains only compact diagnostics/revision for inspection.
+Engineering edits invalidate dependent state; presentation/name-only edits do
+not. A stale report never authorizes execution.
+
+When setup is complete but a mesh is missing/stale, an explicit
+Mesh and solve action may perform meshing → checks → solve with visible stages,
+cancellation, the same validation/memory gates, and no concurrent mesher/solver
+heaps. Independent mesh generation and Run checks only remain available.
+
+Engineering Undo/Redo stores at most 50 compact commands / 2 MiB of UTF-8
+definitions, evicting oldest deterministically. An oversized command clears
+incompatible history. Commands cover committed material/gravity/assignment/mesh
+settings/orientation changes and preserve IDs/order. They exclude CAD bytes,
+mesh/results, workers, and WASM. Undo uses ordinary validation/invalidation and
+never rewinds revision or ID/name allocators. Rename replay preserves results.
+
+New edits discard redo; no-ops/cancelled drafts add nothing. Import, replacement,
+and removal clear history after validation. Drafts and worker execution disable
+history. Generation/solve/convergence are not replayable commands. Edit-menu and
+toolbar descriptions identify the available command; platform shortcuts respect
+text editing, IME composition, modals, Settings, and unhandled browser commands.
+
+### 15.11 Delivery and acceptance
+
+[The plan index](docs/plans/README.md) owns sequence and review checkpoints.
+Plans 21–27 have recorded owner acceptance; Plans 28–34 have implementation
+verification. Approved future work is still planned, not implemented.
+
+Each delivery supplies focused regressions, applicable full-suite evidence,
+one complete-diff review, and its owner walkthrough. Grouping checkpoints is
+allowed when explicitly requested by the owner. Final integrated usability
+acceptance precedes Task 20's exact-artifact candidate audit. Historical test
+passes cover only their original inputs; changed behavior needs fresh evidence.
+No plan or documentation update grants tagging/publication permission.
 
 ---
 
@@ -2140,216 +2163,67 @@ cannot fulfill the successful-run requirement.
 
 ## 17. Milestones and Definition of Done
 
-### Milestone 0 — Repository and execution skeleton
+The original development milestones remain useful evidence categories:
 
-Deliverables:
+| Milestone | Delivered capability | Required evidence |
+| --- | --- | --- |
+| 0 — Portable foundation | Static shell, local assets, separate file-safe workers/WASM, optional HTTP | Direct-local and HTTP startup without an application build pipeline |
+| 1 — Geometry/meshing | CAD solid import, face identity, preview, tetrahedral mesh and sizing | Stable remesh selections, curved/planar geometry and classified 50-entry corpus |
+| 2 — Trusted Tet4 | Isotropic elasticity, global component supports, loads, CSR/PCG, reactions | Patch/analytical tests, failure diagnostics, cancellation and memory preflight |
+| 3 — Production Tet10 | Quadratic geometry/loading/recovery, bounded sparse assembly | Native/WASM reference benchmarks, quality gates and resource calibration |
+| 4 — Results/trust | Contours, deformation, raw/smoothed peaks, FoS, probes and global convergence | Numerical acceptance in Section 16, singularity distinctions, stale-state handling |
 
-- static `index.html` using the adapted SpjutSim shell markup;
-- copied/internal SpjutSim UI CSS and behavior files loaded from the repository;
-- plain JavaScript application bootstrap using a direct-local-compatible script structure;
-- Three.js viewport loaded from repository-local vendored files;
-- mesher and solver worker shells;
-- file-safe worker bootstrap/proof of concept;
-- single-threaded local-file-compatible WASM loading proof of concept;
-- optional cross-origin-isolated Python server for HTTP/threaded testing;
-- native/WASM solver build scripts and tests;
-- no npm/Node frontend dependency;
-- documented double-click/open-`index.html` path plus optional HTTP command.
+These implemented milestones alone do not establish v1 readiness. The additional
+pre-v1 feature plans, final integrated owner review, Section 26 checklist, and
+Task 20 exact-candidate audit must also pass.
 
-Done when the primary supported desktop browser can open `index.html` through `file://`, load the shell and Three.js viewport, start both worker entry paths, and instantiate a small test WASM module without blocking the UI or requiring a server. The optional `python tools/serve.py` path must also work and report `crossOriginIsolated === true` when configured for threaded testing.
-
-### Milestone 1 — Geometry and meshing spike
-
-Deliverables:
-
-- STEP, IGES, and OpenCASCADE BREP import through Gmsh/OpenCASCADE;
-- single-solid validation;
-- face IDs and face picking;
-- Tet4 volume mesh;
-- surface-to-CAD-face mapping;
-- coarse/normal/fine/custom sizing;
-- mesh-quality summary;
-- corpus of at least 50 representative/problematic CAD parts if available during development.
-
-Done when representative supported CAD parts can be repeatedly remeshed without losing selected geometric faces and failures are classified usefully.
-
-### Milestone 2 — Trusted Tet4 solver
-
-Deliverables:
-
-- isotropic material;
-- component-based global X/Y/Z supports, including nonzero prescribed values;
-- pressure, total force, gravity;
-- Tet4 assembly;
-- sparse PCG solve;
-- reactions;
-- core analytical tests;
-- solver worker cancellation;
-- initial memory estimate.
-
-Done when patch tests and simple analytical benchmarks pass defined tolerances.
-
-### Milestone 3 — Production element and analysis workflow
-
-Deliverables:
-
-- Tet10 generation and solve;
-- correct quadratic face loading;
-- mesh optimization/quality gates;
-- stable sparse assembly without giant triplet memory spike;
-- calibrated memory estimator;
-- resource preflight UI;
-- solver diagnostics and underconstraint handling.
-
-Done when Tet10 reference benchmarks and memory tests pass.
-
-### Milestone 4 — Results, trust layer, and convergence — **v1.0 release bar**
-
-Deliverables:
-
-- deformed-shape rendering;
-- displacement fields;
-- von Mises/principal stress fields;
-- raw vs smoothed stress reporting;
-- reactions/equilibrium residual;
-- FoS calculation;
-- probe tool;
-- result extrema;
-- global mesh-convergence workflow;
-- convergence plots/table;
-- stress-singularity heuristic and warning;
-- stale-result invalidation;
-- final benchmark suite.
-
-**The application is considered good to use / v1.0-ready only when this milestone is complete and validation criteria are passing.**
-
-### Post-v1.0 Milestone 5 — Onshape integration
-
-Candidate work:
-
-- OAuth;
-- document/workspace/element/part selection;
-- direct geometry acquisition/export pipeline;
-- import Onshape material metadata;
-- analysis provenance linked to Onshape document version.
-
-### Post-v1.0 Milestone 6 — Printed-part anisotropy
-
-Candidate work:
-
-- orthotropic elastic matrix;
-- material coordinate system;
-- build direction and raster direction;
-- directional strengths;
-- anisotropic failure criteria;
-- calibrated print-material profiles.
+Post-v1 plans are sequenced separately in [docs/plans/README.md](docs/plans/README.md):
+load cases, persistent measurements, local mesh control, interior inspection,
+shells, orthotropic materials, modal analysis, and thermal expansion. Their
+validation and architecture work are not v1 release gates. Onshape acquisition
+and material metadata integration remain separate future candidates; no network
+integration or new dependency is authorized by this specification.
 
 ---
 
 ## 18. Repository/Module Boundaries
 
-A suggested layout:
+Use cohesive modules with explicit data flow. Split distinct responsibilities,
+not arbitrary line counts; avoid generic abstractions for hypothetical reuse.
 
-```text
-/web
-  index.html
-  /css
-    app.css
-  /ui
-    ui-tokens.css
-    action-controls.js
-    color-scheme-editor.js
-    color-schemes.js
-    custom-select.js
-    overflow-menu.js
-    settings-controls.js
-    settings-hub.js
-    tooltips.js
-    shell-behaviors.js
-    /reference
-      shell.html              # optional source/reference fragment; not fetched at runtime
-  /js
-    app.js
-    /analysis
-      analysis-document.js
-      app-controller.js
-      invalidation.js
-      units.js
-    /geometry
-      geometry-model.js
-      selection.js
-    /mesh
-      mesh-model.js
-      mesh-settings.js
-    /results
-      result-model.js
-      convergence.js
-    /render
-      viewport-controller.js
-      result-colors.js
-      glyphs.js
-    /ui
-      ui-controller.js
-      tools-panel.js
-      results-panel.js
-      settings.js
-    /workers
-      mesher-client.js
-      solver-client.js
-      worker-protocol.js
-  /vendor
-    /three
-      ... pinned Three.js browser artifact(s) ...
-  /wasm
-    /gmsh
-      ... pinned Gmsh/OpenCASCADE WASM + wrapper/source ...
-    /fem
-      ... generated FEM WASM + loader/source ...
-  /generated
-    /local-runtime
-      ... reproducible file-safe worker/WASM wrapper artifacts ...
+| Location | Responsibility |
+| --- | --- |
+| `web/index.html`, `web/css` | Application markup and simulation-specific styling |
+| `web/ui` | Copied generic SpjutSim controls, menus, themes and settings primitives |
+| `web/js/app.js` | Application composition and operation wiring |
+| `web/js/analysis` | Engineering contracts, controller/invalidation, history, material catalog, solver input, results and convergence |
+| `web/js/geometry`, `web/js/mesh` | CAD/orientation contracts and typed mesh/display contracts |
+| `web/js/render` | Viewport, navigation, glyphs, presentation and clean scene capture |
+| `web/js/ui` | App-specific authoring, workspace, unit preferences, result/report UI |
+| `web/js/workers` | Worker clients, protocol validation and local bootstrap |
+| `workers` | Human-maintained mesher and solver worker entry points |
+| `native/fem` | Independent C++ numerical core, C ABI and native tests |
+| `native/wasm` | Browser/WASM bridge |
+| `web/vendor`, `web/wasm` | Pinned third-party assets and solver runtime |
+| `web/generated/local-runtime` | Reproducible file-safe worker/runtime wrappers |
+| `tools`, `tests`, `benchmarks` | Packaging/audits, Python/native/browser verification, numerical/resource evidence |
 
-/native/fem
-  /include
-  /src
-    elements/
-    sparse/
-    solver/
-    postprocess/
-  /tests
+Dependency rules:
 
-/native/wasm
-  fem_c_api.cpp
+- UI/rendering consume application contracts; DOM widgets do not own engineering state.
+- Controller/model owns commands, invalidation, revisions, and operation lifecycle.
+- Native FEM does not depend on Gmsh or CAD entity tags.
+- Renderer does not depend on sparse-matrix internals.
+- Generic `web/ui` helpers do not depend on simulation data.
+- Worker clients own cross-boundary protocols; large buffers use explicit ownership.
+- Project codecs/recovery share validation but stay separate from DOM and solving.
+- Simple/expanded presentation uses the same state and controls.
 
-/workers
-  mesher-worker.js
-  solver-worker.js
-
-/tools
-  serve.py                    # optional HTTP/threaded mode
-  build-wasm.sh or equivalent
-  build-local-runtime.py      # optional/recommended file-safe wrapper generation
-
-/benchmarks
-  /analytic
-  /reference
-  /cad-corpus
-
-THIRD_PARTY.md
-spec.md
-```
-
-The exact folder names may change, but preserve these dependency rules:
-
-```text
-UI/controllers -> application data contracts <- mesher client/backend
-UI/controllers -> application data contracts <- solver client/backend
-solver native core has no dependency on Gmsh
-renderer has no dependency on sparse matrix internals
-SpjutSim UI helpers have no dependency on FEM/mesh internals
-```
-
-Do not create a separate package/workspace structure merely to simulate boundaries that can be maintained with ordinary modules and directories.
+Dense first-party code should be made readable when touched, with existing
+behavior preserved. Shared result formatting and unit rules have one owner.
+Feature plans include relevant cleanup and performance checks; avoid an unrelated
+whole-repository rewrite. Vendored/generated source stays separate and is never
+hand-edited to implement application behavior.
 
 ### 18.1 UI source ownership
 
@@ -2375,40 +2249,17 @@ When the generic UI foundation changes:
 
 Worker APIs should be versioned, coarse-grained, and represented as plain JavaScript objects plus transferable buffers.
 
-Example mesher requests:
+The current worker envelope protocol is version 4, as defined in
+`web/js/workers/worker-protocol.js`. Mesher requests provide source bytes,
+format/name, geometry identity, orientation/settings, and expected face identity
+for the operation. Solver preparation transfers the validated mesh/material/
+boundary/load definitions; solve runs against the prepared worker and matching
+analysis revision. Cancellation/replacement invalidates that worker identity.
 
-```js
-{
-  protocol: 1,
-  type: 'import',
-  requestId: '...',
-  sourceName: 'part.step',
-  sourceFormat: 'step',
-  sourceBytes: arrayBuffer
-}
-
-{
-  protocol: 1,
-  type: 'mesh',
-  requestId: '...',
-  settings: meshSettings
-}
-```
-
-Example solver request:
-
-```js
-{
-  protocol: 1,
-  type: 'solve',
-  requestId: '...',
-  mesh: transferableMesh,
-  material: isotropicMaterial,
-  boundaryConditions: boundaryConditions,
-  gravity: gravityLoad,
-  solverSettings: solverSettings
-}
-```
+The executable validators and typed contracts define exact request/response
+fields. Do not maintain stale schematic payload examples here as a second API.
+Any change requires synchronized client/worker/native validation, protocol or
+schema versioning as appropriate, regression tests, and regenerated wrappers.
 
 Large arrays must be sent as transferable `ArrayBuffer`s where ownership can move safely instead of being structured-cloned.
 
@@ -2424,7 +2275,7 @@ Worker responses should include:
 
 Do not make the main thread depend on Gmsh wrapper objects or C++/Emscripten-generated class bindings.
 
-Result schema version 2 now requires `rangeMetadataVersion: 1`. Each base
+Result schema version 2 requires `rangeMetadataVersion: 1`. Each base
 rendered field range records `locationOwner: "surface-node"`, boundary-only
 minimum/maximum, their node indices and SI locations. Ties use the first node
 encountered in boundary connectivity. Raw extrema record
@@ -2462,6 +2313,27 @@ Target behaviors:
 - file import and mesh failures return useful diagnostics;
 - preflight occurs before the largest memory allocation;
 - analysis state can be edited after a failed/cancelled solve without reloading the page.
+
+### 20.1 Performance and maintainability during expansion
+
+Measure affected operations against a recorded baseline: import/open, committed
+edit, recovery write, report capture, picking, repeated solve/replacement, and
+cancellation as applicable. Record browser, fixture size, timing, retained buffers,
+and peak-memory observations. Reuse current numerical/resource targets; do not
+invent a universal element cap or unmeasured speed claim.
+
+Cache data by its actual dependencies. Reuse compatible geometry/mesh for
+material/load edits, bound result retention, and never persist the entire live
+document on every keystroke. New result comparisons retain small summaries and
+load bulk fields on demand. Do not deep-copy mesh/results for drafts/history or
+advanced-panel expansion. Avoid repeated whole-mesh traversals and unnecessary
+DOM/GPU rebuilds; process bulk work off-thread when it would block interaction.
+Disposal/cancellation tests cover success, failure, replacement, and repeated use.
+
+Cleanup preserves module boundaries in Section 18 and readability of first-party
+source. Performance changes retain numerical tolerances, determinism, error
+handling, and explicit fallback behavior. Every feature plan owns its affected
+performance checks; the final review tests the combined workflow.
 
 ---
 
@@ -2540,59 +2412,50 @@ For v1:
 - all geometry and analysis computation occurs locally;
 - do not upload CAD files or meshes to an application backend;
 - analytics, if added, must not include geometry or material/analysis payloads;
-- imported file data should be released when the user closes/replaces the model;
+- in-memory imported data is released on close/replacement; local recovery retains only the explicitly managed recoverable project and provides a clear discard action;
 - worker termination is the preferred cleanup mechanism for large WASM heaps.
 
-Third-party scripts/assets should be minimized and stored with the application. Direct-local mode must not depend on remote CDNs. HTTP/threaded mode should use same-origin resources so cross-origin isolation remains straightforward.
+Third-party scripts/assets should be minimized and stored with the application. Direct-local mode must not depend on remote CDNs. Optional HTTP mode should use same-origin resources so cross-origin isolation remains straightforward.
 
 ---
 
-## 24. Decisions Intentionally Left Open
+## 24. Decisions and Evidence
 
-These do not block implementation and should be decided using benchmark data:
+Locked numerical/runtime choices are defined in their owning sections: production
+Tet10 (7–8), scalar CSR/PCG/Jacobi and solver budgets (9), calibrated 1.5 memory
+multiplier/3.5 GiB WASM cap (10), and serial direct-local/HTTP execution (4).
+Do not reopen them without independent numerical and resource evidence.
 
-1. Exact Gmsh 3D meshing algorithm/options for the default preset.
-2. Exact tetrahedral quality metric and warning threshold.
-3. Whether to optimize the validated scalar CSR implementation into 3x3 block-CSR before or after v1.0.
-4. Retain Jacobi in production. Stronger preconditioners require independent numerical and resource evidence.
-5. **Resolved for v1:** relative tolerance `1e-8`, automatic maximum `max(1000, 10 * DOF)`, and a configurable ten-minute PCG budget with live progress and explicit nonconvergence. A universal two-minute/10,000-iteration cap is unsuitable: the accepted 150k-node resource case takes about eight minutes and 17,188 iterations.
-6. **Resolved for v1:** retain the 3.5 GiB single-threaded WASM heap cap; the measured matrix does not justify raising it.
-7. **Resolved for v1:** retain the calibrated 1.5 memory multiplier; measured WASM/model maximum is 0.991525.
-8. **Partially resolved:** current Chromium desktop is primary; current Firefox direct-local is the secondary resource-compatibility target. Broader support remains open.
-9. Whether to provide a downloadable/local desktop wrapper after the browser v1 is stable; it is not required to achieve direct-local browser execution.
-10. Whether the copied SpjutSim UI helpers should eventually be converted from global/IIFE scripts to ES modules; this is cleanup and must not remove the baseline direct-local path.
-11. **Resolved for v1:** threaded WASM is a post-v1 optimization. Cross-origin-isolated HTTP keeps the serial path until a separately modeled and numerically verified pthread artifact exists.
+Further optimization of meshing algorithms/quality thresholds, block-CSR,
+stronger preconditioning, broader browsers, or threading requires measurements
+against the current validated path. A desktop wrapper is optional future work;
+it is not needed to satisfy the local-browser requirement. Any module-loading
+change must preserve direct-local operation.
 
-Each should be resolved by a benchmark, compatibility test, or licensing/product requirement rather than by prematurely coupling the architecture.
+New-physics plans explicitly begin with a formulation/data-contract decision and
+a reproducible benchmark before production integration. Their scoped first
+deliverables and exclusions belong in the plan, not an undocumented fallback.
 
 ---
 
-## 25. Recommended First Development Tasks
+## 25. Implementation Sequence and Review Ownership
 
-Start with a framework-free vertical skeleton and the geometry/meshing path before spending time on solver UI polish.
+[docs/plans/README.md](docs/plans/README.md) is the single sequence/status index.
+Plans state their deliverable, dependencies, affected modules, validation,
+performance constraints, and owner walkthrough. Implement in the current agent
+under repository instructions unless the owner requests otherwise.
 
-1. Copy the current SpjutSim UI foundation into `/web/ui` and adapt the shell fragment directly into `/web/index.html`.
-2. Prove the direct-local execution skeleton first: open `/web/index.html` through `file://`, load the UI and a repository-local Three.js viewport, and start a trivial Blob-backed worker.
-3. Establish the local-file WASM packaging approach with a tiny test module that instantiates without HTTP `fetch()`.
-4. Add optional `/tools/serve.py` for HTTP/threaded testing with COOP/COEP headers and correct WASM MIME handling.
-5. Establish `app.js`, `AppController`, `UIController`, and `ViewportController` with plain JavaScript and JSDoc contracts; do not require native ES modules for the baseline path.
-6. Produce/pin a single-threaded Gmsh/OpenCASCADE browser build that can initialize in the direct-local worker path using repository-local/generated assets only.
-7. Import known-good STEP, IGES, and BREP cubes and normalize units to meters.
-8. Extract geometric surface IDs and a preview tessellation.
-9. Implement face picking in Three.js and connect selection state to the tools pane.
-10. Generate a Tet4 mesh and return typed-array connectivity.
-11. Extract boundary triangles grouped by `FaceId`.
-12. Build a small CAD regression corpus and record failures.
-13. Finalize the mesher backend message contract based on information actually required by the solver/UI.
-14. Implement first-party Tet4 assembly + scalar CSR graph/storage + PCG/Jacobi in native C++ tests.
-15. Compile the same FEM core to single-threaded WASM and connect it through the file-safe solver worker path.
-16. Verify the same vertical slice in optional HTTP mode; only then investigate pthread/threaded acceleration if benchmarks justify it.
+Completed Plans 31/32 were renumbered to 28/29 on 2026-09-22. The former STL
+Plans 28/29 remain archived on `features/stl-import`; their evidence does not
+apply to the newly numbered plans. The former integrated Plan 30 is now Plan 38.
+Dated review records preserve original commits, test counts, browser versions,
+and historical artifact paths.
 
-A successful first vertical slice is:
-
-> Import a CAD cube -> click one face as fixed -> click opposite face and apply traction -> mesh -> show memory estimate -> solve in first-party WASM -> display deformed shape and axial stress -> verify against the analytical solution.
-
-That slice exercises almost every architectural boundary without requiring the full result/convergence system.
+Plans 30–37 deliver the agreed pre-v1 additions, then Plan 38 verifies their
+integrated usability. Task 20 finally audits the exact candidate. Plans 39–46
+are post-v1 and do not delay that release. Feature-local keyboard, failure,
+cancellation, resource, and numerical checks run within each plan; the final
+review verifies the combination and does not defer known defects.
 
 ---
 
@@ -2642,13 +2505,20 @@ evidence.
 - [x] Licensing/distribution posture for Gmsh has been resolved.
 - [x] Responsive workspace/overlays and owner review M21 are accepted.
 - [x] Boundary-only contour extrema, result explanation, and owner review M22 are accepted.
-- [x] Orthographic/isometric and signed gizmo/menu views and M23 are accepted.
+- [x] Orthographic/isometric and signed views and M23 are accepted; View-menu removal has fresh command-access checks in the Plan 32 review.
 - [x] Contextual display controls, independent mesh edges, vertical/horizontal legends, and M24 are accepted.
 - [x] Transactional load/support previews and M25 are accepted.
 - [x] Readable setup and the reviewed check-then-solve workflow and M26 are accepted.
 - [x] Bounded engineering edit undo/redo and M27 are accepted.
-- [ ] Integrated post-change regression and owner usability review M30 are accepted.
-- [ ] Task 20 binds all required evidence to the exact final candidate after Tasks 21–27 and 30; release authorization is recorded.
+- [ ] Portable projects reopen complete setup with verified face identity; optional mesh/results are validated before reuse.
+- [ ] Bounded local recovery handles interruption, unavailable storage and explicit restore/discard without losing the installed analysis.
+- [ ] Model volume/mass and viewport selection improvements pass unit, draft, keyboard and file-mode checks.
+- [ ] Contextual advanced controls preserve active-setting visibility; View-menu removal preserves all commands; editing/status language is consistent.
+- [ ] Default reports remain complete, and optional customization preserves numerical context and capture restoration.
+- [ ] Local directions and sliding/symmetry supports pass native/WASM constraint, rotation and reaction benchmarks.
+- [ ] Bearing loads and moment/offset forces pass integrated force/moment, convergence and resource checks.
+- [ ] Integrated post-change regression and owner usability review M38 are accepted.
+- [ ] Task 20 binds all required evidence to the exact final candidate after the pre-v1 plans and accepted M38; release authorization is recorded.
 
 ---
 
@@ -2693,9 +2563,9 @@ Reference documentation consulted while preparing this specification:
 | Physics | 3D small-strain linear static elasticity |
 | Material | Homogeneous isotropic |
 | Solver | First-party C++ -> WASM, scalar CSR + PCG |
-| Execution | Dedicated Web Workers; single-threaded baseline, optional threaded acceleration |
+| Execution | Dedicated serial Web Workers in both v1 launch modes; threading deferred |
 | Baseline launch | Direct `file://` open on the primary supported browser |
-| HTTP server | Optional Python/static server for compatibility/threaded mode with COOP/COEP |
+| HTTP server | Optional Python/static server with COOP/COEP; no simulation backend |
 | JS package manager | None |
 | Frontend | Plain JavaScript, classic-script-compatible baseline; no bundler/transpiler requirement |
 | UI foundation | SpjutSim UI source copied into project and adapted directly |
@@ -2704,192 +2574,6 @@ Reference documentation consulted while preparing this specification:
 | Memory | Mandatory pre-solve estimate; Device Memory API advisory only |
 | High-memory warning | Explicit warning at >= 8 GiB estimate plus device-relative heuristics |
 | Convergence | Global remeshing study required for v1 trust workflow |
-| v1 release bar | Milestone 4: post-processing + convergence complete |
+| v1 release bar | Validated static workflow, Plans 30–37, accepted M38 and exact-candidate Task 20 |
 | Onshape API | Post-v1.0 |
 | Orthotropic printed-part model | Post-v1.0 |
-
-### Plans 24–27 implementation notes (owner review pending)
-
-The owner requested a combined manual review after all four implementations on
-2026-09-08. Intermediate M24–M27 acceptance gates remain unchecked until that review.
-
-Plan 24: presentation normalizes `lines` to `shaded-edges`; `shaded` and
-`wireframe` are explicit alternatives. Result part outlines follow CAD face
-boundaries separately from element overlay lines. Result colors use an unlit
-material with sRGB-to-linear vertex conversion to match the legend.
-`viewportPresentation.colorRange` holds `{mode, field, locked, minimum?, maximum?}`
-in SI units, separate from numerical result ranges. Manual bounds are finite and
-strictly ordered; an automatic locked uniform range may have equal endpoints.
-Limits reset on incompatible field changes and survive compatible unit changes.
-`legendOrientation` defaults to vertical, with two to seven height-aware labels;
-horizontal labels only endpoints. FoS cap reads `10+`. Units are Pa/kPa/MPa or
-m/mm. Only validated compact style and orientation preferences persist.
-
-Plan 25: `assignmentDraft` is the sole transient support/load transaction, with
-`kind`, optional `itemId`, `faceIds`, SI `definition`, `baseAnalysisRevision`,
-geometry identity, dirty state, and validation feedback. Controller commands
-`beginAssignmentDraft(kind, itemId?, definition?)`, `updateAssignmentDraft(patch)`,
-`toggleDraftFace(faceId)`, `commitAssignmentDraft()`, and `cancelAssignmentDraft()`
-separate previews from committed engineering state. Validation rejects stale
-revisions, malformed values/faces, and conflicting prescribed components on the
-same face. Existing mesh/native checks remain authoritative for shared-node
-conflicts across different faces. Apply uses one existing invalidation boundary;
-unchanged Save and Cancel preserve revision, mesh, preflight, and results.
-Plain draft clicks toggle faces; background preserves the set. Escape cancels
-before ordinary selection clearing. Opening another editor requires explicit
-Apply/Cancel for a dirty draft. Results enter a selectable view for authoring,
-and Cancel restores the prior available presentation. Face samples are cached
-per geometry/mesh with bounded per-face samples; the viewport reuses unchanged
-glyph resources and application updates coalesce to one animation frame.
-
-Plan 26: `solveReadiness(document)` centralizes canCheck/canSolve, status, and
-action guidance. Both controller gates and the UI use it. `lastSolveCheck` retains
-only compact preflight diagnostics and revision so a stale report remains
-inspectable without authorizing a solve. Reports prioritize actionable setup links,
-constraint readiness, and estimated memory; detailed topology/runtime figures
-are expandable. Completed/failed/cancelled solve workers require an explicit
-new check before retrying. Assignment names are trimmed nonempty text.
-`renameAssignment(kind,id,name)` and name-only assignment replacement are metadata
-edits; they retain numerical revision/results/preflight. Automatic name sequences
-still advance independently and monotonically.
-
-Plan 27: controller-owned `EngineeringHistory` retains at most 50 commands and
-2 MiB of UTF-8 serialized definitions, evicting oldest entries deterministically.
-An individual oversized command clears incompatible history. Commands contain
-small before/after definitions, labels, geometry identity, and assignment order;
-rigid orientation uses rotation matrices and operation metadata. Source bytes,
-mesh/result typed arrays, worker objects, and WASM contexts are excluded. Undo
-and redo use ordinary validation/invalidation, retain assignment IDs, and never
-rewind name/ID allocators or analysis revisions. A new edit discards redo;
-no-op Save and cancelled drafts add nothing. Metadata-only rename replay keeps
-results and preflight. Import/replacement/removal clear history after validation.
-Undo/Redo is disabled during any assignment draft or worker execution. Edit-menu
-and toolbar labels identify the command; status explains recheck/remesh needs.
-Platform shortcuts exclude editable fields, composition, modals, and Settings,
-and leave browser commands untouched when no app history action is available.
-Assignment drafts also block convergence startup before disposing a ready solver.
-
-
-### M24–M27 manual-review corrections (acceptance pending)
-
-The owner requested these changes after the first combined review. They supersede
-Task 26's originally explicit separate check-then-Solve interaction. Solve checks
-and then runs; cap/failure/draft/busy gates and large-memory confirmation remain.
-Cancelled or disposed workers are rechecked on retry. Import, mesh completion,
-opening a report, and presentation changes do not start checks by themselves.
-Checks explain concrete repairs with editor links and named free rigid motions.
-
-Deformation defaults to Auto on entry. Editing minimum/maximum chooses Manual;
-input widths match Display selects. Legends are movable/resizable by pointer or
-keyboard, with bounds clamped to the central viewport and compact validated
-per-orientation placement preferences. Horizontal defaults wider. The color bar
-fills available width/height as the legend resizes. Tools/Results use accent and
-selection-text tokens when engaged, including light themes.
-
-Planar glyph samples use a regular surface grid; curved or trimmed surfaces use
-bounded area-stratified candidates and farthest-point spacing. Samples retain
-local normals and are cached per surface. Glyphs are qualitative direction cues.
-Apply/Save clears selected faces. Force defaults to normal magnitude 1 N with
-Push/Pull; component defaults are [0,1,0] N and pressure defaults to 1 MPa. Gravity
-has its own Loads editor, directional components/presets, Apply/Save, Cancel edit,
-Remove gravity, and independent presentation visibility. Enabling gravity restores its arrow;
-disabled gravity never draws arrows. Top-right status and activity icon report
-worker progress and short outcomes; routine history prose beneath Setup is hidden.
-Transfer uses almost the full viewport with original, mapped, and current preview
-glyphs in the respective model views. M24–M27 remain pending another owner check.
-
-### M24–M27 second manual-review corrections (acceptance pending)
-
-A new solve preserves the previously selected viewport mode, result field,
-deformation mode, and user scale through engineering edits, assignment drafts,
-and remeshing. The first solve defaults to von Mises stress. Color limits reset
-to Automatic and unlocked after each solve; Auto deformation recomputes its scale
-from the new result. Convergence result updates follow the same rule.
-
-Gravity uses the assignment transaction with no face selection: its live preview
-changes neither calculation nor history; Apply enables calculation directly,
-Save changes edits it, Cancel restores the prior state, and Remove gravity disables
-it. Existing draft/busy/validation/history gates apply. Arrow visibility stays a
-presentation choice. Display independently controls support, load, and gravity
-arrows; valid active assignment previews remain visible while editing.
-
-Surface glyphs use at least six samples per nondegenerate CAD face, with target
-spacing one quarter of the model's largest extent. Area and face span both set
-density so thin surfaces also receive coverage. Planar grids constrain both axis
-spacings; curved/trimmed sampling adds points until the bounded candidate coverage
-meets the target. A 128-sample per-face cap bounds pathological surfaces; at this
-cap the spacing target may be exceeded. Samples stay deterministic and cached.
-
-Viewport controls are centered, with result/deformation controls below the primary
-row. Perspective is in Display. Rotate and pan bindings each allow left, middle,
-or right mouse buttons; assigning an occupied button swaps the other binding,
-and the navigation hint follows the selected buttons. Preferences remain local.
-
-Settings is in File, and Help → About provides application information and license
-notices. Model summaries show format and face count without orientation status.
-Material summaries put E in GPa at the left of the second line; Poisson's ratio
-remains editable in the material form. Empty Supports/Loads offer Add support… /
-Add load… rows. The CAD editor has no face-selection status or Clear selection
-button; viewport selection and background/Escape deselection remain available.
-
-### M24–M27 approval adjustments (2026-09-10)
-
-Result stress units include Pa, kPa, MPa, psi, and ksi; displacement units include
-m, mm, and inch (`in`). Stored results and color limits remain SI. Conversion
-uses the international pound and inch with standard gravity: 1 psi =
-0.45359237 × 9.80665 / 0.0254² Pa, 1 ksi = 1000 psi, and 1 in = 0.0254 m.
-Legends, manual limits, result summaries, and point displacement values follow the
-selected units without invalidating analysis. Coordinate labels retain explicit m.
-
-Fit model uses a brief, cancellable camera animation that preserves the viewing
-angle and honors reduced-motion preferences. Its Truss zoom-to-fit icon is below
-and left of the view gizmo, opposite Reset, with the same hover/focus styling.
-Undo, Redo, Save, Export, Setup, and Results reuse the Truss action icons; Setup
-and Results retain text labels, while Save remains a disabled placeholder and Export downloads the solved report.
-The Setup toggle replaces the panel's duplicate title. Add material has no
-“required before solving” subtitle. Edit shows Ctrl+Z and Ctrl+Y beside its dynamic
-Undo/Redo descriptions.
-
-The owner approved M24–M27 with these adjustments. Acceptance covers this grouped
-workflow; plan 30 and the final release audit remain separate gates.
-
-## Material, load-entry, and report follow-up
-
-- [x] [Plan 31: material strengths, load units, and report export](docs/plans/31-material-units-and-report.md)
-  adds documented bulk PLA tensile/compressive yield and ABS compressive yield;
-  persistent inline pressure (MPa default, Pa, psi, ksi) and force (N default,
-  kN, lbf, kip) unit choices that convert draft values while preserving SI;
-  Force as the initial load type; undeformed part dimensions in Results; and a
-  local ZIP report with all Results information and reset/fitted scene PNGs for
-  assignments, mesh, stress, optional FoS, and Auto deformation.
-
-
-Plan 31 implementation contracts:
-- PLA adds 62 MPa tensile yield and 70.8 MPa compressive yield; ABS adds 46.1 MPa
-  compressive yield. Existing fields retain their provenance. These are bulk
-  reference inputs with explicit mixed-source limitations; see
-  [material strength evidence](docs/material-strengths.md).
-- Load unit preferences belong to the authoring UI, under browser storage key
-  `spjutsim-fea.load-input-units`; analysis loads remain SI. Pressure defaults to
-  MPa and force to N. Changing a unit converts all associated values atomically;
-  blank inputs remain blank and invalid changes retain the previous preference.
-- Results/report summary rows share `web/js/ui/result-summary.js`. Original part
-  size is the undeformed geometry bounding box in study global axes, displayed
-  using the result length unit. It does not include deformation exaggeration.
-- `web/js/ui/report-export.js` owns report formatting, export eligibility and
-  dependency-free stored ZIP packaging. Current solved results are required;
-  drafts, running operations and stale revisions cannot export. `report.txt`
-  includes setup parameters, material provenance where matched, assumptions,
-  Results/diagnostics and the convergence table; tables use tabs between cells.
-- `web/js/render/report-capture.js` owns five preset scene PNGs (four without FoS).
-  Each capture applies Reset View then Fit Model and restores camera, selection,
-  probe, overlays, presentation and animation multiplier in `finally`. Main-scene
-  rendering omits grid/gizmo/chrome. Legends share the renderer's color function
-  with explicit linear-to-sRGB conversion. Result limits are Auto; deformation is
-  Auto shape with the existing scale calculation. Output uses current projection,
-  result display units and viewport resolution. No PDF or project serialization
-  is introduced. No new application dependencies or worker artifacts are needed.
-
-### Plan 32 — document reports and unit preferences
-
-- [x] [Document reports and preferred units](docs/plans/32-document-report-and-unit-preferences.md): dependency-free DOCX alongside text/PNG ZIP, stable Settings size, SI/USCS and saved custom display/input units. Engineering state remains SI; preference changes preserve entered physical values and solved results.

@@ -1,5 +1,7 @@
 # Task 15: Deliver convergence, validation, and the v1.0 release gate
 
+Status note (2026-09-22): the convergence/validation implementation below is historical completed work. The overall v1 gate remains open through current Plans 30–38 and Task 20; follow the current plan index and repository execution rules.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add deterministic global mesh-convergence studies and assemble the numerical, resource, compatibility, and licensing evidence required to call SpjutSim FEA v1.0-ready.

@@ -229,17 +229,8 @@
       themeColor('--ui-color-grid-major', '#334155'),
       themeColor('--ui-color-grid-minor', '#1f2937')
     );
-    var geometry = new root.THREE.BoxGeometry(0.72, 0.72, 0.72);
-    var material = new root.THREE.MeshStandardMaterial({
-      color: themeColor('--ui-color-geometry', '#f4f1ea'),
-      roughness: 0.72,
-      metalness: 0.04
-    });
-    var referenceObject = new root.THREE.Mesh(geometry, material);
     grid.name = 'reference-grid';
-    referenceObject.name = 'reference-solid';
-    referenceObject.position.y = 0.36;
-    this.scene.add(grid, referenceObject);
+    this.scene.add(grid);
   };
 
   ViewportController.prototype.rebuildReferenceGrid = function () {
@@ -250,8 +241,6 @@
     grid.name = 'reference-grid';
     if (current) { this.scene.remove(current); disposeObjectResources(current); }
     this.scene.add(grid);
-    var referenceObject = this.scene.getObjectByName('reference-solid');
-    if (referenceObject) { setMaterialTheme(referenceObject.material, themeColor('--ui-color-geometry', '#f4f1ea')); }
   };
 
   ViewportController.prototype.rebuildAxisTriad = function () {
@@ -335,12 +324,14 @@
       if (event.button !== 0) { return; }
       if (self.suppressNextClick) {
         self.suppressNextClick = false;
+        if (self.cancelPickThrough) { self.cancelPickThrough(); }
         return;
       }
       if ((self.presentation.mode === 'stress' || self.presentation.mode === 'deformation') && self.resultModel) {
         self.selectResultPoint(self.pickResultAtPointer(event));
         return;
       }
+      if (self.pickThroughActive && self.pickThroughHandler) { self.pickThroughHandler(event); return; }
       faceId = self.pickFaceAtPointer(event);
       if (self.facePickHandler) {
         self.facePickHandler(faceId, Boolean(event.shiftKey));
@@ -348,7 +339,7 @@
     };
     this.canvas.addEventListener('click', this.pointerClickListener);
     this.draftHoverListener = function (event) {
-      if (!self.assignmentDraftActive || self.activePointers.size) { return; }
+      if (self.pickThroughActive || !self.assignmentDraftActive || self.activePointers.size) { return; }
       self.draftHoverPointer = {clientX:event.clientX,clientY:event.clientY};
       if (self.draftHoverFrame) { return; }
       self.draftHoverFrame = root.requestAnimationFrame(function () {
@@ -356,7 +347,7 @@
         self.showDraftHover(self.assignmentDraftActive ? self.pickFaceAtPointer(self.draftHoverPointer) : null);
       });
     };
-    this.draftHoverLeave = function () { self.showDraftHover(null); };
+    this.draftHoverLeave = function () { if (!self.pickThroughActive) { self.showDraftHover(null); } };
     this.canvas.addEventListener('pointermove',this.draftHoverListener);
     this.canvas.addEventListener('pointerleave',this.draftHoverLeave);
   };
@@ -817,6 +808,8 @@
 
   ViewportController.prototype.clearGeometryPreview = function () {
     this.clearDraftHover();
+    this.hiddenFaceIds = new Set();
+    if (this.cancelPickThrough) { this.cancelPickThrough(); }
     this.selectionPreview = null; this.selectionMesh = null; this.selectionKey = null;
     if (this.importedGeometry) {
       this.scene.remove(this.importedGeometry);
@@ -828,7 +821,6 @@
     this.clearResultDisplay();
     this.clearAnalysisOverlay();
     this.selectedFaceIds.clear();
-    this.scene.getObjectByName('reference-solid').visible = true;
     this.render();
   };
 
@@ -899,7 +891,6 @@
     this.importedGeometry = importedGeometry;
     this.previewMesh = surfaceMesh;
     this.applyPresentation();
-    this.scene.getObjectByName('reference-solid').visible = false;
     centerX = (geometryModel.boundingBoxM.minM[0] + geometryModel.boundingBoxM.maxM[0]) / 2;
     centerY = (geometryModel.boundingBoxM.minM[1] + geometryModel.boundingBoxM.maxM[1]) / 2;
     centerZ = (geometryModel.boundingBoxM.minM[2] + geometryModel.boundingBoxM.maxM[2]) / 2;
@@ -1258,6 +1249,7 @@
       this.resultDisplay.userData.lines.visible = this.presentation.meshOverlay === true;
       if (this.resultDisplay.userData.partEdges) { this.resultDisplay.userData.partEdges.visible = this.presentation.displayStyle === 'shaded-edges' || this.presentation.displayStyle === 'lines'; }
     }
+    if (this.applyFaceVisibility) { this.applyFaceVisibility(); }
   };
 
   ViewportController.prototype.clearDraftHover = function () {
@@ -1306,11 +1298,13 @@
         surface.geometry.groups[rangeIndex].materialIndex = this.selectedFaceIds.has(surface.userData.faceIdsByRange[rangeIndex]) ? 1 : 0;
       }
     }, this);
+    if (this.applyFaceVisibility) { this.applyFaceVisibility(); }
     this.render();
   };
 
   /** Return the opaque FaceId under a pointer, or null for empty space. */
   ViewportController.prototype.pickFaceAtPointer = function (event) {
+    if (this.pickFacesAtPointer) { return this.pickFacesAtPointer(event)[0] || null; }
     var coordinates;
     var intersections;
     var intersection;

@@ -41,3 +41,22 @@ now checks equal content widths across native, thin, and zero-lane modes, stable
 width through fit/overflow/fit transitions, and clearance before a conservative
 15px overlay region. It failed on the missing startup measurement before the
 change. Zero-lane geometry tests do not emulate native macOS thumb painting.
+
+## Shared action icons
+
+On 2026-09-22, report and mesh options adopted the UI Kit Settings drawing and
+shared action geometry (20px SVG, 30px minimum desktop target, 44px coarse-pointer
+target). `web/ui/action-icons.js` is the unmodified generated catalog from UI Kit
+commit `6f440685602bf91713a3dfd984dfbff29112385c`, catalog SHA-256
+`6bd2c34de167e14bc394738b1ad14f0d94e98963c0831b150a18ed896116438c`.
+This is a selective reference merge; the base shell pin remains unchanged.
+
+Reproduce/check the catalog from that UI Kit checkout:
+
+```sh
+node ../SpjutSim-UI-Kit/scripts/build-icons.js --output "$PWD/web/ui/action-icons.js"
+node ../SpjutSim-UI-Kit/scripts/build-icons.js --check --output "$PWD/web/ui/action-icons.js"
+```
+
+The catalog is local at runtime. Application buttons own accessible names,
+callbacks and availability. No sibling checkout or icon build is needed to run FEA.

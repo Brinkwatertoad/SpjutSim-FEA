@@ -1,5 +1,7 @@
 # Task 27: Engineering edit undo and redo implementation plan
 
+Historical numbering note (2026-09-22): the next Task 28 named below was the archived STL plan. Use the current plan index for subsequent execution.
+
 > **For agentic workers:** Use superpowers:executing-plans in the current agent. Follow repository AGENTS.md; do not dispatch subagents. Stop at M27 before Task 28.
 
 **Goal:** Make committed setup edits reversible without retaining large numerical snapshots or reviving stale results.

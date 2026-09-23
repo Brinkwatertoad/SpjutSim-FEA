@@ -13,6 +13,7 @@
   var activeImport = null;
   var importGeneration = 0;
   var activeMesh = null;
+  var meshSolveGeneration = 0;
   var activeSolver = null;
   var activeSolverRevision = null;
   var activeConvergence = null;
@@ -33,7 +34,8 @@
     return error;
   }
 
-  function importCadFile(file) {
+  function importCadFile(file, options) {
+    if (app.projectOpening) { return; }
     var client;
     var geometryId;
     var replacing = Boolean(app.document.geometry);
@@ -59,7 +61,7 @@
       onError: function () {}
     });
     activeImport = client;
-    file.arrayBuffer().then(function (sourceBytes) {
+    return file.arrayBuffer().then(function (sourceBytes) {
       if (activeImport !== client || generation !== importGeneration) { return; }
       return client.importGeometry({
         geometryId: geometryId,
@@ -70,6 +72,7 @@
         if (activeImport !== client || generation !== importGeneration) { return; }
         var source = { sourceName: file.name, sourceFormat: sourceFormat, sourceBytes: sourceBytes };
         installImportedGeometry(geometry, source);
+        if (options && options.example && app.document.geometry === geometry) { api.applyCubeExample(app); }
       });
     }).catch(function (error) {
       if (activeImport === client) { app.failGeometryImport(error); }
@@ -80,6 +83,7 @@
   }
 
   function installImportedGeometry(geometry, source) {
+    if (api.projectFaceEvidence) { source.faceEvidence = api.projectFaceEvidence(geometry); }
     if (app.document.geometry && (app.document.boundaryConditions.length || app.document.loads.length)) {
       var draft = api.createReplacementMigrationDraft(app.document, geometry, source);
       app.restoreGeometryImportStatus();
@@ -95,25 +99,38 @@
     }
   }
   function generateMesh() {
+    if (app.projectOpening) { return; }
     var client;
+    var revision = app.document.analysisRevision;
     if (!app.document.geometry || !app.geometrySource) { return; }
     cancelConvergence();
     if (activeMesh) { activeMesh.cancel(); }
     disposeSolver();
     app.discardSolvePreflight();
     app.beginMeshGeneration();
-    client = new api.MesherClient({ onProgress: function (progress) { app.reportMeshProgress(progress); } });
+    client = new api.MesherClient({ onProgress: function (progress) { if (activeMesh === client) { app.reportMeshProgress(progress); } } });
     activeMesh = client;
-    client.generateMesh({
+    return client.generateMesh({
       geometry: app.document.geometry, settings: app.document.meshSettings, sourceBytes: app.geometrySource.sourceBytes
     }).then(function (mesh) {
-      if (activeMesh === client) { app.completeMeshGeneration(mesh); }
+      if (activeMesh === client) {
+        if (app.document.analysisRevision !== revision) { app.failMeshGeneration({message:'Setup changed during meshing. Generate the mesh again.'}); return null; }
+        app.completeMeshGeneration(mesh); return mesh;
+      }
     }).catch(function (error) {
       if (activeMesh === client) { app.failMeshGeneration(error); }
     }).finally(function () {
       client.dispose();
       if (activeMesh === client) { activeMesh = null; }
     });
+  }
+
+  async function meshAndSolve() {
+    if (app.document.mesh) { solve(); return; }
+    if (activeMesh || activeImport || activeConvergence || app.document.assignmentDraft) { return; }
+    var generation = ++meshSolveGeneration;
+    var mesh = await generateMesh();
+    if (generation === meshSolveGeneration && mesh && app.document.mesh === mesh) { prepareSolve(true); }
   }
 
   function disposeSolver() {
@@ -123,6 +140,7 @@
   }
 
   function prepareSolve(continueToSolve) {
+    if (app.projectOpening) { return; }
     if (app.document.assignmentDraft || app.document.solvePreflight.status === 'running' || app.document.solveExecution.status === 'running' ||
         activeImport || activeMesh || activeConvergence) { return; }
     ui.showOutputPanel("checks");
@@ -152,6 +170,7 @@
   }
 
   function solve() {
+    if (app.projectOpening) { return; }
     var preflight = app.document.solvePreflight;
     var confirmed = true;
     var revision;
@@ -175,6 +194,8 @@
   }
 
   function cancelSolve() {
+    meshSolveGeneration++;
+    if (activeMesh) { activeMesh.cancel(); activeMesh=null; app.failMeshGeneration({message:'Meshing cancelled.'}); }
     disposeSolver();
     app.cancelSolve();
   }
@@ -185,6 +206,7 @@
   }
 
   function startConvergence() {
+    if (app.projectOpening) { return; }
     var revision;
     var resolved;
     var diagonal;
@@ -288,20 +310,27 @@
     if (indicator && documentState.assignmentDraft) { indicator.textContent = documentState.assignmentDraft.kind === 'gravity' ? 'Gravity preview · Apply or Cancel in Setup' : 'Preview · click faces to toggle · Apply or Cancel in Setup'; }
   });
   ui.setImportHandler(importCadFile);
-  ui.setMeshHandlers(generateMesh, function () { if (activeMesh) { activeMesh.cancel(); } }, function () {
+  ui.setMeshHandlers(generateMesh, function () { meshSolveGeneration++; if (activeMesh) { activeMesh.cancel(); activeMesh=null; app.failMeshGeneration({message:'Meshing cancelled.'}); } }, function () {
     disposeSolver();
     app.clearMesh();
   });
-  ui.setSolveHandlers(prepareSolve, solve, cancelSolve);
+  ui.setSolveHandlers(prepareSolve, meshAndSolve, cancelSolve);
   ui.setConvergenceHandlers(startConvergence, cancelConvergence);
   viewport.setProbeHandler(function (probe) { ui.renderProbe(probe); });
   ui.start();
   api.bindUnitSettings(app, ui);
+  api.bindContextualWorkflow(app, ui, importCadFile);
+  api.bindFaceAccess(app, viewport);
   api.bindReportExport(app, viewport, ui);
+  var projectUI = api.bindProjectUI(app, { importCad: importCadFile, beforeStage: function () { disposeSolver(); app.discardSolvePreflight(); }, beforeInstall: function () {
+    importGeneration++; if (activeImport) { activeImport.cancel(); activeImport=null; }
+    if (activeMesh) { activeMesh.cancel(); activeMesh=null; }
+    cancelConvergence(); disposeSolver(); if (replacementMigrationUI.draft) { replacementMigrationUI.cancel(); }
+  } });
 
   // Startup verifies WebAssembly support. Gmsh/FEM start only for an
   // operation that needs them; their full smoke checks live in runtime tests.
-  WebAssembly.instantiate(wasmBytes).then(function () {
+  Promise.all([WebAssembly.instantiate(wasmBytes), projectUI && projectUI.ready]).then(function () {
     setText('worker-status', 'Analysis workers start when needed');
     setText('wasm-status', 'WebAssembly available; analysis engines load when needed');
     ui.runtimeStatus='Local runtime ready';ui.renderActivity(app.document);

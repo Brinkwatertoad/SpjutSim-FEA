@@ -47,7 +47,7 @@
     ui.renderSolve({mesh:{},solvePreflight:{status:'failed',error:{userMessage:'Add supports to constrain rigid-body motion.'}}});
     assert(!document.getElementById('solve-output-status').hidden && document.getElementById('solve-output-status').textContent.includes('Add supports'), 'Preflight failure is not visible in Results when Tools is collapsed');
     ui.renderSolve({mesh:null});
-    assert(!document.getElementById('solve-button').disabled, 'Incomplete model cannot show actionable checks');
+    assert(document.getElementById('solve-button').disabled, 'Mesh and solve must wait for a complete setup');
     var before = JSON.stringify(result);
     ui.renderResults({results:result});
     assert(document.getElementById('peak-headline').textContent.includes('0.005 MPa'), 'Engineering headline did not use sample peak');

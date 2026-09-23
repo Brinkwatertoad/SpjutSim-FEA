@@ -1,4 +1,6 @@
-# Plan 32 verification
+# Plan 29: Document reports and preferred units verification
+
+Numbering note (2026-09-22): formerly Plan 32. This is historical implementation evidence, not a new test run or final owner usability acceptance. STL references below describe the then-tested branch; STL is now archived.
 
 Scope: SpjutSim-FEA only, on `feat/material-load-units-report`. No dependencies, vendor/generated changes, worktrees, merges, or deployments.
 

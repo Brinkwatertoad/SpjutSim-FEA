@@ -1,5 +1,7 @@
 # CAD-only import — 2026-09-20
 
+Numbering note (2026-09-22): references below to integrated M30 now correspond to Plan/M38; new Plans 30–37 also precede the final candidate. This record preserves its original CAD-only evidence.
+
 The owner requested preservation of the STL experiment on GitHub and removal of
 STL import from main. This is a scope change, not acceptance of the STL workflow.
 

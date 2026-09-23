@@ -11,10 +11,14 @@
     var stressUnit = presentation.stressUnit || 'MPa', lengthUnit = presentation.lengthUnit || 'mm';
     function stress(value) { return api.formatResultMagnitude(value, stressUnit); }
     function displacement(value) { return api.formatResultMagnitude(value, lengthUnit); }
+    var info = api.modelInformation(documentState);
+
     var box = documentState.geometry && documentState.geometry.boundingBoxM;
     var size = box ? box.maxM.map(function (v, i) { return displacement(v - box.minM[i]); }).join(' × ') : 'Unavailable';
     var entries = [
       ['Original part size (X × Y × Z)', size],
+      ['CAD volume', info.volumeM3 === null ? 'Unavailable' : api.formatResultMagnitude(info.volumeM3, api.preferredUnit('volumeM3'))],
+      ['Mass (homogeneous density)', info.massKg === null ? 'Unavailable' : api.formatResultMagnitude(info.massKg, api.preferredUnit('massKg'))],
       ['Element', result.elementType.toUpperCase()],
       ['System', result.meshStatistics.nodeCount + ' nodes / ' + result.meshStatistics.elementCount + ' elements / ' + result.meshStatistics.nodeCount * 3 + ' DOF'],
       ['Max displacement', displacement(result.extrema.maxDisplacement.valueM)],

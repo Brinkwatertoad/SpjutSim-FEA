@@ -132,6 +132,19 @@
       failed=false;try{await api.buildAnalysisReport(noFosController,viewport,autoScale);}catch(e){failed=e.message.includes('analysis changed');}finally{viewport.captureReportView=capture;}
       assert(failed,'Stale export was accepted');restored();
       click('#export-report-button');await waitFor(function(){return doc.getElementById('report-status').textContent==='Report downloaded.';});restored();
+      var custom=await api.buildAnalysisReport(app,viewport,autoScale,'zip',{title:'Bracket <&>',notes:'Review <bolt> & preload',views:['stress'],currentView:true});restored();
+      var packageEntries=await api.readStoredZip(custom.blob);assert(packageEntries.size===3 && packageEntries.has('06-current-view.png'),'Customized image selection differs');
+      var customText=await packageEntries.get('report.txt').blob.text();assert(customText.includes('Bracket <&>') && customText.includes('Review <bolt> & preload') && customText.includes('Current view') && customText.includes('Convergence'),'Customized report lost notes or engineering context');
+      var abort=new win.AbortController(),originalCapture=viewport.captureReportView;
+      viewport.captureReportView=function(){var canvas=originalCapture.apply(this,arguments);abort.abort();return canvas;};
+      var cancelled=false;try{await api.buildAnalysisReport(app,viewport,autoScale,'zip',null,abort.signal);}catch(error){cancelled=error.name==='AbortError';}finally{viewport.captureReportView=originalCapture;}
+      assert(cancelled,'Cancelled report continued exporting');restored();
+      var savedResult=app.document.results, savedRevision=app.document.analysisRevision;
+      var projectBlob=await api.writeProjectFile(await api.createProjectSnapshot(app,{includeDerived:true}));
+      var workflow=new api.ProjectWorkflow(app);await workflow.open(projectBlob);
+      assert(app.document.results && app.document.results.extrema.maxDisplacement.valueM===savedResult.extrema.maxDisplacement.valueM,'Solved project did not reopen for inspection');
+      assert(app.document.solvePreflight.status==='idle' && app.document.analysisRevision===savedRevision,'Reopened results retained worker readiness');
+      window.solvedProjectBlob=projectBlob;
       document.getElementById('test-status').textContent='Passed';
     }catch(e){document.getElementById('test-status').textContent='Failed: '+e.message;}
   });

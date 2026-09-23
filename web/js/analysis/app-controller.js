@@ -81,6 +81,7 @@
   };
 
   AppController.prototype.notify = function (change) {
+    if (this.observeProject && change !== 'solve-progress' && change !== 'convergence-progress') { this.observeProject(); }
     var documentState = this.document;
     this.listeners.forEach(function (listener) { listener(documentState, change); });
   };
@@ -152,7 +153,7 @@
       throw new Error('A non-empty canonical CAD source matching the geometry format is required.');
     }
     this.clearEngineeringHistory();
-    this.geometrySource = { sourceName: source.sourceName, sourceFormat: source.sourceFormat, sourceBytes: source.sourceBytes };
+    this.geometrySource = { sourceName: source.sourceName, sourceFormat: source.sourceFormat, sourceBytes: source.sourceBytes, faceEvidence: source.faceEvidence };
     this.document.geometry = geometry;
     this.document.selectedFaceIds = [];
     this.document.boundaryConditions = [];
@@ -212,7 +213,7 @@
     viewportPreferences = transfer.viewportPreferences || {};
 
     this.clearEngineeringHistory();
-    this.geometrySource = { sourceName: source.sourceName, sourceFormat: source.sourceFormat, sourceBytes: source.sourceBytes };
+    this.geometrySource = { sourceName: source.sourceName, sourceFormat: source.sourceFormat, sourceBytes: source.sourceBytes, faceEvidence: source.faceEvidence };
     this.document.geometry = geometry;
     this.document.material = materialValidation.value;
     this.document.boundaryConditions = supports;
@@ -340,6 +341,7 @@
     if (root.SpjutsimFEA.sameEngineeringDefinition(this.document.material,validation.value)) { return validation; }
     this.recordEngineeringEdit('material',this.document.material,validation.value,'Edit material');
     this.document.material = validation.value;
+    this.document.materialProvenance = null;
     this.invalidateResults('material');
     this.notify();
     return validation;
@@ -350,6 +352,7 @@
     if (!this.document.material) { return; }
     this.recordEngineeringEdit('material',this.document.material,null,'Remove material');
     this.document.material = null;
+    this.document.materialProvenance = null;
     this.invalidateResults('material');
     this.notify();
   };
@@ -376,6 +379,7 @@
     var existing = this.document.boundaryConditions[index];
     var candidate = Object.assign({}, definition, {
       id: id,
+      enabled: definition.enabled === undefined ? existing.enabled : definition.enabled,
       name: definition.name === undefined ? existing.name : definition.name,
       type: definition.type === undefined ? existing.type : definition.type,
       faceIds: definition.faceIds === undefined ? existing.faceIds.slice() : definition.faceIds
@@ -429,6 +433,7 @@
     var existing = this.document.loads[index];
     var candidate = Object.assign({}, definition, {
       id: id,
+      enabled: definition.enabled === undefined ? existing.enabled : definition.enabled,
       name: definition.name === undefined ? existing.name : definition.name,
       type: definition.type === undefined ? existing.type : definition.type,
       faceIds: definition.faceIds === undefined ? existing.faceIds.slice() : definition.faceIds
@@ -457,6 +462,28 @@
     this.document.loads.splice(index, 1);
     this.invalidateResults('loads');
     this.notify();
+  };
+
+  AppController.prototype.setAssignmentIncluded = function (kind, id, included) {
+    if (typeof included !== 'boolean' || ['support','load'].indexOf(kind) < 0) { throw Error('Choose Include or Suppress for a support or load.'); }
+    if (root.SpjutsimFEA.engineeringBusy(this.document) || this.document.assignmentDraft) { throw Error('Apply or Cancel the current operation first.'); }
+    var items = kind === 'support' ? this.document.boundaryConditions : this.document.loads;
+    var item = items[findItem(items,id,kind)];
+    var definition = Object.assign({},item,{enabled:included});
+    if (kind === 'support') { this.replaceBoundaryCondition(id,definition); } else { this.replaceLoad(id,definition); }
+  };
+
+  AppController.prototype.duplicateAssignment = function (kind, id) {
+    if (['support','load'].indexOf(kind) < 0 || root.SpjutsimFEA.engineeringBusy(this.document) || this.document.assignmentDraft) { throw Error('Finish the current edit before duplicating an assignment.'); }
+    var items = kind === 'support' ? this.document.boundaryConditions : this.document.loads;
+    var definition = JSON.parse(JSON.stringify(items[findItem(items,id,kind)]));
+    var base = definition.name + ' copy', name = base, index = 2;
+    while (items.some(function(item){return item.name === name;})) { name = base + ' ' + index++; }
+    definition.name = name;
+    var selected = this.document.selectedFaceIds;
+    this.document.selectedFaceIds = definition.faceIds.slice();
+    try { return kind === 'support' ? this.createBoundaryCondition(definition) : this.createLoad(definition); }
+    finally { this.document.selectedFaceIds = selected; this.notify(); }
   };
 
   AppController.prototype.renameAssignment = function (kind, id, name) {

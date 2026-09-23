@@ -516,7 +516,7 @@
       message = (state.error && state.error.userMessage) || 'The CAD file could not be imported.';
     }
     if (this.geometryStatus) { this.geometryStatus.textContent = message; }
-    if (this.importButton) { this.importButton.disabled = state.status === 'importing' || convergenceRunning; }
+    if (this.importButton) { this.importButton.disabled = this.controller.projectOpening || state.status === 'importing' || convergenceRunning; }
     this.renderMesh(documentState);
     this.renderViewportPresentation(documentState);
     this.renderSolve(documentState);
@@ -574,7 +574,7 @@
       message = 'Ready to generate a ' + elementLabel + ' mesh.';
     }
     if (this.meshStatus) { this.meshStatus.textContent = message; }
-    if (this.generateMeshButton) { this.generateMeshButton.disabled = !hasGeometry || isGenerating || convergenceRunning; }
+    if (this.generateMeshButton) { this.generateMeshButton.disabled = this.controller.projectOpening || !hasGeometry || isGenerating || convergenceRunning; }
     if (this.generateMeshButton) { this.generateMeshButton.textContent = documentState.mesh ? 'Regenerate mesh' : 'Generate mesh'; }
     if (this.cancelMeshButton) { this.cancelMeshButton.hidden = !isGenerating; }
     if (this.deleteMeshButton) { this.deleteMeshButton.hidden = !documentState.mesh || isGenerating || convergenceRunning; }
@@ -882,10 +882,10 @@
     var readiness = root.SpjutsimFEA.solveReadiness(documentState);
     if (this.solveReadinessStatus) { this.solveReadinessStatus.textContent = readiness.label + (documentState.assignmentDraft ? ' · Apply/Cancel preview' : ''); this.solveReadinessStatus.title = readiness.message; }
     if (this.preflightButton) { this.preflightButton.disabled = !readiness.canCheck; this.preflightButton.title = readiness.message; }
-    if (this.solveButton) { this.solveButton.disabled = !readiness.canRequestSolve; this.solveButton.title = readiness.message; }
+    if (this.solveButton) { this.solveButton.disabled = this.controller.projectOpening || !readiness.canRequestSolve; this.solveButton.title = readiness.message; this.solveButton.textContent = documentState.mesh ? 'Solve' : 'Mesh and solve'; }
     if (this.solveStatus) { this.solveStatus.textContent = message + ' ' + readiness.message; }
     this.renderChecks(documentState);
-    if (this.cancelSolveButton) { this.cancelSolveButton.hidden = !running; }
+    if (this.cancelSolveButton) { this.cancelSolveButton.hidden = !running && !(documentState.meshGeneration && documentState.meshGeneration.status === 'generating'); }
     preflight = documentState.lastSolveCheck || preflight;
     if (this.preflightSummary) {
       this.preflightSummary.hidden = preflight.status !== 'ready';

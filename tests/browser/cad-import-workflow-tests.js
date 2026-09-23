@@ -33,7 +33,7 @@
         MesherClient:function(){var client=this,work=deferred();client.work=work;client.requests=[];
           client.generateMesh=client.importGeometry=function(request){client.requests.push(request);return work.promise;};
           client.cancel=client.dispose=function(){client.disposed=true;};clients.push(client);},
-        bindUnitSettings:noop,bindReportExport:noop,startLocalWorker:function(){workerStarts++;throw new Error('Eager worker startup');}
+        bindFaceAccess:noop,bindContextualWorkflow:noop,bindProjectUI:noop,bindUnitSettings:noop,bindReportExport:noop,startLocalWorker:function(){workerStarts++;throw new Error('Eager worker startup');}
       }};
       new Function('globalThis','document',source)(fakeRoot,{documentElement:{},getElementById:function(){return {addEventListener:noop};}});
       return {state:state,clients:clients,imported:imported,failures:failures,importFile:handler,generateMesh:meshHandler,meshes:meshes,

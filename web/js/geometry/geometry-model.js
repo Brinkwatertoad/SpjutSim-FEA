@@ -183,6 +183,14 @@
     return preview.valid ? validation(true) : preview;
   }
 
+  function modelInformation(state) {
+    var geometry = state && state.geometry, density = state && state.material && state.material.densityKgM3;
+    var volume = geometry && Number.isFinite(geometry.volumeM3) && geometry.volumeM3 > 0 ? geometry.volumeM3 : null;
+    var mass = volume !== null && Number.isFinite(density) && density > 0 ? volume * density : null;
+    return {volumeM3: volume, massKg: Number.isFinite(mass) ? mass : null,
+      dimensionsM: geometry ? geometry.boundingBoxM.maxM.map(function(value,axis){return value-geometry.boundingBoxM.minM[axis];}) : null};
+  }
+
   function createGeometryId() {
     return 'geometry-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
   }
@@ -195,4 +203,5 @@
   root.SpjutsimFEA.validatePreview = validatePreview;
   root.SpjutsimFEA.validateGeometryModel = validateGeometryModel;
   root.SpjutsimFEA.createGeometryId = createGeometryId;
+  root.SpjutsimFEA.modelInformation = modelInformation;
 }(globalThis));

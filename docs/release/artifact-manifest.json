@@ -238,11 +238,15 @@
         {
           "path": "web/ui/ui-tokens.css",
           "sha256": "3a64642412d333807ad2368826613ce3e9dde2e5d6b7fc454b013698866f4065"
+        },
+        {
+          "path": "web/ui/action-icons.js",
+          "sha256": "cf9b2405070d8c20d135c1a886b6e36337ece197e03cf27995cb4de136403813"
         }
       ],
       "build_recipe": {
         "path": "UI_FOUNDATION.md",
-        "sha256": "3dda10e68e389799a4c759d350f1e9d0d3bc55cd47987f82c0317e2c969de27c"
+        "sha256": "c9b13d0432828ee465c881f68a188653150a1cef03b2bcce0e3d229b2b517825"
       },
       "modifications": "Copied as first-party source on 2026-08-25; FEA-owned adaptations and owner-approved GPL grant apply to these copies only. Current content is pinned per artifact.",
       "notices": [
@@ -1230,6 +1234,13 @@
       "sha256": "852e0e8699169bf9f6fdc6bda3e682d078dcbc738b5d33e74df594721bff271d",
       "components": [
         "three"
+      ]
+    },
+    {
+      "path": "web/ui/action-icons.js",
+      "sha256": "cf9b2405070d8c20d135c1a886b6e36337ece197e03cf27995cb4de136403813",
+      "components": [
+        "ui-foundation"
       ]
     }
   ]

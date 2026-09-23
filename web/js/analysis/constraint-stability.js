@@ -156,6 +156,7 @@
     var observationKeys = new Set();
     var constrainedPoints = new Set();
     documentState.boundaryConditions.forEach(function (support) {
+      if (support.enabled === false) { return; }
       support.faceIds.forEach(function (faceId) {
         var range = rangeForFace(ranges, faceMap, faceId);
         if (!range) { throw new Error('Support stability could not find CAD face ' + faceId + '.'); }

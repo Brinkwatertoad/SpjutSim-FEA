@@ -1,5 +1,7 @@
 # Combined M24–M27 owner review
 
+Numbering note (2026-09-22): Task 28 below refers to the historical STL work, now archived; it is not the current material/report Plan 28.
+
 The owner supplied corrections after this packet. Use the
 [follow-up recheck packet](24-27-followup.md) for the current workflow, including
 automatic checks on Solve and normal-force authoring.

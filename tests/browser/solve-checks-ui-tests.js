@@ -12,7 +12,7 @@
     assert(state.solveSettings.maxDurationMs===1800000 && state.analysisRevision===savedRevision && state.mesh===savedMesh,
       'Changing a runtime budget changed engineering inputs');
     [0,-1,NaN,Infinity,3600001].forEach(function(value){var rejected=false;try{app.replaceSolveTimeLimit(value);}catch(e){rejected=true;}assert(rejected,'Invalid solve budget was accepted');});
-    ui.renderSolve(state); assert(!solve.disabled && !check.disabled,'Incomplete setup cannot be checked for actionable guidance');
+    ui.renderSolve(state); assert(solve.disabled && !check.disabled,'Incomplete setup must retain checks while Mesh and solve waits');
     assert(document.querySelectorAll('#checks-findings button').length===4,'Missing setup findings lack editor links');
     state.geometry={};state.material={};state.mesh={};state.boundaryConditions=[{id:'fixed'}];
     state.solvePreflight={status:'ready',analysisRevision:0,result:{exceedsWasmCap:false,estimatedPeakBytes:123456,constraintStability:{status:'fully-constrained'}}};

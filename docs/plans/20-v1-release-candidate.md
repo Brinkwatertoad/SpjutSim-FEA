@@ -1,6 +1,6 @@
 # Task 20: v1.0 Release Candidate Implementation Plan
 
-> **For agentic workers:** Use superpowers:executing-plans in the current agent. Follow repository AGENTS.md; do not dispatch subagents. Final candidate execution follows accepted Task 30.
+> **For agentic workers:** Use superpowers:executing-plans in the current agent. Follow repository AGENTS.md; do not dispatch subagents. Final candidate execution follows accepted Task 38.
 
 **Goal:** Turn the completed feature set and Tasks 16–19 evidence into one reproducible, fully audited v1.0 candidate without overstating unsupported behavior.
 
@@ -12,7 +12,7 @@
 
 ## Global constraints
 
-- Tasks 16–19 and the approved Tasks 21–27 and 30 sequence, including their owner manual reviews, are hard prerequisites. A pending feature, usability, evidence, or rights gate keeps the candidate unreleased.
+- Tasks 16–19 and the approved Tasks 21–38 sequence, including their owner manual reviews, are hard prerequisites. A pending feature, usability, evidence, or rights gate keeps the candidate unreleased.
 - The owner removed STL from main and v1 on 2026-09-20. Supported import is STEP, IGES and BREP; mesh repair, OBJ and multibody analysis remain outside scope.
 - Test the exact checked-in/generated artifact intended for distribution; rebuilding after acceptance invalidates its hashes and requires rerunning affected checks.
 - Direct-local Chromium desktop is the baseline. Optional HTTP mode and declared secondary browsers are reported precisely, without implying unavailable threaded acceleration.
@@ -20,13 +20,20 @@
 
 ---
 
+## Planned continuation boundary
+
+Post-v1 Plans 39–46 are not prerequisites for this candidate. No deferred
+capability is advertised as available in the v1 artifact. Earlier audits and
+owner reviews are retained with their original scope; protocol/native changes
+in Plans 35–37 require fresh numerical/resource evidence.
+
 ## Starting point
 
 The original Tet10 workflow and Tasks 16–19 evidence are implemented. On
 2026-09-07 the owner required interface/result improvements
 and manual usability reviews before v1. STL work was subsequently archived by
-owner request; Task 30 now precedes this final
-candidate audit. The plan index schedules every owner checkpoint.
+owner request. Plans 30–37 deliver the agreed usability/persistence/loading
+additions, and Task 38 precedes this final candidate audit. The plan index schedules every owner checkpoint.
 
 Preliminary checks from this plan may run earlier and retain their original
 commit/artifact scope. They do not authorize freezing a candidate, closing v1
@@ -37,7 +44,8 @@ status, or skipping new manual reviews. Re-run affected checks after changes.
 - [ ] **Freeze the candidate inputs.** Record the commit, dirty-tree status,
   toolchain/browser versions, Gmsh/FEM payload hashes, and release version in
   `docs/release/v1.0.0-rc1.md`. Require a clean tree and successful Tasks 16–19
-  audits plus accepted M21–M30 records before assigning the candidate identifier.
+  audits plus scoped Plans 21–29 evidence, accepted new pre-v1 packages and
+  final M38 acceptance before assigning the candidate identifier.
 - [ ] **Automate Section 26 evidence mapping.** Add `tools/audit-v1-release.py`
   plus Python tests. Parse a machine-readable evidence map under
   `docs/release/v1-evidence.json`, require one owned artifact per checklist
@@ -51,9 +59,11 @@ status, or skipping new manual reviews. Re-run affected checks after changes.
   candidate record; any failure returns the corresponding gate to Pending.
 - [ ] **Exercise complete user workflows.** In current non-headless Chromium,
   run `file://` import -> material -> component support/load -> Tet10 mesh ->
-  explicit Check model -> Solve -> probes/FoS -> two-level convergence for STEP,
+  Solve with automatic checks -> probes/FoS -> two-level convergence for STEP,
   plus import/mesh coverage for IGES and BREP and rejection of unsupported files.
-  Include draft cancellation, undo/redo, resize,
+  Include portable project save/open, optional result caches, local recovery,
+  volume/mass, local supports, bearing/moment loads, default/custom reports,
+  draft cancellation, undo/redo, resize,
   projection/gizmo, boundary-only contour ranges, and both legend orientations.
   Repeat the production STEP workflow in
   optional cross-origin-isolated HTTP mode and run the declared Firefox
@@ -91,7 +101,7 @@ status, or skipping new manual reviews. Re-run affected checks after changes.
 
 ## Done when
 
-Tasks 21–30 and M21–M30 are accepted, every v1 acceptance item passes with
+All pre-v1 packages and final M38 are accepted, every v1 acceptance item passes with
 reproducible evidence, the numerical and
 resource limits remain within `spec.md`, distribution is authorized, the exact
 candidate works through `file://`, and the owner has an auditable tree ready to

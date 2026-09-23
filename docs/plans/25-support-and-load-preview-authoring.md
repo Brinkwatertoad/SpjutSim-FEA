@@ -8,7 +8,7 @@
 
 **Tech Stack:** JavaScript application contracts, Three.js face picking/glyphs, inline semantic forms, browser tests.
 
-**Spec:** `spec.md` Sections 8, 15.2.2, 15.6–15.7, 15.11, 18, and 19.
+**Spec:** `spec.md` Sections 8, 15.2, 15.6–15.7, 15.11, 18, and 19.
 
 ## Dependencies and constraints
 
