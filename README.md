@@ -260,13 +260,16 @@ Tet4; Tet10 remains the default. Nondefault settings remain in the row summary. 
 Fit, Reset and Perspective remain at the viewport. Report controls sit together
 beside Solve/Results. Stress/Deformation interaction is retained.
 
-Expanded setup headers pair the assignment name with compact Apply (✓), Cancel
-(×) and Remove (trash) actions. Field hints follow the selected load type.
+Expanded setup editors have an action row below the header: ✓ Apply and × Cancel
+on the left, red trash Remove on the right when an item already exists. Field
+hints follow the selected load type.
 Save to material library independently stores reusable materials. Assignment options include Duplicate and Suppress/Include. The empty viewport offers Import CAD… and Open Cube Example, with no placeholder
 solid. The example already has material, supports, load and Tet10 settings.
 A dismissible guide starts after CAD import; dismissal is remembered. Help →
-Show setup guide brings it back. Stable section anchors and explicit Next/Back
-keep support/load editing in place. The guide teaches Generate mesh, Inspect mesh,
+Show setup guide brings it back. The guide highlights clickable controls: an
+editor opener or Add, then Apply, then Add again for another assignment. Explicit
+Next/Back changes stages; rerenders do not scroll the pane or advance the guide.
+The guide teaches Generate mesh, Inspect mesh,
 then Solve; the prepared cube starts at Generate mesh. Recovered projects reopen
 quietly. Mesh and solve runs generation, checks and solve on explicit request, retaining cancellation and
 independent Generate mesh/Run checks actions. Rebuild the embedded example with

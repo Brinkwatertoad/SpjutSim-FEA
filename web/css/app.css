@@ -221,6 +221,7 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 .fea-setup-row-button { grid-template-columns: 14px minmax(0, 1fr) minmax(76px, 1fr); }
 .fea-setup-row-button strong { white-space: normal; overflow-wrap: anywhere; }
 [data-item-id="new"] .fea-setup-row-button strong { grid-column: 2 / -1; }
+[data-item-id="new"] .fea-setup-row-summary { display:none; }
 .fea-setup-row-summary:empty, .fea-setup-row-meta:empty { display: none; }
 :is([data-setup-kind="model"], [data-setup-kind="material"]) .fea-setup-row-button strong { grid-column: 2 / -1; }
 :is([data-setup-kind="model"], [data-setup-kind="material"]) .fea-setup-row-summary { grid-column: 2; grid-row: 2; text-align: left; }
@@ -324,17 +325,13 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 
 .fea-guide-target { outline:2px solid var(--ui-color-accent, #387bff); outline-offset:2px; }
 
-/* Actions remain form controls while occupying the expanded row's header. */
-.fea-setup-row-editing { position:relative; }
-.fea-setup-row-editing > .fea-setup-row-button { width:calc(100% - 114px); min-height:38px; grid-template-columns:14px minmax(0,1fr); align-items:center; }
-.fea-setup-row-editing > .fea-setup-row-button strong { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.fea-setup-row-editing > .fea-setup-row-button .fea-setup-row-summary,
-.fea-setup-row-editing > .fea-setup-row-button .fea-setup-row-meta { display:none; }
-.fea-editor-actions { display:flex; align-items:center; gap:4px; position:absolute; top:4px; right:6px; z-index:2; }
+/* One action row below the editor heading, before its fields. */
+.fea-editor-actions { display:flex; align-items:center; gap:4px; position:relative; margin-bottom:6px; }
 .fea-editor-actions button { flex:none; width:30px; height:30px; margin:0; }
-.fea-editor-actions [data-action-intent="danger"] { margin-left:8px; }
+.fea-editor-actions button[type="submit"] { width:auto; gap:4px; padding-inline:8px; }
+.fea-editor-actions [data-action-intent="danger"] { margin-left:auto; }
 .fea-editor-actions button[hidden] { display:none; }
 .fea-editor-actions button:focus-visible::after { content:attr(aria-label); position:absolute; top:100%; right:0; padding:4px 8px; background:var(--ui-color-surface); color:var(--ui-color-text); border:1px solid var(--ui-color-border); border-radius:4px; white-space:nowrap; font-size:12px; }
 .fea-report-actions { display:flex; align-items:center; gap:4px; flex:none; }
 .fea-actionbar { flex-wrap:wrap; }
-@media (pointer:coarse) { .fea-editor-actions button { width:44px; height:44px; } .fea-setup-row-editing > .fea-setup-row-button { width:calc(100% - 156px); min-height:52px; } }
+@media (pointer:coarse) { .fea-editor-actions button { width:44px; height:44px; } .fea-editor-actions button[type="submit"] { width:auto; } }

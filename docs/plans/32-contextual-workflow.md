@@ -41,9 +41,9 @@ The shared execution, evidence, performance, and review rules in [the plan index
 
 ### 2. Make editing and feedback consistent
 
-- [x] Use Apply for setup commits, Save project for files and Save to material library for catalog persistence. Use checkmark Apply, × Cancel and shared trash Remove in the expanded assignment header; contextual field hints replace opening paragraphs. Preserve existing transactions, unique-name validation and focus return without scrolling the guide.
+- [x] Use Apply for setup commits, Save project for files and Save to material library for catalog persistence. Use a row below the expanded assignment header: checkmark plus Apply text and × Cancel on the left, red shared trash Remove on the right; contextual field hints replace opening paragraphs. Preserve existing transactions, unique-name validation and focus return without scrolling the guide.
 - [x] Place field errors beside controls and assignment errors within the editor; focus the first invalid field on failed Apply. Coalesce announcements and avoid validation noise during incomplete typing.
-- [x] Use a dismissible viewport guide pointing at stable section headings or toolbar controls, with explicit progression that stays put during support/load Apply, remembered dismissal and Help reenable; lead Results with displacement/stress/available FoS/convergence and retain visible warnings.
+- [x] Use a dismissible viewport guide highlighting the next clickable opener/Add, Apply, Generate mesh or toolbar control, with targets following deliberate editor actions and stages changing only through Next/Back, remembered dismissal and Help reenable; lead Results with displacement/stress/available FoS/convergence and retain visible warnings.
 - [x] Add Duplicate and explicitly named Suppress/Include controls for assignments in contextual options, with model-owned enabled state, history, persistence, rank/preflight and report updates. Keep Show/hide presentation distinct. Suppressed definitions remain visible and do not enter numerical inputs. Add regression tests before extending this public contract.
 
 ### 3. Improve starting and running a check

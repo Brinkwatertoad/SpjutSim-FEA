@@ -155,3 +155,34 @@ with its name and moving explanations beside their fields.
   `build/guide-actions-browser.json` and `build/guide-actions-http.json`.
 
 Design approval does not replace the remaining owner walkthrough of the final UI.
+
+## Follow-up: action row and guidance to clickable controls
+
+The owner replaced the previous header-action arrangement and section-heading
+anchors with an action row below each expanded header and guidance to the actual
+next control. This supersedes those layout details in the preceding review.
+
+- ✓ Apply includes visible text and sits beside icon-only × Cancel on the left;
+  red shared trash Remove sits on the right for existing items. Headers regain
+  their full width. New-row summaries no longer wrap into a one-character column.
+- Guidance highlights the Model/Material/Mesh opener, Add support/load, Apply,
+  Generate mesh, Mesh view, Solve or Results as appropriate. It does not open
+  editors or click controls automatically. Apply/Cancel return the support/load
+  target to Add, with Next available when setup permits it. Ordinary rerenders
+  keep the target and scroll position; explicit guide navigation may reveal an
+  offscreen target.
+- `project-resume-tests.html` covers these target transitions, visible Apply text,
+  left/right action placement, Cancel, compact new headers, stable rerenders and
+  explicit mesh inspection, followed by the existing analytical cube solve.
+- Visual evidence: `build/click-guide-add.png`, `build/click-guide-apply.png`, and
+  `build/guide-row-narrow.png` (220-pixel Setup). The latter confirms that the
+  action row fits without truncating the assignment header to make room for icons.
+
+- Verification: 42 applicable direct-file browser harnesses, 77 Python tests and
+  eight native tests passed. The final new-header correction was rechecked in
+  project resume, grouped authoring and workspace layout locally, plus those
+  harnesses and project interface over HTTP at 2× DPI. Records:
+  `build/click-guide-browser.json`, `build/click-guide-layout.json`, and
+  `build/click-guide-http.json`. Whitespace validation passes.
+
+The owner approved this design; final visual acceptance remains separate.

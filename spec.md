@@ -1788,12 +1788,12 @@ Mesh is one expandable row with preset/count summary, generation/regeneration,
 and deletion. Deleting a mesh preserves source, material, assignments, gravity,
 and mesh settings while clearing derived data.
 
-Expanded material/support/load/gravity editors place compact actions at the right
-of the assignment header: checkmark Apply, × Cancel, and shared UI Kit trash
-Remove. Keep accessible labels, hover/focus help and separate destructive spacing;
-hide Remove for new items. Material Cancel restores committed properties. The name
-remains on the left, with fields starting directly below; do not reserve an empty
-action row. Put pressure sign and force-direction hints beside their relevant
+Expanded material/support/load/gravity editors place an action row directly below
+the full-width assignment header and above fields. Left-align checkmark plus the
+visible word Apply, followed by icon-only × Cancel. Right-align shared UI Kit
+trash Remove with danger styling, hiding it for new items. Keep accessible labels,
+hover/focus help and adequate hit areas. Material Cancel restores committed
+properties. Put pressure sign and force-direction hints beside their relevant
 fields and hide them with those fields.
 
 **Editing language:** use Apply for engineering edits, Save project for
@@ -1982,17 +1982,21 @@ Tet10 mesh settings already applied. Its 1 m cube uses E = 200 GPa, ν = 0.3;
 expected axial stress is 1 kPa, axial extension 5 nm. Examples are deliberately
 loaded offline and never silently solved. No placeholder solid is shown.
 
-A small guide in the viewport points to stable Setup section headings or toolbar
-actions, never to moving Apply buttons. The opening panel appears alone; explicitly
+A small guide in the viewport points to and highlights the actual next clickable
+control, not section headings. The opening panel appears alone; explicitly
 starting Help guidance on an empty project replaces it with guidance pointing to
-Model. Start after CAD import, allow Back/Next and easy × dismissal, remember dismissal, and expose Help → Show setup guide. Guide display
-never steals focus or changes engineering state. User-requested step navigation
-can open the corresponding existing editor. Applying supports or loads does not
-advance the guide or scroll focus back to a collapsed row. Teach Import → Material
-→ Supports → Loads → Generate mesh → Inspect mesh → Solve → Review results.
-Mesh generation uses the existing Mesh tool; inspection switches to Mesh view and
-explains refinement around holes, small features and loads, plus convergence. The
-prepared cube begins at Generate mesh. Recovered projects stay quiet. No
+the Model button. Start after CAD import, allow Back/Next and easy × dismissal,
+remember dismissal, and expose Help → Show setup guide. Guide display never
+steals focus or changes engineering state. Highlight an editor opener/Add while
+closed, Apply while editing, and Add again after support/load Apply or Cancel.
+These user actions change targets, not stages; routine rerenders neither scroll
+Setup nor advance the guide. Explicit Next/Back may reveal its target by scrolling
+Setup, but does not open editors or click their controls automatically.
+Teach Import → Material → Supports → Loads → Generate mesh → Inspect mesh → Solve
+→ Review results. Mesh guidance highlights the Mesh opener, then Generate mesh;
+inspection highlights the Mesh view button and explains refinement around holes,
+small features and loads, plus convergence. The prepared cube begins at Generate
+mesh. Recovered projects stay quiet. No
 next-step banner or routine persistence prose belongs above Model. Report and
 mesh options use shared UI Kit SVGs with 20px icons, 30px desktop targets and 44px
 coarse-pointer targets.

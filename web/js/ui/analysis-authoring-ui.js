@@ -24,7 +24,11 @@
         path.setAttribute('d',button.type === 'submit' ? 'M5 12l4 4L19 6' : 'M6 6l12 12M18 6L6 18');
         icon.appendChild(path);
       }
-      button.replaceChildren(icon); button.classList.add('fea-icon-button'); labelAction(button,label);
+      button.replaceChildren(icon); button.classList.add('fea-icon-button');
+      if (button.type === 'submit') {
+        var text = document.createElement('span'); text.textContent = 'Apply'; button.appendChild(text);
+      }
+      labelAction(button,label);
     });
   }
 
@@ -864,7 +868,6 @@
       var active = self.activeInspectorKind === definition.kind && self.activeInspectorItemId === definition.itemId;
       var editorId = 'setup-editor-' + definition.kind + '-' + definition.itemId;
       item.className = 'fea-setup-row';
-      item.classList.toggle('fea-setup-row-editing', active && ['material','support','load','gravity'].indexOf(definition.kind) !== -1);
       item.dataset.setupRow = '';
       item.dataset.setupKind = definition.kind;
       item.dataset.itemId = definition.itemId;
