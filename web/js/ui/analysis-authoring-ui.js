@@ -505,14 +505,14 @@
     if (this.modelOrientationStatus) { this.modelOrientationStatus.hidden = !this.orientationFeedback; }
   };
 
-  AnalysisAuthoringUI.prototype.openInspectorRow = function (kind, itemId, opener) {
+  AnalysisAuthoringUI.prototype.openInspectorRow = function (kind, itemId, opener, duplicate) {
     var selectedItem;
     if (kind === 'model' && !this.controller.document.geometry) {
       var importButton = byId('import-step-button');
       if (importButton && !importButton.disabled) { importButton.click(); }
       return;
     }
-    if (this.activeInspectorKind === kind && this.activeInspectorItemId === itemId) {
+    if (!duplicate && this.activeInspectorKind === kind && this.activeInspectorItemId === itemId) {
       this.closeInspectorRow({ restoreFocus: true, cancelEdit: true });
       return;
     }
@@ -524,13 +524,21 @@
     if (kind === 'support' && itemId === 'new') { this.resetSupportForm(false); }
     if (kind === 'load' && itemId === 'new') { this.resetLoadForm(false); }
     this.activeInspectorKind = kind;
-    this.activeInspectorItemId = itemId;
+    this.activeInspectorItemId = duplicate ? 'new' : itemId;
     this.activeInspectorFocusReturn = opener || null;
     if (kind === 'support') { selectedItem = this.controller.document.boundaryConditions.find(function (item) { return item.id === itemId; }); }
     if (kind === 'load') { selectedItem = this.controller.document.loads.find(function (item) { return item.id === itemId; }); }
     this.announceSetup('Editing ' + (selectedItem ? selectedItem.name : (itemId === 'new' ? 'new ' + kind : kind)) + '.');
     if (kind === 'support' && itemId !== 'new') { this.beginSupportEdit(itemId); }
     else if (kind === 'load' && itemId !== 'new') { this.beginLoadEdit(itemId); }
+    if (duplicate) {
+      this.controller.clearSelectedFaces();
+      var items = kind === 'support' ? this.controller.document.boundaryConditions : this.controller.document.loads;
+      var base = selectedItem.name + ' copy', name = base, index = 2;
+      while (items.some(function(item){return item.name === name;})) { name = base + ' ' + index++; }
+      byId(kind + '-name').value = name;
+      this.editingSupportId = null; this.editingLoadId = null;
+    }
     if (kind === 'gravity') {
       this.gravityFeedback = null;
       try {
@@ -542,14 +550,16 @@
       try {
         var definition;
         try { definition = kind === 'support' ? this.readSupport() : this.readLoad(); } catch (error) { definition = {type:kind === 'support' ? 'support' : this.loadType.value}; }
-        this.controller.beginAssignmentDraft(kind,itemId === 'new' ? null : itemId,definition);
+        if (duplicate) { definition = Object.assign({},selectedItem,{name:name}); }
+        this.controller.beginAssignmentDraft(kind,duplicate || itemId === 'new' ? null : itemId,definition);
 
       } catch (error) { this.announceSetup(error.message); }
     }
     this.openingInspector=false;
     if(this.controller.document.assignmentDraft)this.controller.document.assignmentDraft.immediate=true;
     this.render(this.controller.document);
-    this.controller.notify(selectedItem ? 'locate-assignment' : undefined);
+    this.controller.notify(selectedItem && !duplicate ? 'locate-assignment' : undefined);
+    if (duplicate) { this.announceSetup('Choose new faces for ' + name + '. Escape closes an empty copy.'); }
   };
 
   AnalysisAuthoringUI.prototype.updateDraftFromForm = function (commit, input) {
@@ -637,7 +647,7 @@
     var self = this;
     var groups;
     if (!this.setupModelList || !root.SpjutsimFEA.buildSetupInspectorRows) { return; }
-    var rowKey = JSON.stringify([root.SpjutsimFEA.buildSetupInspectorRows(documentState),this.activeInspectorKind,this.activeInspectorItemId,root.SpjutsimFEA.engineeringBusy(documentState)]);
+    var rowKey = JSON.stringify([root.SpjutsimFEA.buildSetupInspectorRows(documentState),this.activeInspectorKind,this.activeInspectorItemId,documentState.boundaryConditions.map(function(item){return item.enabled;}),documentState.loads.map(function(item){return item.enabled;}),root.SpjutsimFEA.engineeringBusy(documentState)]);
     if (rowKey === this.renderedRowKey) { return; }
     this.renderedRowKey = rowKey;
     var focused = document.activeElement;
@@ -712,14 +722,24 @@
       }
       if (['support','load'].indexOf(definition.kind) >= 0 && definition.itemId !== 'new') {
         var assignment = (definition.kind === 'support' ? documentState.boundaryConditions : documentState.loads).find(function(entry){return entry.id === definition.itemId;});
-        if (assignment.enabled === false) { meta.textContent += ' · Suppressed'; }
-        var options = document.createElement('details'), disclosure = document.createElement('summary');
-        options.className = 'fea-assignment-options';disclosure.textContent = '⋯';disclosure.title = 'Assignment options';disclosure.setAttribute('aria-label','Options for ' + definition.primaryText);options.appendChild(disclosure);
-        [['Duplicate',function(){self.controller.duplicateAssignment(definition.kind,definition.itemId);}],
-          [assignment.enabled === false ? 'Include in analysis' : 'Suppress from analysis',function(){self.controller.setAssignmentIncluded(definition.kind,definition.itemId,assignment.enabled === false);}]].forEach(function(action){
-          var button = document.createElement('button');button.type='button';button.textContent=action[0];button.disabled=root.SpjutsimFEA.hasPendingAssignment(documentState) || root.SpjutsimFEA.engineeringBusy(documentState);
-          button.addEventListener('click',function(){action[1]();});options.appendChild(button);
-        });heading.insertBefore(options,heading.querySelector('[data-setup-delete]'));
+        var suppressed = assignment.enabled === false;
+        item.classList.toggle('is-suppressed',suppressed);
+        if (suppressed) { meta.textContent += ' · Suppressed'; trigger.setAttribute('aria-label',definition.ariaLabel + ', suppressed from analysis'); }
+        var duplicateButton=document.createElement('button');duplicateButton.type='button';duplicateButton.className='fea-icon-button';duplicateButton.dataset.setupDuplicate='';
+        duplicateButton.title='Duplicate '+definition.primaryText+' onto new faces';duplicateButton.setAttribute('aria-label',duplicateButton.title);
+        duplicateButton.append(root.PortableUIIcons.createIcon('duplicate',{document:document,size:18}));
+        duplicateButton.addEventListener('click',function(){self.openInspectorRow(definition.kind,definition.itemId,duplicateButton,true);});
+        var include=document.createElement('button');include.type='button';include.className='fea-icon-button';include.dataset.setupInclude='';
+        include.title=(suppressed?'Include in analysis: ':'Suppress from analysis: ')+definition.primaryText;include.setAttribute('aria-label',include.title);
+        include.setAttribute('aria-pressed',String(!suppressed));
+        include.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>'+(suppressed?'<path d="m3 3 18 18"/>':'')+'</svg>';
+        include.addEventListener('click',function(){
+          self.controller.setAssignmentIncluded(definition.kind,definition.itemId,suppressed);
+          var updated=document.querySelector('[data-setup-kind="'+definition.kind+'"][data-item-id="'+definition.itemId+'"] [data-setup-include]');
+          if(updated)updated.focus({preventScroll:true});
+        });
+        heading.insertBefore(duplicateButton,heading.querySelector('[data-setup-delete]'));
+        heading.insertBefore(include,heading.querySelector('[data-setup-delete]'));
       }
       if (definition.kind === 'mesh') {
         var meshOptions = document.createElement('button');
@@ -763,7 +783,7 @@
     this.renderSetupInspector(documentState);
     var busy=root.SpjutsimFEA.engineeringBusy(documentState), pending=root.SpjutsimFEA.hasPendingAssignment(documentState);
     [this.materialForm,this.gravityForm].forEach(function(form){Array.from(form.elements).forEach(function(control){if(control.id!=='gravity-visible')control.disabled=busy;});});
-    document.querySelectorAll('.fea-assignment-options button, [data-mesh-options]').forEach(function(button){button.disabled=busy || pending || !documentState.geometry;});
+    document.querySelectorAll('[data-setup-duplicate], [data-setup-include], [data-mesh-options]').forEach(function(button){button.disabled=busy || pending || !documentState.geometry;});
     var draft = documentState.assignmentDraft;
     if (this.supportFrameEditor) {
       this.supportFrameEditor.preview(draft && draft.kind==='support' ? draft.definition : null,documentState.geometry);

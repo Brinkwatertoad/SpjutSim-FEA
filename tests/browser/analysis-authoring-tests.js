@@ -644,8 +644,8 @@
     assert(state.boundaryConditions.length === 1 && state.boundaryConditions[0].name === 'Support 1', 'keyboard form submission did not add an auto-named support');
     assert(document.getElementById('constraint-stability-summary').textContent.indexOf('Fully constrained · Preview') === 0,
       'compact setup inspector did not show provisional full constraint stability');
-    controller.replaceSelectedFaces(['face-x+']);
     authoring.openInspectorRow('load','new');
+    controller.toggleDraftFace('face-x+');
     document.getElementById('load-pressure').value = '1.5';
     document.getElementById('load-form').requestSubmit();
     assert(state.loads.length === 1 && state.loads[0].name === 'Load 1' && state.loads[0].pressurePa === 1.5e6, 'keyboard form submission did not add an auto-named pressure load');
@@ -700,10 +700,9 @@
       'setup row accessible name omitted its item summary');
     assert(document.getElementById('support-form').closest('[data-setup-editor-host]'), 'support form was not mounted in the selected row');
     var escapeEvent = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
-    var selectedBeforeEscape = state.selectedFaceIds.slice();
     assert(authoring.handleDocumentKeyDown(escapeEvent), 'inline editor did not consume Escape');
     assert(escapeEvent.defaultPrevented && !authoring.activeInspectorKind, 'Escape did not close and consume the inline editor');
-    assert(state.selectedFaceIds.join('|') === selectedBeforeEscape.join('|'), 'closing inline editor cleared selected CAD faces');
+    assert(state.selectedFaceIds.length === 0, 'closing inline editor retained editor-owned faces');
     supportTrigger = document.querySelector('[data-setup-kind="support"][data-item-id="support-1"] [data-setup-row-trigger]');
     supportTrigger.click();
     supportTrigger.focus();

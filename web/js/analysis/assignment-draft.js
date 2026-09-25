@@ -139,7 +139,7 @@
   /** Cancel never changes an analysis revision, assignment, mesh, preflight, or result. */
   prototype.cancelAssignmentDraft = function () {
     if (!this.document.assignmentDraft) { return; }
-    var previous = this.assignmentDraftReturn;
+    var previous = this.assignmentDraftReturn, immediate = this.document.assignmentDraft.immediate;
     this.document.assignmentDraft = null; this.assignmentDraftReturn = null;
     if (previous) {
       this.document.selectedFaceIds = previous.selectedFaceIds.filter(function (id) { return this.document.geometry && this.document.geometry.faceIds.indexOf(id) >= 0; },this);
@@ -148,6 +148,8 @@
       if (presentation.mode === 'mesh' && !this.document.mesh) { presentation.mode = 'model'; }
       this.document.viewportPresentation = presentation;
     }
+    // Immediate editors own their face selection; do not seed the next editor.
+    if (immediate) { this.document.selectedFaceIds = []; }
     this.notify();
   };
 }(globalThis));

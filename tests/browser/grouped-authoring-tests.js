@@ -39,7 +39,7 @@
       var positive=geometry.faceIds.find(function(id){return api.analyzeGeometryFaceNormal(geometry,id).normal[0]>0.99;});
       assert(doc.querySelector('[data-setup-kind="support"] strong').textContent==='Add support…' && doc.querySelector('[data-setup-kind="load"] strong').textContent==='Add load…','Empty assignment rows are missing');
       app.replaceSelectedFaces([negative]);click('[data-setup-kind="support"][data-item-id="new"] [data-setup-row-trigger]');fill('support-name','Fixed end');
-      app.replaceSelectedFaces([positive]);click('#setup-add-load-button');fill('load-type','total-force');
+      click('#setup-add-load-button');app.toggleDraftFace(positive);fill('load-type','total-force');
       assert(doc.getElementById('load-force-mode').value==='normal' && doc.getElementById('load-magnitude').value==='1','Default normal force magnitude missing');
       fill('load-force-mode','components');fill('load-name','Axial force');
       fill('load-fx','1000');fill('load-fy','0');fill('load-fz','0');

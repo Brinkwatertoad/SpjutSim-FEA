@@ -286,8 +286,6 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 
 .fea-empty-workflow { position:absolute; left:50%; top:45%; transform:translate(-50%,-50%); max-width:30rem; width:80%; padding:1rem; border-radius:.5rem; background:var(--surface, #202329); z-index:3; }
 .fea-empty-workflow[hidden] { display:none; }
-.fea-options summary, .fea-assignment-options summary { cursor:pointer; min-height:28px; padding:.25rem; }
-.fea-assignment-options { padding:0 .4rem; } .fea-assignment-options button { margin:.2rem; }
 .fea-field-error { color:var(--ui-color-danger, #b42318); font-size:.85em; }
 
 #report-options-dialog label { display:block; margin:.35rem 0; }
@@ -295,11 +293,6 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 
 .fea-pick-through { position:absolute; bottom:1rem; left:1rem; z-index:5; max-width:calc(100% - 2rem); padding:.5rem; border:1px solid var(--border); border-radius:4px; background:var(--surface); }
 .fea-face-access button { margin:.2rem; }
-.fea-setup-row:has(.fea-assignment-options) { position:relative; }
-.fea-assignment-options { position:absolute; bottom:1px; left:1px; z-index:2; padding:0; }
-.fea-assignment-options summary { list-style:none; min-width:30px; text-align:center; }
-.fea-assignment-options[open] { background:var(--surface, #202329); border:1px solid var(--border, #777); border-radius:4px; box-shadow:0 3px 10px #0005; }
-.fea-assignment-options[open] button { display:block; }
 
 /* Shared UI Kit action geometry; SVG drawings come from its generated catalog. */
 .fea-icon-button { display:inline-flex; align-items:center; justify-content:center; min-width:30px; min-height:30px; padding:4px; border-radius:8px; }
@@ -351,8 +344,12 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 .fea-frame-actions { display:flex; flex-wrap:wrap; gap:4px; }
 .fea-frame-actions button { width:auto; flex:1; }
 .fea-setup-row-heading .fea-mesh-options { position:static; margin:0; flex:none; }
-.fea-setup-row-heading .fea-assignment-options { position:relative; bottom:auto; left:auto; flex:none; align-self:center; }
-.fea-assignment-options[open] { position:absolute; right:34px; top:0; bottom:auto; left:auto; z-index:4; }
 .fea-setup-row-heading .fea-setup-row-button { grid-template-columns:12px minmax(0,1fr) minmax(0,1fr); column-gap:4px; }
 .fea-setup-row-heading .fea-setup-row-summary { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .fea-setup-row-heading .fea-setup-row-button strong { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.fea-setup-row.is-suppressed .fea-setup-row-button { color:var(--ui-color-text-muted); }
+.fea-setup-row.is-suppressed .fea-setup-row-button strong { text-decoration:line-through; }
+.fea-setup-row.is-suppressed { border-left:3px dashed var(--ui-color-text-muted); }
+
+.fea-options summary { cursor:pointer; min-height:28px; padding:.25rem; }

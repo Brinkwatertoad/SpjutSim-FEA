@@ -17,7 +17,7 @@
   check(!doc.getElementById('support-planar-help').hidden,'missing free-direction/symmetry explanation');
 
    check(app.document.boundaryConditions.length===1&&app.document.boundaryConditions[0].preset==='sliding','sliding did not commit');
-   app.replaceSelectedFaces([face]);click('setup-add-load-button');fill('load-type','total-force');fill('load-force-mode','components');fill('load-frame-kind','manual');
+   click('setup-add-load-button');app.toggleDraftFace(face);fill('load-type','total-force');fill('load-force-mode','components');fill('load-frame-kind','manual');
    fill('load-frame-rotation-axis','z');click('load-frame-plus-90');fill('load-fx','10');fill('load-fy','0');fill('load-fz','0');
    fill('load-frame-origin-x','0.0254');
    fill('settings-unit-system','uscs');

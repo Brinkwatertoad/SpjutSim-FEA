@@ -1873,8 +1873,12 @@ frame details belong in keyboard-accessible information disclosures. Actionable
 validation errors remain visible. Material caveats and references stay in the
 library record rather than recurring in the assignment panel.
 
-**Assignment options:** Duplicate copies a small committed definition
-with a fresh ID/name. Suppress/Include controls calculation participation;
+**Assignment actions:** Compact rows expose Duplicate, Include/Suppress, and Delete
+directly. Duplicate opens the copied settings with an empty face set and asks for
+new surfaces; the first valid face selection creates a fresh ID/name, subsequent
+picks edit that copy, and Escape before picking creates nothing. The original is
+unchanged. Include/Suppress uses an eye toggle with immediate icon and row state
+(including a visible Suppressed label) even when collapsed. It controls calculation participation;
 suppressed items remain visible and serializable, are excluded from rank checks
 and solver inputs, and are labeled in reports. Show/hide controls only glyph
 visibility. These changes follow ordinary history, revision and project-schema
@@ -1979,7 +1983,9 @@ the set. Commits validate values, face ownership, revision, and conflicting
 prescribed components. Native mesh checks remain authoritative for shared-node
 conflicts. No-op changes preserve revision, mesh, checks, results, and history.
 Invalid edits retain the previous committed assignment. Switching or closing an
-editor discards only pending text. A clean open editor does not block Save, Solve,
+editor discards pending text and clears its selected faces, preventing them from
+seeding a different assignment. Deliberate picks made outside an editor can seed
+a new assignment. A clean open editor does not block Save, Solve,
 report export, or Undo; incomplete edits must be finished or closed before solving
 or saving. Undo closes the assignment session before restoring a committed state.
 
