@@ -62,6 +62,7 @@
       assert(!doc.querySelector(row('load',id)).classList.contains('is-suppressed'),'Include left suppressed visual state');
       click(row('load',id)+' [data-setup-duplicate]');
       assert(app.document.assignmentDraft.faceIds.length===0 && app.document.loads.length===1,'Duplicate reused the source faces or committed early');
+      assert(doc.getElementById('load-status').textContent.includes('Select new faces'),'Duplicate lacks a visible face-picking prompt');
       near(Number(doc.getElementById('load-fx').value),12);
       doc.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
       assert(app.document.loads.length===1,'Cancelling an empty duplicate created a load');
@@ -76,6 +77,16 @@
       assert(app.document.material.name==='PLA','Material selection did not apply');
       assert(!doc.querySelector('#material-form button[type="submit"]'),'Apply remains');
       assert(!doc.getElementById('material-catalog-details').textContent.includes('Printed properties'),'Material caveats clutter setup');
+      var info=doc.querySelector('[data-field-info="material-poisson-info"]');
+      assert(info && info.parentElement.querySelector('label[for="material-poisson"]'),'Poisson info is not in the field heading');
+      info.click();assert(info.getAttribute('aria-expanded')==='true' && !doc.getElementById('material-poisson-info').hidden,'Info did not disclose all field help');
+      info.click();assert(doc.getElementById('material-poisson-info').hidden,'Info did not collapse');
+      click(row('load',id)+' [data-setup-row-trigger]');
+      assert(doc.getElementById('load-details').parentElement.id==='load-components-info','Component force information was not combined');
+      fill('load-force-mode','normal');
+      assert(doc.getElementById('load-details').parentElement.id==='load-normal-info','Normal force information was not combined');
+      fill('load-type','pressure');
+      assert(doc.getElementById('load-details').parentElement.id==='load-pressure-info','Pressure information was not combined');
       win.localStorage.removeItem('spjutsim-fea.unit-preferences');
       document.getElementById('test-status').textContent='Passed';
     }catch(e){document.getElementById('test-status').textContent='Failed: '+e.message;}

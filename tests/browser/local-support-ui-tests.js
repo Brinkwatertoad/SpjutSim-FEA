@@ -17,6 +17,12 @@
   check(!doc.getElementById('support-planar-help').hidden,'missing free-direction/symmetry explanation');
 
    check(app.document.boundaryConditions.length===1&&app.document.boundaryConditions[0].preset==='sliding','sliding did not commit');
+   doc.querySelector('[data-setup-kind="support"] [data-setup-duplicate]').click();
+   check(app.document.assignmentDraft.faceIds.length===0 && app.document.boundaryConditions.length===1,'CAD support duplicate committed before a new face');
+   var otherFace=app.document.geometry.faceIds[1];app.toggleDraftFace(otherFace);
+   check(app.document.boundaryConditions.length===2 && app.document.boundaryConditions[1].frame.faceId===otherFace,'Copied CAD frame did not attach to its new face');
+   check(app.document.boundaryConditions[0].frame.faceId===face,'Copy changed original CAD attachment');
+   app.undoEngineeringEdit();check(app.document.boundaryConditions.length===1,'Undo did not remove the copied support');
    click('setup-add-load-button');app.toggleDraftFace(face);fill('load-type','total-force');fill('load-force-mode','components');fill('load-frame-kind','manual');
    fill('load-frame-rotation-axis','z');click('load-frame-plus-90');fill('load-fx','10');fill('load-fy','0');fill('load-fz','0');
    fill('load-frame-origin-x','0.0254');

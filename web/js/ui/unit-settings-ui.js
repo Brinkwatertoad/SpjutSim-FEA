@@ -30,18 +30,24 @@
       try {
         var converted=Array.from(document.querySelectorAll('input[data-unit-quantity]')).map(function(input){
           var quantity=input.dataset.unitQuantity, previous=api.preferredUnit(quantity), value=input.value;
+          var snapshot=(ui.analysisAuthoring.materialInputSnapshot || {})[input.id];
+          var unchanged=snapshot && value.trim()!=='' && Number(value)===Number(snapshot.text);
           if(previous!==units[quantity]){
             if(input.validity.badInput)throw Error('Complete '+(labels[quantity]||quantity)+' before changing units.');
-            if(value.trim()!=='')value=String(api.siToDisplay(quantity,api.displayToSI(quantity,Number(value),previous),units[quantity]));
+            if(value.trim()!=='')value=String(api.siToDisplay(quantity,unchanged ? snapshot.si : api.displayToSI(quantity,Number(value),previous),units[quantity]));
           }
-          return {input:input,value:value};
+          return {input:input,value:value,materialSnapshot:snapshot,snapshotText:snapshot && snapshot.si!=null ? String(api.siToDisplay(quantity,snapshot.si,units[quantity])) : ''};
         });
         action();api.setPreferredUnits(prefs.units);
         ui.analysisAuthoring.loadUnits={pressurePa:prefs.units.pressurePa,forceN:prefs.units.forceN};
         controller.replaceViewportPresentation(Object.assign({},controller.document.viewportPresentation,{stressUnit:prefs.units.stressPa,lengthUnit:prefs.units.displacementM}));
         if(ui.viewport)ui.viewport.refreshSelectedResultPoint();
         // Presentation render can refresh editors. Restore converted unsaved entries afterwards.
-        converted.forEach(function(entry){entry.input.value=entry.value;});refresh();
+        converted.forEach(function(entry){
+          entry.input.value=entry.value;
+          // Keep the committed baseline in the new unit even for an edited field.
+          if(entry.materialSnapshot)entry.materialSnapshot.text=entry.snapshotText;
+        });refresh();
       }catch(e){refresh();status.textContent=e.message;ui.analysisAuthoring.loadStatus.textContent=e.message;}
     }
     function edit(patch){change(function(){prefs.edit(patch);},Object.assign({},prefs.units,patch));}

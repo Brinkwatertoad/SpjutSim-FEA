@@ -28,7 +28,7 @@
       fill('load-force-mode','components');fill('load-fx','-2');fill('load-fy','3');fill('load-fz','0.5');
       fill('load-vector-unit','lbf');near(Number(doc.getElementById('load-fx').value),-2000/4.4482216152605);
       near(app.document.loads[0].forceN[0],-2000);near(app.document.loads[0].forceN[1],3000);near(app.document.loads[0].forceN[2],500);
-      app.replaceSelectedFaces([app.document.geometry.faceIds[1]]);click('#setup-add-load-button');fill('load-type','pressure');fill('load-pressure','2');fill('load-pressure-unit','psi');near(Number(doc.getElementById('load-pressure').value),2e6/6894.757293168361);
+      click('#setup-add-load-button');app.toggleDraftFace(app.document.geometry.faceIds[1]);fill('load-type','pressure');fill('load-pressure','2');fill('load-pressure-unit','psi');near(Number(doc.getElementById('load-pressure').value),2e6/6894.757293168361);
       fill('load-pressure-unit','ksi');fill('load-pressure-unit','Pa');near(Number(doc.getElementById('load-pressure').value),2e6);
       fill('load-pressure','');fill('load-pressure-unit','MPa');assert(doc.getElementById('load-pressure').value==='','Blank became zero');
       fill('load-pressure','-3');fill('load-pressure-unit','psi');near(author.readLoad().pressurePa,-3e6);

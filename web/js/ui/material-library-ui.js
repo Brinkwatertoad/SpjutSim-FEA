@@ -61,8 +61,13 @@
           if(assign){use(result.entry);library.closeLibrary();}
         }catch(e){error.textContent=e.message;}
       }
-      if(!readonly){[['Save',false],['Save & Use',true]].forEach(function(action){var button=document.createElement('button');button.type='button';button.textContent=action[0];if(!action[1])button.dataset.engineeringRecordSave='';button.addEventListener('click',function(){save(action[1]);});actions.append(button);});}
-      var close=document.createElement('button');close.type='button';close.textContent=readonly?'Close':'Cancel';close.addEventListener('click',options.close);actions.append(close);
+      var close=document.createElement('button');close.type='button';close.className='ghost';close.textContent=readonly?'Close':'Cancel';close.addEventListener('click',options.close);actions.append(close);
+      var spacer=document.createElement('span');spacer.className='engineering-record-action-spacer';actions.append(spacer);
+      if(!readonly){[['Save',false],['Save & Use',true]].forEach(function(action){
+        var button=document.createElement('button');button.type='button';button.textContent=action[0];
+        if(action[1]){button.className='ui-button-primary';button.dataset.engineeringRecordSaveUse='';}else button.dataset.engineeringRecordSave='';
+        button.addEventListener('click',function(){save(action[1]);});actions.append(button);
+      });}
       form.addEventListener('submit',function(event){event.preventDefault();if(!readonly)save(false);});
       options.host.replaceChildren(form);
     }
@@ -74,7 +79,37 @@
       };},onUse:function(payload){use(payload.record);},onCopy:function(payload){return {record:payload.record};},
       onDelete:function(payload){try{var result=catalog.removeUser(payload.id);author.renderMaterialCatalogOptions();status(result.storageWarning||'Material removed from library. Project properties are unchanged.');}catch(e){status(e.message,'error');}},onStatus:status
     });
-    document.getElementById('open-material-library').addEventListener('click',function(){library.openLibrary({kind:'material',selectedId:author.materialCatalogSelect.value});});
+    var saveButton=document.getElementById('save-material-library-button');
+    saveButton.append(root.PortableUIIcons.createIcon('save',{document:document,size:18}));
+    saveButton.addEventListener('click',function(){
+      try {
+        var entry=catalog.get(author.materialCatalogSelect.value), factory=entry && entry.layer==='factory';
+        var material=factory ? catalog.materialSnapshot(entry.id) : author.readMaterial();
+        var metadata=Object.assign({},entry ? entry.metadata : {source:'User'});
+        metadata.fieldProvenance=Object.assign({},metadata.fieldProvenance);
+        if(entry)fields.forEach(function(field){if(material[field[0]]!==entry.material[field[0]])delete metadata.fieldProvenance[field[0]];});
+        if(factory){
+          var base=material.name+' copy', name=base, index=2;
+          var names=catalog.list().map(function(item){return item.material.name.toLowerCase();});
+          while(names.includes(name.toLowerCase()))name=base+' '+index++;
+          material.name=name;
+        }
+        var result=entry && !factory ? catalog.replaceUser(entry.id,material,metadata) : catalog.saveUser(material,metadata);
+        use(result.entry);
+        author.materialFeedback=result.storageWarning ? {warning:true,message:result.storageWarning} : null;
+        author.render(author.controller.document);
+        author.announceSetup(result.storageWarning || 'Material saved to library.');
+      } catch(error) {
+        author.materialFeedback={error:true,message:error.message};author.render(author.controller.document);
+      }
+    });
+    document.getElementById('edit-material-library-button').addEventListener('click',function(){
+      var entry=catalog.get(author.materialCatalogSelect.value);
+      if(entry){
+        library.openLibrary({kind:'material',selectedId:entry.id});
+        document.getElementById('engineering-library-edit').click();
+      }else library.openLibrary({kind:'material',mode:'create',context:{material:author.controller.document.material}});
+    });
     author.materialLibrary=library;
     return library;
   }

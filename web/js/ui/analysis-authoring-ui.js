@@ -2,6 +2,7 @@
   'use strict';
 
   function byId(id) { return document.getElementById(id); }
+  var materialInputs = {youngsModulusPa:'youngs',poissonsRatio:'poisson',densityKgM3:'density',tensileYieldPa:'tensile-yield',compressiveYieldPa:'compressive-yield',ultimateTensilePa:'ultimate-tensile',ultimateCompressivePa:'ultimate-compressive'};
 
   function AnalysisAuthoringUI(controller) {
     var storage = null;
@@ -10,7 +11,6 @@
     this.materialStatus = byId('material-status');
     this.materialCatalogSelect = byId('material-catalog-select');
     this.materialCatalogDetails = byId('material-catalog-details');
-    this.replaceSavedMaterialButton = byId('replace-saved-material-button');
     this.supportForm = byId('support-form');
     this.supportStatus = byId('support-status');
     this.supportType = byId('support-type');
@@ -88,15 +88,17 @@
   AnalysisAuthoringUI.prototype.start = function () {
     var self = this;
     if (!this.materialForm) { return; }
+    document.addEventListener('click',function(event){
+      var button=event.target.closest('[data-field-info]');
+      if(!button)return;
+      var info=byId(button.dataset.fieldInfo);
+      info.hidden=!info.hidden;button.setAttribute('aria-expanded',String(!info.hidden));
+    });
     this.materialForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveMaterial(); });
     if (this.materialCatalogSelect) {
       this.materialCatalogSelect.addEventListener('change', function () { self.selectMaterialCatalogEntry(); });
     }
-    if (root.SpjutsimFEA.bindMaterialLibrary && byId('open-material-library'))root.SpjutsimFEA.bindMaterialLibrary(this);
-    if (byId('save-material-library-button')) { byId('save-material-library-button').addEventListener('click',function(){if(self.materialLibrary)self.materialLibrary.openLibrary({kind:'material',mode:'create',context:{material:self.controller.document.material}});}); }
-    if (this.replaceSavedMaterialButton) {
-      this.replaceSavedMaterialButton.addEventListener('click', function () { if(self.materialLibrary)self.materialLibrary.openLibrary({kind:'material',selectedId:self.materialCatalogSelect.value}); });
-    }
+    if (root.SpjutsimFEA.bindMaterialLibrary && byId('edit-material-library-button')) { root.SpjutsimFEA.bindMaterialLibrary(this); }
     this.supportForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveSupport(); });
     this.supportType.addEventListener('change', function () {
       if (!self.editingSupportId) { self.lastSupportType = self.supportType.value; }
@@ -180,6 +182,11 @@
     setOptionalDisplay('material-compressive-yield', 'strengthPa', material && material.compressiveYieldPa);
     setOptionalDisplay('material-ultimate-tensile', 'strengthPa', material && material.ultimateTensilePa);
     setOptionalDisplay('material-ultimate-compressive', 'strengthPa', material && material.ultimateCompressivePa);
+    var values = this.materialInputSnapshot = {};
+    Object.keys(materialInputs).forEach(function(key){
+      var id='material-'+materialInputs[key];
+      values[id] = {text:byId(id).value,si:material && material[key]};
+    });
   };
 
   AnalysisAuthoringUI.prototype.selectMaterialCatalogEntry = function () {
@@ -198,8 +205,11 @@
     var factory = entry && entry.layer === 'factory';
     var details = this.materialCatalogDetails;
     Array.from(this.materialForm ? this.materialForm.querySelectorAll('input') : []).forEach(function (input) { input.readOnly = Boolean(factory); });
-    if (byId('save-material-library-button')) { byId('save-material-library-button').hidden = Boolean(entry); }
-    if (this.replaceSavedMaterialButton) { this.replaceSavedMaterialButton.hidden = !entry || entry.layer !== 'user'; }
+    var save = byId('save-material-library-button');
+    if (save) {
+      save.title = factory ? 'Save as custom copy' : entry ? 'Update material in library' : 'Save material to library';
+      save.setAttribute('aria-label',save.title);
+    }
     if (details) { details.replaceChildren(); }
   };
 
@@ -219,6 +229,12 @@
       var value = readNumber(entry[0], entry[1], true);
       if (value !== undefined) { material[entry[1]] = root.SpjutsimFEA.preferredToSI('strengthPa', value); }
     });
+    // Preserve exact SI values when unchanged display-unit text is read again.
+    var snapshot = this.materialInputSnapshot || {};
+    Object.keys(material).forEach(function(key){
+      var id='material-'+materialInputs[key], field=snapshot[id];
+      if (field && field.text !== '' && Number(byId(id).value) === Number(field.text)) { material[key] = field.si; }
+    });
     return material;
   };
 
@@ -227,7 +243,10 @@
     var entry = selectedId !== 'custom' && this.materialCatalog ? this.materialCatalog.get(selectedId) : null;
     try {
       var material = entry && entry.layer === 'factory' ? this.materialCatalog.materialSnapshot(selectedId) : this.readMaterial();
-      var validation = this.controller.replaceMaterial(material);
+      this.applyingMaterial = true;
+      var validation;
+      try { validation = this.controller.replaceMaterial(material); }
+      finally { this.applyingMaterial = false; }
       this.materialFeedback = validation.warnings.length ? {warning:true,message:validation.warnings[0].message} : {message:'Material applied to this project.'};
       this.render(this.controller.document);
       this.materialForm.dispatchEvent(new CustomEvent('fea-material-applied',{bubbles:true}));
@@ -241,7 +260,7 @@
     if (this.renderedMaterial !== material) {
       this.renderedMaterial = material;
       var match=this.materialCatalog && this.materialCatalog.list().find(function(entry){return root.SpjutsimFEA.sameEngineeringDefinition(entry.material,material);});
-      if(this.materialCatalogSelect)this.materialCatalogSelect.value=match?match.id:'custom';
+      if(this.materialCatalogSelect && !this.applyingMaterial)this.materialCatalogSelect.value=match?match.id:'custom';
       this.writeMaterialFields(material);
     }
     setFeedback(this.materialStatus, this.materialFeedback && (this.materialFeedback.error || this.materialFeedback.warning) ? this.materialFeedback : null, '');
@@ -252,7 +271,7 @@
     var custom = this.supportType.value === 'custom';
     this.componentFields.hidden = !custom;
     var planar=['sliding','symmetry'].includes(this.supportType.value);
-    if(byId('support-planar-help')){byId('support-planar-help').hidden=!planar;byId('support-planar-help').parentElement.hidden=!planar;}
+    if(byId('support-planar-help')){byId('support-planar-help').hidden=!planar;}
     if(this.supportFrameEditor){
       this.supportFrameEditor.kind.disabled=planar;
       if(planar)this.supportFrameEditor.kind.value='cad';
@@ -370,6 +389,8 @@
     this.pressureFields.hidden = !pressure;
     var normal=byId('load-force-mode') && byId('load-force-mode').value === 'normal';
     this.forceFields.hidden = pressure || normal;
+    var info=byId(pressure?'load-pressure-info':normal?'load-normal-info':'load-components-info');
+    if(info && byId('load-details'))info.append(byId('load-details'));
     if(byId('force-mode-fields'))byId('force-mode-fields').hidden=pressure;
     if(byId('normal-force-fields'))byId('normal-force-fields').hidden=pressure || !normal;
   };
@@ -552,6 +573,7 @@
         try { definition = kind === 'support' ? this.readSupport() : this.readLoad(); } catch (error) { definition = {type:kind === 'support' ? 'support' : this.loadType.value}; }
         if (duplicate) { definition = Object.assign({},selectedItem,{name:name}); }
         this.controller.beginAssignmentDraft(kind,duplicate || itemId === 'new' ? null : itemId,definition);
+        if (duplicate) { this.controller.document.assignmentDraft.duplicate = true; }
 
       } catch (error) { this.announceSetup(error.message); }
     }
@@ -609,7 +631,6 @@
       if (kind === 'support') { this.resetSupportForm(false); }
       if (kind === 'load') { this.resetLoadForm(false); }
       if (kind === 'material') {
-        if (this.materialCatalogSelect) { this.materialCatalogSelect.value = 'custom'; }
         this.writeMaterialFields(this.controller.document.material); this.materialFeedback = null;
       }
     }
@@ -793,7 +814,7 @@
     if (draft) {
       var status = draft.kind === 'gravity' ? this.gravityStatus : draft.kind === 'support' ? this.supportStatus : this.loadStatus;
       var summary = root.SpjutsimFEA.describeAssignmentDraft ? root.SpjutsimFEA.describeAssignmentDraft(documentState) : '';
-      status.textContent = draft.validation.valid || !draft.showErrors ? '' : (draft.definition.inputError || draft.validation.message);
+      status.textContent = draft.validation.valid || !draft.showErrors ? (draft.duplicate && !draft.itemId && !draft.faceIds.length ? 'Select new faces for this copy.' : '') : (draft.definition.inputError || draft.validation.message);
       var info=byId(draft.kind+'-details');if(info)info.textContent=(draft.kind==='gravity'?'':draft.faceIds.length+' faces. ')+summary;
       status.classList.toggle('fea-error', !draft.validation.valid && draft.showErrors === true);
 

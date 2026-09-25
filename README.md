@@ -277,17 +277,22 @@ beside Solve/Results. Stress/Deformation interaction is retained.
 Setup selectors commit immediately. Numeric fields commit on Enter or blur; invalid
 text leaves the previous valid assignment intact. Close an editor with its row or
 Escape, and use Undo to reverse committed changes. Existing compact rows expose
-right-aligned removal. Rectangular frames use global-axis rotation controls and an
-axis preview; supplementary area/direction explanations live behind info controls.
+right-aligned removal, Duplicate onto new faces, and an immediate Include/Suppress
+eye toggle. Leaving or switching assignment editors clears their selected faces;
+deliberate picks outside an editor can seed a new assignment. Rectangular frames
+use global-axis rotation controls and an axis preview; supplementary area/direction explanations share one info control
+beside each relevant field heading, with details directly below.
 
 The [material library](docs/material-library.md) reuses the Truss searchable table
 and full property editor, including optional properties, notes and sources. Save
-stores a reusable record; Use assigns a project snapshot. Cross-app import remains
-future work. Test these workflows with `tests/browser/immediate-setup-tests.html`
+stores a reusable record; Use assigns a project snapshot. Save and Edit in library
+icons sit beside the material dropdown: Save updates a selected custom entry or
+creates a custom copy of a built-in, and Edit opens its full library editor.
+Cross-app import remains future work. Test these workflows with `tests/browser/immediate-setup-tests.html`
 and `tests/browser/material-library-tests.html` using the same local-file browser
 configuration as the CAD workflow tests.
 
-Assignment options include Duplicate and Suppress/Include. The empty viewport offers Import CAD… and Open Cube Example, with no placeholder
+The empty viewport offers Import CAD… and Open Cube Example, with no placeholder
 solid. The example already has material, supports, load and Tet10 settings.
 A dismissible guide starts after CAD import; dismissal is remembered. Help →
 Show setup guide brings it back. The guide highlights clickable controls: an

@@ -47,4 +47,5 @@ worker protocols, solver WASM, mesher artifacts, or third-party binaries changed
 Cross-app material import remains future work; no compatibility is claimed for
 loading a Truss library file directly into FEA.
 
-Owner acceptance of the revised interface remains pending.
+The next owner-requested controls and selection follow-up is recorded in
+[setup controls verification](35-setup-controls.md).

@@ -336,10 +336,6 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 .fea-setup-row-heading .fea-setup-row-button { flex:1; }
 .fea-row-delete { flex:none; margin:0 4px 0 auto; width:30px; height:30px; }
 .fea-editor-actions[hidden], #delete-mesh-button { display:none; }
-.fea-info { margin:4px 0; font-size:12px; }
-.fea-info > summary { width:max-content; cursor:pointer; list-style:none; padding:3px 6px; }
-.fea-info > summary::marker { content:''; }
-.fea-info[open] { padding-bottom:6px; }
 .fea-frame-triad { width:100%; max-height:130px; font-size:10px; }
 .fea-frame-actions { display:flex; flex-wrap:wrap; gap:4px; }
 .fea-frame-actions button { width:auto; flex:1; }
@@ -353,3 +349,15 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 .fea-setup-row.is-suppressed { border-left:3px dashed var(--ui-color-text-muted); }
 
 .fea-options summary { cursor:pointer; min-height:28px; padding:.25rem; }
+
+.fea-material-picker { display:flex; align-items:center; gap:4px; }
+.fea-material-picker select { flex:1; min-width:0; }
+.fea-material-picker button { flex:none; }
+
+.fea-field-heading { display:flex; align-items:center; gap:4px; margin-top:8px; }
+.fea-field-heading label { width:auto; margin:0; }
+.fea-field-heading .fea-unit-label { min-width:0; }
+.fea-field-info-toggle { flex:none; padding:2px 5px; min-width:26px; min-height:26px; border-color:transparent; background:transparent; }
+.fea-field-info { margin:3px 0 6px; color:var(--ui-color-text-muted); font-size:11px; }
+.fea-tools legend .fea-field-heading { margin:0; }
+@media(pointer:coarse) { .fea-field-info-toggle { min-width:44px; min-height:44px; } }

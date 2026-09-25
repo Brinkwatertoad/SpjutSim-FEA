@@ -3,14 +3,14 @@
   var api=root.SpjutsimFEA, identity=[[1,0,0],[0,1,0],[0,0,1]];
   function LocalFrameEditor(container,prefix){
     this.container=container;this.prefix=prefix;this.savedFrame=null;this.axes=identity.map(function(v){return v.slice();});
-    container.innerHTML='<label for="'+prefix+'-frame-kind">Coordinate frame</label><select id="'+prefix+'-frame-kind"><option value="global">Global XYZ</option><option value="manual">Rectangular (stays global)</option><option value="cad">Planar face (follows CAD)</option></select>'+
+    container.innerHTML='<div class="fea-field-heading"><label for="'+prefix+'-frame-kind">Coordinate frame</label><button type="button" class="fea-field-info-toggle" data-field-info="'+prefix+'-frame-info" aria-controls="'+prefix+'-frame-info" aria-expanded="false" aria-label="Coordinate frame information" title="Coordinate frame information">ⓘ</button></div><div id="'+prefix+'-frame-info" class="fea-field-info" hidden><small id="'+prefix+'-frame-preview"></small></div><select id="'+prefix+'-frame-kind"><option value="global">Global XYZ</option><option value="manual">Rectangular (stays global)</option><option value="cad">Planar face (follows CAD)</option></select>'+
       '<fieldset id="'+prefix+'-frame-fields" hidden><legend>Rotate frame</legend>'+
       '<svg id="'+prefix+'-frame-triad" class="fea-frame-triad" viewBox="0 0 180 130" role="img" aria-label="Local frame axes in global coordinates"></svg>'+
       '<label for="'+prefix+'-frame-rotation-axis">Global axis</label><select data-frame-control id="'+prefix+'-frame-rotation-axis"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select>'+
       '<label for="'+prefix+'-frame-angle">Angle (°)</label><input data-frame-control id="'+prefix+'-frame-angle" type="number" step="any" value="15">'+
       '<div class="fea-frame-actions">'+[['minus','− angle'],['plus','+ angle'],['minus-90','−90°'],['plus-90','+90°'],['reset','Reset']].map(function(item){return '<button type="button" id="'+prefix+'-frame-'+item[0]+'">'+item[1]+'</button>';}).join('')+'</div>'+
       '<details><summary>Frame origin</summary>'+['x','y','z'].map(function(axis){return '<label for="'+prefix+'-frame-origin-'+axis+'">'+axis.toUpperCase()+' (<span data-unit-label="lengthM">'+api.preferredUnit('lengthM')+'</span>)</label><input id="'+prefix+'-frame-origin-'+axis+'" data-unit-quantity="lengthM" type="number" step="any" value="0">';}).join('')+'</details></fieldset>'+
-      '<details class="fea-info"><summary aria-label="Coordinate frame information" title="Coordinate frame information">ⓘ</summary><small id="'+prefix+'-frame-preview"></small></details><small id="'+prefix+'-frame-error" class="fea-error" role="status"></small>';
+      '<small id="'+prefix+'-frame-error" class="fea-error" role="status"></small>';
     var self=this;this.kind=this.get('kind');
     this.kind.addEventListener('change',function(){self.savedFrame=null;self.refresh();});
     this.get('angle').addEventListener('keydown',function(event){if(event.key==='Enter'){event.preventDefault();event.stopPropagation();self.get('plus').click();}});

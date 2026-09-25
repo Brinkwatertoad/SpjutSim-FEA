@@ -1857,6 +1857,12 @@ Add, Copy & Modify, Edit, Delete, and Use, with every optional property and sour
 notes, family, standard, and per-property provenance available in the full editor.
 Factory Edit is read-only; copying retains provenance. Changed properties lose
 inherited citations. Library Save is separate from project assignment and Undo.
+Place Save and Edit in library icons beside the Material dropdown, in that order.
+Save updates the selected custom entry even after inline edits; for a built-in it
+saves a uniquely named custom copy with metadata. Edit opens that entry in the full
+library editor, or a new entry seeded from an unsaved custom project material.
+Library Delete uses danger styling; Use and Save & Use use accent styling. Match
+Truss footer ordering: Cancel, flexible space, Save, Save & Use.
 See `docs/material-library.md` for shared UI provenance and future exchange mapping.
 Cross-app import is not yet supported; FEA must not invent missing Poisson ratios.
 
@@ -1869,7 +1875,9 @@ Removal is undoable without a confirmation dialog. Deleting a mesh preserves the
 source, material, assignments, gravity, and settings while clearing derived data.
 
 Supplementary face counts, area, load-distribution explanations, and coordinate
-frame details belong in keyboard-accessible information disclosures. Actionable
+frame details belong in keyboard-accessible information disclosures. Put one info
+control on the same row as each relevant field heading; combine that field’s
+information and reveal it directly below. Actionable
 validation errors remain visible. Material caveats and references stay in the
 library record rather than recurring in the assignment panel.
 

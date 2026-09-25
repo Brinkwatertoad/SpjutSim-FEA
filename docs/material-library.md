@@ -8,6 +8,18 @@ in `web/css/material-library.css`, using FEA theme variables. FEA-specific data,
 validation, property units, and record editing live in `material-library-ui.js`.
 No runtime connection to another checkout or external service is required.
 
+The material dropdown has a Save icon followed by an Edit in library icon on the
+same row. Save writes the current properties directly: it updates the selected
+user entry (including after inline edits), or creates a uniquely named custom copy
+of a built-in, retaining its metadata. Invalid input does not overwrite a record.
+Edit in library opens the selected entry in the full editor; an unsaved custom
+material opens a new entry seeded from the project. Project reopen and Undo resolve
+the selector from the project snapshot rather than persisting a live library link.
+
+The library uses FEA danger styling for Delete and accent styling for Use and
+Save & Use. Its editor footer follows Truss: Cancel on the left, then a spacer,
+Save and Save & Use on the right.
+
 Material library opens a searchable table with Add, Copy & Modify, Edit, Delete,
 and Use. Edit exposes all properties (including blank optional strengths), family,
 standard, source, source URL, notes, and per-property source links. Factory records
@@ -19,7 +31,8 @@ Printed-material variability notes and model limitations stay in catalog metadat
 visible in the full editor. They are not repeated in the normal assignment panel.
 Sources survive copy, editing unrelated fields, and browser-storage reload.
 Untouched fields retain their original SI values instead of round-tripping through
-display units, avoiding numerical drift and accidental citation removal. A
+display units, including when switching unit preferences before saving, avoiding
+numerical drift and accidental citation removal. A
 changed numerical property loses its inherited per-property citation; its new
 source can be recorded in Source/Source URL and Notes. Links are opened only for
 HTTP(S) URLs. Browser-storage failures leave records usable during the session and
