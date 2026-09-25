@@ -53,6 +53,7 @@
     ui.analysisAuthoring.onLoadUnitChange=function(quantity,symbol){edit({[quantity]:symbol});};
     [[ui.stressUnit,'stressPa'],[ui.lengthUnit,'displacementM']].forEach(function(entry){entry[0].addEventListener('change',function(e){e.stopImmediatePropagation();edit({[entry[1]]:this.value});},true);});
     change(function(){},prefs.units);
+    ui.analysisAuthoring.resetLoadForm(false);
     ui.unitPreferences=prefs;
   }
   api.bindUnitSettings=bindUnitSettings;

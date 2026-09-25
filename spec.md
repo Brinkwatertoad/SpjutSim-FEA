@@ -1986,8 +1986,11 @@ and is never reused. Trimmed nonempty names can be changed without invalidating
 numerical results. Adding/editing restores appropriate remembered type choices;
 editing an existing item always shows its actual type.
 
-Initial Force is surface-normal magnitude 1 N with Push/Pull. Component force
-defaults to [0, 1, 0] N; pressure defaults to 1 MPa. Explain constant pressure
+Initial Force is surface-normal magnitude 1 in the selected force unit with
+Push/Pull. Component force defaults to [0, 1, 0] in that unit; pressure defaults
+to 1 in the selected pressure unit. These defaults apply whenever a new load is
+started, including restored unit preferences. Changing units on an existing
+draft or saved load preserves its physical value. Explain constant pressure
 versus total force across all selected faces, including cancellation of opposing
 normal directions. Gravity uses the same transaction with no face selection,
 global components/presets, Apply, Cancel, and Remove. Gravity arrow visibility

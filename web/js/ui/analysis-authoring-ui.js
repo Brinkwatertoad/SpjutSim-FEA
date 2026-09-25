@@ -625,8 +625,8 @@
     this.editingLoadId = null;
     this.loadForm.reset();
     if(this.loadFrameEditor)this.loadFrameEditor.set(null);
-    byId('load-pressure').value = root.SpjutsimFEA.siToDisplay('pressurePa', 1e6, this.loadUnits.pressurePa);
-    ['load-magnitude','load-fy'].forEach(function (id) { if (byId(id)) { byId(id).value = root.SpjutsimFEA.siToDisplay('forceN', 1, this.loadUnits.forceN); } }, this);
+    byId('load-pressure').value = 1;
+    ['load-magnitude','load-fy'].forEach(function (id) { if (byId(id)) { byId(id).value = 1; } });
     this.syncLoadUnits();
     if (byId('load-name')) { byId('load-name').value = 'Load ' + this.controller.nextLoadNameSequence; }
     this.loadType.value = this.lastLoadType;

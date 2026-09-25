@@ -40,7 +40,12 @@
       var reloaded=document.createElement('iframe');reloaded.src='../../web/index.html';document.body.append(reloaded);
       await wait(function(){return reloaded.contentDocument && reloaded.contentDocument.getElementById('app-status') && reloaded.contentDocument.getElementById('app-status').textContent==='Local runtime ready';});
       assert(reloaded.contentDocument.getElementById('load-force-unit').value==='lbf' && reloaded.contentDocument.getElementById('load-pressure-unit').value==='psi','App reload ignored preferences');
-      near(Number(reloaded.contentDocument.getElementById('load-magnitude').value),1/4.4482216152605);
+      ['load-magnitude','load-fy','load-pressure'].forEach(function(id){near(Number(reloaded.contentDocument.getElementById(id).value),1);});
+      author.resetLoadForm(false);
+      ['load-magnitude','load-fy','load-pressure'].forEach(function(id){near(Number(doc.getElementById(id).value),1);});
+      fill('load-type','total-force');fill('load-force-mode','normal');near(author.readLoad().magnitudeN,4.4482216152605);
+      fill('load-force-mode','components');near(author.readLoad().forceN[1],4.4482216152605);
+      fill('load-type','pressure');near(author.readLoad().pressurePa,6894.757293168361);
       reloaded.remove();
       win.localStorage.removeItem('spjutsim-fea.unit-preferences');
       document.getElementById('test-status').textContent='Passed';
