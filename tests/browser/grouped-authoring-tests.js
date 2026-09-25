@@ -38,20 +38,20 @@
       var negative=geometry.faceIds.find(function(id){return api.analyzeGeometryFaceNormal(geometry,id).normal[0]<-0.99;});
       var positive=geometry.faceIds.find(function(id){return api.analyzeGeometryFaceNormal(geometry,id).normal[0]>0.99;});
       assert(doc.querySelector('[data-setup-kind="support"] strong').textContent==='Add support…' && doc.querySelector('[data-setup-kind="load"] strong').textContent==='Add load…','Empty assignment rows are missing');
-      app.replaceSelectedFaces([negative]);click('[data-setup-kind="support"][data-item-id="new"] [data-setup-row-trigger]');fill('support-name','Fixed end');click('#support-form button[type="submit"]');
+      app.replaceSelectedFaces([negative]);click('[data-setup-kind="support"][data-item-id="new"] [data-setup-row-trigger]');fill('support-name','Fixed end');
       app.replaceSelectedFaces([positive]);click('#setup-add-load-button');fill('load-type','total-force');
       assert(doc.getElementById('load-force-mode').value==='normal' && doc.getElementById('load-magnitude').value==='1','Default normal force magnitude missing');
       fill('load-force-mode','components');fill('load-name','Axial force');
       fill('load-fx','1000');fill('load-fy','0');fill('load-fz','0');
-      assert(app.document.assignmentDraft.validation.valid && !app.document.loads.length,'Live preview committed early or is invalid');
-      click('#load-form button[type="submit"]');assert(!app.document.selectedFaceIds.length,'Apply left faces selected');
+      assert(app.document.assignmentDraft.validation.valid && app.document.loads.length===1,'Immediate load did not commit');
+      assert(!app.document.selectedFaceIds.length,'Apply left faces selected');
       app.replaceMeshSettings({preset:'coarse',elementType:'tet10'});click('[data-setup-kind="mesh"] [data-setup-row-trigger]');click('#generate-mesh-button');
       await waitFor(function(){return app.document.meshGeneration.status==='succeeded';});
       assert(!doc.getElementById('solve-button').disabled && app.document.solvePreflight.status==='idle','Mesh triggered a check or blocked Solve');
       click('#solve-button');
       assert(!doc.getElementById('checks-panel').hidden,'Solve did not open Checks first');await waitFor(function(){return Boolean(app.document.results);});
       var result=app.document.results, revision=app.document.analysisRevision, mesh=app.document.mesh;
-      click('[data-setup-kind="load"] [data-setup-row-trigger]');fill('load-fx','1500');click('#cancel-load-edit');
+      click('[data-setup-kind="load"] [data-setup-row-trigger]');var pending=doc.getElementById('load-fx');pending.value='1500';pending.dispatchEvent(new win.Event('input',{bubbles:true}));doc.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
       assert(app.document.results===result && app.document.analysisRevision===revision && app.document.viewportPresentation.mode==='stress','Cancel failed to preserve completed solve and view');
       click('[data-view-mode="deformation"]');assert(app.document.viewportPresentation.deformationMode==='auto','Deformation did not default to Auto');click('#deformation-animation-toggle');click('#deformation-animation-toggle');click('[data-view-mode="stress"]');
       assert(app.document.viewportPresentation.deformationScale===0,'Stress retained hidden deformation scaling');
@@ -110,8 +110,8 @@
       click('[data-view-mode="deformation"]');fill('result-field','uy');
       var oldScale=app.document.viewportPresentation.deformationScale;
       click('#setup-gravity-button');fill('gravity-direction','+y');
-      assert(app.document.assignmentDraft.validation.valid && !app.document.gravity.enabled && app.document.results===result,'Gravity preview changed committed calculation');
-      click('#apply-gravity-button');
+      assert(app.document.assignmentDraft.validation.valid && app.document.gravity.enabled && !app.document.results,'Gravity did not commit immediately');
+
       assert(app.document.gravity.enabled && app.document.gravity.accelerationMS2[1]>0,'Apply did not enable gravity in chosen direction');
       await new Promise(function(resolve){win.requestAnimationFrame(resolve);});
       assert(doc.querySelector('[data-setup-kind="gravity"]') && viewport.analysisOverlay.children.some(function(g){return g.userData.descriptor.type==='gravity' && g.userData.descriptor.direction[1]===1;}),'Enabled gravity not represented in setup and viewport');
@@ -120,17 +120,17 @@
       assert(app.document.viewportPresentation.deformationScale>0 && app.document.viewportPresentation.deformationScale!==oldScale,'Auto deformation scale did not follow new result');
       fill('deformation-mode','user');fill('deformation-scale','37');
       click('[data-setup-kind="gravity"] [data-setup-row-trigger]');
-      assert(doc.getElementById('apply-gravity-button').getAttribute('aria-label')==='Apply gravity','Existing gravity does not offer Apply');
-      fill('gravity-direction','-x');click('#cancel-gravity-edit');
+      assert(!doc.getElementById('apply-gravity-button'),'Obsolete gravity Apply remains');
+      doc.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
       assert(app.document.gravity.accelerationMS2[1]>0 && app.document.results===result && app.document.viewportPresentation.mode==='deformation','Cancel gravity changed solved state');
-      click('[data-setup-kind="gravity"] [data-setup-row-trigger]');fill('gravity-direction','+z');click('#apply-gravity-button');
+      click('[data-setup-kind="gravity"] [data-setup-row-trigger]');fill('gravity-direction','+z');
       assert(app.document.gravity.accelerationMS2[2]>0 && !app.document.results,'Save gravity did not apply new direction');
       app.replaceViewportPresentation(Object.assign({},app.document.viewportPresentation,{showGravity:false}));
       await new Promise(function(resolve){win.requestAnimationFrame(resolve);});
       click('#show-supports');await new Promise(function(resolve){win.requestAnimationFrame(resolve);});
       assert(!viewport.analysisOverlay.children.some(function(g){return g.userData.descriptor.type==='gravity' || g.userData.descriptor.type==='support';}) && viewport.analysisOverlay.children.length,'Independent gravity/support visibility failed');
       app.replaceViewportPresentation(Object.assign({},app.document.viewportPresentation,{showSupports:true}));
-      click('[data-setup-kind="gravity"] [data-setup-row-trigger]');click('#remove-gravity-button');
+      click('[data-setup-kind="gravity"] [data-setup-row-trigger]');click('[data-setup-kind="gravity"] [data-setup-delete]');
       assert(!app.document.gravity.enabled && !doc.querySelector('[data-setup-kind="gravity"]'),'Remove gravity left active body load');
       click('#solve-button');await waitFor(function(){return Boolean(app.document.results);});result=app.document.results;
       assert(app.document.viewportPresentation.deformationMode==='user' && app.document.viewportPresentation.deformationScale===37,'New solve lost user deformation scale');
@@ -148,6 +148,6 @@
       click('#view-checks-button');assert(doc.getElementById('checks-revision').textContent.includes('Stale'),'Old check lost its stale label');
       window.__spjutsimGroupedEvidence={samplePeakPa:result.extrema.rawVonMisesMax.valuePa,maxDisplacementM:result.extrema.maxDisplacement.valueM,elementType:result.elementType};
       document.getElementById('test-status').textContent='Passed';
-    }catch(error){document.getElementById('test-status').textContent='Failed: '+error.message;}
+    }catch(error){document.getElementById('test-status').textContent='Failed: '+error.message+(app?' '+JSON.stringify({solve:app.document.solveExecution,preflight:app.document.solvePreflight.status,draft:app.document.assignmentDraft && {dirty:app.document.assignmentDraft.dirty,valid:app.document.assignmentDraft.validation},gravity:app.document.gravity}):'');}
   },{once:true});
 }());

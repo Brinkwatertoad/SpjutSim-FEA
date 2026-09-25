@@ -7,6 +7,7 @@
   <link rel="icon" href="assets/icons/fea.svg" type="image/svg+xml">
   <link rel="stylesheet" href="ui/ui-tokens.css">
   <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/material-library.css">
 </head>
 <body>
   <div class="fea-app" id="app-shell">
@@ -83,13 +84,13 @@
             </div>
             <div id="material-editor">
               <form id="material-form" novalidate>
-                <div class="fea-editor-actions"><button class="ui-button-primary" type="submit">Apply material</button><button id="cancel-material-edit" type="button">Cancel edit</button><button id="remove-material-button" type="button" data-action-intent="danger">Remove active material</button></div>
-                <label for="material-catalog-select">Catalog</label>
+                <label for="material-catalog-select">Material</label>
                 <select id="material-catalog-select" aria-describedby="material-catalog-details"><option value="custom" selected>Custom</option></select>
+                <button id="open-material-library" type="button">Material library…</button>
                 <label for="material-name">Name</label><input id="material-name" autocomplete="off" placeholder="e.g. Structural steel">
                 <label for="material-youngs">Young's modulus (<span data-unit-label="youngsModulusPa">GPa</span>)</label><input data-unit-quantity="youngsModulusPa" id="material-youngs" type="number" min="0" step="any" required>
                 <label for="material-poisson">Poisson's ratio</label><input id="material-poisson" type="number" min="-0.999" max="0.499" step="any" required aria-describedby="material-poisson-help">
-                <small id="material-poisson-help">Valid between −1 and 0.5. Negative values are unusual for ordinary solids.</small>
+                <details class="fea-info"><summary aria-label="More information" title="More information">ⓘ</summary><small id="material-poisson-help">Valid between −1 and 0.5. Negative values are unusual for ordinary solids.</small></details>
                 <label for="material-density">Density (<span data-unit-label="densityKgM3">kg/m³</span>, optional)</label><input data-unit-quantity="densityKgM3" id="material-density" type="number" min="0" step="any">
                 <details><summary><span class="fea-chevron" aria-hidden="true">▶</span> Optional strengths</summary>
                   <label for="material-tensile-yield">Tensile yield (<span data-unit-label="strengthPa">MPa</span>)</label><input data-unit-quantity="strengthPa" id="material-tensile-yield" type="number" min="0" step="any">
@@ -97,20 +98,18 @@
                   <label for="material-ultimate-tensile">Ultimate tensile (<span data-unit-label="strengthPa">MPa</span>)</label><input data-unit-quantity="strengthPa" id="material-ultimate-tensile" type="number" min="0" step="any">
                   <label for="material-ultimate-compressive">Ultimate compressive (<span data-unit-label="strengthPa">MPa</span>)</label><input data-unit-quantity="strengthPa" id="material-ultimate-compressive" type="number" min="0" step="any">
                 </details>
-                <button id="save-material-library-button" type="button">Save to material library</button>
-                <button id="replace-saved-material-button" type="button" hidden>Save to material library</button>
-                <button id="remove-saved-material-button" type="button" data-action-intent="danger" hidden>Remove saved material</button>
+                <button id="save-material-library-button" type="button">Add to library…</button>
+                <button id="replace-saved-material-button" type="button" hidden>Edit in library…</button>
               </form>
               <div id="material-catalog-details" class="fea-material-details" aria-live="polite"></div>
               <p id="material-status" role="status" aria-live="polite">No material defined.</p>
             </div>
             <div id="support-editor">
               <form id="support-form" novalidate>
-                <div class="fea-editor-actions"><button class="ui-button-primary" type="submit">Apply support</button><button id="cancel-support-edit" type="button" hidden>Cancel edit</button><button id="remove-support-item-button" type="button" data-action-intent="danger" hidden>Remove support</button></div>
                 <label for="support-name">Name</label><input id="support-name" type="text" maxlength="160" required>
                 <label for="support-type">Preset</label><select id="support-type"><option value="fixed">Fixed (X, Y, Z = 0)</option><option value="custom">Choose components</option><option value="sliding">Planar sliding</option><option value="symmetry">Planar symmetry</option></select>
                 <div id="support-frame-editor"></div>
-                <small id="support-planar-help" hidden>Normal motion is restrained; both tangential directions remain free. Symmetry requires symmetric geometry and loading. Loads are not automatically scaled.</small>
+                <details class="fea-info"><summary aria-label="More information" title="More information">ⓘ</summary><small id="support-planar-help" hidden>Normal motion is restrained; both tangential directions remain free. Symmetry requires symmetric geometry and loading. Loads are not automatically scaled.</small></details>
                 <fieldset id="support-component-fields" hidden>
                   <legend><span id="support-coordinate-label">Global</span> constrained components (<span data-unit-label="displacementM">mm</span>)</legend>
                   <label class="fea-component"><input id="support-ux-enabled" type="checkbox"><span>Ux</span><input data-unit-quantity="displacementM" id="support-ux" type="number" step="any" aria-label="Ux displacement in millimeters"></label>
@@ -118,28 +117,28 @@
                   <label class="fea-component"><input id="support-uz-enabled" type="checkbox"><span>Uz</span><input data-unit-quantity="displacementM" id="support-uz" type="number" step="any" aria-label="Uz displacement in millimeters"></label>
                 </fieldset>
               </form>
+              <details class="fea-info"><summary aria-label="Support information" title="Support information">ⓘ</summary><div id="support-details"></div></details>
               <p id="support-status" role="status" aria-live="polite">Import geometry and select faces to add a support.</p>
             </div>
             <div id="load-editor">
               <form id="load-form" novalidate>
-                <div class="fea-editor-actions"><button class="ui-button-primary" type="submit">Apply load</button><button id="cancel-load-edit" type="button" hidden>Cancel edit</button><button id="remove-load-item-button" type="button" data-action-intent="danger" hidden>Remove load</button></div>
                 <label for="load-name">Name</label><input id="load-name" type="text" maxlength="160" required>
                 <label for="load-type">Type</label><select id="load-type"><option value="total-force">Force</option><option value="pressure">Pressure</option></select>
-                <div id="pressure-fields" hidden><div class="fea-unit-label"><label for="load-pressure">Pressure</label> (<select id="load-pressure-unit" class="fea-inline-unit" data-load-unit="pressurePa" aria-label="Pressure input unit"><option>MPa</option><option>Pa</option><option>psi</option><option>ksi</option></select>)</div><input data-unit-quantity="pressurePa" id="load-pressure" aria-describedby="load-pressure-help" type="number" step="any" value="1"><small id="load-pressure-help">Positive pressure pushes inward.</small></div>
+                <div id="pressure-fields" hidden><div class="fea-unit-label"><label for="load-pressure">Pressure</label> (<select id="load-pressure-unit" class="fea-inline-unit" data-load-unit="pressurePa" aria-label="Pressure input unit"><option>MPa</option><option>Pa</option><option>psi</option><option>ksi</option></select>)</div><input data-unit-quantity="pressurePa" id="load-pressure" aria-describedby="load-pressure-help" type="number" step="any" value="1"><details class="fea-info"><summary aria-label="More information" title="More information">ⓘ</summary><small id="load-pressure-help">Positive pressure pushes inward.</small></details></div>
                 <div id="force-mode-fields"><label for="load-force-mode">Direction</label><select id="load-force-mode"><option value="normal">Surface normal</option><option value="components">Components</option></select></div>
-                <div id="normal-force-fields"><div class="fea-unit-label"><label for="load-magnitude">Magnitude</label> (<select id="load-force-unit" class="fea-inline-unit" data-load-unit="forceN" aria-label="Force input unit"><option>N</option><option>kN</option><option>lbf</option><option>kip</option></select>)</div><input data-unit-quantity="forceN" id="load-magnitude" aria-describedby="load-normal-help" type="number" step="any" min="0" value="1"><label for="load-sense">Direction along normal</label><select id="load-sense"><option value="push">Push inward</option><option value="pull">Pull outward</option></select><small id="load-normal-help">Distributed by area along each face’s local normal.</small></div>
+                <div id="normal-force-fields"><div class="fea-unit-label"><label for="load-magnitude">Magnitude</label> (<select id="load-force-unit" class="fea-inline-unit" data-load-unit="forceN" aria-label="Force input unit"><option>N</option><option>kN</option><option>lbf</option><option>kip</option></select>)</div><input data-unit-quantity="forceN" id="load-magnitude" aria-describedby="load-normal-help" type="number" step="any" min="0" value="1"><label for="load-sense">Direction along normal</label><select id="load-sense"><option value="push">Push inward</option><option value="pull">Pull outward</option></select><details class="fea-info"><summary aria-label="More information" title="More information">ⓘ</summary><small id="load-normal-help">Distributed by area along each face’s local normal.</small></details></div>
                 <fieldset id="force-fields" aria-describedby="load-components-help" hidden><legend>Total force vector (<select id="load-vector-unit" class="fea-inline-unit" data-load-unit="forceN" aria-label="Force input unit"><option>N</option><option>kN</option><option>lbf</option><option>kip</option></select>)</legend>
-                  <small id="load-components-help">Components use the selected coordinate frame.</small><div id="load-frame-editor"></div>
+                  <details class="fea-info"><summary aria-label="More information" title="More information">ⓘ</summary><small id="load-components-help">Components use the selected coordinate frame.</small></details><div id="load-frame-editor"></div>
                   <label for="load-fx">Fx</label><input data-unit-quantity="forceN" id="load-fx" type="number" step="any" value="0">
                   <label for="load-fy">Fy</label><input data-unit-quantity="forceN" id="load-fy" type="number" step="any" value="1">
                   <label for="load-fz">Fz</label><input data-unit-quantity="forceN" id="load-fz" type="number" step="any" value="0">
                 </fieldset>
               </form>
+              <details class="fea-info"><summary aria-label="Load information" title="Load information">ⓘ</summary><div id="load-details"></div></details>
               <p id="load-status" role="status" aria-live="polite">Import geometry and select faces to add a load.</p>
             </div>
             <div id="gravity-editor">
               <form id="gravity-form" class="fea-gravity-form" novalidate>
-                <div class="fea-editor-actions"><button id="apply-gravity-button" type="submit">Apply gravity</button><button id="cancel-gravity-edit" type="button">Cancel edit</button><button id="remove-gravity-button" type="button" data-action-intent="danger" hidden>Remove gravity</button></div>
                 <label for="gravity-direction">Direction</label><select id="gravity-direction"><option value="-z">−Z</option><option value="+z">+Z</option><option value="-y">−Y</option><option value="+y">+Y</option><option value="-x">−X</option><option value="+x">+X</option><option value="custom">Components</option></select>
                 <label class="fea-inline-check"><input id="gravity-visible" type="checkbox" checked><span>Show gravity arrow</span></label>
                 <fieldset><legend>Acceleration (<span data-unit-label="accelerationMS2">m/s²</span>)</legend>
@@ -148,6 +147,7 @@
                   <label for="gravity-z">Z</label><input data-unit-quantity="accelerationMS2" id="gravity-z" type="number" step="any" value="-9.80665">
                 </fieldset>
               </form>
+              <details class="fea-info"><summary aria-label="Gravity information" title="Gravity information">ⓘ</summary><div id="gravity-details"></div></details>
               <p id="gravity-status" role="status" aria-live="polite">Gravity is off.</p>
             </div>
             <div id="mesh-editor">
@@ -393,6 +393,40 @@
   <script src="js/render/viewport-controller.js"></script>
 <script src="js/render/face-access.js"></script>
   <script src="js/ui/setup-inspector-summary.js"></script>
+  <dialog id="engineering-library-dialog" class="engineering-library-dialog" aria-modal="true" aria-labelledby="engineering-library-title">
+    <div class="engineering-library-surface">
+      <header class="engineering-library-header">
+        <h2 id="engineering-library-title">Engineering Library</h2>
+        <div class="engineering-library-header-actions" role="group" aria-label="Engineering library-wide actions">
+          <button hidden id="engineering-library-import" type="button" class="secondary">Import CSV…</button>
+          <button hidden id="engineering-library-csv-format" type="button" class="secondary" aria-expanded="false">CSV Format…</button>
+          <button hidden id="engineering-library-export-filtered" type="button" class="secondary">Export Filtered CSV</button>
+          <button hidden id="engineering-library-delete-filtered" type="button" class="secondary danger-action" disabled>Delete Filtered</button>
+          <button hidden id="engineering-library-reset" type="button" class="secondary danger-action">Reset Library</button>
+          <button class="action-button" type="button" data-engineering-library-close aria-label="Close Engineering Library">Close</button>
+        </div>
+      </header>
+      <aside id="engineering-library-csv-guide" class="engineering-library-csv-guide" aria-label="CSV format guidance" hidden></aside>
+      <div class="engineering-library-toolbar">
+
+        <input id="engineering-library-search" type="search" placeholder="Search library" aria-label="Search engineering library">
+        <div class="engineering-library-command-actions" role="group" aria-label="Engineering library actions">
+          <button id="engineering-library-add" type="button" class="secondary">Add custom…</button>
+          <button id="engineering-library-copy" type="button" class="secondary" disabled>Copy &amp; Modify…</button>
+          <button id="engineering-library-edit" type="button" class="secondary" disabled>Edit</button>
+          <button id="engineering-library-delete" type="button" class="secondary danger-action" disabled>Delete</button>
+          <button id="engineering-library-use" type="button" class="primary" disabled>Use</button>
+        </div>
+      </div>
+      <div class="engineering-library-body">
+        <div id="engineering-library-table" class="engineering-library-table-host" role="region" aria-label="Engineering library records"></div>
+        <aside id="engineering-library-editor" class="engineering-library-editor" aria-label="Engineering record editor" hidden></aside>
+      </div>
+      <div id="engineering-library-message" class="engineering-library-message" role="status" aria-live="polite"></div>
+    </div>
+  </dialog>
+  <script src="js/ui/engineering-library.js"></script>
+  <script src="js/ui/material-library-ui.js"></script>
   <script src="js/ui/local-frame-editor.js"></script>
   <script src="js/ui/analysis-authoring-ui.js"></script>
   <script src="js/ui/result-formatting.js"></script>

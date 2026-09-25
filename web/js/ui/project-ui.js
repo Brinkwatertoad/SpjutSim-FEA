@@ -22,8 +22,8 @@
     }
     var flow=new api.ProjectWorkflow(app,Object.assign({},options,{acceptSetupOnly:async function(text){return await ask(text+' Open the CAD and setup without cached results?',[['open','Open setup only'],['cancel','Cancel']])==='open';}}));
     function render(){
-      document.querySelectorAll('[data-project-save]').forEach(function(button){button.disabled=busy || !app.geometrySource || Boolean(app.document.assignmentDraft);});
-      document.querySelectorAll('[data-project-open],[data-project-new]').forEach(function(button){button.disabled=busy || api.engineeringBusy(app.document) || Boolean(app.document.assignmentDraft);});
+      document.querySelectorAll('[data-project-save]').forEach(function(button){button.disabled=busy || !app.geometrySource || api.hasPendingAssignment(app.document);});
+      document.querySelectorAll('[data-project-open],[data-project-new]').forEach(function(button){button.disabled=busy || api.engineeringBusy(app.document) || api.hasPendingAssignment(app.document);});
       var saveButton=document.getElementById('save-project-button');
       saveButton.title='Save project ('+modifier+'S)'+(app.projectDirty?' · Unsaved changes':'');
     }
@@ -38,7 +38,7 @@
       finally{busy=false;render();}
     }
     async function preserveCurrent(){
-      if(app.document.assignmentDraft){message('Apply or Cancel the draft first.');return false;}
+      if(api.hasPendingAssignment(app.document)){message('Finish the incomplete edit or close its editor first.');return false;}
       if(!app.geometrySource){return true;}
       try{await recovery.checkpoint();return true;}
       catch(error){
@@ -80,7 +80,7 @@
     document.querySelectorAll('[data-project-shortcut]').forEach(function(label){label.textContent=modifier+label.dataset.projectShortcut.toUpperCase();});
     root.addEventListener('keydown',function(event){
       if(!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey || event.isComposing || !['o','s'].includes(event.key.toLowerCase())){return;}
-      event.preventDefault();if(busy || document.querySelector('dialog[open]') || app.document.assignmentDraft){return;}
+      event.preventDefault();if(busy || document.querySelector('dialog[open]') || api.hasPendingAssignment(app.document)){return;}
       if(event.key.toLowerCase()==='o'){document.querySelector('[data-project-open]').click();}
       else{document.getElementById('save-project-button').click();}
     });

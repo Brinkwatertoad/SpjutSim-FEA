@@ -493,7 +493,7 @@
     else {
       var failed=tasks.find(function(task){return task.status==='failed';});
       if(failed)message=failed.error && (failed.error.userMessage || failed.error.message) || 'Operation failed. Open Checks for details.';
-      else if(state.assignmentDraft)message='Previewing '+state.assignmentDraft.kind+' · Apply or Cancel';
+      else if(root.SpjutsimFEA.hasPendingAssignment(state))message='Finish editing '+state.assignmentDraft.kind;
       else if(state.solveExecution && state.solveExecution.status==='cancelled')message='Simulation cancelled';
       else if(state.results)message='Solve complete';
       else if(state.solvePreflight && state.solvePreflight.status==='ready')message=state.solvePreflight.result.exceedsWasmCap?'Memory limit reached · use a coarser mesh':'Model checks passed';
@@ -851,7 +851,7 @@
 
   UIController.prototype.renderSolve = function (documentState) {
     if (this.solveTimeLimit) {
-      this.solveTimeLimit.disabled = root.SpjutsimFEA.engineeringBusy(documentState) || Boolean(documentState.assignmentDraft);
+      this.solveTimeLimit.disabled = root.SpjutsimFEA.engineeringBusy(documentState) || root.SpjutsimFEA.hasPendingAssignment(documentState);
       if (document.activeElement !== this.solveTimeLimit) {
         var limit = documentState.solveSettings && documentState.solveSettings.maxDurationMs;
         this.solveTimeLimit.value = (limit === undefined ? 600000 : limit) / 60000;
@@ -880,7 +880,7 @@
       this.solveOutputStatus.textContent = message;
     }
     var readiness = root.SpjutsimFEA.solveReadiness(documentState);
-    if (this.solveReadinessStatus) { this.solveReadinessStatus.textContent = readiness.label + (documentState.assignmentDraft ? ' · Apply/Cancel preview' : ''); this.solveReadinessStatus.title = readiness.message; }
+    if (this.solveReadinessStatus) { this.solveReadinessStatus.textContent = readiness.label + (root.SpjutsimFEA.hasPendingAssignment(documentState) ? ' · Incomplete edit' : ''); this.solveReadinessStatus.title = readiness.message; }
     if (this.preflightButton) { this.preflightButton.disabled = !readiness.canCheck; this.preflightButton.title = readiness.message; }
     if (this.solveButton) { this.solveButton.disabled = this.controller.projectOpening || !readiness.canRequestSolve; this.solveButton.title = readiness.message; this.solveButton.textContent = documentState.mesh ? 'Solve' : 'Mesh and solve'; }
     if (this.solveStatus) { this.solveStatus.textContent = message + ' ' + readiness.message; }
@@ -935,7 +935,7 @@
     if (!(state.boundaryConditions || []).length) { finding('Add supports to constrain rigid motion.','support'); }
     if (!state.mesh) { finding('Generate a current mesh.','mesh'); }
     if (state.constraintStability && state.constraintStability.status !== 'fully-constrained') { finding('Unrestrained motion: '+state.constraintStability.modes.filter(function(m){return m.status!=='constrained';}).map(function(m){return m.id;}).join(', ')+'. Add support components that prevent these motions.','support'); }
-    if (state.assignmentDraft) { finding('Apply or Cancel the current assignment preview.'); }
+    if (root.SpjutsimFEA.hasPendingAssignment(state)) { finding('Finish the incomplete edit or close its editor.'); }
     if (report && report.error) {
       var message = report.error.userMessage || report.error.message || 'The check failed. Review Setup and check again.';
       var kind = /mesh|memory|cap/i.test(message) ? 'mesh' : /material|density/i.test(message) ? 'material' : /load|force/i.test(message) ? 'load' : 'support';
@@ -979,7 +979,7 @@
     var otherWorkerRunning = documentState.geometryImport.status === 'importing' ||
       documentState.meshGeneration.status === 'generating' || documentState.solvePreflight.status === 'running' ||
       documentState.solveExecution.status === 'running';
-    if (this.startConvergenceButton) { this.startConvergenceButton.disabled = running || otherWorkerRunning || Boolean(documentState.assignmentDraft) || !documentState.geometry || !documentState.material; }
+    if (this.startConvergenceButton) { this.startConvergenceButton.disabled = running || otherWorkerRunning || root.SpjutsimFEA.hasPendingAssignment(documentState) || !documentState.geometry || !documentState.material; }
     if (this.startConvergenceButton) { this.startConvergenceButton.textContent = study ? 'Restart study' : 'Start study'; }
     if (this.cancelConvergenceButton) { this.cancelConvergenceButton.hidden = !running; }
     if (this.convergenceStatus) {

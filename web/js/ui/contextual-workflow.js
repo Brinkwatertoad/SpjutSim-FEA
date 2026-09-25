@@ -47,7 +47,7 @@
     }
     function guideTarget(){
       var form=step===1 ? document.getElementById('material-form') : step===2 ? document.getElementById('support-form') : step===3 ? document.getElementById(app.document.assignmentDraft && app.document.assignmentDraft.kind==='gravity' ? 'gravity-form' : 'load-form') : null;
-      if(form && form.getClientRects().length){return needsFaces() ? document.getElementById('viewport') : form.querySelector('button[type=submit]');}
+      if(form && form.getClientRects().length){return needsFaces() ? document.getElementById('viewport') : form.querySelector('select, input');}
       var generate=document.getElementById('generate-mesh-button');
       if(step===4 && generate.getClientRects().length){return generate;}
       return document.querySelector(steps[step].target);
@@ -84,16 +84,13 @@
       document.getElementById('setup-guide-title').textContent=needsFaces() ? 'Select '+(step===2?'support':'load')+' faces' : steps[step].title;
       var target=guideTarget(),text=steps[step].text;
       if(needsFaces()){text='Click faces on the model to select them. Click a selected face again to deselect it.';}
-      if(target && target.type==='submit'){
-        text=step===1 ? 'Choose a material or enter its properties, then click Apply to continue to supports.' : 'Adjust the '+(step===2?'support':'load')+' settings or select more faces, then click Apply. You can add another afterward.';
-        if(target.id==='apply-gravity-button'){text='Set the gravity direction and acceleration, then click Apply.';}
-      }
+      if(target && target.closest('form'))text='Changes are saved automatically. Enter a value and press Enter or leave the field. Use Undo to reverse an edit.';
       if(step===4 && target && target.id==='generate-mesh-button'){text='Choose a mesh density, then click Generate mesh. Complicated parts may need finer settings. When generation finishes, choose Next to inspect it.';}
       if(step===7 && app.document.projectMetadata && app.document.projectMetadata.name==='Cube example'){text+=' The cube should extend by 5 nm under 1 kPa axial stress.';}
       document.getElementById('setup-guide-text').textContent=text;
-      document.getElementById('setup-guide-back').disabled=step===0 || Boolean(app.document.assignmentDraft);
+      document.getElementById('setup-guide-back').disabled=step===0 || api.hasPendingAssignment(app.document);
       document.getElementById('setup-guide-next').textContent=step===7?'Done':'Next';
-      document.getElementById('setup-guide-next').disabled=Boolean(app.document.assignmentDraft) || (step<4 && nextGuideStep(app.document)<=step) || ((step===4 || step===5) && !app.document.mesh) || (step===5 && app.document.viewportPresentation.mode!=='mesh') || (step===6 && !app.document.results);
+      document.getElementById('setup-guide-next').disabled=api.hasPendingAssignment(app.document) || (step<4 && nextGuideStep(app.document)<=step) || ((step===4 || step===5) && !app.document.mesh) || (step===5 && app.document.viewportPresentation.mode!=='mesh') || (step===6 && !app.document.results);
       position();
     }
     function dismiss(){shown=false;dismissed=true;try{root.localStorage.setItem(guideKey,'true');}catch(error){}render();}
@@ -108,7 +105,7 @@
       render();
     }
     // Editor open/close can finish after controller notifications. Refresh after the user action,
-    // without scrolling, so Apply/Cancel return the guide to Add rather than a detached control.
+    // without scrolling or targeting a detached control.
     document.getElementById('setup-pane').addEventListener('click',render);
     document.getElementById('setup-pane').addEventListener('submit',render);
     document.getElementById('setup-pane').addEventListener('fea-material-applied',function(){
@@ -129,7 +126,7 @@
     document.getElementById('report-options-button').classList.add('fea-icon-button');
     var viewport=document.getElementById('viewport');
     viewport.addEventListener('dragover',function(event){event.preventDefault();});
-    viewport.addEventListener('drop',function(event){event.preventDefault();if(event.dataTransfer.files.length===1 && !api.engineeringBusy(app.document) && !app.document.assignmentDraft){importCadFile(event.dataTransfer.files[0]);}});
+    viewport.addEventListener('drop',function(event){event.preventDefault();if(event.dataTransfer.files.length===1 && !api.engineeringBusy(app.document) && !api.hasPendingAssignment(app.document)){importCadFile(event.dataTransfer.files[0]);}});
     app.subscribe(function(state,change){
       if(change==='solve-progress' || change==='convergence-progress'){return;}
       var geometryId=state.geometry && state.geometry.geometryId;

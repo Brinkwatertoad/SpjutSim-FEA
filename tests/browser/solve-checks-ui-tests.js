@@ -28,7 +28,7 @@
     assert(timeLimit.disabled,'Running solve budget remains editable');
     var busyRejected=false;try{app.replaceSolveTimeLimit(120000);}catch(e){busyRejected=true;}assert(busyRejected,'Runtime budget changed during a worker operation');
     state.solvePreflight={status:'ready',analysisRevision:1,result:{exceedsWasmCap:false}};state.assignmentDraft={dirty:true};ui.renderSolve(state);
-    assert(check.disabled && solve.disabled && document.getElementById('solve-status').textContent.includes('Apply or Cancel'),'Draft has no persistent explanation');
+    assert(check.disabled && solve.disabled && document.getElementById('solve-status').textContent.includes('incomplete edit'),'Draft has no persistent explanation');
     var rejected=false;try{app.beginSolve();}catch(e){rejected=true;}assert(rejected,'Controller gates can be bypassed with a draft');
     state.assignmentDraft=null;state.solvePreflight.analysisRevision=0;rejected=false;try{app.beginSolve();}catch(e){rejected=true;}assert(rejected,'Controller accepted a stale check');
     document.getElementById('test-status').textContent='Passed';

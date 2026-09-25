@@ -81,6 +81,7 @@
   };
 
   AppController.prototype.notify = function (change) {
+    if (this.committingImmediateAssignment) { return; }
     if (this.observeProject && change !== 'solve-progress' && change !== 'convergence-progress') { this.observeProject(); }
     var documentState = this.document;
     this.listeners.forEach(function (listener) { listener(documentState, change); });
@@ -258,6 +259,7 @@
     validation = root.SpjutsimFEA.validateGeometryModel(oriented);
     if (!validation.valid) { throw new Error('Invalid oriented geometry: ' + validation.reason); }
     if (root.SpjutsimFEA.sameEngineeringDefinition(this.document.geometry.orientation,oriented.orientation)) { return this.document.geometry.orientation; }
+    this.history.discardDeletedMesh();
     this.recordEngineeringEdit('orientation',this.document.geometry.orientation,oriented.orientation,'Rotate model');
     this.document.geometry = oriented;
     this.document.mesh = null;
@@ -466,7 +468,7 @@
 
   AppController.prototype.setAssignmentIncluded = function (kind, id, included) {
     if (typeof included !== 'boolean' || ['support','load'].indexOf(kind) < 0) { throw Error('Choose Include or Suppress for a support or load.'); }
-    if (root.SpjutsimFEA.engineeringBusy(this.document) || this.document.assignmentDraft) { throw Error('Apply or Cancel the current operation first.'); }
+    if (root.SpjutsimFEA.engineeringBusy(this.document) || root.SpjutsimFEA.hasPendingAssignment(this.document)) { throw Error('Apply or Cancel the current operation first.'); }
     var items = kind === 'support' ? this.document.boundaryConditions : this.document.loads;
     var item = items[findItem(items,id,kind)];
     var definition = Object.assign({},item,{enabled:included});
@@ -474,7 +476,7 @@
   };
 
   AppController.prototype.duplicateAssignment = function (kind, id) {
-    if (['support','load'].indexOf(kind) < 0 || root.SpjutsimFEA.engineeringBusy(this.document) || this.document.assignmentDraft) { throw Error('Finish the current edit before duplicating an assignment.'); }
+    if (['support','load'].indexOf(kind) < 0 || root.SpjutsimFEA.engineeringBusy(this.document) || root.SpjutsimFEA.hasPendingAssignment(this.document)) { throw Error('Finish the current edit before duplicating an assignment.'); }
     var items = kind === 'support' ? this.document.boundaryConditions : this.document.loads;
     var definition = JSON.parse(JSON.stringify(items[findItem(items,id,kind)]));
     var base = definition.name + ' copy', name = base, index = 2;
@@ -509,6 +511,7 @@
     var validation = root.SpjutsimFEA.validateMeshSettings(settings, this.document.geometry && this.document.geometry.boundingBoxM);
     if (!validation.valid) { throw new Error('Invalid mesh settings: ' + validation.reason); }
     if (root.SpjutsimFEA.sameEngineeringDefinition(this.document.meshSettings,settings)) { return; }
+    this.history.discardDeletedMesh();
     this.recordEngineeringEdit('meshSettings',this.document.meshSettings,settings,'Edit mesh settings');
     this.document.meshSettings = Object.assign({}, settings);
     this.document.mesh = null;
@@ -522,12 +525,14 @@
 
   AppController.prototype.beginMeshGeneration = function () {
     if (!this.document.geometry || !this.geometrySource) { throw new Error('Import geometry before generating a mesh.'); }
+    this.history.discardDeletedMesh();
     this.document.meshGeneration = { status: 'generating', error: null, progress: null };
     this.notify();
   };
 
   AppController.prototype.reportMeshProgress = function (progress) {
     if (this.document.meshGeneration.status !== 'generating') { return; }
+    this.history.discardDeletedMesh();
     this.document.meshGeneration = { status: 'generating', error: null, progress: progress };
     this.notify();
   };
@@ -545,6 +550,12 @@
   };
 
   AppController.prototype.clearMesh = function () {
+    if (!this.document.mesh) { return; }
+    if (!this.historyReplaying) {
+      this.history.discardDeletedMesh();
+      this.history.deletedMesh=this.document.mesh;
+      this.recordEngineeringEdit('meshRemoval',{available:true},null,'Remove mesh');
+    }
     this.document.mesh = null;
     this.document.meshMetadata = null;
     this.refreshConstraintStability();
@@ -576,7 +587,7 @@
   };
 
   AppController.prototype.replaceSolveTimeLimit = function (milliseconds) {
-    if (root.SpjutsimFEA.engineeringBusy(this.document) || this.document.assignmentDraft) {
+    if (root.SpjutsimFEA.engineeringBusy(this.document) || root.SpjutsimFEA.hasPendingAssignment(this.document)) {
       throw new Error('Finish or cancel the current operation before changing the solve time limit.');
     }
     if (!Number.isFinite(milliseconds) || milliseconds < 1000 || milliseconds > 3600000) {
@@ -669,7 +680,7 @@
   };
 
   AppController.prototype.beginConvergenceStudy = function (settings) {
-    if (this.document.assignmentDraft) { throw new Error('Apply or Cancel the assignment draft before starting convergence.'); }
+    if (root.SpjutsimFEA.hasPendingAssignment(this.document)) { throw new Error('Apply or Cancel the assignment draft before starting convergence.'); }
     if (!this.document.geometry || !this.document.material || !this.geometrySource) {
       throw new Error('Import geometry and define a material before starting convergence.');
     }

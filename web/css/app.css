@@ -337,3 +337,22 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 .fea-report-actions { display:flex; align-items:center; gap:4px; flex:none; }
 .fea-actionbar { flex-wrap:wrap; }
 @media (pointer:coarse) { .fea-editor-actions button { width:44px; height:44px; } .fea-editor-actions button:not([data-action-intent="danger"]) { width:auto; } }
+
+/* Immediate editors keep row actions separate from expansion. */
+.fea-setup-row-heading { display:flex; align-items:center; min-width:0; }
+.fea-setup-row-heading .fea-setup-row-button { flex:1; }
+.fea-row-delete { flex:none; margin:0 4px 0 auto; width:30px; height:30px; }
+.fea-editor-actions[hidden], #delete-mesh-button { display:none; }
+.fea-info { margin:4px 0; font-size:12px; }
+.fea-info > summary { width:max-content; cursor:pointer; list-style:none; padding:3px 6px; }
+.fea-info > summary::marker { content:''; }
+.fea-info[open] { padding-bottom:6px; }
+.fea-frame-triad { width:100%; max-height:130px; font-size:10px; }
+.fea-frame-actions { display:flex; flex-wrap:wrap; gap:4px; }
+.fea-frame-actions button { width:auto; flex:1; }
+.fea-setup-row-heading .fea-mesh-options { position:static; margin:0; flex:none; }
+.fea-setup-row-heading .fea-assignment-options { position:relative; bottom:auto; left:auto; flex:none; align-self:center; }
+.fea-assignment-options[open] { position:absolute; right:34px; top:0; bottom:auto; left:auto; z-index:4; }
+.fea-setup-row-heading .fea-setup-row-button { grid-template-columns:12px minmax(0,1fr) minmax(0,1fr); column-gap:4px; }
+.fea-setup-row-heading .fea-setup-row-summary { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fea-setup-row-heading .fea-setup-row-button strong { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }

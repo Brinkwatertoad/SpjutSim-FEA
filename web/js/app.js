@@ -127,7 +127,7 @@
 
   async function meshAndSolve() {
     if (app.document.mesh) { solve(); return; }
-    if (activeMesh || activeImport || activeConvergence || app.document.assignmentDraft) { return; }
+    if (activeMesh || activeImport || activeConvergence || api.hasPendingAssignment(app.document)) { return; }
     var generation = ++meshSolveGeneration;
     var mesh = await generateMesh();
     if (generation === meshSolveGeneration && mesh && app.document.mesh === mesh) { prepareSolve(true); }
@@ -141,8 +141,9 @@
 
   function prepareSolve(continueToSolve) {
     if (app.projectOpening) { return; }
-    if (app.document.assignmentDraft || app.document.solvePreflight.status === 'running' || app.document.solveExecution.status === 'running' ||
+    if (api.hasPendingAssignment(app.document) || app.document.solvePreflight.status === 'running' || app.document.solveExecution.status === 'running' ||
         activeImport || activeMesh || activeConvergence) { return; }
+    app.cancelAssignmentDraft();
     ui.showOutputPanel("checks");
     var input;
     var revision;
@@ -177,7 +178,8 @@
     if (activeImport || activeMesh || preflight.status === 'running' || app.document.solveExecution.status === 'running' ||
         (app.document.convergenceStudy && app.document.convergenceStudy.status === 'running')) { return; }
     if (preflight.status === 'ready' && preflight.result.exceedsWasmCap) { return; }
-    if (app.document.assignmentDraft) { return; }
+    if (api.hasPendingAssignment(app.document)) { return; }
+    app.cancelAssignmentDraft();
     if (!activeSolver || preflight.status !== 'ready' || preflight.analysisRevision !== app.document.analysisRevision) { prepareSolve(true); return; }
     if (preflight.result.requiresEightGiBConfirmation) {
       confirmed = root.confirm('This solve is estimated at or above 8 GiB. Browser, OS, or WebAssembly limits may terminate it even when the device has more memory. Continue?');
@@ -210,7 +212,7 @@
     var revision;
     var resolved;
     var diagonal;
-    if (activeImport || activeMesh || app.document.assignmentDraft) { return; }
+    if (activeImport || activeMesh || api.hasPendingAssignment(app.document)) { return; }
     if (activeConvergence) { activeConvergence.cancel(); }
     disposeSolver();
     try {
@@ -307,7 +309,7 @@
     var indicator = document.getElementById('assignment-preview-indicator');
     indicator.hidden = !documentState.assignmentDraft;
     viewport.assignmentDraftActive = Boolean(documentState.assignmentDraft && documentState.assignmentDraft.kind !== 'gravity');
-    if (indicator && documentState.assignmentDraft) { indicator.textContent = documentState.assignmentDraft.kind === 'gravity' ? 'Gravity preview · Apply or Cancel in Setup' : 'Preview · click faces to toggle · Apply or Cancel in Setup'; }
+    if (indicator && documentState.assignmentDraft) { indicator.textContent = documentState.assignmentDraft.kind === 'gravity' ? 'Editing gravity' : 'Click faces to toggle assignment'; }
   });
   ui.setImportHandler(importCadFile);
   ui.setMeshHandlers(generateMesh, function () { meshSolveGeneration++; if (activeMesh) { activeMesh.cancel(); activeMesh=null; app.failMeshGeneration({message:'Meshing cancelled.'}); } }, function () {

@@ -14,6 +14,7 @@
     state.mesh=api.assignmentTestMesh();var mesh=state.mesh;state.results={old:true};var revision=state.analysisRevision;
     app.undoEngineeringEdit();assert(state.loads[0].forceN[0]===100 && state.mesh===mesh && !state.results && state.analysisRevision===revision+1,'Undo restored stale result or lost usable mesh');
     app.redoEngineeringEdit();assert(state.loads[0].forceN[0]===200,'Redo did not reapply engineering definition');
+    app.clearMesh();assert(!state.mesh,'Mesh not removed');app.undoEngineeringEdit();assert(state.mesh===mesh,'Undo mesh removal did not restore original buffers');app.redoEngineeringEdit();assert(!state.mesh,'Redo mesh removal failed');app.undoEngineeringEdit();
     app.removeLoad(id);app.undoEngineeringEdit();assert(state.loads[0].id===id,'Undo delete did not restore original ID');
     var result={current:true};state.results=result;revision=state.analysisRevision;
     app.renameAssignment('load',id,'End load');app.undoEngineeringEdit();

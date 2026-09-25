@@ -209,6 +209,7 @@
     var descriptors = [];
     if (!surface) { return descriptors; }
     var draft = documentState.assignmentDraft;
+    if (draft && draft.immediate && !draft.dirty) { draft = null; }
     var supports = documentState.boundaryConditions.filter(function (item) { return item.enabled !== false && (!documentState.viewportPresentation || documentState.viewportPresentation.showSupports !== false) && (!draft || item.id !== draft.itemId); });
     var loads = documentState.loads.filter(function (item) { return item.enabled !== false && (!documentState.viewportPresentation || documentState.viewportPresentation.showLoads !== false) && (!draft || item.id !== draft.itemId); });
     if (draft && draft.kind !== 'gravity' && draft.validation.valid) {

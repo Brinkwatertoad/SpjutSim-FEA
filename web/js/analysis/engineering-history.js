@@ -13,8 +13,8 @@
     return result;
   }
   function sameDefinition(first, second) { return JSON.stringify(canonical(first)) === JSON.stringify(canonical(second)); }
-  function EngineeringHistory() { this.entries=[]; this.cursor=0; this.byteLength=0; }
-  EngineeringHistory.prototype.clear = function () { this.entries=[]; this.cursor=0; this.byteLength=0; };
+  function EngineeringHistory() { this.entries=[]; this.cursor=0; this.byteLength=0; this.deletedMesh=null; }
+  EngineeringHistory.prototype.clear = function () { this.entries=[]; this.cursor=0; this.byteLength=0; this.deletedMesh=null; };
   EngineeringHistory.prototype.record = function (entry) {
     var data=canonical(entry), serialized=JSON.stringify(data), bytes=new TextEncoder().encode(serialized).byteLength;
     if (sameDefinition(data.before,data.after)) { return false; }
@@ -23,6 +23,16 @@
     while (this.entries.length >= 50 || this.byteLength + bytes > 2 * 1024 * 1024) { this.byteLength -= this.entries.shift().bytes; this.cursor--; }
     data.bytes=bytes; this.entries.push(data); this.cursor++; this.byteLength+=bytes; return true;
   };
+  // Keep at most one removed mesh, by reference (no copied numerical buffers).
+  // A new mesh operation or incompatible geometry/settings releases it first.
+  EngineeringHistory.prototype.discardDeletedMesh = function () {
+    var self=this, cursor=0;
+    this.entries=this.entries.filter(function(entry,index){
+      if(entry.kind==='meshRemoval'){self.byteLength-=entry.bytes;return false;}
+      if(index<self.cursor)cursor++;return true;
+    });
+    this.cursor=cursor;this.deletedMesh=null;
+  };
   api.EngineeringHistory=EngineeringHistory;
   api.sameEngineeringDefinition=sameDefinition;
 
@@ -30,16 +40,17 @@
   prototype.recordEngineeringEdit = function (kind,before,after,label,index) {
     if (this.historyReplaying) { return; }
     this.history.record({kind:kind,before:before,after:after,label:label,index:index === undefined ? null : index,geometryId:this.document.geometry && this.document.geometry.geometryId});
+    if(!this.history.entries.some(function(entry){return entry.kind==='meshRemoval';}))this.history.deletedMesh=null;
     this.historyNotice=label + '.';
   };
   prototype.clearEngineeringHistory = function () {
     this.history.clear(); this.historyNotice='History cleared for the imported model. Import, replacement, and removal start a new history.';
   };
   prototype.historyState = function () {
-    var enabled=!api.engineeringBusy(this.document) && !this.document.assignmentDraft;
+    var enabled=!api.engineeringBusy(this.document) && !(this.document.assignmentDraft && !this.document.assignmentDraft.immediate);
     var undo=this.history.entries[this.history.cursor-1], redo=this.history.entries[this.history.cursor];
     return {canUndo:Boolean(enabled && undo),canRedo:Boolean(enabled && redo),undoLabel:undo ? undo.label : '',redoLabel:redo ? redo.label : '',
-      message:this.document.assignmentDraft ? 'Apply or Cancel the preview before Undo/Redo.' : api.engineeringBusy(this.document) ? 'Undo/Redo is unavailable during worker execution.' : ((this.document.results || api.solveReadiness(this.document).canSolve) ? this.historyNotice.split('. ')[0] + '.' : this.historyNotice)};
+      message:this.document.assignmentDraft && !this.document.assignmentDraft.immediate ? 'Apply or Cancel the preview before Undo/Redo.' : api.engineeringBusy(this.document) ? 'Undo/Redo is unavailable during worker execution.' : ((this.document.results || api.solveReadiness(this.document).canSolve) ? this.historyNotice.split('. ')[0] + '.' : this.historyNotice)};
   };
   /** Restore a deleted item with its original identity/order; never rewind ID/name allocators. */
   prototype.restoreHistoryAssignment = function (kind,item,index) {
@@ -61,6 +72,16 @@
         if (entry.kind === 'support') { this.removeBoundaryCondition(id); } else { this.removeLoad(id); }
       } else if (!exists) { this.restoreHistoryAssignment(entry.kind,value,entry.index); }
       else if (entry.kind === 'support') { this.replaceBoundaryCondition(id,value); } else { this.replaceLoad(id,value); }
+    } else if (entry.kind === 'meshRemoval') {
+      if(value===null){this.clearMesh();}
+      else {
+        if(!this.history.deletedMesh)throw Error('The removed mesh is no longer available. Generate a mesh again.');
+        var mesh=this.history.deletedMesh;
+        this.document.mesh=mesh;this.document.meshMetadata={statistics:mesh.statistics,quality:mesh.quality,memoryInputs:mesh.memoryInputs};
+        this.document.meshGeneration={status:'succeeded',error:null,progress:null};
+        this.refreshConstraintStability();this.invalidateResults('mesh');
+        this.document.viewportPresentation=Object.assign({},this.document.viewportPresentation,{mode:'mesh'});this.notify();
+      }
     } else if (entry.kind === 'material') {
       if (value === null) { this.clearMaterial(); } else { this.replaceMaterial(value); }
     } else if (entry.kind === 'gravity') { this.replaceGravity(value); }
@@ -70,6 +91,7 @@
     } else { throw new Error('Unsupported engineering history command.'); }
   };
   prototype.moveEngineeringHistory = function (direction) {
+    if (this.document.assignmentDraft && this.document.assignmentDraft.immediate) { this.cancelAssignmentDraft(); }
     var state=this.historyState();
     if (!(direction < 0 ? state.canUndo : state.canRedo)) { throw new Error(state.message || 'No engineering edit is available.'); }
     var entry=this.history.entries[this.history.cursor + (direction < 0 ? -1 : 0)];

@@ -3,35 +3,6 @@
 
   function byId(id) { return document.getElementById(id); }
 
-  // Keep SVG children intact when an editor's accessible action label changes.
-  function labelAction(button, label) {
-    if (!button) { return; }
-    if (!button.closest('.fea-editor-actions')) { button.textContent = label; return; }
-    button.setAttribute('aria-label', label); button.title = label;
-  }
-  function initializeEditorActions() {
-    document.querySelectorAll('.fea-editor-actions button').forEach(function(button) {
-      var label = button.textContent.trim(), icon;
-      if (button.dataset.actionIntent === 'danger') {
-        icon = root.PortableUIIcons.createIcon('delete', {document:document,size:20});
-      } else {
-        icon = document.createElementNS('http://www.w3.org/2000/svg','svg');
-        icon.setAttribute('viewBox','0 0 24 24'); icon.setAttribute('fill','none');
-        icon.setAttribute('stroke','currentColor'); icon.setAttribute('stroke-width','2');
-        icon.setAttribute('stroke-linecap','round'); icon.setAttribute('stroke-linejoin','round');
-        icon.setAttribute('aria-hidden','true');
-        var path = document.createElementNS(icon.namespaceURI,'path');
-        path.setAttribute('d',button.type === 'submit' ? 'M5 12l4 4L19 6' : 'M6 6l12 12M18 6L6 18');
-        icon.appendChild(path);
-      }
-      button.replaceChildren(icon); button.classList.add('fea-icon-button');
-      if (button.dataset.actionIntent !== 'danger') {
-        var text = document.createElement('span'); text.textContent = button.type === 'submit' ? 'Apply' : 'Cancel'; button.appendChild(text);
-      }
-      labelAction(button,label);
-    });
-  }
-
   function AnalysisAuthoringUI(controller) {
     var storage = null;
     this.controller = controller;
@@ -40,21 +11,15 @@
     this.materialCatalogSelect = byId('material-catalog-select');
     this.materialCatalogDetails = byId('material-catalog-details');
     this.replaceSavedMaterialButton = byId('replace-saved-material-button');
-    this.removeSavedMaterialButton = byId('remove-saved-material-button');
-    this.removeMaterialButton = byId('remove-material-button');
     this.supportForm = byId('support-form');
     this.supportStatus = byId('support-status');
     this.supportType = byId('support-type');
     this.componentFields = byId('support-component-fields');
-    this.cancelSupportEdit = byId('cancel-support-edit');
-    this.removeSupportItemButton = byId('remove-support-item-button');
     this.loadForm = byId('load-form');
     this.loadStatus = byId('load-status');
     this.loadType = byId('load-type');
     this.pressureFields = byId('pressure-fields');
     this.forceFields = byId('force-fields');
-    this.cancelLoadEdit = byId('cancel-load-edit');
-    this.removeLoadItemButton = byId('remove-load-item-button');
     this.gravityForm = byId('gravity-form');
     this.gravityStatus = byId('gravity-status');
     this.modelRotationAxis = byId('model-rotation-axis');
@@ -120,44 +85,34 @@
     if (this.setupInspectorStatus) { this.setupInspectorStatus.textContent = message || ''; }
   };
 
-  var MATERIAL_FIELD_LABELS = {
-    youngsModulusPa: "Young's modulus", poissonsRatio: "Poisson's ratio", densityKgM3: 'density',
-    tensileYieldPa: 'tensile yield', compressiveYieldPa: 'compressive yield',
-    ultimateTensilePa: 'ultimate tensile', ultimateCompressivePa: 'ultimate compressive'
-  };
-
   AnalysisAuthoringUI.prototype.start = function () {
     var self = this;
     if (!this.materialForm) { return; }
-    initializeEditorActions();
-    if (byId('cancel-material-edit')) { byId('cancel-material-edit').addEventListener('click',function(){self.closeInspectorRow({restoreFocus:true,cancelEdit:true});}); }
     this.materialForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveMaterial(); });
     if (this.materialCatalogSelect) {
       this.materialCatalogSelect.addEventListener('change', function () { self.selectMaterialCatalogEntry(); });
     }
-    if (byId('save-material-library-button')) { byId('save-material-library-button').addEventListener('click',function(){self.saveMaterialToLibrary();}); }
+    if (root.SpjutsimFEA.bindMaterialLibrary && byId('open-material-library'))root.SpjutsimFEA.bindMaterialLibrary(this);
+    if (byId('save-material-library-button')) { byId('save-material-library-button').addEventListener('click',function(){if(self.materialLibrary)self.materialLibrary.openLibrary({kind:'material',mode:'create'});}); }
     if (this.replaceSavedMaterialButton) {
-      this.replaceSavedMaterialButton.addEventListener('click', function () { self.replaceSavedMaterial(); });
+      this.replaceSavedMaterialButton.addEventListener('click', function () { if(self.materialLibrary)self.materialLibrary.openLibrary({kind:'material',selectedId:self.materialCatalogSelect.value}); });
     }
-    if (this.removeSavedMaterialButton) {
-      this.removeSavedMaterialButton.addEventListener('click', function () { self.removeSavedMaterial(); });
-    }
-    this.removeMaterialButton.addEventListener('click', function () {
-      try { self.controller.clearMaterial(); self.materialFeedback = null; self.render(self.controller.document); } catch (error) { self.materialFeedback = { error: true, message: error.message }; self.render(self.controller.document); }
-    });
     this.supportForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveSupport(); });
     this.supportType.addEventListener('change', function () {
       if (!self.editingSupportId) { self.lastSupportType = self.supportType.value; }
       self.renderSupportType();
     });
-    this.cancelSupportEdit.addEventListener('click', function () { self.closeInspectorRow({ restoreFocus: true, cancelEdit: true }); });
-    this.removeSupportItemButton.addEventListener('click', function () { self.removeActiveSupport(); });
     ['ux', 'uy', 'uz'].forEach(function (axis) {
       byId('support-' + axis + '-enabled').addEventListener('change', function () { self.renderSupportComponents(); });
     });
     [this.supportForm, this.loadForm, this.gravityForm].forEach(function (form) {
-      ['input','change'].forEach(function (eventName) { form.addEventListener(eventName, function () { self.updateDraftFromForm(); }); });
+      ['input','change'].forEach(function (eventName) { form.addEventListener(eventName, function (event) { if(event.target.id==='gravity-visible' || event.target.hasAttribute('data-frame-control'))return; self.updateDraftFromForm(eventName === 'change',event.target); }); });
     });
+    [this.supportForm,this.loadForm,this.gravityForm].forEach(function(form){
+      form.addEventListener('keydown',function(event){if(event.key==='Enter' && event.target.tagName==='INPUT'){event.preventDefault();self.updateDraftFromForm(true,event.target);}});
+    });
+    this.materialForm.addEventListener('change',function(event){if(event.target.tagName==='INPUT')self.saveMaterial();});
+    this.materialForm.addEventListener('keydown',function(event){if(event.key==='Enter' && event.target.tagName==='INPUT'){event.preventDefault();self.saveMaterial();}});
     this.resetLoadForm(false);
     Array.from(this.loadForm.querySelectorAll('[data-load-unit]')).forEach(function (select) {
       select.addEventListener('change', function (event) {
@@ -171,20 +126,12 @@
       if (!self.editingLoadId) { self.lastLoadType = self.loadType.value; }
       self.renderLoadType();
     });
-    this.cancelLoadEdit.addEventListener('click', function () { self.closeInspectorRow({ restoreFocus: true, cancelEdit: true }); });
-    this.removeLoadItemButton.addEventListener('click', function () { self.removeActiveLoad(); });
     if (byId('load-force-mode')) { byId('load-force-mode').addEventListener('change',function(){self.renderLoadType();}); }
     if (byId('setup-gravity-button')) { byId('setup-gravity-button').addEventListener('click',function(){self.openInspectorRow('gravity','gravity',this);}); }
     if (byId('gravity-direction')) { ['input','change'].forEach(function(eventName){byId('gravity-direction').addEventListener(eventName,function(){
       if(this.value==='custom')return;var direction=this.value,magnitude=Math.hypot.apply(Math,['x','y','z'].map(function(a){return Number(byId('gravity-'+a).value);}))||root.SpjutsimFEA.preferredFromSI('accelerationMS2',9.80665);
       ['x','y','z'].forEach(function(a){byId('gravity-'+a).value=direction[1]===a ? (direction[0]==='-'?-1:1)*magnitude : 0;});
     });}); }
-    byId('cancel-gravity-edit').addEventListener('click',function(){self.closeInspectorRow({restoreFocus:true,cancelEdit:true});});
-    byId('remove-gravity-button').addEventListener('click',function(){
-      self.controller.cancelAssignmentDraft();
-      self.controller.replaceGravity(Object.assign({},self.controller.document.gravity,{enabled:false}));
-      self.closeInspectorRow({restoreFocus:true,cancelEdit:false,message:'Gravity removed.'});
-    });
     if (byId('gravity-visible')) { byId('gravity-visible').addEventListener('change',function(){self.controller.replaceViewportPresentation(Object.assign({},self.controller.document.viewportPresentation,{showGravity:this.checked}));}); }
     this.gravityForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveGravity(); });
     if (this.rotateModelPositiveButton) { this.rotateModelPositiveButton.addEventListener('click', function () { self.rotateModel(1); }); }
@@ -241,50 +188,19 @@
     else { this.writeMaterialFields(this.controller.document.material); }
     this.materialFeedback = null;
     this.renderMaterialCatalogSelection();
-    this.renderMaterial(this.controller.document);
+    if(entry)this.saveMaterial();
+    else this.renderMaterial(this.controller.document);
   };
 
   AnalysisAuthoringUI.prototype.renderMaterialCatalogSelection = function () {
     var selectedId = this.materialCatalogSelect ? this.materialCatalogSelect.value : 'custom';
     var entry = selectedId !== 'custom' && this.materialCatalog ? this.materialCatalog.get(selectedId) : null;
     var factory = entry && entry.layer === 'factory';
-    var submit = this.materialForm && this.materialForm.querySelector('button[type="submit"]');
     var details = this.materialCatalogDetails;
     Array.from(this.materialForm ? this.materialForm.querySelectorAll('input') : []).forEach(function (input) { input.readOnly = Boolean(factory); });
-    if (submit) { labelAction(submit, 'Apply material'); }
     if (byId('save-material-library-button')) { byId('save-material-library-button').hidden = Boolean(entry); }
     if (this.replaceSavedMaterialButton) { this.replaceSavedMaterialButton.hidden = !entry || entry.layer !== 'user'; }
-    if (this.removeSavedMaterialButton) { this.removeSavedMaterialButton.hidden = !entry || entry.layer !== 'user'; }
-    if (!details) { return; }
-    details.replaceChildren();
-    if (!entry) {
-      var customNote = document.createElement('p');
-      customNote.textContent = 'Apply uses these properties in this project. Save to material library keeps a separate reusable browser copy.';
-      details.append(customNote);
-      return;
-    }
-    if (entry.metadata.notes) {
-      var notes = document.createElement('p'); notes.textContent = entry.metadata.notes; details.append(notes);
-    }
-    if (entry.metadata.warning) {
-      var warning = document.createElement('p'); warning.className = 'fea-warning'; warning.textContent = entry.metadata.warning; details.append(warning);
-    }
-    if (entry.metadata.source) {
-      var userSource = document.createElement('p'); userSource.textContent = 'Source: ' + entry.metadata.source; details.append(userSource);
-    }
-    var sources = [];
-    Object.keys(entry.metadata.fieldProvenance || {}).forEach(function (field) {
-      var source = entry.metadata.fieldProvenance[field];
-      var known = sources.find(function (candidate) { return candidate.source.url === source.url; });
-      if (known) { known.fields.push(field); }
-      else { sources.push({ source: source, fields: [field] }); }
-    });
-    sources.forEach(function (group) {
-      var row = document.createElement('p');
-      var link = document.createElement('a'); link.href = group.source.url; link.textContent = group.source.label; link.target = '_blank'; link.rel = 'noreferrer';
-      row.append('Source for ' + group.fields.map(function (field) { return MATERIAL_FIELD_LABELS[field] || field; }).join(', ') + ': ', link);
-      details.append(row);
-    });
+    if (details) { details.replaceChildren(); }
   };
 
   AnalysisAuthoringUI.prototype.readMaterial = function () {
@@ -313,55 +229,10 @@
       var material = entry && entry.layer === 'factory' ? this.materialCatalog.materialSnapshot(selectedId) : this.readMaterial();
       var validation = this.controller.replaceMaterial(material);
       this.materialFeedback = validation.warnings.length ? {warning:true,message:validation.warnings[0].message} : {message:'Material applied to this project.'};
-      this.closeInspectorRow({restoreFocus:true,cancelEdit:false,message:'Material applied.'});
+      this.render(this.controller.document);
       this.materialForm.dispatchEvent(new CustomEvent('fea-material-applied',{bubbles:true}));
     } catch (error) {
-      this.materialFeedback = {error:true,message:error.message};this.render(this.controller.document);this.focusEditorError(this.materialForm,error.message);
-    }
-  };
-
-  AnalysisAuthoringUI.prototype.saveMaterialToLibrary = function () {
-    try {
-      var validation = root.SpjutsimFEA.validateIsotropicMaterial(this.readMaterial());
-      if (!validation.valid) { throw Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
-      var saved = this.materialCatalog.saveUser(validation.value);
-      this.renderMaterialCatalogOptions();this.materialCatalogSelect.value = saved.entry.id;this.renderMaterialCatalogSelection();
-      this.materialFeedback = saved.storageWarning ? {warning:true,message:saved.storageWarning} : {message:'Saved to material library. Apply to use it in this project.'};
-      this.renderMaterial(this.controller.document);
-    } catch (error) {
-      this.materialFeedback = {error:true,message:error.message};this.renderMaterial(this.controller.document);this.focusEditorError(this.materialForm,error.message);
-    }
-  };
-
-  AnalysisAuthoringUI.prototype.replaceSavedMaterial = function () {
-    try {
-      var id = this.materialCatalogSelect.value;
-      var material = this.readMaterial();
-      this.materialCatalog.assertUniqueName(material.name, id);
-      var validation = root.SpjutsimFEA.validateIsotropicMaterial(material);
-      if (!validation.valid) { throw Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
-      var result = this.materialCatalog.replaceUser(id, validation.value);
-      this.materialFeedback = result.storageWarning ? { warning: true, message: result.storageWarning } : { message: 'Saved material updated. Apply to use it in this project.' };
-      if (validation.warnings.length) { this.materialFeedback = { warning: true, message: validation.warnings[0].message }; }
-      this.renderMaterialCatalogOptions();
-      this.render(this.controller.document);
-    } catch (error) {
-      this.materialFeedback = { error: true, message: error.message };
-      this.render(this.controller.document);
-    }
-  };
-
-  AnalysisAuthoringUI.prototype.removeSavedMaterial = function () {
-    try {
-      var result = this.materialCatalog.removeUser(this.materialCatalogSelect.value);
-      this.materialCatalogSelect.value = 'custom';
-      this.materialFeedback = result.storageWarning ? { warning: true, message: result.storageWarning } : { message: 'Saved material removed. The active analysis snapshot is unchanged.' };
-      this.renderMaterialCatalogOptions();
-      this.writeMaterialFields(this.controller.document.material);
-      this.render(this.controller.document);
-    } catch (error) {
-      this.materialFeedback = { error: true, message: error.message };
-      this.render(this.controller.document);
+      this.materialFeedback = {error:true,message:error.message};this.render(this.controller.document);
     }
   };
 
@@ -369,13 +240,11 @@
     var material = documentState.material;
     if (this.renderedMaterial !== material) {
       this.renderedMaterial = material;
-      if (!this.materialCatalogSelect || this.materialCatalogSelect.value === 'custom') { this.writeMaterialFields(material); }
+      var match=this.materialCatalog && this.materialCatalog.list().find(function(entry){return root.SpjutsimFEA.sameEngineeringDefinition(entry.material,material);});
+      if(this.materialCatalogSelect)this.materialCatalogSelect.value=match?match.id:'custom';
+      this.writeMaterialFields(material);
     }
-    this.removeMaterialButton.disabled = !material;
-    this.removeMaterialButton.hidden = !material;
-    setFeedback(this.materialStatus, this.materialFeedback, material
-      ? (material.name || 'Unnamed material') + ' · ' + root.SpjutsimFEA.preferredFromSI('youngsModulusPa', material.youngsModulusPa) + ' ' + root.SpjutsimFEA.preferredUnit('youngsModulusPa')
-      : 'No material defined.');
+    setFeedback(this.materialStatus, this.materialFeedback && (this.materialFeedback.error || this.materialFeedback.warning) ? this.materialFeedback : null, '');
     this.renderMaterialCatalogSelection();
   };
 
@@ -421,52 +290,7 @@
     return support;
   };
 
-  AnalysisAuthoringUI.prototype.focusEditorError = function (form, message) {
-    if (!form) { return; }
-    var draft = this.controller.document.assignmentDraft;
-    if (draft) { draft.showErrors = true; }
-    var field = Array.from(form.querySelectorAll('input, select')).find(function(input){return !input.disabled && input.getClientRects().length && !input.validity.valid;});
-    var errors = draft && draft.validation.errors || [];
-    var key = errors.length && errors[0].field;
-    var ids = {name:form.id === 'support-form' ? 'support-name' : 'load-name',pressurePa:'load-pressure',magnitudeN:'load-magnitude',forceN:'load-fx','componentsM.x':'support-ux','componentsM.y':'support-uy','componentsM.z':'support-uz'};
-    if (!field && ids[key]) { field = byId(ids[key]); }
-    if (!field || !field.getClientRects().length) { field = form; form.tabIndex = -1; }
-    var id = field.id + '-error';
-    var previous = byId(id); if (previous) { previous.remove(); }
-    var note = document.createElement('p'); note.id = id; note.className = 'fea-field-error'; note.textContent = message;
-    field.setAttribute('aria-invalid','true');field.setAttribute('aria-describedby',id);field.insertAdjacentElement('afterend',note);field.focus();
-    field.addEventListener('input',function(){field.removeAttribute('aria-invalid');field.removeAttribute('aria-describedby');note.remove();},{once:true});
-  };
-
-  AnalysisAuthoringUI.prototype.saveSupport = function () {
-    try {
-      var support = this.readSupport();
-      if (!this.controller.document.assignmentDraft) { this.controller.beginAssignmentDraft('support',this.editingSupportId,support); }
-      this.controller.updateAssignmentDraft({definition:support});
-      this.controller.commitAssignmentDraft();
-      this.supportFeedback = { message: this.editingSupportId ? 'Support updated.' : 'Support added.' };
-      this.resetSupportForm(false);
-      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: 'Support applied.' });
-    } catch (error) {
-      this.supportFeedback = { error: true, message: error.message };
-      this.render(this.controller.document);
-      this.focusEditorError(this.supportForm, error.message);
-    }
-  };
-
-  AnalysisAuthoringUI.prototype.removeActiveSupport = function () {
-    if (!this.editingSupportId) { return; }
-    try {
-      this.controller.cancelAssignmentDraft();
-      this.controller.removeBoundaryCondition(this.editingSupportId);
-      this.supportFeedback = { message: 'Support removed.' };
-      this.resetSupportForm(false);
-      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: 'Support removed.' });
-    } catch (error) {
-      this.supportFeedback = { error: true, message: error.message };
-      this.render(this.controller.document);
-    }
-  };
+  AnalysisAuthoringUI.prototype.saveSupport = function () { this.updateDraftFromForm(true); };
 
   AnalysisAuthoringUI.prototype.beginSupportEdit = function (id) {
     var item = this.controller.document.boundaryConditions.find(function (entry) { return entry.id === id; });
@@ -481,8 +305,6 @@
       byId('support-' + axis + '-enabled').checked = value !== undefined;
       byId('support-' + axis).value = value === undefined ? '' : String(root.SpjutsimFEA.preferredFromSI('displacementM', value));
     });
-    labelAction(this.supportForm.querySelector('button[type="submit"]'), 'Apply support');
-    this.cancelSupportEdit.hidden = false;
     this.renderSupportType();
   };
 
@@ -492,9 +314,6 @@
     if(this.supportFrameEditor)this.supportFrameEditor.set(null);
     if (byId('support-name')) { byId('support-name').value = 'Support ' + this.controller.nextSupportNameSequence; }
     this.supportType.value = this.lastSupportType;
-    labelAction(this.supportForm.querySelector('button[type="submit"]'), 'Apply support');
-    this.cancelSupportEdit.hidden = true;
-    this.removeSupportItemButton.hidden = true;
     this.renderSupportType();
     if (renderNow !== false) { this.render(this.controller.document); }
   };
@@ -504,12 +323,9 @@
     if (this.editingSupportId && !documentState.boundaryConditions.some(function (item) { return item.id === self.editingSupportId; })) {
       this.resetSupportForm(false);
     }
-    Array.from(this.supportForm.elements).forEach(function (control) { control.disabled = !documentState.geometry; });
-    this.removeSupportItemButton.hidden = !this.editingSupportId;
+    Array.from(this.supportForm.elements).forEach(function (control) { control.disabled = !documentState.geometry || root.SpjutsimFEA.engineeringBusy(documentState); });
     this.renderSupportComponents();
-    setFeedback(this.supportStatus, this.supportFeedback, !documentState.geometry
-      ? 'Import geometry and select faces to add a support.'
-      : (documentState.boundaryConditions.length ? documentState.boundaryConditions.length + ' support item(s) defined.' : 'Select one or more faces, then add a support.'));
+    setFeedback(this.supportStatus, this.supportFeedback, '');
     this.renderConstraintStability(documentState);
   };
 
@@ -572,35 +388,7 @@
     return load;
   };
 
-  AnalysisAuthoringUI.prototype.saveLoad = function () {
-    try {
-      var load = this.readLoad();
-      if (!this.controller.document.assignmentDraft) { this.controller.beginAssignmentDraft('load',this.editingLoadId,load); }
-      this.controller.updateAssignmentDraft({definition:load});
-      this.controller.commitAssignmentDraft();
-      this.loadFeedback = { message: this.editingLoadId ? 'Load updated.' : 'Load added.' };
-      this.resetLoadForm(false);
-      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: 'Load applied.' });
-    } catch (error) {
-      this.loadFeedback = { error: true, message: error.message };
-      this.render(this.controller.document);
-      this.focusEditorError(this.loadForm, error.message);
-    }
-  };
-
-  AnalysisAuthoringUI.prototype.removeActiveLoad = function () {
-    if (!this.editingLoadId) { return; }
-    try {
-      this.controller.cancelAssignmentDraft();
-      this.controller.removeLoad(this.editingLoadId);
-      this.loadFeedback = { message: 'Load removed.' };
-      this.resetLoadForm(false);
-      this.closeInspectorRow({ restoreFocus: true, cancelEdit: false, message: 'Load removed.' });
-    } catch (error) {
-      this.loadFeedback = { error: true, message: error.message };
-      this.render(this.controller.document);
-    }
-  };
+  AnalysisAuthoringUI.prototype.saveLoad = function () { this.updateDraftFromForm(true); };
 
   AnalysisAuthoringUI.prototype.beginLoadEdit = function (id) {
     var item = this.controller.document.loads.find(function (entry) { return entry.id === id; });
@@ -616,8 +404,6 @@
     byId('load-pressure').value = String(root.SpjutsimFEA.siToDisplay('pressurePa', item.pressurePa === undefined ? 1e6 : item.pressurePa, this.loadUnits.pressurePa));
     var unit = this.loadUnits.forceN;
     ['x', 'y', 'z'].forEach(function (axis, index) { byId('load-f' + axis).value = root.SpjutsimFEA.siToDisplay('forceN', item.forceN ? item.forceN[index] : (index===1?1:0), unit); });
-    labelAction(this.loadForm.querySelector('button[type="submit"]'), 'Apply load');
-    this.cancelLoadEdit.hidden = false;
     this.renderLoadType();
   };
 
@@ -630,9 +416,6 @@
     this.syncLoadUnits();
     if (byId('load-name')) { byId('load-name').value = 'Load ' + this.controller.nextLoadNameSequence; }
     this.loadType.value = this.lastLoadType;
-    labelAction(this.loadForm.querySelector('button[type="submit"]'), 'Apply load');
-    this.cancelLoadEdit.hidden = true;
-    this.removeLoadItemButton.hidden = true;
     this.renderLoadType();
     if (renderNow !== false) { this.render(this.controller.document); }
   };
@@ -642,29 +425,15 @@
     if (this.editingLoadId && !documentState.loads.some(function (item) { return item.id === self.editingLoadId; })) {
       this.resetLoadForm(false);
     }
-    Array.from(this.loadForm.elements).forEach(function (control) { control.disabled = !documentState.geometry; });
-    this.removeLoadItemButton.hidden = !this.editingLoadId;
-    setFeedback(this.loadStatus, this.loadFeedback, !documentState.geometry
-      ? 'Import geometry and select faces to add a load.'
-      : (documentState.loads.length ? documentState.loads.length + ' load item(s) defined.' : 'Select one or more faces, then add a load.'));
+    Array.from(this.loadForm.elements).forEach(function (control) { control.disabled = !documentState.geometry || root.SpjutsimFEA.engineeringBusy(documentState); });
+    setFeedback(this.loadStatus, this.loadFeedback, '');
   };
 
   AnalysisAuthoringUI.prototype.readGravity = function () {
     return {enabled:true,accelerationMS2:['x','y','z'].map(function (axis) { return root.SpjutsimFEA.preferredToSI('accelerationMS2', readNumber('gravity-'+axis,'gravity '+axis.toUpperCase())); })};
   };
 
-  AnalysisAuthoringUI.prototype.saveGravity = function () {
-    try {
-      this.controller.updateAssignmentDraft({definition:this.readGravity()});
-      this.controller.commitAssignmentDraft();
-      this.gravityFeedback = null;
-      this.closeInspectorRow({restoreFocus:true,cancelEdit:false,message:'Gravity applied.'});
-    } catch (error) {
-      this.gravityFeedback = {error:true,message:error.message};
-      this.render(this.controller.document);
-      this.focusEditorError(this.gravityForm, error.message);
-    }
-  };
+  AnalysisAuthoringUI.prototype.saveGravity = function () { this.updateDraftFromForm(true); };
 
   AnalysisAuthoringUI.prototype.renderGravity = function (documentState) {
     var draft = documentState.assignmentDraft;
@@ -676,9 +445,7 @@
       byId('gravity-direction').value = nonzero.length===1 ? (gravity.accelerationMS2[nonzero[0]]<0?'-':'+')+'xyz'[nonzero[0]] : 'custom';
       ['x','y','z'].forEach(function(axis,i){byId('gravity-'+axis).value=String(root.SpjutsimFEA.preferredFromSI('accelerationMS2',gravity.accelerationMS2[i]));});
     }
-    labelAction(byId('apply-gravity-button'), 'Apply gravity');
-    byId('remove-gravity-button').hidden = !documentState.gravity.enabled;
-    setFeedback(this.gravityStatus,this.gravityFeedback,documentState.gravity.enabled ? 'Gravity is active.' : 'Apply to add gravity to the calculation.');
+    setFeedback(this.gravityStatus,this.gravityFeedback,'');
   };
 
   AnalysisAuthoringUI.prototype.rotateModel = function (direction) {
@@ -744,14 +511,11 @@
       if (importButton && !importButton.disabled) { importButton.click(); }
       return;
     }
-    if (this.controller.document.assignmentDraft && this.controller.document.assignmentDraft.dirty &&
-        !(this.activeInspectorKind === kind && this.activeInspectorItemId === itemId)) {
-      this.announceSetup('Apply or Cancel the current preview before opening another editor.'); return;
-    }
     if (this.activeInspectorKind === kind && this.activeInspectorItemId === itemId) {
       this.closeInspectorRow({ restoreFocus: true, cancelEdit: true });
       return;
     }
+    this.openingInspector=true;
     this.controller.cancelAssignmentDraft();
     if (this.activeInspectorKind === 'support') { this.resetSupportForm(false); }
     if (this.activeInspectorKind === 'load') { this.resetLoadForm(false); }
@@ -778,14 +542,16 @@
         var definition;
         try { definition = kind === 'support' ? this.readSupport() : this.readLoad(); } catch (error) { definition = {type:kind === 'support' ? 'support' : this.loadType.value}; }
         this.controller.beginAssignmentDraft(kind,itemId === 'new' ? null : itemId,definition);
-        (kind === 'support' ? this.cancelSupportEdit : this.cancelLoadEdit).hidden = false;
+
       } catch (error) { this.announceSetup(error.message); }
     }
+    this.openingInspector=false;
+    if(this.controller.document.assignmentDraft)this.controller.document.assignmentDraft.immediate=true;
     this.render(this.controller.document);
     if (selectedItem) { this.controller.notify('locate-assignment'); }
   };
 
-  AnalysisAuthoringUI.prototype.updateDraftFromForm = function () {
+  AnalysisAuthoringUI.prototype.updateDraftFromForm = function (commit, input) {
     var draft = this.controller.document.assignmentDraft;
     if (!draft) { return; }
     var definition;
@@ -793,7 +559,25 @@
     catch (error) { definition = {type:draft.kind === 'support' ? 'support' : this.loadType.value, inputError:error.message}; }
     // The draft owns the engineering definition; DOM fields retain incomplete input text.
     if (definition.name === undefined && draft.definition.name !== undefined) { definition.name = draft.definition.name; }
-    this.controller.updateAssignmentDraft({definition:definition});
+    this.updatingImmediateForm = true;
+    try {
+      this.controller.updateAssignmentDraft({definition:definition});
+      if(commit){
+        draft.showErrors = true;
+        var id=this.controller.applyImmediateAssignment();
+        if(id){
+          this.activeInspectorItemId=id;
+          if(draft.kind==='support')this.editingSupportId=id;
+          if(draft.kind==='load')this.editingLoadId=id;
+        }
+      }
+    } finally { this.updatingImmediateForm=false; }
+    if(input && ['INPUT','SELECT'].includes(input.tagName)){
+      input.setAttribute('aria-invalid',String(!draft.validation.valid));
+      if(!draft.validation.valid)input.setAttribute('aria-describedby',draft.kind+'-status');
+      else if(input.getAttribute('aria-describedby')===draft.kind+'-status')input.removeAttribute('aria-describedby');
+    }
+    this.render(this.controller.document);
   };
 
   AnalysisAuthoringUI.prototype.returnEditorsToStash = function () {
@@ -824,7 +608,7 @@
     this.activeInspectorFocusReturn = null;
     this.render(this.controller.document);
     if (options && options.message) { this.announceSetup(options.message); }
-    else if (options && options.cancelEdit) { this.announceSetup('Editing cancelled.'); }
+    else if (options && options.cancelEdit) { this.announceSetup('Editor closed.'); }
     if (restoreFocus) {
       var selector = '[data-setup-kind="' + kind + '"][data-item-id="' + itemId + '"] [data-setup-row-trigger]';
       var target = document.querySelector(selector);
@@ -896,7 +680,7 @@
       trigger.setAttribute('aria-expanded', String(active));
       trigger.setAttribute('aria-controls', editorId);
       primary.textContent = definition.primaryText;
-      summary.className = 'fea-setup-row-summary'; summary.textContent = definition.secondaryText;
+      summary.className = 'fea-setup-row-summary'; summary.textContent = definition.secondaryText; summary.title=definition.secondaryText;
       meta.className = 'fea-setup-row-meta'; meta.textContent = definition.metaText;
       trigger.append(chevron, primary, summary, meta);
       trigger.addEventListener('click', function () { self.openInspectorRow(definition.kind, definition.itemId, trigger); });
@@ -904,7 +688,26 @@
       editorHost.className = 'fea-setup-editor';
       editorHost.dataset.setupEditorHost = '';
       editorHost.hidden = !active;
-      item.append(trigger, editorHost);
+      var heading=document.createElement('div');heading.className='fea-setup-row-heading';heading.append(trigger);
+      item.append(heading, editorHost);
+      var removable=definition.itemId!=='new' && (['support','load','gravity'].includes(definition.kind) || definition.kind==='material' && documentState.material || definition.kind==='mesh' && documentState.mesh);
+      if(removable){
+        var remove=document.createElement('button');remove.type='button';remove.className='fea-icon-button fea-row-delete';remove.dataset.setupDelete='';
+        remove.setAttribute('aria-label','Remove '+definition.primaryText);remove.title='Remove '+definition.primaryText;
+        remove.append(root.PortableUIIcons.createIcon('delete',{document:document,size:18}));
+        remove.disabled=root.SpjutsimFEA.engineeringBusy(documentState);
+        remove.addEventListener('click',function(){
+          self.closeInspectorRow({cancelEdit:true});
+          if(definition.kind==='support')self.controller.removeBoundaryCondition(definition.itemId);
+          if(definition.kind==='load')self.controller.removeLoad(definition.itemId);
+          if(definition.kind==='material')self.controller.clearMaterial();
+          if(definition.kind==='gravity')self.controller.replaceGravity(Object.assign({},documentState.gravity,{enabled:false}));
+          if(definition.kind==='mesh')self.controller.clearMesh();
+          self.announceSetup(definition.primaryText+' removed. Undo to restore.');
+          var focus=definition.kind==='support'?self.addSupportButton:['load','gravity'].includes(definition.kind)?self.addLoadButton:document.querySelector('[data-setup-kind="'+definition.kind+'"] [data-setup-row-trigger]');
+          if(focus)focus.focus();
+        });heading.append(remove);
+      }
       if (['support','load'].indexOf(definition.kind) >= 0 && definition.itemId !== 'new') {
         var assignment = (definition.kind === 'support' ? documentState.boundaryConditions : documentState.loads).find(function(entry){return entry.id === definition.itemId;});
         if (assignment.enabled === false) { meta.textContent += ' · Suppressed'; }
@@ -912,18 +715,18 @@
         options.className = 'fea-assignment-options';disclosure.textContent = '⋯';disclosure.title = 'Assignment options';disclosure.setAttribute('aria-label','Options for ' + definition.primaryText);options.appendChild(disclosure);
         [['Duplicate',function(){self.controller.duplicateAssignment(definition.kind,definition.itemId);}],
           [assignment.enabled === false ? 'Include in analysis' : 'Suppress from analysis',function(){self.controller.setAssignmentIncluded(definition.kind,definition.itemId,assignment.enabled === false);}]].forEach(function(action){
-          var button = document.createElement('button');button.type='button';button.textContent=action[0];button.disabled=Boolean(documentState.assignmentDraft) || root.SpjutsimFEA.engineeringBusy(documentState);
+          var button = document.createElement('button');button.type='button';button.textContent=action[0];button.disabled=root.SpjutsimFEA.hasPendingAssignment(documentState) || root.SpjutsimFEA.engineeringBusy(documentState);
           button.addEventListener('click',function(){action[1]();});options.appendChild(button);
-        });item.appendChild(options);
+        });heading.insertBefore(options,heading.querySelector('[data-setup-delete]'));
       }
       if (definition.kind === 'mesh') {
         var meshOptions = document.createElement('button');
         meshOptions.type = 'button'; meshOptions.className = 'fea-mesh-options fea-icon-button';
         meshOptions.setAttribute('data-mesh-options',''); meshOptions.setAttribute('aria-label','Mesh options'); meshOptions.title = 'Mesh options';
         meshOptions.appendChild(root.PortableUIIcons.createIcon('settings',{document:document,size:20}));
-        meshOptions.disabled = !documentState.geometry || root.SpjutsimFEA.engineeringBusy(documentState) || Boolean(documentState.assignmentDraft);
+        meshOptions.disabled = !documentState.geometry || root.SpjutsimFEA.engineeringBusy(documentState) || root.SpjutsimFEA.hasPendingAssignment(documentState);
         meshOptions.addEventListener('click',function(){document.getElementById('mesh-options-dialog').showModal();});
-        item.appendChild(meshOptions);
+        heading.insertBefore(meshOptions,heading.querySelector('[data-setup-delete]'));
       }
       list.append(item);
     });
@@ -932,7 +735,14 @@
   };
 
   AnalysisAuthoringUI.prototype.render = function (documentState) {
-    if (!this.materialForm) { return; }
+    if (!this.materialForm || this.updatingImmediateForm || this.openingInspector) { return; }
+    var activeDraft=documentState.assignmentDraft;
+    if(this.activeInspectorKind && ['support','load','gravity'].includes(this.activeInspectorKind) && !activeDraft){
+      this.activeInspectorKind=null;this.activeInspectorItemId=null;this.editingSupportId=null;this.editingLoadId=null;
+    }
+    if(activeDraft && activeDraft.immediate && activeDraft.baseAnalysisRevision!==documentState.analysisRevision){
+      this.controller.cancelAssignmentDraft();return;
+    }
     var frameDraft=documentState.assignmentDraft;
     var frameFaces=frameDraft && frameDraft.kind!=='gravity' ? JSON.stringify(frameDraft.faceIds) : null;
     var frameEditor=frameDraft && (frameDraft.kind==='support' ? this.supportFrameEditor : frameDraft.kind==='load' ? this.loadFrameEditor : null);
@@ -940,8 +750,8 @@
     this.lastFrameDraft=frameDraft;this.lastFrameFaces=frameFaces;
     // Face picking changes a CAD frame's input, just as a form change does.
     // Store the selection first so the controller's notification cannot recurse.
-    if(selectionChanged && frameEditor && frameEditor.kind.value==='cad') {
-      this.updateDraftFromForm();return;
+    if(selectionChanged && frameDraft.immediate) {
+      this.updateDraftFromForm(true);return;
     }
     this.renderMaterial(documentState);
     this.renderSupports(documentState);
@@ -958,9 +768,10 @@
     if (draft) {
       var status = draft.kind === 'gravity' ? this.gravityStatus : draft.kind === 'support' ? this.supportStatus : this.loadStatus;
       var summary = root.SpjutsimFEA.describeAssignmentDraft ? root.SpjutsimFEA.describeAssignmentDraft(documentState) : '';
-      status.textContent = 'Preview · ' + (draft.kind === 'gravity' ? '' : draft.faceIds.length + ' face(s). ') + summary + (draft.validation.valid || !draft.showErrors ? '' : ' ' + (draft.definition.inputError || draft.validation.message));
+      status.textContent = draft.validation.valid || !draft.showErrors ? '' : (draft.definition.inputError || draft.validation.message);
+      var info=byId(draft.kind+'-details');if(info)info.textContent=(draft.kind==='gravity'?'':draft.faceIds.length+' faces. ')+summary;
       status.classList.toggle('fea-error', !draft.validation.valid && draft.showErrors === true);
-      (draft.kind === 'gravity' ? byId('cancel-gravity-edit') : draft.kind === 'support' ? this.cancelSupportEdit : this.cancelLoadEdit).hidden = false;
+
     }
   };
 

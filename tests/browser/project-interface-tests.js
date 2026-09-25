@@ -24,20 +24,14 @@
       assert(doc.getElementById('solve-button').textContent==='Mesh and solve','Combined action not discoverable');
       assert(doc.getElementById('report-options-button'),'Report options missing');
       doc.querySelector('[data-setup-kind="load"] [data-setup-row-trigger]').click();
-      var name=doc.getElementById('load-name');name.value='';name.dispatchEvent(new win.Event('input',{bubbles:true}));doc.getElementById('load-form').dispatchEvent(new win.Event('submit',{bubbles:true,cancelable:true}));
-      assert(doc.activeElement===name && name.getAttribute('aria-invalid')==='true','Failed Apply did not focus and explain invalid field');
-      doc.getElementById('cancel-load-edit').click();
+      var name=doc.getElementById('load-name');name.value='';name.dispatchEvent(new win.Event('change',{bubbles:true}));
+      assert(doc.getElementById('load-status').classList.contains('fea-error'),'Invalid edit has no inline error');
+      doc.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
       doc.querySelector('[data-setup-kind="material"] [data-setup-row-trigger]').click();
       var catalog=doc.getElementById('material-catalog-select');catalog.value='custom';catalog.dispatchEvent(new win.Event('change',{bubbles:true}));
-      doc.getElementById('material-name').value='Library only';doc.getElementById('material-youngs').value='100';doc.getElementById('material-poisson').value='0.3';
-      assert(doc.getElementById('save-material-library-button'),'Separate material-library save is missing');
-      revision=app.document.analysisRevision;doc.getElementById('save-material-library-button').click();
-      assert(app.document.analysisRevision===revision && app.document.material.youngsModulusPa===200e9,'Saving to the library changed the active material');
-      doc.getElementById('material-form').dispatchEvent(new win.Event('submit',{bubbles:true,cancelable:true}));assert(app.document.material.youngsModulusPa===100e9,'Apply did not use the saved material');
-      doc.querySelector('[data-setup-kind="material"] [data-setup-row-trigger]').click();
-      doc.getElementById('material-youngs').value='150';doc.getElementById('cancel-material-edit').click();
-      doc.querySelector('[data-setup-kind="material"] [data-setup-row-trigger]').click();
-      assert(Number(doc.getElementById('material-youngs').value)===100 && app.document.material.youngsModulusPa===100e9,'Material Cancel retained unapplied properties');
+      doc.getElementById('material-youngs').value='100';doc.getElementById('material-youngs').dispatchEvent(new win.Event('change',{bubbles:true}));
+      assert(app.document.material.youngsModulusPa===100e9,'Material did not commit on change');
+      app.undoEngineeringEdit();assert(app.document.material.youngsModulusPa===200e9,'Material Undo failed');
       document.getElementById('test-status').textContent='Passed';
     }catch(e){document.getElementById('test-status').textContent='Failed: '+e.message;console.error(e);}
   });

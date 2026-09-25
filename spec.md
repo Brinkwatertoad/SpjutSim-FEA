@@ -1234,7 +1234,7 @@ The browser's optional `solveSettings.maxDurationMs` accepts finite values from
 1,000 to 3,600,000 ms; missing values use 600,000 ms for older documents. The
 Checks panel lets the user choose 1–60 minutes. This runtime preference survives
 setup transfer, does not invalidate accepted physical results, and cannot change
-during a worker operation or assignment draft. Native C++ callers can set a
+during a worker operation or pending assignment edit. Native C++ callers can set a
 positive finite `max_duration_ms`; the additive C API `fem_set_time_limit`
 configures the same budget without changing version-2 structure layouts.
 Exhausting either budget returns `SOLVER_NOT_CONVERGED` and publishes no results.
@@ -1847,31 +1847,32 @@ without page scrolling. Support/load names align left with defining values/compo
 
 A row opens its single editor in place. Move the existing form node between
 its stash and active row; do not clone forms or create competing editors.
-Material expands independently beneath Model. Apply, cancel, removal, and Escape
-return focus to the logical row or Add action. Escape closes the editor before
-ordinary face deselection. Expanded editors may have bounded internal overflow.
+Material expands independently beneath Model. Escape or the row trigger closes an
+editor; committed edits remain. Incomplete text is discarded on closing. Restore
+focus to the logical row or Add action. Expanded editors may have bounded overflow.
 
-Material selection previews properties and provenance. Applying a material stores
-a snapshot. The user library has unique case-insensitive names, immutable factory
-entries, and explicit user-entry replacement/removal. Storage failure does not
-prevent using a valid material in the current analysis. See Sections 3 and 5.2.
+Selecting a material immediately stores a validated snapshot. The user library
+has unique case-insensitive names, immutable factory entries, and explicit user
+replacement/removal. The library closely follows SpjutSim Truss: searchable table,
+Add, Copy & Modify, Edit, Delete, and Use, with every optional property and source,
+notes, family, standard, and per-property provenance available in the full editor.
+Factory Edit is read-only; copying retains provenance. Changed properties lose
+inherited citations. Library Save is separate from project assignment and Undo.
+See `docs/material-library.md` for shared UI provenance and future exchange mapping.
+Cross-app import is not yet supported; FEA must not invent missing Poisson ratios.
 
-Mesh is one expandable row with preset/count summary, generation/regeneration,
-and deletion. Deleting a mesh preserves source, material, assignments, gravity,
-and mesh settings while clearing derived data.
+Setup editors have no Apply/Cancel actions. Choices commit immediately; numeric
+and text fields commit on change (blur) or Enter, not each keystroke. Invalid or
+incomplete input remains local with visible feedback. No edit automatically meshes
+or solves. Right-aligned removal actions sit in compact rows for existing
+materials, supports, loads, gravity, and meshes, separate from row expansion.
+Removal is undoable without a confirmation dialog. Deleting a mesh preserves the
+source, material, assignments, gravity, and settings while clearing derived data.
 
-Expanded material/support/load/gravity editors place an action row directly below
-the full-width assignment header and above fields. Left-align checkmark plus the
-visible word Apply, followed by × and the visible word Cancel. Right-align shared UI Kit
-trash Remove with danger styling, hiding it for new items. Keep accessible labels,
-hover/focus help and adequate hit areas. Material Cancel restores committed
-properties. Put pressure sign and force-direction hints beside their relevant
-fields and hide them with those fields.
-
-**Editing language:** use Apply for engineering edits, Save project for
-persistence, and Save to material library for catalog storage. Distinguish the
-library action from applying the active material. Preserve draft transactions,
-unique-name safeguards, and existing keyboard/focus behavior.
+Supplementary face counts, area, load-distribution explanations, and coordinate
+frame details belong in keyboard-accessible information disclosures. Actionable
+validation errors remain visible. Material caveats and references stay in the
+library record rather than recurring in the assignment panel.
 
 **Assignment options:** Duplicate copies a small committed definition
 with a fresh ID/name. Suppress/Include controls calculation participation;
@@ -1966,20 +1967,29 @@ gesture does not. Escape clears selection only after higher-priority controls
 have declined it. Clicking other UI controls does not clear faces.
 The Model editor has no separate face list or Clear selection control.
 
-`assignmentDraft` is the sole controller-owned support/load/gravity transaction:
+`assignmentDraft` is the controller-owned support/load/gravity editing session:
 kind, optional item ID, face IDs, SI definition, base revision, geometry identity,
-dirty state, and validation feedback. Commands begin/update/toggle/commit/cancel
-the draft; the UI does not own a second engineering copy.
+immediate-edit flag, dirty state, and validation feedback. The UI retains only
+incomplete field text, not a competing engineering definition. Opening an editor
+alone never creates an assignment. Choosing settings or picking faces commits once
+the required definition and face set are valid. Each subsequent committed change
+keeps the same assignment identity and creates one meaningful Undo step.
 
-Draft clicks toggle faces, hover previews candidates, background clicks preserve
-the set, and Escape cancels. Apply validates values, face ownership, revision,
-and conflicting prescribed components before one commit/invalidation. Native
-mesh checks remain authoritative for shared-node conflicts between faces.
-No-op Apply and Cancel preserve revision, mesh, checks, and results.
-Apply clears transient selected faces. Dirty drafts require Apply/Cancel before
-changing editing tasks, checking, solving, or starting convergence. Authoring
-uses a selectable view; Cancel restores the prior available presentation.
-Editing suppresses duplicate old glyphs.
+Clicks toggle assigned faces; hover previews candidates; background clicks preserve
+the set. Commits validate values, face ownership, revision, and conflicting
+prescribed components. Native mesh checks remain authoritative for shared-node
+conflicts. No-op changes preserve revision, mesh, checks, results, and history.
+Invalid edits retain the previous committed assignment. Switching or closing an
+editor discards only pending text. A clean open editor does not block Save, Solve,
+report export, or Undo; incomplete edits must be finished or closed before solving
+or saving. Undo closes the assignment session before restoring a committed state.
+
+Rectangular frames use incremental rotations about global X/Y/Z, angle buttons,
+±90° shortcuts, Reset, and a labeled local/global axis preview. Axes remain a
+validated right-handed orthonormal basis in the persisted contract. Origin is
+optional UI detail because it does not affect a direction. Manual frames stay in
+global space; planar frames remain attached to CAD. No Euler conversion is needed
+when opening an existing arbitrary basis.
 
 Assignment IDs are stable; default Support/Load numbering increases monotonically
 and is never reused. Trimmed nonempty names can be changed without invalidating
@@ -1993,7 +2003,7 @@ started, including restored unit preferences. Changing units on an existing
 draft or saved load preserves its physical value. Explain constant pressure
 versus total force across all selected faces, including cancellation of opposing
 normal directions. Gravity uses the same transaction with no face selection,
-global components/presets, Apply, Cancel, and Remove. Gravity arrow visibility
+global components/presets, immediate edits, and compact-row removal. Gravity arrow visibility
 is separate from calculation enablement; enabling it restores its arrow.
 
 ### 15.7 Loads/support glyphs
@@ -2064,14 +2074,14 @@ the Model button. Start after CAD import, allow Back/Next and easy × dismissal,
 remember dismissal, and expose Help → Show setup guide. Guide display never
 steals focus or changes engineering state. Highlight an editor opener/Add while
 closed. For support/load drafts with no faces, point into the model and instruct
-face selection. Highlight Apply once at least one face is selected; return to face
+face selection. Highlight the open editor once faces are selected; return to face
 selection if all faces are deselected. Existing assignments with faces and gravity
-skip this picking phase. Highlight Add again after support/load Apply or Cancel.
+skip this picking phase. Highlight Add again after the editor closes.
 Draw a separate, noninteractive highlight ring at document level around the full
 button so clipped controls cannot hide its top/bottom edges. Keep the selector's
 normal dividers and keyboard-focus styling. Hide the ring during model picking,
 when its target is hidden/scrolled out of view, and when the guide is dismissed.
-Successful material Apply immediately advances to Supports; failed Apply stays on
+A valid material change immediately advances to Supports; an invalid edit stays on
 Material. Support/load actions change targets, not stages; routine rerenders neither scroll
 Setup nor advance the guide. User-driven stage changes may reveal their target
 by scrolling Setup, but do not open editors or click controls automatically.
@@ -2088,7 +2098,7 @@ coarse-pointer targets.
 Use concise contextual explanations for terms such as Poisson's ratio, von Mises,
 mesh quality, convergence, and memory. Field errors belong beside their inputs;
 assignment failures belong in the active editor; worker progress uses shared
-status. Link cross-cutting errors to the repair location. A failed Apply focuses
+status. Link cross-cutting errors to the repair location. An invalid edit identifies
 the first invalid field; avoid repetitive alerts while a number is being typed.
 
 Group readiness identifies the next useful action. Results lead with displacement,
@@ -2122,8 +2132,13 @@ mesh/results, workers, and WASM. Undo uses ordinary validation/invalidation and
 never rewinds revision or ID/name allocators. Rename replay preserves results.
 
 New edits discard redo; no-ops/cancelled drafts add nothing. Import, replacement,
-and removal clear history after validation. Drafts and worker execution disable
-history. Generation/solve/convergence are not replayable commands. Edit-menu and
+and removal clear history after validation. Worker execution and legacy transactional
+drafts disable history; immediate editors can be closed by Undo, including when
+they contain invalid text. Generation/solve/convergence are not replayable commands. Mesh removal keeps at
+most one mesh by reference outside the compact definition log, without copying
+buffers or restoring results. Starting meshing, changing mesh settings/orientation,
+import/replacement, or history eviction releases it and removes its restoration
+commands; this prevents accumulating old numerical buffers. Edit-menu and
 toolbar descriptions identify the available command; platform shortcuts respect
 text editing, IME composition, modals, Settings, and unhandled browser commands.
 

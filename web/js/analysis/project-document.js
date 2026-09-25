@@ -86,7 +86,7 @@
   }
   async function createProjectSnapshot(controller,options) {
     if(!controller.geometrySource || !controller.document.geometry) { throw Error('Import a CAD model before saving a project.'); }
-    if(controller.document.assignmentDraft) { throw Error('Apply or Cancel the draft before saving the project.'); }
+    if(root.SpjutsimFEA.hasPendingAssignment(controller.document)) { throw Error('Finish the incomplete edit or close its editor before saving.'); }
     controller.observeProject();
     var source=controller.geometrySource, state=controller.document, revision=controller.projectRevision;
     var manifest={format:'SpjutSim-FEA',version:1,producer:PRODUCER,

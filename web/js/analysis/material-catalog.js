@@ -137,6 +137,23 @@
 
   function normalizedName(name) { return String(name || '').trim().toLowerCase(); }
 
+  function normalizeMetadata(raw) {
+    raw=raw || {};
+    var result={};
+    ['source','sourceUrl','notes','warning','family','standard'].forEach(function(key){
+      if(raw[key]!==undefined && typeof raw[key]!=='string')throw Error('Material '+key+' must be text.');
+      result[key]=String(raw[key] || '').trim();
+      if(result[key].length>20000)throw Error('Material '+key+' is too long.');
+    });
+    result.fieldProvenance={};
+    Object.keys(raw.fieldProvenance || {}).forEach(function(key){
+      var source=raw.fieldProvenance[key];
+      if(!source || typeof source.label!=='string' || typeof source.url!=='string')throw Error('Invalid material field source.');
+      result.fieldProvenance[key]={label:source.label,url:source.url};
+    });
+    return result;
+  }
+
   function validateUserEntry(raw) {
     var validation;
     if (!raw || typeof raw !== 'object' || Array.isArray(raw) ||
@@ -145,7 +162,7 @@
     if (!validation.valid || !validation.value.name) { return null; }
     return {
       id: raw.id, layer: 'user', material: validation.value,
-      metadata: { source: 'User', notes: raw.metadata && typeof raw.metadata.notes === 'string' ? raw.metadata.notes : '' }
+      metadata: normalizeMetadata(raw.metadata)
     };
   }
 
@@ -194,7 +211,7 @@
 
   MaterialCatalog.prototype.persist = function () {
     if (!this.storage || typeof this.storage.setItem !== 'function') {
-      return 'The material is applied, but browser storage is unavailable so it will not be retained.';
+      return 'Browser storage is unavailable; this library change will last only for this session.';
     }
     try {
       this.storage.setItem(STORAGE_KEY, JSON.stringify({
@@ -204,7 +221,7 @@
       }));
       return null;
     } catch (error) {
-      return 'The material is applied, but it could not be saved in browser storage. Check storage permissions or available space.';
+      return 'The library change could not be saved in browser storage. Check storage permissions or available space.';
     }
   };
 
@@ -229,7 +246,7 @@
     })) { throw new Error('A material named "' + String(name).trim() + '" already exists. Choose a unique name or explicitly replace the saved entry.'); }
   };
 
-  MaterialCatalog.prototype.saveUser = function (material) {
+  MaterialCatalog.prototype.saveUser = function (material, metadata) {
     var validation = root.SpjutsimFEA.validateIsotropicMaterial(material);
     var entry;
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
@@ -237,21 +254,21 @@
     this.assertUniqueName(validation.value.name);
     entry = {
       id: 'user.material.' + this.nextUserSequence,
-      layer: 'user', material: validation.value, metadata: { source: 'User', notes: '' }
+      layer: 'user', material: validation.value, metadata: normalizeMetadata(metadata || {source:'User'})
     };
     this.nextUserSequence += 1;
     this.userEntries.push(entry);
     return { entry: clone(entry), storageWarning: this.persist() };
   };
 
-  MaterialCatalog.prototype.replaceUser = function (id, material) {
+  MaterialCatalog.prototype.replaceUser = function (id, material, metadata) {
     var index = this.userEntries.findIndex(function (entry) { return entry.id === id; });
     var validation = root.SpjutsimFEA.validateIsotropicMaterial(material);
     if (index < 0) { throw new Error('Only a saved user material can be replaced.'); }
     if (!validation.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validation)); }
     if (!validation.value.name) { throw new Error('Enter a name before replacing a saved material.'); }
     this.assertUniqueName(validation.value.name, id);
-    this.userEntries[index] = { id: id, layer: 'user', material: validation.value, metadata: { source: 'User', notes: '' } };
+    this.userEntries[index] = { id: id, layer: 'user', material: validation.value, metadata: normalizeMetadata(metadata || this.userEntries[index].metadata) };
     return { entry: clone(this.userEntries[index]), storageWarning: this.persist() };
   };
 

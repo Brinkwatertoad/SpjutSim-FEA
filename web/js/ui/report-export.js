@@ -2,7 +2,7 @@
   'use strict';
   var api = root.SpjutsimFEA = root.SpjutsimFEA || {};
   function canExportReport(state) {
-    return Boolean(state && state.results && state.results.analysisRevision === state.analysisRevision && !state.assignmentDraft &&
+    return Boolean(state && state.results && state.results.analysisRevision === state.analysisRevision && !root.SpjutsimFEA.hasPendingAssignment(state) &&
       !['geometryImport','meshGeneration','solvePreflight','solveExecution','convergenceStudy'].some(function (key) {
         return state[key] && ['running','importing','generating'].indexOf(state[key].status) >= 0;
       }));

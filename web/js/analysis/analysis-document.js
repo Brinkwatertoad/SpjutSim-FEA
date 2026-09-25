@@ -32,5 +32,9 @@
   }
 
   root.SpjutsimFEA = root.SpjutsimFEA || {};
+  root.SpjutsimFEA.hasPendingAssignment = function (state) {
+    var draft = state.assignmentDraft;
+    return Boolean(draft && (!draft.immediate || draft.dirty));
+  };
   root.SpjutsimFEA.createAnalysisDocument = createAnalysisDocument;
 }(globalThis));

@@ -7,7 +7,7 @@
   ProjectWorkflow.prototype.cancel=function(){this.generation++;if(this.client){this.client.cancel();this.client.dispose();this.client=null;}if(this.controller.projectOpening){this.controller.projectOpening=false;this.controller.notify('project-status');}};
   ProjectWorkflow.prototype.open=async function(file,options){
     options=options || {};var app=this.controller;
-    if(app.document.assignmentDraft){throw Error('Apply or Cancel the draft before opening a project.');}
+    if(root.SpjutsimFEA.hasPendingAssignment(app.document)){throw Error('Close the incomplete editor before opening a project.');}
     if(api.engineeringBusy(app.document)){throw Error('Finish or cancel the current import, mesh or solve before opening a project.');}
     this.cancel();if(this.options.beforeStage){this.options.beforeStage();}app.observeProject();var generation=this.generation, revision=app.projectRevision, client=null;
     app.projectOpening=true;app.notify('project-status');

@@ -42,7 +42,7 @@
     if (api.engineeringBusy(this.document)) { throw new Error('Wait for the current operation or cancel it before editing.'); }
     if (!this.document.geometry) { throw new Error('Import geometry before adding assignments.'); }
     if (this.document.assignmentDraft) {
-      if (this.document.assignmentDraft.dirty) { throw new Error('Apply or Cancel the current preview before opening another editor.'); }
+      if (this.document.assignmentDraft.dirty && !this.document.assignmentDraft.immediate) { throw new Error('Apply or Cancel the current preview before opening another editor.'); }
       this.cancelAssignmentDraft();
     }
     var item = kind === 'gravity' ? (itemId && this.document.gravity.enabled ? this.document.gravity : null) : itemId ? collection(this.document,kind).find(function (value) { return value.id === itemId; }) : null;
@@ -114,6 +114,27 @@
     } catch (error) {
       this.document.assignmentDraft = draft; this.document.selectedFaceIds = selected; throw error;
     }
+  };
+  /** Commit a valid edit while retaining the face-picking session and item identity.
+   * Notifications are batched so observers never see a half-updated editor. */
+  prototype.applyImmediateAssignment = function () {
+    var draft = this.refreshAssignmentDraft();
+    if (!draft.validation.valid) { draft.showErrors = true; this.notify(); return null; }
+    if (api.engineeringBusy(this.document)) { throw Error('Wait for the current operation before editing.'); }
+    this.committingImmediateAssignment = true;
+    try {
+      var id = this.commitAssignmentDraft();
+      var item = draft.kind === 'gravity' ? this.document.gravity : collection(this.document,draft.kind).find(function(value){return value.id===id;});
+      draft.itemId = id;
+      draft.definition = copy(item); delete draft.definition.id; delete draft.definition.faceIds;
+      draft.baseAnalysisRevision = this.document.analysisRevision;
+      draft.immediate = true; draft.showErrors = false;
+      this.document.assignmentDraft = draft;
+      this.assignmentDraftInitialSignature = signature(draft);
+      this.assignmentDraftReturn = null;
+      this.refreshAssignmentDraft();
+      return id;
+    } finally { this.committingImmediateAssignment = false; this.notify(); }
   };
   /** Cancel never changes an analysis revision, assignment, mesh, preflight, or result. */
   prototype.cancelAssignmentDraft = function () {
