@@ -12,7 +12,7 @@
       var state = {geometry:{},meshSettings:{},meshGeneration:{status:'idle'},analysisRevision:1,mesh:withMesh === false ? null : {},solveSettings:{},solvePreflight:{status:'idle'},solveExecution:{status:'idle'}};
       var handlers, subscriber = noop, clients = [], meshers = [], solves = 0, confirmations = 0, confirmResult = true;
       var app = {
-        document:state, geometrySource:{sourceBytes:new ArrayBuffer(1)}, discardSolvePreflight:noop,
+        document:state, geometrySource:{sourceBytes:new ArrayBuffer(1)}, discardSolvePreflight:noop,cancelAssignmentDraft:function(){state.assignmentDraft=null;},
         beginMeshGeneration:function(){state.meshGeneration.status='generating';},reportMeshProgress:noop,
         completeMeshGeneration:function(mesh){state.mesh=mesh;state.analysisRevision++;state.meshGeneration.status='succeeded';},
         failMeshGeneration:function(error){state.meshGeneration={status:'failed',error:error};}, subscribe:function (fn) { subscriber = fn; }, cancelConvergenceStudy:noop,
@@ -31,7 +31,7 @@
         cancelSolve:function () { state.solvePreflight = {status:'cancelled'}; state.solveExecution = {status:'cancelled'}; }
       };
       var fakeRoot = {requestAnimationFrame:requestAnimationFrame.bind(window),navigator:{},addEventListener:noop,confirm:function () { confirmations++; return confirmResult; },SpjutsimFEA:{
-        bindFaceAccess:noop,bindContextualWorkflow:noop,bindProjectUI:noop,bindUnitSettings:noop,bindReportExport:noop,FEAColorSchemes:inert,createAnalysisDocument:noop,AppController:function () { return app; },
+        hasPendingAssignment:SpjutsimFEA.hasPendingAssignment,bindFaceAccess:noop,bindContextualWorkflow:noop,bindProjectUI:noop,bindUnitSettings:noop,bindReportExport:noop,FEAColorSchemes:inert,createAnalysisDocument:noop,AppController:function () { return app; },
         UIController:function () { return new Proxy({setSolveHandlers:function (preflight,solve,cancel) { handlers = {preflight:preflight,solve:solve,cancel:cancel}; }}, {get:function (target,key) { return target[key] || noop; }}); },
         ViewportController:inert,ReplacementMigrationUI:inert,prepareSolverInput:function () { return {}; },
         MesherClient:function(){var work=deferred(), client=this;this.generateMesh=function(){return work.promise;};this.cancel=function(){client.cancelled=true;};this.dispose=function(){client.disposed=true;};meshers.push({client:client,work:work});},
@@ -54,7 +54,9 @@
     var ready = {exceedsWasmCap:false,requiresEightGiBConfirmation:false};
     var test = fixture();
     assert(test.clients.length === 0, 'Startup automatically checked the model');
+    test.state.assignmentDraft={immediate:true,dirty:false};
     test.handlers.solve();
+    assert(!test.state.assignmentDraft,'Solve retained clean editor');
     assert(test.clients.length === 1 && test.solves() === 0, 'Solve did not check first');
     test.handlers.solve();assert(test.clients.length===1,'Repeated Solve replaced checking worker');
     test.clients[0].preflight.resolve(ready);await flush();assert(test.solves()===1,'Successful check did not continue to solve');

@@ -26,8 +26,10 @@
       var input=doc.getElementById('load-fx'), before=app.history.cursor;
       input.value='12';input.dispatchEvent(new win.Event('input',{bubbles:true}));
       near(app.document.loads[0].forceN[0],0);
-      input.dispatchEvent(new win.Event('change',{bubbles:true}));near(app.document.loads[0].forceN[0],12);
+      input.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));near(app.document.loads[0].forceN[0],12);
       assert(app.history.cursor===before+1,'Value edit was not one undo step');
+      input.dispatchEvent(new win.Event('change',{bubbles:true}));assert(app.history.cursor===before+1,'Blur after Enter duplicated history');
+      assert(!api.hasPendingAssignment(app.document),'Clean editor blocks save/solve');
       fill('load-fx','');near(app.document.loads[0].forceN[0],12);
       assert(doc.getElementById('load-status').classList.contains('fea-error'),'Invalid input has no visible error');
       app.undoEngineeringEdit();near(app.document.loads[0].forceN[0],0);

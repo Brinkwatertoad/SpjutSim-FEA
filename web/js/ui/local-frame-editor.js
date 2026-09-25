@@ -13,6 +13,7 @@
       '<details class="fea-info"><summary aria-label="Coordinate frame information" title="Coordinate frame information">ⓘ</summary><small id="'+prefix+'-frame-preview"></small></details><small id="'+prefix+'-frame-error" class="fea-error" role="status"></small>';
     var self=this;this.kind=this.get('kind');
     this.kind.addEventListener('change',function(){self.savedFrame=null;self.refresh();});
+    this.get('angle').addEventListener('keydown',function(event){if(event.key==='Enter'){event.preventDefault();event.stopPropagation();self.get('plus').click();}});
     ['minus','plus','minus-90','plus-90','reset'].forEach(function(action){self.get(action).addEventListener('click',function(){
       try{
         if(action==='reset')self.axes=identity.map(function(v){return v.slice();});
@@ -31,11 +32,14 @@
   LocalFrameEditor.prototype.refresh=function(){
     this.get('fields').hidden=this.kind.value!=='manual';
     var svg=this.get('triad'), ns='http://www.w3.org/2000/svg';svg.replaceChildren();
-    function project(v){return [90+48*(v[0]-.65*v[1]),70+48*(.35*v[0]+.35*v[1]-v[2])];}
-    function draw(axes,global){axes.forEach(function(v,i){var end=project(v),line=document.createElementNS(ns,'line'),label=document.createElementNS(ns,'text');
-      line.setAttribute('x1',90);line.setAttribute('y1',70);line.setAttribute('x2',end[0]);line.setAttribute('y2',end[1]);line.setAttribute('stroke',global?'currentColor':['#df6363','#5da66b','#609de0'][i]);line.setAttribute('stroke-width',global?1:3);if(global)line.setAttribute('stroke-dasharray','3 3');
-      label.setAttribute('x',end[0]+4);label.setAttribute('y',end[1]-4);label.setAttribute('fill','currentColor');label.textContent=(global?'':'Local ')+'XYZ'[i];svg.append(line,label);
-    });}
+    function draw(axes,global){
+      var cx=global?46:132,cy=61,scale=29;
+      axes.forEach(function(v,i){var end=[cx+scale*(v[0]-.65*v[1]),cy+scale*(.35*v[0]+.35*v[1]-v[2])],line=document.createElementNS(ns,'line'),label=document.createElementNS(ns,'text');
+        line.setAttribute('x1',cx);line.setAttribute('y1',cy);line.setAttribute('x2',end[0]);line.setAttribute('y2',end[1]);line.setAttribute('stroke',global?'currentColor':['#df6363','#5da66b','#609de0'][i]);line.setAttribute('stroke-width',global?1:3);if(global)line.setAttribute('stroke-dasharray','3 3');
+        label.setAttribute('x',end[0]+4);label.setAttribute('y',end[1]-4);label.setAttribute('fill','currentColor');label.textContent='XYZ'[i];svg.append(line,label);
+      });
+      var caption=document.createElementNS(ns,'text');caption.setAttribute('x',cx);caption.setAttribute('y',105);caption.setAttribute('text-anchor','middle');caption.setAttribute('fill','currentColor');caption.textContent=global?'Global':'Local';svg.append(caption);
+    }
     draw(identity,true);draw(this.axes,false);
   };
   LocalFrameEditor.prototype.set=function(frame){
@@ -57,7 +61,7 @@
     }),axes:this.axes.map(function(v){return v.slice();})});
   };
   LocalFrameEditor.prototype.preview=function(item,geometry){
-    this.refresh();var text='';
+    this.refresh();var text=this.kind.value==='cad'?'This frame follows its selected planar CAD face.':'Components use the global X, Y, Z axes.';
     try{
       if(item && item.frame){var frame=api.resolveLocalFrame(item.frame,geometry);
         function vector(v){return '['+v.map(function(x){return Number(x.toPrecision(5));}).join(', ')+']';}

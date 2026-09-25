@@ -2,7 +2,8 @@
 
 The FEA library reuses `engineering-library-ui.js` from the local SpjutSim Truss
 checkout at commit `5e5222fd2dd51f858cb791dafd623929c4b90742`. The unchanged shared
-component is checked in as `web/js/ui/engineering-library.js`; its layout is ported
+component is checked in as `web/js/ui/engineering-library.js`
+(SHA-256 `4f04986a798b17b7a94dc8e1f9eff8e85aa53fd4b3021d1fd3dded362fc7759f`); its layout is ported
 in `web/css/material-library.css`, using FEA theme variables. FEA-specific data,
 validation, property units, and record editing live in `material-library-ui.js`.
 No runtime connection to another checkout or external service is required.
@@ -16,7 +17,9 @@ independent project material snapshot. Project Undo does not modify library reco
 
 Printed-material variability notes and model limitations stay in catalog metadata,
 visible in the full editor. They are not repeated in the normal assignment panel.
-Sources survive copy, editing unrelated fields, and browser-storage reload. A
+Sources survive copy, editing unrelated fields, and browser-storage reload.
+Untouched fields retain their original SI values instead of round-tripping through
+display units, avoiding numerical drift and accidental citation removal. A
 changed numerical property loses its inherited per-property citation; its new
 source can be recorded in Source/Source URL and Notes. Links are opened only for
 HTTP(S) URLs. Browser-storage failures leave records usable during the session and

@@ -99,7 +99,8 @@
     }
   }
   function generateMesh() {
-    if (app.projectOpening) { return; }
+    if (app.projectOpening || api.hasPendingAssignment(app.document)) { return; }
+    app.cancelAssignmentDraft();
     var client;
     var revision = app.document.analysisRevision;
     if (!app.document.geometry || !app.geometrySource) { return; }
@@ -214,6 +215,7 @@
     var diagonal;
     if (activeImport || activeMesh || api.hasPendingAssignment(app.document)) { return; }
     if (activeConvergence) { activeConvergence.cancel(); }
+    app.cancelAssignmentDraft();
     disposeSolver();
     try {
       revision = app.beginConvergenceStudy();
@@ -270,6 +272,7 @@
   setText('launch-mode', location.protocol === 'file:' ? 'Direct local file' : (root.crossOriginIsolated ? 'HTTP, isolated' : 'HTTP, portable'));
   root.addEventListener('pagehide', function () { if (activeImport) { activeImport.cancel(); } if (activeMesh) { activeMesh.cancel(); } if (activeConvergence) { activeConvergence.cancel(); } disposeSolver(); replacementMigrationUI.dispose(); ui.dispose(); viewport.dispose(); }, { once: true });
   viewport.setFacePickHandler(function (faceId, additive) {
+    if (api.engineeringBusy(app.document)) { return; }
     if (app.document.assignmentDraft) {
       if (faceId) { app.toggleDraftFace(faceId); }
     } else if (!faceId) {

@@ -139,9 +139,9 @@ Nylon. Choosing a catalog entry copies its current properties into the analysis
 document; the analysis must not retain a live reference that could change when
 the catalog is edited later.
 
-Custom exposes the same property editor used for catalog entries. Saving a
-valid, named custom material both applies it to the current analysis and adds it
-to the browser-local material catalog for later use. Built-in entries are
+Custom exposes editable project properties that commit when valid. Saving a
+valid, named custom material in the library stores a reusable browser-local
+record; Use or Save & Use separately assigns its snapshot to the project. Built-in entries are
 immutable. User entries may be explicitly replaced or removed, but a save must
 never silently overwrite an existing case-insensitive name.
 
@@ -163,12 +163,11 @@ Density becomes required if gravity is enabled.
 
 Strength data is not required to solve; it is required for corresponding factor-of-safety calculations.
 
-Catalog values are engineering starting points, not certification data. The UI
-must identify their source/revision and remind users to verify values against
-the actual alloy, grade, filament, print orientation, and process. This is
-especially important for printed polymers. TPU also requires a prominent
-warning that a small-strain linear-isotropic model may be inappropriate for its
-normal large-deformation behavior. Do not ship guessed placeholder values.
+Catalog values are engineering starting points, not certification data. The full library record
+identifies source/revision and retains notes about verifying the actual alloy,
+grade, filament, print orientation, and process. TPU retains an explicit model
+limitation in that record: small-strain linear isotropy may be inappropriate for
+its normal large-deformation behavior. Do not ship guessed placeholder values.
 
 The active model and material have adjacent rows in the compact setup inspector.
 Selecting either row opens its corresponding single editor in place; the

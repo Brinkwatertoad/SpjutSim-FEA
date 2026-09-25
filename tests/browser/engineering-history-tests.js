@@ -54,6 +54,8 @@
     app.replaceGeometry(api.assignmentTestGeometry('replacement'),{sourceName:'cube.step',sourceFormat:'step',sourceBytes:new ArrayBuffer(1)});
     assert(!app.historyState().canUndo && !app.historyState().canRedo && app.history.byteLength===0,'Geometry replacement retained incompatible history');
     key=shortcut(document.body);assert(!ui.handleHistoryShortcut(key) && !key.defaultPrevented,'Empty history swallowed browser command');
+    state.mesh=mesh;app.clearMesh();app.beginMeshGeneration();
+    assert(!app.history.deletedMesh && !app.history.entries.some(function(e){return e.kind==='meshRemoval';}),'New meshing retained removed mesh buffers');
     document.getElementById('test-status').textContent='Passed';
   }catch(error){document.getElementById('test-status').textContent='Failed: '+error.message;}
 }());

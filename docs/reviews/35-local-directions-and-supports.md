@@ -99,3 +99,12 @@ Known scope limits: planar CAD references only; no contact, friction, cylindrica
 sliding, springs, or rigid connectors. Rectangular axes must be orthonormal and
 right handed. Symmetry requires suitable geometry/loading selected by the user.
 Full release browser/resource acceptance and owner walkthrough remain separate gates.
+
+## Owner usability follow-up
+
+The owner requested immediate edits/Undo, compact-row removal, rotation-based
+frame entry, quieter information disclosures, and a library closely matching
+SpjutSim Truss. See [implementation and verification](35-immediate-setup.md).
+These changes supersede the earlier Apply/Cancel authoring walkthrough; numerical
+frame contracts and the recorded numerical acceptance evidence are unchanged.
+Owner acceptance of the revised interface remains pending.

@@ -28,6 +28,8 @@
    check(app.document.loads[0].frame.ownership==='global','manual frame not saved');
    check(Math.abs(app.document.loads[0].frame.originM[0]-.0254)<1e-12,'frame origin lost SI value');
    var force=api.assignmentGlobalForce(app.document.loads[0],app.document.geometry);check(force[1]===10,'manual global direction wrong');
+   click('load-frame-reset');check(api.assignmentGlobalForce(app.document.loads[0],app.document.geometry)[0]===10,'Frame reset did not commit');
+   app.undoEngineeringEdit();check(api.assignmentGlobalForce(app.document.loads[0],app.document.geometry)[1]===10,'Undo frame rotation lost direction');
    app.rotateGeometryAroundGlobalAxis('x',30);check(api.assignmentGlobalForce(app.document.loads[0],app.document.geometry)[1]===10,'manual frame followed CAD');
    click('setup-add-load-button');fill('load-force-mode','components');fill('load-frame-kind','manual');fill('load-frame-origin-x','');
    check(!app.document.assignmentDraft.validation.valid,'nonunit frame accepted');doc.dispatchEvent(new win.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));check(app.document.loads.length===1,'cancel changed loads');

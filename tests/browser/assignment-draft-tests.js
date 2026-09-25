@@ -16,7 +16,7 @@
     assert(app.document.viewportPresentation.mode === 'mesh','Draft did not enter selectable presentation');
     var convergenceError='';
     try { app.beginConvergenceStudy(); } catch(error) { convergenceError=error.message; }
-    assert(/Apply or Cancel/.test(convergenceError),'Convergence must explicitly reject an assignment draft');
+    assert(/incomplete edit/.test(convergenceError),'Convergence must explicitly reject an assignment draft');
     rejects(function(){app.commitAssignmentDraft();});
     app.toggleDraftFace('face-x+'); app.toggleDraftFace('face-y+'); app.toggleDraftFace('face-y+');
     assert(app.document.assignmentDraft.faceIds.join() === 'face-x+','Plain toggles do not maintain set');

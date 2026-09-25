@@ -17,14 +17,14 @@
     });
     function fixture() {
       var state={geometry:null,boundaryConditions:[],loads:[]}, clients=[], imported=[], failures=[], handler, meshHandler, meshes=[], workerStarts=0, migration=null;
-      var controller={document:state,subscribe:noop,cancelConvergenceStudy:noop,discardSolvePreflight:noop,
+      var controller={document:state,cancelAssignmentDraft:function(){state.assignmentDraft=null;},subscribe:noop,cancelConvergenceStudy:noop,discardSolvePreflight:noop,
         beginGeometryImport:function(name){state.geometryImport={status:'importing',sourceName:name};},
         failGeometryImport:function(error){failures.push(error);state.geometryImport.status='failed';},
         reportGeometryImportProgress:noop,restoreGeometryImportStatus:noop,
         beginMeshGeneration:noop,completeMeshGeneration:function(mesh){meshes.push(mesh);},failMeshGeneration:function(error){failures.push(error);},
         replaceGeometry:function(geometry,canonical){state.geometry=geometry;controller.geometrySource=canonical;imported.push({geometry:geometry,source:canonical});},
         replaceGeometryWithSetup:function(){throw new Error('Unreviewed assignment migration');}};
-      var fakeRoot={requestAnimationFrame:requestAnimationFrame.bind(window),navigator:{},addEventListener:noop,SpjutsimFEA:{
+      var fakeRoot={requestAnimationFrame:requestAnimationFrame.bind(window),navigator:{},addEventListener:noop,SpjutsimFEA:{hasPendingAssignment:api.hasPendingAssignment,
         FEAColorSchemes:inert,AppController:function(){return controller;},createAnalysisDocument:noop,
         UIController:function(){return new Proxy({setImportHandler:function(fn){handler=fn;},setMeshHandlers:function(fn){meshHandler=fn;}},{get:function(target,key){return target[key]||noop;}});},
         ViewportController:inert,ReplacementMigrationUI:function(){return {open:function(draft){migration=draft;}};},

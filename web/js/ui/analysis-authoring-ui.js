@@ -93,7 +93,7 @@
       this.materialCatalogSelect.addEventListener('change', function () { self.selectMaterialCatalogEntry(); });
     }
     if (root.SpjutsimFEA.bindMaterialLibrary && byId('open-material-library'))root.SpjutsimFEA.bindMaterialLibrary(this);
-    if (byId('save-material-library-button')) { byId('save-material-library-button').addEventListener('click',function(){if(self.materialLibrary)self.materialLibrary.openLibrary({kind:'material',mode:'create'});}); }
+    if (byId('save-material-library-button')) { byId('save-material-library-button').addEventListener('click',function(){if(self.materialLibrary)self.materialLibrary.openLibrary({kind:'material',mode:'create',context:{material:self.controller.document.material}});}); }
     if (this.replaceSavedMaterialButton) {
       this.replaceSavedMaterialButton.addEventListener('click', function () { if(self.materialLibrary)self.materialLibrary.openLibrary({kind:'material',selectedId:self.materialCatalogSelect.value}); });
     }
@@ -252,7 +252,7 @@
     var custom = this.supportType.value === 'custom';
     this.componentFields.hidden = !custom;
     var planar=['sliding','symmetry'].includes(this.supportType.value);
-    if(byId('support-planar-help'))byId('support-planar-help').hidden=!planar;
+    if(byId('support-planar-help')){byId('support-planar-help').hidden=!planar;byId('support-planar-help').parentElement.hidden=!planar;}
     if(this.supportFrameEditor){
       this.supportFrameEditor.kind.disabled=planar;
       if(planar)this.supportFrameEditor.kind.value='cad';
@@ -264,7 +264,7 @@
   AnalysisAuthoringUI.prototype.renderSupportComponents = function () {
     ['ux', 'uy', 'uz'].forEach(function (axis) {
       var enabled = byId('support-' + axis + '-enabled');
-      byId('support-' + axis).disabled = !this.controller.document.geometry || !enabled.checked;
+      byId('support-' + axis).disabled = !this.controller.document.geometry || root.SpjutsimFEA.engineeringBusy(this.controller.document) || !enabled.checked;
     }, this);
   };
 
@@ -325,6 +325,7 @@
     }
     Array.from(this.supportForm.elements).forEach(function (control) { control.disabled = !documentState.geometry || root.SpjutsimFEA.engineeringBusy(documentState); });
     this.renderSupportComponents();
+    if(this.supportFrameEditor)this.supportFrameEditor.kind.disabled=['sliding','symmetry'].includes(this.supportType.value) || root.SpjutsimFEA.engineeringBusy(documentState);
     setFeedback(this.supportStatus, this.supportFeedback, '');
     this.renderConstraintStability(documentState);
   };
@@ -489,7 +490,7 @@
   };
 
   AnalysisAuthoringUI.prototype.renderModelOrientation = function (documentState) {
-    var disabled = !documentState.geometry;
+    var disabled = !documentState.geometry || root.SpjutsimFEA.engineeringBusy(documentState);
     [this.modelRotationAxis, this.modelRotationAngle, this.rotateModelPositiveButton,
       this.rotateModelNegativeButton, this.resetModelOrientationButton, this.modelFaceDirection].forEach(function (control) {
       if (control) { control.disabled = disabled; }
@@ -548,7 +549,7 @@
     this.openingInspector=false;
     if(this.controller.document.assignmentDraft)this.controller.document.assignmentDraft.immediate=true;
     this.render(this.controller.document);
-    if (selectedItem) { this.controller.notify('locate-assignment'); }
+    this.controller.notify(selectedItem ? 'locate-assignment' : undefined);
   };
 
   AnalysisAuthoringUI.prototype.updateDraftFromForm = function (commit, input) {
@@ -636,7 +637,7 @@
     var self = this;
     var groups;
     if (!this.setupModelList || !root.SpjutsimFEA.buildSetupInspectorRows) { return; }
-    var rowKey = JSON.stringify([root.SpjutsimFEA.buildSetupInspectorRows(documentState),this.activeInspectorKind,this.activeInspectorItemId]);
+    var rowKey = JSON.stringify([root.SpjutsimFEA.buildSetupInspectorRows(documentState),this.activeInspectorKind,this.activeInspectorItemId,root.SpjutsimFEA.engineeringBusy(documentState)]);
     if (rowKey === this.renderedRowKey) { return; }
     this.renderedRowKey = rowKey;
     var focused = document.activeElement;
@@ -676,6 +677,7 @@
       trigger.type = 'button';
       trigger.className = 'fea-setup-row-button';
       trigger.dataset.setupRowTrigger = '';
+      trigger.disabled=root.SpjutsimFEA.engineeringBusy(documentState);
       trigger.setAttribute('aria-label', definition.ariaLabel);
       trigger.setAttribute('aria-expanded', String(active));
       trigger.setAttribute('aria-controls', editorId);
@@ -692,7 +694,7 @@
       item.append(heading, editorHost);
       var removable=definition.itemId!=='new' && (['support','load','gravity'].includes(definition.kind) || definition.kind==='material' && documentState.material || definition.kind==='mesh' && documentState.mesh);
       if(removable){
-        var remove=document.createElement('button');remove.type='button';remove.className='fea-icon-button fea-row-delete';remove.dataset.setupDelete='';
+        var remove=document.createElement('button');remove.type='button';remove.className='fea-icon-button fea-row-delete';remove.dataset.setupDelete='';remove.dataset.actionIntent='danger';
         remove.setAttribute('aria-label','Remove '+definition.primaryText);remove.title='Remove '+definition.primaryText;
         remove.append(root.PortableUIIcons.createIcon('delete',{document:document,size:18}));
         remove.disabled=root.SpjutsimFEA.engineeringBusy(documentState);
@@ -759,6 +761,9 @@
     this.renderGravity(documentState);
     this.renderModelOrientation(documentState);
     this.renderSetupInspector(documentState);
+    var busy=root.SpjutsimFEA.engineeringBusy(documentState), pending=root.SpjutsimFEA.hasPendingAssignment(documentState);
+    [this.materialForm,this.gravityForm].forEach(function(form){Array.from(form.elements).forEach(function(control){if(control.id!=='gravity-visible')control.disabled=busy;});});
+    document.querySelectorAll('.fea-assignment-options button, [data-mesh-options]').forEach(function(button){button.disabled=busy || pending || !documentState.geometry;});
     var draft = documentState.assignmentDraft;
     if (this.supportFrameEditor) {
       this.supportFrameEditor.preview(draft && draft.kind==='support' ? draft.definition : null,documentState.geometry);

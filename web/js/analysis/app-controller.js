@@ -468,7 +468,7 @@
 
   AppController.prototype.setAssignmentIncluded = function (kind, id, included) {
     if (typeof included !== 'boolean' || ['support','load'].indexOf(kind) < 0) { throw Error('Choose Include or Suppress for a support or load.'); }
-    if (root.SpjutsimFEA.engineeringBusy(this.document) || root.SpjutsimFEA.hasPendingAssignment(this.document)) { throw Error('Apply or Cancel the current operation first.'); }
+    if (root.SpjutsimFEA.engineeringBusy(this.document) || root.SpjutsimFEA.hasPendingAssignment(this.document)) { throw Error('Finish the incomplete edit or close its editor first.'); }
     var items = kind === 'support' ? this.document.boundaryConditions : this.document.loads;
     var item = items[findItem(items,id,kind)];
     var definition = Object.assign({},item,{enabled:included});
@@ -532,7 +532,6 @@
 
   AppController.prototype.reportMeshProgress = function (progress) {
     if (this.document.meshGeneration.status !== 'generating') { return; }
-    this.history.discardDeletedMesh();
     this.document.meshGeneration = { status: 'generating', error: null, progress: progress };
     this.notify();
   };
@@ -540,6 +539,7 @@
   AppController.prototype.completeMeshGeneration = function (mesh) {
     var validation = root.SpjutsimFEA.validateVolumeMeshResult(mesh, this.document.geometry && this.document.geometry.faceIds);
     if (!validation.valid) { throw new Error('Invalid volume mesh: ' + validation.reason); }
+    if(this.history.deletedMesh)this.history.discardDeletedMesh();
     this.document.mesh = mesh;
     this.document.viewportPresentation = Object.assign({}, this.document.viewportPresentation, {mode: 'mesh'});
     this.document.meshMetadata = { statistics: mesh.statistics, quality: mesh.quality, memoryInputs: mesh.memoryInputs };
@@ -680,7 +680,7 @@
   };
 
   AppController.prototype.beginConvergenceStudy = function (settings) {
-    if (root.SpjutsimFEA.hasPendingAssignment(this.document)) { throw new Error('Apply or Cancel the assignment draft before starting convergence.'); }
+    if (root.SpjutsimFEA.hasPendingAssignment(this.document)) { throw new Error('Finish the incomplete edit or close its editor before starting convergence.'); }
     if (!this.document.geometry || !this.document.material || !this.geometrySource) {
       throw new Error('Import geometry and define a material before starting convergence.');
     }

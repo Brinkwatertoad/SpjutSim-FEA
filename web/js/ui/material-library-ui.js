@@ -16,14 +16,17 @@
       author.selectMaterialCatalogEntry();
     }
     function renderEditor(options){
-      var record=options.record, metadata=record && record.metadata || {}, readonly=options.mode==='edit' && record.layer==='factory';
+      status('');
+      var record=options.record || (options.launchContext && options.launchContext.material ? {material:options.launchContext.material,metadata:{source:'User'}} : null);
+      var metadata=record && record.metadata || {}, readonly=options.mode==='edit' && record.layer==='factory';
       var form=document.createElement('form');form.dataset.engineeringRecordEditor='material';form.noValidate=true;
       var heading=document.createElement('h3');heading.textContent=(readonly?'View':options.mode==='edit'?'Edit':options.mode==='copy'?'Copy & Modify':'Add')+' material';form.append(heading);
+      var initialValues={};
       var grid=document.createElement('div');grid.className='engineering-record-editor-fields';form.append(grid);
       function field(name,label,value,numeric,required,multiline){
         var wrapper=document.createElement('label'),caption=document.createElement('span'),input=document.createElement(multiline?'textarea':'input');
         wrapper.className='engineering-record-field'+(multiline?' engineering-record-field-wide':'');caption.textContent=label+(required?' *':'');
-        input.name=name;input.value=value==null?'':value;input.readOnly=readonly;
+        input.name=name;input.value=value==null?'':value;input.readOnly=readonly;initialValues[name]=input.value;
         if(!multiline)input.type=numeric?'number':'text';if(numeric)input.step='any';input.required=Boolean(required);
         wrapper.append(caption,input);grid.append(wrapper);
       }
@@ -46,7 +49,7 @@
       function save(assign){
         try{
           var material={name:form.elements.name.value.trim()}, meta=Object.assign({},metadata);
-          fields.forEach(function(item){var value=form.elements[item[0]].value.trim();if(!value){if(item[3])throw Error('Enter '+item[1]+'.');return;}material[item[0]]=item[2]?api.preferredToSI(item[2],Number(value)):Number(value);});
+          fields.forEach(function(item){var value=form.elements[item[0]].value.trim();if(!value){if(item[3])throw Error('Enter '+item[1]+'.');return;}material[item[0]]=record && initialValues[item[0]]!=='' && Number(value)===Number(initialValues[item[0]]) ? record.material[item[0]] : item[2]?api.preferredToSI(item[2],Number(value)):Number(value);});
           ['family','standard','source','sourceUrl','notes','warning'].forEach(function(key){if(form.elements[key])meta[key]=form.elements[key].value;});
           // A copied property retains its citation. Changed values must no longer
           // claim that the original reference supplies that value.

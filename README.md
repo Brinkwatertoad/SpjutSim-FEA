@@ -92,7 +92,7 @@ glyph-orientation checks. It should report `Passed` without a server.
 Open `tests/browser/local-frame-tests.html`, `tests/browser/local-support-ui-tests.html`, and
 `tests/browser/local-support-workflow-tests.html` with
 local-file access enabled or from the HTTP server. They verify frame validation,
-editor previews/cancel, rotated Tet4/Tet10 analytical solves, nonzero prescribed
+immediate frame edits/Undo, rotated Tet4/Tet10 analytical solves, nonzero prescribed
 motion, intersecting-face conflicts, signed glyphs, project reopen, replacement,
 undo/suppression and curved-face rejection. Native CTest includes local constraint
 and full/half symmetry benchmarks. See [Plan 35 evidence](docs/reviews/35-local-directions-and-supports.md).
@@ -215,15 +215,18 @@ global or local displacement components, including nonzero prescribed values.
 Rectangular manual frames stay global; planar CAD frames follow model rotation.
 Planar sliding/symmetry presets restrain normal motion and leave tangential motion
 free. Symmetry requires appropriate geometry/loading; loads are not scaled automatically. Loads include
-pressure, total global/local force, area-distributed normal force and gravity. Drafts
-preview changes; Apply/Save commits and Cancel/Escape preserves the prior analysis.
+pressure, total global/local force, area-distributed normal force and gravity. Valid
+changes commit immediately; incomplete text stays local. Escape closes the editor,
+and Undo reverses committed edits.
 Existing rows locate/edit their assignments. Model orientation supports axis rotation
 and selected-face alignment; replacing CAD uses explicit face-mapping review.
 
 Solve runs constraint/memory checks before execution and retains cancellation,
 the WASM cap and high-memory confirmation. Engineering edits invalidate dependent
 results; presentation and assignment renames preserve them. Undo/Redo retains bounded
-setup definitions, not meshes/results, and clears after source import/replacement.
+setup definitions and clears after source import/replacement. Mesh removal retains
+one mesh by reference for Undo until new meshing or incompatible geometry/settings;
+results are never restored.
 
 Model/Mesh/Stress/Deformation views include signed camera controls, independent
 projection/style/mesh-overlay choices, movable/resizable legends, contour limits
@@ -271,17 +274,27 @@ Tet4; Tet10 remains the default. Nondefault settings remain in the row summary. 
 Fit, Reset and Perspective remain at the viewport. Report controls sit together
 beside Solve/Results. Stress/Deformation interaction is retained.
 
-Expanded setup editors have an action row below the header: ✓ Apply and × Cancel
-on the left, red trash Remove on the right when an item already exists. Field
-hints follow the selected load type.
-Save to material library independently stores reusable materials. Assignment options include Duplicate and Suppress/Include. The empty viewport offers Import CAD… and Open Cube Example, with no placeholder
+Setup selectors commit immediately. Numeric fields commit on Enter or blur; invalid
+text leaves the previous valid assignment intact. Close an editor with its row or
+Escape, and use Undo to reverse committed changes. Existing compact rows expose
+right-aligned removal. Rectangular frames use global-axis rotation controls and an
+axis preview; supplementary area/direction explanations live behind info controls.
+
+The [material library](docs/material-library.md) reuses the Truss searchable table
+and full property editor, including optional properties, notes and sources. Save
+stores a reusable record; Use assigns a project snapshot. Cross-app import remains
+future work. Test these workflows with `tests/browser/immediate-setup-tests.html`
+and `tests/browser/material-library-tests.html` using the same local-file browser
+configuration as the CAD workflow tests.
+
+Assignment options include Duplicate and Suppress/Include. The empty viewport offers Import CAD… and Open Cube Example, with no placeholder
 solid. The example already has material, supports, load and Tet10 settings.
 A dismissible guide starts after CAD import; dismissal is remembered. Help →
 Show setup guide brings it back. The guide highlights clickable controls: an
-editor opener or Add, face selection on the model, then Apply, then Add again for
-another assignment. The button highlight surrounds the whole control without
+editor opener or Add, face selection on the model, then the editing controls.
+Closing the editor returns the guide to Add for another assignment. The button highlight surrounds the whole control without
 changing its normal styling.
-Successful material Apply advances to Supports; other stages use Next/Back.
+A valid material choice or property edit advances to Supports; other stages use Next/Back.
 Rerenders do not scroll the pane or advance the guide.
 The guide teaches Generate mesh, Inspect mesh,
 then Solve; the prepared cube starts at Generate mesh. Recovered projects reopen
