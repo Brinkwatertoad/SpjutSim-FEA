@@ -72,7 +72,10 @@
         if (activeImport !== client || generation !== importGeneration) { return; }
         var source = { sourceName: file.name, sourceFormat: sourceFormat, sourceBytes: sourceBytes };
         installImportedGeometry(geometry, source);
-        if (options && options.example && app.document.geometry === geometry) { api.applyCubeExample(app); }
+        if (options && options.example && app.document.geometry === geometry) {
+          if (options.example === 'cantilever') { api.applyCantileverExample(app); }
+          else { api.applyCubeExample(app); }
+        }
       });
     }).catch(function (error) {
       if (activeImport === client) { app.failGeometryImport(error); }
@@ -190,7 +193,11 @@
     ui.showOutputPanel("results");
     var client = activeSolver;
     client.solve(revision, app.document.solveSettings, confirmed).then(function (result) {
-      if (activeSolver === client) { app.completeSolve(revision, result); disposeSolver(); }
+      if (activeSolver === client) {
+        var completed = app.completeSolve(revision, result);
+        disposeSolver();
+        if (completed && ui.autoMeshCheck && app.document.results && app.document.analysisRevision === revision) { startConvergence('quick'); }
+      }
     }).catch(function (error) {
       if (activeSolver === client) { app.failSolve(revision, error); disposeSolver(); }
     });
@@ -208,27 +215,33 @@
     app.cancelConvergenceStudy();
   }
 
-  function startConvergence() {
+  function startConvergence(mode) {
     if (app.projectOpening) { return; }
     var revision;
     var resolved;
     var diagonal;
-    if (activeImport || activeMesh || api.hasPendingAssignment(app.document)) { return; }
-    if (activeConvergence) { activeConvergence.cancel(); }
+    if (activeImport || activeMesh || activeConvergence || api.engineeringBusy(app.document) || api.hasPendingAssignment(app.document)) { return; }
+    var baseline = mode === 'quick' ? api.currentConvergenceBaseline(app.document) : null;
+    if (mode === 'quick' && !baseline) { return; }
+    var settings = api.createConvergenceSettings(mode === 'quick' ? {maxLevels:2} : undefined);
     app.cancelAssignmentDraft();
     disposeSolver();
     try {
-      revision = app.beginConvergenceStudy();
+      revision = app.beginConvergenceStudy(settings);
+      if (baseline) { app.completeConvergenceLevel(revision, baseline, app.document.results); }
       resolved = api.resolveMeshSettings(app.document.meshSettings, app.document.geometry.boundingBoxM);
       diagonal = Math.hypot(
         app.document.geometry.boundingBoxM.maxM[0] - app.document.geometry.boundingBoxM.minM[0],
         app.document.geometry.boundingBoxM.maxM[1] - app.document.geometry.boundingBoxM.minM[1],
         app.document.geometry.boundingBoxM.maxM[2] - app.document.geometry.boundingBoxM.minM[2]);
     } catch (error) { return; }
+    function reportProgress(progress) {
+      if (activeConvergence === runner) { app.reportConvergenceProgress(revision, progress); }
+    }
     var runner = new api.ConvergenceRunner({
       prepareLevel: async function (targetSizeM, index, control) {
         var mesher = new api.MesherClient({ onProgress: function (progress) {
-          app.reportConvergenceProgress(revision, { level: index + 1, stage: progress.stage || 'meshing', targetSizeM: targetSizeM });
+          reportProgress({ level: index + 1, stage: progress.stage || 'meshing', targetSizeM: targetSizeM });
         } });
         var solver = null;
         control.cancelCurrent = function () { mesher.cancel(); if (solver) { solver.cancel(); } };
@@ -239,7 +252,7 @@
             sourceBytes: app.geometrySource.sourceBytes });
           mesher.dispose();
           solver = new api.SolverClient({ onProgress: function (progress) {
-            app.reportConvergenceProgress(revision, { level: index + 1, stage: progress.stage, userMessage: progress.userMessage, targetSizeM: targetSizeM });
+            reportProgress({ level: index + 1, stage: progress.stage, userMessage: progress.userMessage, targetSizeM: targetSizeM });
           } });
           control.cancelCurrent = function () { solver.cancel(); };
           var input = api.prepareSolverInput(Object.assign({}, app.document, { mesh: mesh,
@@ -252,20 +265,21 @@
           mesher.dispose(); if (solver) { solver.dispose(); } throw error;
         }
       },
-      onProgress: function (progress) { app.reportConvergenceProgress(revision, progress); },
+      onProgress: reportProgress,
       onLevel: function (summary, result) {
-        if (!app.completeConvergenceLevel(revision, summary, result)) { runner.cancel(); }
+        if (activeConvergence !== runner || !app.completeConvergenceLevel(revision, summary, result)) { runner.cancel(); }
       },
       onComplete: function (classification, error) {
+        if (activeConvergence !== runner) { return; }
         app.completeConvergenceStudy(revision, classification, error);
-        if (activeConvergence === runner) { activeConvergence = null; }
+        activeConvergence = null;
       },
       confirmHighMemory: function (preflight, level) {
         return root.confirm('Convergence level ' + level + ' is estimated at or above 8 GiB. Continue this level?');
       }
     });
     activeConvergence = runner;
-    runner.start(resolved.maxSizeM, undefined, diagonal);
+    runner.start(baseline ? baseline.targetSizeM : resolved.maxSizeM, settings, diagonal, baseline);
   }
 
   function setText(id, value) { document.getElementById(id).textContent = value; }
@@ -320,11 +334,13 @@
     app.clearMesh();
   });
   ui.setSolveHandlers(prepareSolve, meshAndSolve, cancelSolve);
-  ui.setConvergenceHandlers(startConvergence, cancelConvergence);
+  ui.setConvergenceHandlers(startConvergence, cancelConvergence, function () { startConvergence('quick'); });
   viewport.setProbeHandler(function (probe) { ui.renderProbe(probe); });
   ui.start();
   api.bindUnitSettings(app, ui);
-  api.bindContextualWorkflow(app, ui, importCadFile);
+  api.bindContextualWorkflow(app, ui, function(file, options){
+    return options && options.example ? projectUI.openExample(file, options) : importCadFile(file, options);
+  });
   api.bindFaceAccess(app, viewport);
   api.bindReportExport(app, viewport, ui);
   var projectUI = api.bindProjectUI(app, { importCad: importCadFile, beforeStage: function () { disposeSolver(); app.discardSolvePreflight(); }, beforeInstall: function () {

@@ -16,13 +16,13 @@
     if (this.cancelCurrent) { this.cancelCurrent(); }
   };
 
-  ConvergenceRunner.prototype.start = async function (initialTargetSizeM, suppliedSettings, modelDiagonal) {
+  ConvergenceRunner.prototype.start = async function (initialTargetSizeM, suppliedSettings, modelDiagonal, baseline) {
     var settings = root.SpjutsimFEA.createConvergenceSettings(suppliedSettings);
-    var levels = [];
+    var levels = baseline ? [baseline] : [];
     var stopReason = 'level-limit';
     var index;
     this.cancelled = false;
-    for (index = 0; index < settings.maxLevels; index += 1) {
+    for (index = levels.length; index < settings.maxLevels; index += 1) {
       if (this.cancelled) { stopReason = 'cancelled'; break; }
       var target = initialTargetSizeM * Math.pow(settings.refinementFactor, index);
       var output = null;
@@ -41,8 +41,9 @@
         var summary = root.SpjutsimFEA.convergenceLevelSummary(index, target, output.mesh, output.preflight, decorated);
         levels.push(summary);
         this.onLevel(summary, decorated);
+        if (this.cancelled) { stopReason = 'cancelled'; break; }
         var interim = root.SpjutsimFEA.classifyConvergence(levels, 'criteria-met', settings, modelDiagonal);
-        if (interim.globalConverged) { stopReason = 'criteria-met'; break; }
+        if (interim.globalConverged && interim.stressStable) { stopReason = 'criteria-met'; break; }
       } catch (error) {
         if (this.cancelled || (error.diagnostic && error.diagnostic.code === 'SOLVE_CANCELLED')) {
           stopReason = 'cancelled';

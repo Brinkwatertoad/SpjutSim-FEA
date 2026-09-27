@@ -28,7 +28,15 @@
       (ready ? 'Select Solve to continue.' : 'Solve checks the current setup before starting.'))));
     return {canCheck:!busy && !draft,canRequestSolve:!busy && !draft && (Boolean(state.mesh) || setupReady) && !(current && check.result.exceedsWasmCap),canSolve:ready,label:label,message:message};
   }
+  function resultInvalidationMessage(state) {
+    if (state.results || !state.resultInvalidation || !state.resultInvalidation.stale) { return ''; }
+    var labels = {material:'Material changed',loads:'Loads changed','boundary-conditions':'Supports changed',gravity:'Gravity changed',
+      'mesh-settings':'Mesh settings changed',mesh:'Mesh changed',geometry:'Model changed',orientation:'Model orientation changed'};
+    return (labels[state.resultInvalidation.reason] || 'Setup changed') + '. Previous results cleared. ' +
+      (engineeringBusy(state) ? 'Analysis is running.' : state.mesh ? 'Solve again to update results.' : 'Choose Mesh and solve to update results.');
+  }
   root.SpjutsimFEA = root.SpjutsimFEA || {};
+  root.SpjutsimFEA.resultInvalidationMessage = resultInvalidationMessage;
   root.SpjutsimFEA.engineeringBusy = engineeringBusy;
   root.SpjutsimFEA.solveReadiness = solveReadiness;
   root.SpjutsimFEA.hasPrescribedDisplacement = hasPrescribedDisplacement;

@@ -51,6 +51,10 @@
     var cached=await api.readProjectFile(await api.writeProjectFile(await api.createProjectSnapshot(app,{includeDerived:true})));
     var restored=api.prepareProjectCandidate(cached,geometry);
     assert(restored.document.mesh.nodePositionsM instanceof Float64Array,'Cached mesh did not retain binary type');
+    var level={level:1,targetSizeM:0.1,nodeCount:4,elementCount:1,degreeOfFreedomCount:12,estimatedPeakBytes:1000,maximumDisplacementM:1,strainEnergyJ:1,rawVonMisesMaxPa:100,solveDurationMs:1,iterations:1,peakLocationM:[0,0,0]};
+    cached.derived.convergence={schemaVersion:1,status:'completed',analysisRevision:cached.manifest.cache.analysisRevision,settings:api.createConvergenceSettings({maxLevels:2,displacementTolerance:0.001}),levels:[level,Object.assign({},level,{level:2,targetSizeM:0.07,maximumDisplacementM:1.01})],stopReason:'level-limit',selectedLevel:2};
+    var restoredStudy=api.prepareProjectCandidate(cached,geometry).document.convergenceStudy;
+    assert(restoredStudy && !restoredStudy.classification.globalConverged && restoredStudy.classification.stopReason==='level-limit','Reopened mesh check ignored its saved thresholds or stop reason');
     cached.derived.convergence={status:'running',levels:null};
     assert(api.prepareProjectCandidate(cached,geometry).cacheWarning,'Invalid cached convergence was installed');
     cached.derived.convergence=null;

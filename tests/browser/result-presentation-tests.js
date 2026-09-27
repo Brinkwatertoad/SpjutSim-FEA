@@ -49,10 +49,25 @@
     ui.renderSolve({mesh:null});
     assert(document.getElementById('solve-button').disabled, 'Mesh and solve must wait for a complete setup');
     var before = JSON.stringify(result);
+    var quickStudy = {status:'completed',settings:{maxLevels:2},levels:[{},{}],classification:{status:'converged-stress-unresolved',warning:'Review the peak concentration.'}};
+    assert(api.convergenceStatusMessage(quickStudy).includes('Review the peak concentration.'), 'Quick check discarded its stress warning');
+    quickStudy.levels=[{}];quickStudy.stopReason='resource-limit';quickStudy.classification={status:'indeterminate-resource-limit'};
+    assert(api.convergenceStatusMessage(quickStudy).includes('No refinement comparison completed'), 'Blocked quick check claimed a completed comparison');
     ui.renderResults({results:result});
+    assert(document.getElementById('displacement-headline').textContent.includes('0.001 mm'), 'Primary displacement metric is missing or incorrectly scaled');
+    assert(document.getElementById('displacement-guidance').textContent.includes('not studied'), 'Unstudied displacement lacks its convergence qualification');
+    assert(document.getElementById('stress-guidance').textContent.includes('smoothed'), 'Stress headline does not explain its relationship to the contour');
+    assert(document.getElementById('yield-guidance').textContent.includes('not a safety verdict'), 'FoS lacks a qualification beside the value');
     assert(document.getElementById('peak-headline').textContent.includes('0.005 MPa'), 'Engineering headline did not use sample peak');
     assert(document.getElementById('yield-headline').textContent.endsWith(': 2'), 'Engineering yield headline used smoothed FoS');
     assert(document.getElementById('trust-headline').textContent.includes('Not studied'), 'Single solve implied convergence');
+    result.warnings = ['Review large displacement.'];
+    ui.renderResults({results:result,convergenceStudy:{status:'completed',classification:{status:'converged-stress-unresolved',globalConverged:true,stressStable:false}}});
+    assert(document.getElementById('displacement-guidance').textContent.includes('stabilized') && document.getElementById('stress-guidance').textContent.includes('refine'), 'Global convergence incorrectly implied stress stability');
+    assert(!document.getElementById('result-warnings').hidden && document.getElementById('result-warnings').textContent.includes('large displacement'), 'Result warnings were hidden in details');
+    result.warnings = [];
+    ui.renderResults({results:result});
+    assert(document.getElementById('result-warnings').hidden, 'An old result warning remained visible');
     ui.renderLegend({results:result,viewportPresentation:{mode:'stress',field:'factorOfSafety'}});
     assert(!document.getElementById('legend-title').textContent.includes('clipped') && document.getElementById('legend-status').textContent.includes('Unclipped'), 'Unclipped FoS was described as clipped');
     ['vertical','horizontal'].forEach(function (orientation) {

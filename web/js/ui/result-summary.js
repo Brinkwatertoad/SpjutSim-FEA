@@ -3,6 +3,38 @@
   var api = root.SpjutsimFEA;
   function formatNumber(value, unit) { return api.formatResultNumber(value) + (unit ? ' ' + unit : ''); }
   function formatBytes(bytes) { return formatNumber(bytes / 1073741824, 'GiB'); }
+  function resultGuidance(state) {
+    var study = state.convergenceStudy, classification = study && study.classification;
+    var globalStable = classification && classification.globalConverged;
+    var stressStable = classification && classification.stressStable;
+    var changes = classification && classification.changes, settings = study && study.settings;
+    function comparison(value, limit, label) {
+      if (!Number.isFinite(value)) { return label + ' changed from zero; refine further to assess stability.'; }
+      return label + ' changed ' + api.formatResultNumber(value * 100) + '%; ' +
+        (value <= limit + 1e-12 ? 'within' : 'above') + ' the ' + api.formatResultNumber(limit * 100) + '% refinement threshold.';
+    }
+    var displacement = globalStable ? 'Displacement and energy stabilized across the last refinement.' :
+      (!study ? 'Mesh sensitivity not studied. Choose Check with a finer mesh to compare displacement.' : 'Mesh check incomplete or outside its thresholds. Review convergence for the next step.');
+    var stress = stressStable ? 'Peak stress stabilized across the last refinement.' : 'Locate the peak, inspect supports and loads, and refine to check stress stability.';
+    if (changes && settings) {
+      displacement = comparison(changes.maximumDisplacement, settings.displacementTolerance, 'Displacement') + ' ' +
+        comparison(changes.strainEnergy, settings.strainEnergyTolerance, 'Strain energy');
+      stress = comparison(changes.rawVonMisesMax, settings.stressTolerance, 'Peak stress') +
+        (stressStable ? '' : ' Inspect the peak and refine further. Peak-based FoS cannot yet establish whether this region meets your requirement.');
+    }
+    var fos = state.results.factorOfSafety, unit = (state.viewportPresentation || {}).stressUnit || 'MPa';
+    var sources = {'tensile-yield':'tensile yield','compressive-yield':'compressive yield',
+      'tensile-yield-minimum':'tensile yield (smaller supplied strength)','compressive-yield-minimum':'compressive yield (smaller supplied strength)'};
+    var yieldBasis = fos ? 'Criterion: von Mises yielding. Strength used: ' + (sources[fos.strength.source] || 'yield strength') +
+      ', ' + api.formatResultMagnitude(fos.strength.valuePa, unit) + '. FoS = strength ÷ peak von Mises (' +
+      api.formatResultMagnitude(state.results.extrema.rawVonMisesMax.valuePa, unit) + '). ' : '';
+    return {
+      displacement: displacement + ' Design displacement limits are a separate requirement.',
+      stress: 'Unaveraged peak; the smoothed surface may show a lower maximum. ' + stress,
+      yield: fos ? yieldBasis + 'This is not a safety verdict; compare with your required FoS and review stress stability.' :
+        'Add a suitable tensile or compressive yield strength in Material to calculate yield FoS. Use strength data appropriate to the actual part.'
+    };
+  }
   // Undeformed geometry bounds in the study's global axes, never exaggerated result bounds.
   function resultSummaryRows(documentState) {
     var result = documentState.results;
@@ -51,4 +83,5 @@
     ] };
   }
   api.resultSummaryRows = resultSummaryRows;
+  api.resultGuidance = resultGuidance;
 }(globalThis));

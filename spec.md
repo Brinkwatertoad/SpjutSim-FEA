@@ -1591,6 +1591,11 @@ Keep the current image after the selected preset images in the finished report.
 
 **Report customization (Plan 34):** Preserve one-action export with complete defaults. An accessible options action allows a title/notes, selection of available views, and optional current-view capture; remember compact choices and offer Restore defaults. Notes remain user-authored and are escaped as text. Applicable assumptions, units, warnings, result currency, smoothing/deformation explanations, and convergence status cannot be omitted. User-selected views include their actual field, scale, limits, and clipping. Future measurement/case content is added only when those capabilities exist.
 
+Report options live in the normal Settings hub's Report tab; the toolbar options
+action opens that tab. Title/notes commit on change (Enter also commits title);
+image choices and Restore defaults apply immediately. These are project metadata,
+saved/recovered with the project, and never invalidate numerical results.
+
 ---
 
 ## 12. Factor of Safety
@@ -1655,7 +1660,21 @@ The exact sequence may be adjusted to Gmsh behavior, but it must be deterministi
 Default maximum:
 
 - 4 solved mesh levels total, or
-- stop earlier due to convergence, solver failure, user cancellation, or memory guard.
+- stop early for convergence only when displacement, strain energy and raw peak
+  von Mises stress all meet their respective thresholds;
+- solver failure, user cancellation and memory guards can stop at any level.
+  A globally stable but stress-unresolved study continues up to the mesh limit.
+  At that limit, preserve separate global/stress judgments and explain that the
+  strength assessment remains unresolved.
+
+An optional **Check with a finer mesh** action reuses the current displayed solve
+as level 1 and solves exactly one finer level at 0.7× its actual target size. A
+repeat starts from the displayed refined level, not the original mesh settings.
+Keep existing results if the check cannot complete; do not claim a completed
+comparison after cancellation, failure or a resource stop. Normal preflight,
+confirmation, cancellation and result invalidation remain in force. Settings →
+Analysis can automatically run this check after each successful normal solve;
+it defaults off, persists as a browser preference and does not trigger recursively.
 
 ### 13.3 Metrics to track
 
@@ -1685,8 +1704,25 @@ Stress convergence is tracked separately:
 
 - raw max von Mises relative change <= 5% is considered locally stable for the purpose of a simple indicator;
 - do not fail global convergence solely because raw peak stress does not converge.
+  This is a separate global-response judgment, not the full study’s early-stop
+  condition: early convergence requires both global and stress criteria.
 
 These values should be configurable in developer settings and may become advanced user controls later.
+
+These are application screening defaults, not universal engineering acceptance
+criteria or bounds on error relative to the exact solution. Show measured changes
+and thresholds beside the results. Call the two-level workflow a quick mesh check;
+passing one comparison establishes only that the measured change met the threshold.
+A longer refinement sequence helps assess the trend. Displacement limits and
+required FoS are independent design requirements, never inferred from mesh
+stability. FoS presentation states von Mises yielding, the selected tensile or
+compressive yield strength (the smaller when both are supplied), its numerical
+value, and the peak stress used in the ratio.
+
+The baseline stores only compact summary data. For reopened results without a
+preflight estimate, its memory value is the saved WASM allocation and carries
+`memorySource: 'wasm-allocated'`; UI and reports label that value explicitly.
+This is not used to authorize the next solve, which requires fresh preflight.
 
 ### 13.5 Singularity heuristic
 
@@ -1710,9 +1746,36 @@ Show a table and simple plots for:
 - mesh size/DOF vs strain energy;
 - mesh size/DOF vs raw max von Mises stress.
 
+Present each quantity in its own labeled chart using actual preferred-unit values
+and a DOF horizontal axis; explain DOF as mesh degrees of freedom. Auto-range the
+vertical scale to data and band bounds with padding, clamping the lower bound at
+zero. Explain auto-ranging and show both axis bounds. Label data values on the
+Y axis where they fit without overlap, prioritizing recent meshes. Show first and
+last DOF labels plus the previous mesh DOF when space permits. Use visible point
+markers and accessible per-mesh value descriptions.
+Do not overlay independently normalized quantities without readable scales.
+For the last completed comparison, draw a shaded **Convergence band** with dashed
+bounds at previous value ± abs(previous value) × the recorded tolerance (5% for
+stress, 2% for displacement/energy by default). Convert to preferred units and
+show the numeric bounds and reference mesh in a visible/accessible label. Include
+both band bounds in the vertical range and use clearly visible accent shading.
+No band is shown for a single mesh; a zero previous value gives a zero-width
+value interval, not an invented absolute tolerance. This is a mesh-change band,
+not a design limit or an error bound. Keep the full mesh/resource table available
+under expandable details.
+Show the actual relative change and recorded threshold beside each quantity for
+the last two completed meshes. Define change relative to the earlier mesh; zero
+to zero is 0%, zero to nonzero has an undefined percentage and needs review.
+One mesh cannot establish stability. Failed/cancelled/running studies label any
+shown comparisons as completed meshes only, without claiming study completion.
+Separate mesh thresholds from design limits and explicitly retain unresolved
+peak-stress/FoS guidance even when displacement meets its threshold. Two meshes
+are a screening comparison, not proof of convergence. These presentation rules
+do not change numerical classification, thresholds or retention of result arrays.
+
 Status values:
 
-- **Converged** — global criteria satisfied;
+- **Converged** — global criteria and peak-stress stability criterion satisfied;
 - **Converged globally; stress unresolved** — global criteria pass, peak stress fails stability criterion;
 - **Unconverged** — available levels do not satisfy criteria;
 - **Indeterminate — resource limit** — next required mesh was blocked by memory/resource limits;
@@ -1896,7 +1959,8 @@ rules, including face-reference repair during geometry replacement.
 
 Settings is reached through File and Ctrl/Cmd+, using the existing hub. Its
 preferred size is 840 × 720 CSS pixels, capped to the viewport; active tab content
-scrolls internally. Controls, Units, and Appearance contain preferences.
+scrolls internally. Controls, Units, Analysis, Report, and Appearance are tabs.
+Report edits project metadata; the other tabs contain browser preferences.
 Engineering material/load/support/mesh inputs remain with their setup editors.
 
 Use one interface with contextual options/advanced disclosures.
@@ -2080,6 +2144,23 @@ Tet10 mesh settings already applied. Its 1 m cube uses E = 200 GPa, ν = 0.3;
 expected axial stress is 1 kPa, axial extension 5 nm. Examples are deliberately
 loaded offline and never silently solved. No placeholder solid is shown.
 
+The opening panel also offers a cantilever bending example: a 2 × 0.2 × 0.1 m
+rectangular steel beam (E = 200 GPa, ν = 0.3, density 7,800 kg/m³), fixed on its
+X-min end. The complete example is rotated −90° about global X: its global
+dimensions are 2 × 0.1 × 0.2 m and the 2,000 N end load points in −Y. Tet10 custom sizes are
+40–50 mm. No yield strength is assumed. Its original setup has an Euler–Bernoulli
+tip displacement of 1.6 mm, with solid end/shear effects explaining small
+differences. Verify the mean tip displacement within 3% and reactions at the
+configured equilibrium tolerance. Guidance and report notes identify the
+original setup, Auto deformation exaggeration, and mesh-sensitive fixed-end
+peak stress; edited examples require a new reference calculation. Both example
+assets are generated reproducibly by `tools/build-examples.py`.
+
+The top Examples menu offers the cantilever and axial cube even when a part is
+already open. Use the existing project recovery checkpoint/new-project path before
+loading the complete prepared setup; never combine old loads/supports with an
+example. Normal busy and pending-edit guards apply.
+
 A small guide in the viewport points to and highlights the actual next clickable
 control, not section headings. The opening panel appears alone; explicitly
 starting Help guidance on an empty project replaces it with guidance pointing to
@@ -2102,7 +2183,7 @@ Teach Import → Material → Supports → Loads → Generate mesh → Inspect m
 → Review results. Mesh guidance highlights the Mesh opener, then Generate mesh.
 Beginner guidance discusses density and refinement without naming element
 formulations. Inspection highlights the Mesh view button and explains refinement around holes,
-small features and loads, plus convergence. The prepared cube begins at Generate
+small features and loads, plus convergence. Prepared examples begin at Generate
 mesh. Recovered projects stay quiet. No
 next-step banner or routine persistence prose belongs above Model. Report and
 mesh options use shared UI Kit SVGs with 20px icons, 30px desktop targets and 44px
@@ -2118,6 +2199,14 @@ Group readiness identifies the next useful action. Results lead with displacemen
 stress, available yield FoS, and convergence, with numerical detail expandable.
 Warnings remain visible. Do not duplicate the same error across multiple panels.
 
+Each primary result has adjacent interpretation: displacement distinguishes
+mesh stability from an allowable movement limit; stress identifies the
+unaveraged whole-solid peak versus the smoothed surface; yield FoS is qualified
+by strength applicability and stress convergence. Direct actions open Auto
+deformation, locate the peak, review convergence/checks, and open the material
+strength field when yield FoS is unavailable. Detailed values remain expandable;
+warnings are visible outside that disclosure.
+
 ### 15.10 Solve workflow and history
 
 `solveReadiness(document)` owns check/solve readiness and actionable explanations.
@@ -2131,6 +2220,15 @@ at the same analysis revision.
 `lastSolveCheck` retains only compact diagnostics/revision for inspection.
 Engineering edits invalidate dependent state; presentation/name-only edits do
 not. A stale report never authorizes execution.
+
+When an edit clears solved results, a persistent shared status below the toolbar
+identifies the changed input and the next action: Solve again, or Mesh and solve
+when the mesh is absent. This remains visible with both side panes closed and
+survives subsequent edits and Undo/Redo until new results exist or a new/opened
+project replaces the state. First-time authoring does not show a results-cleared
+notice. Active work uses a progress-appropriate message. Editing guidance
+distinguishes committed changes from downloaded project files; local recovery
+does not update downloaded files.
 
 When setup is complete but a mesh is missing/stale, an explicit
 Mesh and solve action may perform meshing → checks → solve with visible stages,

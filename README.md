@@ -34,6 +34,26 @@ cmake --build build/native-fem
 ctest --test-dir build/native-fem
 ```
 
+For repeatable browser verification, use the optional test-only runner with an
+existing Playwright installation and Chromium executable (no app build step):
+
+```sh
+node tools/run-browser-tests.cjs --all
+node tools/run-browser-tests.cjs convergence-view convergence-part-workflow
+# With tools/serve.py running in another terminal:
+FEA_TEST_HTTP=http://127.0.0.1:8000 FEA_TEST_DPR=2 node tools/run-browser-tests.cjs mesh-check-workflow
+```
+
+The runner uses the existing local verification paths under `build/` by default.
+For another installation, set `FEA_PLAYWRIGHT_MODULE` to the absolute Playwright
+module path and `FEA_CHROMIUM_PATH` to the browser executable. It installs nothing.
+`--all` runs the application harnesses; the longer `cad-corpus`,
+`resource-benchmark` and `validation-benchmark` must be requested explicitly.
+Results, browser version and numerical evidence are written to
+`build/browser-tests-file.json` or `build/browser-tests-http.json`; override with
+`FEA_TEST_REPORT` to retain separate runs. A failure or uncaught page error returns
+a nonzero exit status. Each harness has a five-minute timeout.
+
 Open `tests/browser/worker-runtime-tests.html` directly in Chromium to run the
 worker protocol-validation and lifecycle regression checks; it should report
 `Passed` without a server.
@@ -240,8 +260,23 @@ Yield FoS uses the smaller available yield strength, with an independently cappe
 contour. Global mesh convergence tracks displacement/energy separately from peak
 stress stability. One solve or a smooth contour does not establish safety.
 
-File → Settings provides navigation bindings, SI/USCS/custom unit preferences and
-FEA Classic/Light/Dark/Vivid themes. Custom unit sets support Save copy, name-based
+**Check with a finer mesh** reuses the displayed solve and runs one additional
+mesh at 0.7× its target size. Results show the measured changes against screening
+thresholds: 2% displacement, 2% strain energy and 5% peak stress. These are changes
+between meshes, not error bounds or design acceptance limits. A full study
+continues until displacement, energy and raw peak stress all meet their thresholds,
+or it reaches the four-mesh/resource limit. Stable displacement alone no longer
+ends the study. The quick check still performs just one extra solve. Repeat the check
+or use the full convergence study to investigate the trend. Yield FoS names its
+von Mises criterion and governing yield strength; required FoS and displacement
+limits come from the design requirements.
+
+File → Settings provides navigation bindings, SI/USCS/custom unit preferences,
+Analysis, Report and FEA Classic/Light/Dark/Vivid themes. Analysis can enable one
+automatic finer-mesh check after each normal solve (off by default, remembered
+in this browser). Report contains project-specific title, notes and image choices;
+the toolbar options icon opens that tab. Changes apply on commit without clearing
+results. Custom unit sets support Save copy, name-based
 save/rename, automatic updates to an active saved set and Delete to Custom.
 All engineering values remain SI; unit changes convert current entries without
 invalidating results. Material source/limitations remain visible; see
@@ -292,8 +327,13 @@ Cross-app import remains future work. Test these workflows with `tests/browser/i
 and `tests/browser/material-library-tests.html` using the same local-file browser
 configuration as the CAD workflow tests.
 
-The empty viewport offers Import CAD… and Open Cube Example, with no placeholder
-solid. The example already has material, supports, load and Tet10 settings.
+The empty viewport offers Import CAD…, Open Cantilever Example and Open Cube
+Example, with no placeholder solid. The top Examples menu opens either prepared
+model after preserving the previous project in local recovery. Both examples include material, supports,
+load and Tet10 settings. The 2 × 0.2 × 0.1 m cantilever is rotated −90° about X,
+including its 2,000 N end load (now −Y), and has approximately 1.6 mm tip deflection
+by beam theory. Its illustrative steel has no assumed yield strength; review mesh convergence and fixed-end
+stress concentrations. The cube remains the uniform axial verification example.
 A dismissible guide starts after CAD import; dismissal is remembered. Help →
 Show setup guide brings it back. The guide highlights clickable controls: an
 editor opener or Add, face selection on the model, then the editing controls.
@@ -302,10 +342,19 @@ changing its normal styling.
 A valid material choice or property edit advances to Supports; other stages use Next/Back.
 Rerenders do not scroll the pane or advance the guide.
 The guide teaches Generate mesh, Inspect mesh,
-then Solve; the prepared cube starts at Generate mesh. Recovered projects reopen
+then Solve; prepared examples start at Generate mesh. Recovered projects reopen
 quietly. Mesh and solve runs generation, checks and solve on explicit request, retaining cancellation and
-independent Generate mesh/Run checks actions. Rebuild the embedded example with
+independent Generate mesh/Run checks actions. Rebuild the embedded examples with
 `python3 tools/build-examples.py` when its source fixture changes.
+
+Results lead with displacement, unaveraged peak stress and yield FoS, each with
+interpretation and direct review actions. Numerical details are expandable;
+warnings stay visible. Engineering edits that clear results show persistent
+feedback below the toolbar, including after Undo/Redo. Solve again, or use Mesh
+and solve if the mesh was cleared. Local recovery stays in this browser; Save
+project downloads a separate file. Run `tests/browser/usability-priorities-tests.html`
+with local-file access enabled or over HTTP to verify the real beam solve,
+analytical displacement/reaction checks and result/edit workflows.
 
 The options button beside Export adds title/notes, selected preset images and an
 optional current view. Defaults remain complete; mandatory engineering context

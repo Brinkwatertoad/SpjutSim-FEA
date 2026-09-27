@@ -23,7 +23,7 @@
     var flow=new api.ProjectWorkflow(app,Object.assign({},options,{acceptSetupOnly:async function(text){return await ask(text+' Open the CAD and setup without cached results?',[['open','Open setup only'],['cancel','Cancel']])==='open';}}));
     function render(){
       document.querySelectorAll('[data-project-save]').forEach(function(button){button.disabled=busy || !app.geometrySource || api.hasPendingAssignment(app.document);});
-      document.querySelectorAll('[data-project-open],[data-project-new]').forEach(function(button){button.disabled=busy || api.engineeringBusy(app.document) || api.hasPendingAssignment(app.document);});
+      document.querySelectorAll('[data-project-open],[data-project-new],[data-ui-menu-action^="example-"]').forEach(function(button){button.disabled=busy || api.engineeringBusy(app.document) || api.hasPendingAssignment(app.document);});
       var saveButton=document.getElementById('save-project-button');
       saveButton.title='Save project ('+modifier+'S)'+(app.projectDirty?' · Unsaved changes':'');
     }
@@ -63,8 +63,14 @@
       busy=true;recovery.stop();render();
       try{
         flow.cancel();if(options.beforeInstall){options.beforeInstall();}
-        await session.fresh();app.newProject();session.remember({empty:true});recovery.start();message('');
-      }catch(error){message('Could not start a new project: '+error.message);}
+        await session.fresh();app.newProject();session.remember({empty:true});recovery.start();message('');return true;
+      }catch(error){message('Could not start a new project: '+error.message);return false;}
+      finally{busy=false;render();}
+    }
+    async function openExample(file, exampleOptions){
+      if(busy || api.engineeringBusy(app.document) || !await newProject()){return;}
+      busy=true;render();
+      try{await options.importCad(file,exampleOptions);}
       finally{busy=false;render();}
     }
     document.getElementById('cancel-project-open').addEventListener('click',function(){flow.cancel();});
@@ -131,7 +137,7 @@
       }finally{busy=false;app.projectOpening=false;app.notify('project-status');render();}
     }());
     root.addEventListener('pagehide',function(){flow.cancel();recovery.stop();session.close();recovery.store.close();},{once:true});
-    return {flow:flow,recovery:recovery,session:session,ready:ready,open:open,save:save,newProject:newProject};
+    return {flow:flow,recovery:recovery,session:session,ready:ready,open:open,save:save,newProject:newProject,openExample:openExample};
   }
   api.bindProjectUI=bindProjectUI;
 }(globalThis));

@@ -21,6 +21,33 @@
     app.replaceMeshSettings({preset:'normal',elementType:'tet10'});app.clearSelectedFaces();
     app.document.projectMetadata={name:'Cube example',reportOptions:null};app.notify('example-ready');
   }
+  function applyCantileverExample(app) {
+    var geometry = app.document.geometry;
+    if (!geometry || geometry.sourceFormat !== 'step') { throw Error('Import the beam before applying its setup.'); }
+    app.rotateGeometryAroundGlobalAxis('x', -90);
+    geometry = app.document.geometry;
+    function endFace(sign) {
+      return geometry.faceIds.find(function (id) {
+        return api.analyzeGeometryFaceNormal(geometry, id).normal[0] * sign > 0.99;
+      });
+    }
+    var fixed = endFace(-1), loaded = endFace(1);
+    if (!fixed || !loaded) { throw Error('The beam end faces could not be identified.'); }
+    app.replaceMaterial({name:'Example steel (illustrative)',youngsModulusPa:200e9,poissonsRatio:0.3,densityKgM3:7800});
+    app.replaceSelectedFaces([fixed]);
+    app.createBoundaryCondition({name:'Fixed end',type:'support',componentsM:{x:0,y:0,z:0}});
+    app.replaceSelectedFaces([loaded]);
+    app.createLoad({name:'Transverse end load',type:'total-force',forceN:[0,-2000,0]});
+    app.replaceMeshSettings({preset:'custom',elementType:'tet10',minSizeM:0.04,maxSizeM:0.05});
+    app.clearSelectedFaces();
+    app.document.projectMetadata = {name:'Cantilever beam example',reportOptions:{
+      title:'Cantilever beam example',views:null,currentView:false,
+      notes:'Original example: 2000 × 200 × 100 mm steel beam rotated −90° about X (global size 2000 × 100 × 200 mm), E = 200 GPa, Poisson ratio = 0.3, fixed at X = 0, 2000 N in −Y on the other end. ' +
+        'Euler–Bernoulli tip deflection: F L³ / (3 E I) ≈ 1.6 mm, I = b h³ / 12. Solid end effects and shear cause small differences. ' +
+        'Inspect deformation and mesh convergence; peak stress at the fixed end can be mesh-sensitive. Properties are illustrative, with no assumed yield strength.'
+    }};
+    app.notify('example-ready');
+  }
   function bindContextualWorkflow(app,ui,importCadFile){
     var guide=document.getElementById('setup-guide'),step=0,shown=false,dismissed=false,highlighted=null,previous=app.document.geometry && app.document.geometry.geometryId;
     var highlight=document.createElement('div');
@@ -84,9 +111,12 @@
       document.getElementById('setup-guide-title').textContent=needsFaces() ? 'Select '+(step===2?'support':'load')+' faces' : steps[step].title;
       var target=guideTarget(),text=steps[step].text;
       if(needsFaces()){text='Click faces on the model to select them. Click a selected face again to deselect it.';}
-      if(target && target.closest('form'))text='Changes are saved automatically. Enter a value and press Enter or leave the field. Use Undo to reverse an edit.';
+      if(target && target.closest('form'))text='Choices apply immediately; valid numbers apply on Enter or when you leave the field. Escape closes the editor; Undo reverses applied edits. Engineering changes clear solved results. Save project downloads a file.';
       if(step===4 && target && target.id==='generate-mesh-button'){text='Choose a mesh density, then click Generate mesh. Complicated parts may need finer settings. When generation finishes, choose Next to inspect it.';}
       if(step===7 && app.document.projectMetadata && app.document.projectMetadata.name==='Cube example'){text+=' The cube should extend by 5 nm under 1 kPa axial stress.';}
+      if(step===7 && app.document.projectMetadata && app.document.projectMetadata.name==='Cantilever beam example'){
+        text='Choose View deformation in Results. The original beam, rotated −90° about X, has about 1.6 mm tip deflection in −Y under 2000 N by beam theory. Auto exaggerates the displayed shape. Review convergence; fixed-end peak stress can be mesh-sensitive. Changed inputs require a new reference calculation.';
+      }
       document.getElementById('setup-guide-text').textContent=text;
       document.getElementById('setup-guide-back').disabled=step===0 || api.hasPendingAssignment(app.document);
       document.getElementById('setup-guide-next').textContent=step===7?'Done':'Next';
@@ -120,7 +150,14 @@
       if(document.getElementById('toggle-setup-pane').getAttribute('aria-expanded')==='false'){document.getElementById('toggle-setup-pane').click();}openStep();
     });
     document.getElementById('empty-import').addEventListener('click',function(){document.getElementById('import-step-input').click();});
-    document.getElementById('load-example').addEventListener('click',function(){importCadFile(new File([api.EXAMPLE_CUBE_STEP],'example-cube.step'),{example:true});});
+    function openExample(beam){
+      if(app.projectOpening || api.engineeringBusy(app.document) || api.hasPendingAssignment(app.document)){return;}
+      importCadFile(new File([beam?api.EXAMPLE_CANTILEVER_STEP:api.EXAMPLE_CUBE_STEP],beam?'cantilever-beam.step':'example-cube.step'),{example:beam?'cantilever':true});
+    }
+    document.getElementById('load-example').addEventListener('click',function(){openExample(false);});
+    document.getElementById('load-beam-example').addEventListener('click',function(){openExample(true);});
+    document.querySelector('[data-ui-menu-action="example-cantilever"]').addEventListener('click',function(){openExample(true);});
+    document.querySelector('[data-ui-menu-action="example-cube"]').addEventListener('click',function(){openExample(false);});
     document.getElementById('mesh-options-dialog').addEventListener('close',function(){var button=document.querySelector('[data-mesh-options]');if(button){button.focus();}});
     document.getElementById('report-options-button').appendChild(root.PortableUIIcons.createIcon('settings',{document:document,size:20}));
     document.getElementById('report-options-button').classList.add('fea-icon-button');
@@ -147,4 +184,5 @@
     root.addEventListener('pagehide',function(){observer.disconnect();if(frame!==null){root.cancelAnimationFrame(frame);}root.removeEventListener('resize',schedulePosition);},{once:true});
   }
   api.nextGuideStep=nextGuideStep;api.applyCubeExample=applyCubeExample;api.bindContextualWorkflow=bindContextualWorkflow;
+  api.applyCantileverExample = applyCantileverExample;
 }(globalThis));

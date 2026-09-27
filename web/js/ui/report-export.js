@@ -26,6 +26,7 @@
     var unit = api.preferredUnit;
     var number = api.formatResultNumber, magnitude = api.formatResultMagnitude, material = state.material;
     var summary = api.resultSummaryRows(state);
+    var guidance = api.resultGuidance(state);
     var parameters = [['File', sourceName], ['Exported (UTC)', (now || new Date()).toISOString()], ['Analysis revision', state.analysisRevision],
       ['Model', state.geometry.sourceFormat], ['Material', material.name || 'Custom'],
       ["Young's modulus", magnitude(material.youngsModulusPa, unit('youngsModulusPa'))], ["Poisson's ratio", number(material.poissonsRatio)]];
@@ -63,16 +64,18 @@
       ['Deformation image shape', 'Auto ×' + number(autoScale)], ['Image color limits', 'Automatic for each field']);
     var text = 'SpjutSim FEA analysis report\n\n' + rowsText(parameters) + '\n\n' +
       'Convergence: ' + api.convergenceStatusMessage(state.convergenceStudy) + '\n' +
+      'Displacement review: ' + guidance.displacement + '\nStress review: ' + guidance.stress + '\nFoS review: ' + guidance.yield + '\n' +
       'Assumptions: homogeneous isotropic solid, small-strain linear static response; SI engineering state with displayed units.\n' +
       'Review support/load concentrations for possible singularities; one solve does not establish safety.\n' +
       'Part dimensions are undeformed bounding dimensions in the study global axes. Image contours show smoothed surface values.\n' +
       (state.results.factorOfSafety ? 'Yield FoS uses the lower available tensile/compressive yield divided by von Mises stress.\n' : 'Yield FoS unavailable: supply tensile or compressive yield strength.\n') +
       '\nResults\nParameter\tValue\n' + rowsText(summary.values) + '\n\nDiagnostics\nParameter\tValue\n' + rowsText(summary.diagnostics) + '\n';
     if (state.convergenceStudy && state.convergenceStudy.levels.length) {
-      text += '\nConvergence study\nLevel\tTarget size ('+unit('lengthM')+')\tDOF\tMax displacement ('+unit('lengthM')+')\tStrain energy ('+unit('energyJ')+')\tPeak von Mises ('+unit('stressPa')+')\tEstimated memory (bytes)\n' + rowsText(state.convergenceStudy.levels.map(function (level) {
-        return [level.level, number(api.preferredFromSI('lengthM',level.targetSizeM)), level.degreeOfFreedomCount, number(api.preferredFromSI('lengthM',level.maximumDisplacementM)), number(api.preferredFromSI('energyJ',level.strainEnergyJ)), number(api.preferredFromSI('stressPa',level.rawVonMisesMaxPa)), level.estimatedPeakBytes];
+      text += '\nConvergence study\nLevel\tTarget size ('+unit('lengthM')+')\tDOF\tMax displacement ('+unit('lengthM')+')\tStrain energy ('+unit('energyJ')+')\tPeak von Mises ('+unit('stressPa')+')\tMemory (bytes; estimated peak unless marked WASM)\n' + rowsText(state.convergenceStudy.levels.map(function (level) {
+        return [level.level, number(api.preferredFromSI('lengthM',level.targetSizeM)), level.degreeOfFreedomCount, number(api.preferredFromSI('lengthM',level.maximumDisplacementM)), number(api.preferredFromSI('energyJ',level.strainEnergyJ)), number(api.preferredFromSI('stressPa',level.rawVonMisesMaxPa)), (level.memorySource==='wasm-allocated'?'WASM ':'')+level.estimatedPeakBytes];
       })) + '\n';
     }
+
     return text;
   }
   async function buildAnalysisReport(controller, viewport, autoScale, format, options, signal) {
@@ -122,7 +125,7 @@
       if (button.dataset.exporting !== String(busy)) { icon.innerHTML = busy ? '<path d="M6 6l12 12M18 6 6 18"/>' : originalIcon; button.dataset.exporting = String(busy); }
     }
     controller.subscribe(render); render();
-    api.bindReportOptions(controller);
+    api.bindReportOptions(controller, ui);
     button.addEventListener('click', async function () {
       if (busy) { abort.abort(); status.textContent = 'Cancelling report…'; return; }
       if (!canExportReport(controller.document)) { return; }

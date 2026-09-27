@@ -158,11 +158,11 @@
     },
     "workers": {
       "project": "workers",
-      "version": "protocol 4; candidate source hashes",
+      "version": "protocol 5; candidate source hashes",
       "license": "GPL-2.0-or-later",
       "source": {
         "url": "https://github.com/Brinkwatertoad/SpjutSim-FEA",
-        "revision": "protocol 4; candidate source hashes"
+        "revision": "protocol 5; candidate source hashes"
       },
       "source_files": [
         {

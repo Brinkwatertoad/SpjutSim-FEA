@@ -38,6 +38,12 @@
     this.resultsSummary = document.getElementById('results-summary');
     this.resultsValues = document.getElementById('results-values');
     this.peakHeadline = document.getElementById('peak-headline');
+    this.displacementHeadline = document.getElementById('displacement-headline');
+    this.displacementGuidance = document.getElementById('displacement-guidance');
+    this.stressGuidance = document.getElementById('stress-guidance');
+    this.yieldGuidance = document.getElementById('yield-guidance');
+    this.resultWarnings = document.getElementById('result-warnings');
+    this.analysisEditFeedback = document.getElementById('analysis-edit-feedback');
     this.yieldHeadline = document.getElementById('yield-headline');
     this.trustHeadline = document.getElementById('trust-headline');
     this.locatePeakButton = document.getElementById('locate-peak-button');
@@ -183,12 +189,12 @@
     this.saveNavigationPreferences();
   };
 
-  UIController.prototype.openSettings = function (opener) {
+  UIController.prototype.openSettings = function (opener, category) {
     if (!this.settingsBackdrop || !this.settingsDialog || !this.settingsHub) { return; }
     this.settingsOpen = true;
     this.settingsHub.setOpener(opener || document.activeElement);
     this.settingsBackdrop.hidden = false;
-    this.settingsHub.setActive('controls', { focusSelector: '#navigation-rotate-button' });
+    this.settingsHub.setActive(category || 'controls', category ? {focus:true} : { focusSelector: '#navigation-rotate-button' });
   };
 
   UIController.prototype.closeSettings = function () {
@@ -207,7 +213,7 @@
       return;
     }
     if (event.key !== 'Tab') { return; }
-    focusable = Array.from(this.settingsDialog.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+    focusable = Array.from(this.settingsDialog.querySelectorAll('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')).filter(function (element) { return element.getClientRects().length; });
     if (!focusable.length) { return; }
     index = focusable.indexOf(document.activeElement);
     if (event.shiftKey && (index <= 0)) { event.preventDefault(); focusable[focusable.length - 1].focus(); }
@@ -249,7 +255,8 @@
     this.solveHandler = solve;
     this.cancelSolveHandler = cancel;
   };
-  UIController.prototype.setConvergenceHandlers = function (start, cancel) {
+  UIController.prototype.setConvergenceHandlers = function (start, cancel, quick) {
+    this.quickMeshCheckHandler = quick;
     this.startConvergenceHandler = start;
     this.cancelConvergenceHandler = cancel;
   };
@@ -341,6 +348,26 @@
     });
     var viewChecks = document.getElementById('view-checks-button');
     if (viewChecks) { viewChecks.addEventListener('click',function () { self.showOutputPanel('checks'); }); }
+    var reviewConvergence = document.getElementById('review-convergence-button');
+    if (reviewConvergence) { reviewConvergence.addEventListener('click', function () { self.showOutputPanel('convergence'); }); }
+    var quickMeshCheck = document.getElementById('quick-mesh-check-button');
+    if (quickMeshCheck) { quickMeshCheck.addEventListener('click', function () { if (self.quickMeshCheckHandler) { self.quickMeshCheckHandler(); } }); }
+    var viewDisplacement = document.getElementById('view-displacement-button');
+    if (viewDisplacement) { viewDisplacement.addEventListener('click', function () {
+      if (!self.controller.document.results) { return; }
+      self.controller.replaceViewportPresentation(Object.assign({}, self.controller.document.viewportPresentation, {
+        mode:'deformation',field:'displacementMagnitude',deformationMode:'auto',deformationScale:self.resolveDeformationScale('auto')
+      }));
+    }); }
+    var resultMaterial = document.getElementById('result-material-button');
+    if (resultMaterial) { resultMaterial.addEventListener('click', function () {
+      if (self.workspaceLayout) { self.workspaceLayout.setPaneOpen('setup', true); }
+      if (self.analysisAuthoring) {
+        if (self.analysisAuthoring.activeInspectorKind !== 'material') { self.analysisAuthoring.openInspectorRow('material', 'material', resultMaterial); }
+        var strength = document.getElementById('material-tensile-yield');
+        strength.closest('details').open = true; strength.focus();
+      }
+    }); }
     if (this.solveButton) { this.solveButton.addEventListener('click', function () { if (self.solveHandler) { self.solveHandler(); } }); }
     if (this.cancelSolveButton) { this.cancelSolveButton.addEventListener('click', function () { if (self.cancelSolveHandler) { self.cancelSolveHandler(); } }); }
     if (this.startConvergenceButton) { this.startConvergenceButton.addEventListener('click', function () { if (self.startConvergenceHandler) { self.showOutputPanel("convergence"); self.startConvergenceHandler(); } }); }
@@ -386,11 +413,27 @@
       var settingsTabs = [this.settingsTabControls];
       var settingsPanels = [this.settingsPanelControls];
       if (document.getElementById('settings-tab-units')) { settingsKeys.push('units'); settingsTabs.push(document.getElementById('settings-tab-units')); settingsPanels.push(document.getElementById('settings-panel-units')); }
+      ['analysis','report'].forEach(function (key) {
+        var tab = document.getElementById('settings-tab-' + key), panel = document.getElementById('settings-panel-' + key);
+        if (tab && panel) { settingsKeys.push(key); settingsTabs.push(tab); settingsPanels.push(panel); }
+      });
       if (this.settingsTabAppearance && this.settingsPanelAppearance) {
         settingsKeys.push('appearance'); settingsTabs.push(this.settingsTabAppearance); settingsPanels.push(this.settingsPanelAppearance);
       }
       this.settingsHub = root.PortableUISettingsHub.createSettingsHub({
         keys: settingsKeys, tabs: settingsTabs, panels: settingsPanels
+      });
+    }
+    var alwaysCheckMesh = document.getElementById('always-check-mesh');
+    this.autoMeshCheck = false;
+    if (alwaysCheckMesh) {
+      try { this.autoMeshCheck = root.localStorage.getItem('spjutsim-fea.always-check-mesh') === 'true'; } catch (error) { /* Session preference is usable without storage. */ }
+      alwaysCheckMesh.checked = this.autoMeshCheck;
+      alwaysCheckMesh.addEventListener('change', function () {
+        self.autoMeshCheck = alwaysCheckMesh.checked;
+        var status = document.getElementById('analysis-preferences-status');
+        try { root.localStorage.setItem('spjutsim-fea.always-check-mesh', String(self.autoMeshCheck)); status.textContent = ''; }
+        catch (error) { status.textContent = 'Preference applies to this session; browser storage is unavailable.'; }
       });
     }
     if (this.closeSettingsButton) { this.closeSettingsButton.addEventListener('click', function () { self.closeSettings(); }); }
@@ -437,7 +480,7 @@
         if (self.solveStatus) { self.solveStatus.textContent = operation.progress.userMessage; }
         if (self.solveOutputStatus) { self.solveOutputStatus.textContent = operation.progress.userMessage; }
       } else if (change === 'convergence-progress') {
-        if (self.convergenceStatus) { self.convergenceStatus.textContent = convergenceStatusMessage(documentState.convergenceStudy); }
+        if (self.convergenceStatus) { self.convergenceStatus.textContent = root.SpjutsimFEA.convergenceStatusMessage(documentState.convergenceStudy); }
       } else { self.render(documentState); }
     });
   };
@@ -505,6 +548,11 @@
   UIController.prototype.render = function (documentState) {
     this.renderHistory();
     this.renderActivity(documentState);
+    if (this.analysisEditFeedback) {
+      var feedback = root.SpjutsimFEA.resultInvalidationMessage(documentState);
+      this.analysisEditFeedback.hidden = !feedback;
+      if (this.analysisEditFeedback.textContent !== feedback) { this.analysisEditFeedback.textContent = feedback; }
+    }
     var state = documentState.geometryImport || { status: 'idle' };
     var convergenceRunning = Boolean(documentState.convergenceStudy && documentState.convergenceStudy.status === 'running');
     var message = 'Choose a STEP, IGES, or BREP solid to begin.';
@@ -807,34 +855,6 @@
     if (initial) { select(initial.dataset.outputTab, false); }
     return select;
   }
-  function convergenceErrorMessage(error) {
-    var value = error && error.diagnostic ? error.diagnostic : error;
-    return value && (value.userMessage || value.message) || null;
-  }
-  function convergenceStatusMessage(study) {
-    var levels = study && Array.isArray(study.levels) ? study.levels : [];
-    var classification = study && study.classification;
-    var statusLabels = { converged: 'Converged', 'converged-stress-unresolved': 'Converged globally; stress unresolved',
-      unconverged: 'Unconverged', 'indeterminate-resource-limit': 'Indeterminate — resource limit', failed: 'Failed' };
-    var message;
-    var errorMessage;
-    if (!study) { return 'Not studied.'; }
-    if (study.status === 'running') {
-      return 'Level ' + ((study.progress && study.progress.level) || levels.length + 1) + ': ' +
-        ((study.progress && (study.progress.userMessage || study.progress.stage)) || 'preparing') + '…';
-    }
-    if (study.status === 'cancelled') { return 'Cancelled — completed levels remain available in the table.'; }
-    message = statusLabels[classification && classification.status] || study.status;
-    errorMessage = convergenceErrorMessage(study.error);
-    if (errorMessage) { message += ' — ' + errorMessage; }
-    else if (study.stopReason === 'high-memory-confirmation') { message += ' — high-memory confirmation was declined.'; }
-    else if (study.stopReason === 'resource-limit') { message += ' — the next level exceeded the configured memory limit.'; }
-    else if (study.stopReason === 'level-limit' && classification && !classification.globalConverged) {
-      message += ' — the four-level limit was reached.';
-    }
-    if (classification && classification.warning) { message += ' ' + classification.warning; }
-    return message;
-  }
   function legendRangeStatus(fieldRange, deformationScale) {
     return (fieldRange && fieldRange.clipped ? 'Clipped visualization range' : 'Unclipped range') +
       ' · deformation ×' + formatNumber(deformationScale || 0);
@@ -871,7 +891,6 @@
     else if (preflight.status === 'ready') {
       message = preflight.result.exceedsWasmCap ? 'Estimate exceeds the WebAssembly cap; generate a coarser mesh.' : 'Checks passed. Solve can proceed.';
     } else if (documentState.mesh) { message = 'Solve will check constraints and memory before starting.'; }
-    if (documentState.resultInvalidation && documentState.resultInvalidation.stale) { message += ' Previous results are stale.'; }
     if (this.solveStatus) { this.solveStatus.textContent = message; this.solveStatus.classList.toggle('fea-error', preflight.status === 'failed' || execution.status === 'failed'); }
     if (this.solveOutputStatus) {
       this.solveOutputStatus.hidden = !(running || preflight.status === 'failed' || execution.status === 'failed' ||
@@ -964,9 +983,17 @@
     var presentation = documentState.viewportPresentation || {};
     var stressUnit = presentation.stressUnit || 'MPa';
     function stress(value) { return root.SpjutsimFEA.formatResultMagnitude(value,stressUnit); }
-    if (this.peakHeadline) { this.peakHeadline.textContent = 'Peak von Mises — unaveraged solver samples: ' + stress(result.extrema.rawVonMisesMax.valuePa); }
-    if (this.yieldHeadline) { this.yieldHeadline.textContent = result.factorOfSafety ? 'Yield FoS — unaveraged solver samples: ' + formatNumber(result.factorOfSafety.rawMinimum.value) : 'Yield FoS unavailable — supply a tensile or compressive yield strength.'; }
-    if (this.trustHeadline) { this.trustHeadline.textContent = 'Convergence: ' + convergenceStatusMessage(documentState.convergenceStudy) + ' Review support/load concentrations for possible singularities; one solve does not establish safety.'; }
+    var guidance = root.SpjutsimFEA.resultGuidance(documentState);
+    if (this.displacementHeadline) { this.displacementHeadline.textContent = 'Max displacement: ' + root.SpjutsimFEA.formatResultMagnitude(result.extrema.maxDisplacement.valueM, presentation.lengthUnit || 'mm'); }
+    if (this.displacementGuidance) { this.displacementGuidance.textContent = guidance.displacement; }
+    if (this.stressGuidance) { this.stressGuidance.textContent = guidance.stress; }
+    if (this.yieldGuidance) { this.yieldGuidance.textContent = guidance.yield; }
+    if (this.resultWarnings) { this.resultWarnings.hidden = !result.warnings.length; this.resultWarnings.textContent = result.warnings.join(' '); }
+    var materialButton = document.getElementById('result-material-button');
+    if (materialButton) { materialButton.hidden = Boolean(result.factorOfSafety); }
+    if (this.peakHeadline) { this.peakHeadline.textContent = 'Peak von Mises: ' + stress(result.extrema.rawVonMisesMax.valuePa); }
+    if (this.yieldHeadline) { this.yieldHeadline.textContent = result.factorOfSafety ? 'Yield FoS: ' + formatNumber(result.factorOfSafety.rawMinimum.value) : 'Yield FoS unavailable'; }
+    if (this.trustHeadline) { this.trustHeadline.textContent = 'Convergence: ' + root.SpjutsimFEA.convergenceStatusMessage(documentState.convergenceStudy); }
     var summary = root.SpjutsimFEA.resultSummaryRows(documentState);
     replaceDefinitionList(this.resultsValues, summary.values);
     replaceDefinitionList(this.diagnosticsValues, summary.diagnostics);
@@ -979,11 +1006,13 @@
     var otherWorkerRunning = documentState.geometryImport.status === 'importing' ||
       documentState.meshGeneration.status === 'generating' || documentState.solvePreflight.status === 'running' ||
       documentState.solveExecution.status === 'running';
+    var quickButton = document.getElementById('quick-mesh-check-button');
+    if (quickButton) { quickButton.disabled = running || otherWorkerRunning || root.SpjutsimFEA.hasPendingAssignment(documentState) || !documentState.results; }
     if (this.startConvergenceButton) { this.startConvergenceButton.disabled = running || otherWorkerRunning || root.SpjutsimFEA.hasPendingAssignment(documentState) || !documentState.geometry || !documentState.material; }
     if (this.startConvergenceButton) { this.startConvergenceButton.textContent = study ? 'Restart study' : 'Start study'; }
     if (this.cancelConvergenceButton) { this.cancelConvergenceButton.hidden = !running; }
     if (this.convergenceStatus) {
-      this.convergenceStatus.textContent = convergenceStatusMessage(study);
+      this.convergenceStatus.textContent = root.SpjutsimFEA.convergenceStatusMessage(study);
     }
     if (this.convergenceTable) {
       var body = this.convergenceTable.tBodies[0];
@@ -992,7 +1021,7 @@
         var row = body.insertRow();
         [level.level, formatNumber(root.SpjutsimFEA.preferredFromSI('lengthM',level.targetSizeM)), level.degreeOfFreedomCount,
           formatNumber(root.SpjutsimFEA.preferredFromSI('lengthM',level.maximumDisplacementM)), formatNumber(root.SpjutsimFEA.preferredFromSI('energyJ',level.strainEnergyJ)),
-          formatNumber(root.SpjutsimFEA.preferredFromSI('stressPa',level.rawVonMisesMaxPa)), formatBytes(level.estimatedPeakBytes)].forEach(function (value) {
+          formatNumber(root.SpjutsimFEA.preferredFromSI('stressPa',level.rawVonMisesMaxPa)), (level.memorySource === 'wasm-allocated' ? 'WASM ' : '') + formatBytes(level.estimatedPeakBytes)].forEach(function (value) {
           row.insertCell().textContent = String(value);
         });
         var action = row.insertCell();
@@ -1006,21 +1035,7 @@
       }, this);
     }
     if (this.convergencePlot) {
-      this.convergencePlot.textContent = '';
-      var plot = this.convergencePlot;
-      [['maximumDisplacementM', '#2563eb'], ['strainEnergyJ', '#16a34a'], ['rawVonMisesMaxPa', '#dc2626']].forEach(function (series) {
-        var maximum = Math.max.apply(null, levels.map(function (level) { return Math.abs(level[series[0]]); }).concat([1e-30]));
-        var minimumDof = levels.length ? Math.min.apply(null, levels.map(function (level) { return level.degreeOfFreedomCount; })) : 0;
-        var maximumDof = levels.length ? Math.max.apply(null, levels.map(function (level) { return level.degreeOfFreedomCount; })) : 1;
-        var points = levels.map(function (level, index) {
-          var x = maximumDof === minimumDof ? 160 : 10 + (level.degreeOfFreedomCount - minimumDof) * 300 / (maximumDof - minimumDof);
-          return x + ',' + (110 - 100 * Math.abs(level[series[0]]) / maximum);
-        }).join(' ');
-        var line = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-        line.setAttribute('points', points); line.setAttribute('fill', 'none');
-        line.setAttribute('stroke', series[1]); line.setAttribute('stroke-width', '2');
-        plot.appendChild(line);
-      });
+      root.SpjutsimFEA.renderConvergenceCharts(this.convergencePlot, study);
     }
   };
 
@@ -1082,7 +1097,6 @@
   };
   root.SpjutsimFEA = root.SpjutsimFEA || {};
   root.SpjutsimFEA.configureOutputTabs = configureOutputTabs;
-  root.SpjutsimFEA.convergenceStatusMessage = convergenceStatusMessage;
   root.SpjutsimFEA.legendRangeStatus = legendRangeStatus;
   root.SpjutsimFEA.UIController = UIController;
 }(globalThis));

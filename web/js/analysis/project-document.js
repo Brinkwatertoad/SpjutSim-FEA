@@ -118,7 +118,7 @@
     });
     var diagonal=Math.hypot.apply(null,geometry.boundingBoxM.maxM.map(function(v,i){return v-geometry.boundingBoxM.minM[i];}));
     return {schemaVersion:1,status:study.status,settings:settings,levels:clone(study.levels),
-      classification:api.classifyConvergence(study.levels,settings,diagonal,study.stopReason),stopReason:study.stopReason,
+      classification:api.classifyConvergence(study.levels,study.stopReason,settings,diagonal),stopReason:study.stopReason,
       error:study.error && {userMessage:String(study.error.userMessage || 'Saved study did not complete.')},
       progress:null,selectedLevel:study.selectedLevel,selectedResult:null,analysisRevision:revision};
   }

@@ -32,6 +32,10 @@
           <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="undo" data-history-action="undo" disabled><span data-history-label>Undo</span><span class="ui-menu-shortcut" aria-hidden="true">Ctrl+Z</span></button><button type="button" role="menuitem" data-ui-menu-action="redo" data-history-action="redo" disabled><span data-history-label>Redo</span><span class="ui-menu-shortcut" aria-hidden="true">Ctrl+Y</span></button></div>
         </div>
         <div class="ui-menu-group" data-ui-menu-group data-open="false">
+          <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">Examples</button>
+          <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="example-cantilever">Cantilever beam</button><button type="button" role="menuitem" data-ui-menu-action="example-cube">Axial cube</button></div>
+        </div>
+        <div class="ui-menu-group" data-ui-menu-group data-open="false">
           <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">Help</button>
           <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="about">About</button><button type="button" role="menuitem" data-ui-menu-action="walkthrough">Show setup guide</button></div>
         </div>
@@ -55,6 +59,7 @@
         <button id="report-options-button" type="button" aria-label="Report options" title="Report options"></button>
       </div>
     </div>
+    <div class="fea-edit-feedback-region"><p id="analysis-edit-feedback" role="status" aria-live="polite" hidden></p></div>
     <main class="fea-workspace">
       <aside id="setup-pane" class="fea-tools" aria-label="Setup">
         <section id="setup-inspector" class="fea-setup-inspector" aria-label="Setup assignments">
@@ -210,7 +215,12 @@
           </div>
         </div>
         <p id="assignment-preview-indicator" class="fea-draft-indicator" role="status" hidden>Preview · click faces to toggle · Apply or Cancel in Setup</p>
-        <section id="pick-through-panel" class="fea-pick-through" hidden aria-label="Select through faces"><p id="pick-through-status" role="status"></p><button id="pick-through-next" type="button">Next face</button><button id="pick-through-confirm" type="button">Select face</button><button id="pick-through-cancel" type="button">Cancel</button></section><section id="empty-workflow" class="fea-empty-workflow"><h2>Open a part</h2><p>Import a STEP, IGES or BREP solid, or drop one here.</p><div class="fea-empty-actions"><button id="empty-import" type="button">Import CAD…</button><button id="load-example" type="button">Open Cube Example</button></div><p class="fea-help">The cube includes material, supports, load and mesh settings, ready to solve.</p></section>
+        <section id="pick-through-panel" class="fea-pick-through" hidden aria-label="Select through faces"><p id="pick-through-status" role="status"></p><button id="pick-through-next" type="button">Next face</button><button id="pick-through-confirm" type="button">Select face</button><button id="pick-through-cancel" type="button">Cancel</button></section>
+        <section id="empty-workflow" class="fea-empty-workflow">
+          <h2>Open a part</h2><p>Import a STEP, IGES or BREP solid, or drop one here.</p>
+          <div class="fea-empty-actions"><button id="empty-import" type="button">Import CAD…</button><button id="load-beam-example" type="button">Open Cantilever Example</button><button id="load-example" type="button">Open Cube Example</button></div>
+          <p class="fea-help">Both examples include material, supports, load and mesh settings. Start with the cantilever to explore bending, or use the cube for uniform axial stress.</p>
+        </section>
         <aside id="setup-guide" class="fea-setup-guide" hidden aria-labelledby="setup-guide-title"><button id="setup-guide-dismiss" class="fea-guide-dismiss" type="button" aria-label="Dismiss setup guide" title="Dismiss setup guide">×</button><strong id="setup-guide-title"></strong><p id="setup-guide-text"></p><div class="fea-guide-actions"><button id="setup-guide-back" type="button">Back</button><button id="setup-guide-next" type="button">Next</button></div></aside>
         <div class="fea-gizmo-bounds" role="group" aria-label="Camera orientation">
           <button type="button" data-view-orientation="+x" aria-label="View from +X · YZ plane" title="View from +X · YZ plane"></button>
@@ -241,10 +251,13 @@
           <p id="report-status" role="status" aria-live="polite"></p>
           <p id="results-empty">No analysis results.</p>
           <section id="results-summary" hidden><h2>Results</h2>
-            <p id="peak-headline"></p><p id="yield-headline"></p><p id="trust-headline"></p>
-            <button id="view-checks-button" type="button">View checks</button><button id="locate-peak-button" type="button">Locate peak</button><p id="peak-location-status" role="status"></p>
+            <div class="fea-result-metric"><p id="displacement-headline"></p><p id="displacement-guidance" class="fea-result-guidance"></p><button id="view-displacement-button" type="button">View deformation</button></div>
+            <div class="fea-result-metric"><p id="peak-headline"></p><p id="stress-guidance" class="fea-result-guidance"></p><button id="locate-peak-button" type="button">Locate peak</button><p id="peak-location-status" role="status"></p></div>
+            <div class="fea-result-metric"><p id="yield-headline"></p><p id="yield-guidance" class="fea-result-guidance"></p><button id="result-material-button" type="button" hidden>Review material</button></div>
+            <p id="trust-headline"></p><p id="result-warnings" class="fea-warning" hidden></p>
+            <div class="fea-result-actions"><button id="quick-mesh-check-button" type="button">Check with a finer mesh</button><button id="review-convergence-button" type="button">Review convergence</button><button id="view-checks-button" type="button">View checks</button></div>
             <details><summary><span class="fea-chevron" aria-hidden="true">▶</span> How to read these results</summary><p>The headline is the peak von Mises stress among unaveraged solver recovery samples throughout the solid. A sampled maximum is not an exact continuum maximum.</p><p>The smoothed surface contour first averages recovery samples within each element, then takes an unweighted mean of adjacent element values at each node. Surface extrema include only nodes used by the displayed boundary. The von Mises color scale spans zero to the whole-model sample peak, so its top color may not appear on the surface. Smoothing can reduce peaks.</p><p>Yield factor of safety uses the unaveraged sample peak and the smaller available tensile/compressive yield strength. One linear solve does not establish safety; review convergence, constraints and stress concentrations.</p></details>
-            <dl class="fea-output-list" id="results-values"></dl></section>
+            <details id="result-details"><summary><span class="fea-chevron" aria-hidden="true">▶</span> Numerical details</summary><dl class="fea-output-list" id="results-values"></dl></details></section>
         </section>
         <section id="checks-panel" role="tabpanel" aria-labelledby="checks-tab" data-output-panel="checks" hidden>
           <h2>Model checks</h2><p>These checks run before solving. Fix any issues below, then select Solve again.</p><button id="preflight-button" type="button">Run checks only</button><p id="solve-status" role="status" aria-live="polite"></p>
@@ -255,14 +268,15 @@
         </section>
         <section id="convergence-summary" role="tabpanel" aria-labelledby="convergence-tab" data-output-panel="convergence" hidden>
           <h2 id="convergence-title">Convergence</h2>
-          <p>Global refinement uses h<sub>next</sub> = 0.7 h, up to four solved levels.</p>
+          <p>A full study refines until displacement, energy and peak stress meet their mesh thresholds, up to four solved levels. If stress remains mesh-sensitive, the strength assessment remains unresolved.</p><p>Thresholds compare successive meshes: displacement/energy ≤ 2%; peak stress ≤ 5%. Small changes support mesh stability, not design acceptance.</p>
           <button id="start-convergence-button" type="button">Start study</button>
           <button id="cancel-convergence-button" type="button" hidden>Cancel study</button>
           <p id="convergence-status" role="status" aria-live="polite">Not studied.</p>
-          <div class="fea-table-scroll"><table id="convergence-table"><caption>Mesh convergence levels</caption>
-            <thead><tr><th>Level</th><th>h (<span data-unit-label="lengthM">m</span>)</th><th>DOF</th><th>Max u (<span data-unit-label="lengthM">m</span>)</th><th>Energy (<span data-unit-label="energyJ">J</span>)</th><th>Raw VM (<span data-unit-label="stressPa">MPa</span>)</th><th>Memory</th><th>Viewport</th></tr></thead><tbody></tbody>
-          </table></div>
-          <svg id="convergence-plot" viewBox="0 0 320 120" role="img" aria-label="Normalized displacement, strain energy, and raw peak stress by convergence level"></svg>
+
+          <div id="convergence-plot" aria-label="Mesh sensitivity by quantity"></div>
+          <details><summary>Mesh values and resource details</summary><div class="fea-table-scroll"><table id="convergence-table"><caption>Mesh convergence levels</caption>
+            <thead><tr><th>Mesh</th><th>Target size (<span data-unit-label="lengthM">m</span>)</th><th>DOF</th><th>Max displacement (<span data-unit-label="lengthM">m</span>)</th><th>Energy (<span data-unit-label="energyJ">J</span>)</th><th>Peak von Mises (<span data-unit-label="stressPa">MPa</span>)</th><th>Memory</th><th>Viewport</th></tr></thead><tbody></tbody>
+          </table></div></details>
         </section>
         <section id="diagnostics-panel" role="tabpanel" aria-labelledby="diagnostics-tab" data-output-panel="diagnostics" hidden>
           <section id="diagnostics-summary" hidden><h2>Diagnostics</h2><dl class="fea-output-list" id="diagnostics-values"></dl></section>
@@ -284,6 +298,8 @@
         <div class="ui-settings-hub-nav" role="tablist" aria-label="Settings categories">
           <button id="settings-tab-controls" type="button" role="tab" aria-selected="true" aria-controls="settings-panel-controls" tabindex="0">Controls</button>
           <button id="settings-tab-units" type="button" role="tab" aria-selected="false" aria-controls="settings-panel-units" tabindex="-1">Units</button>
+          <button id="settings-tab-analysis" type="button" role="tab" aria-selected="false" aria-controls="settings-panel-analysis" tabindex="-1">Analysis</button>
+          <button id="settings-tab-report" type="button" role="tab" aria-selected="false" aria-controls="settings-panel-report" tabindex="-1">Report</button>
           <button id="settings-tab-appearance" type="button" role="tab" aria-selected="false" aria-controls="settings-panel-appearance" tabindex="-1">Appearance</button>
         </div>
         <div class="ui-settings-hub-content">
@@ -309,6 +325,17 @@
               <div id="preferred-unit-fields"></div>
               <p id="units-error" role="status" aria-live="polite"></p>
             </section>
+          </div>
+          <div id="settings-panel-analysis" role="tabpanel" aria-labelledby="settings-tab-analysis" hidden>
+            <section class="ui-settings-section">
+              <label class="ui-settings-row" for="always-check-mesh"><span>Always check with a finer mesh after solving</span><input id="always-check-mesh" type="checkbox" role="switch" aria-describedby="mesh-check-help"></label>
+              <p id="mesh-check-help">Reuses the first result and runs one finer mesh. This adds computation and memory use; normal cancellation and memory checks apply.</p>
+              <p>Refinement thresholds: displacement and strain energy ≤ 2% change; peak stress ≤ 5% change. These check mesh sensitivity, not design acceptance or a bound on error.</p>
+              <p id="analysis-preferences-status" role="status"></p>
+            </section>
+          </div>
+          <div id="settings-panel-report" role="tabpanel" aria-labelledby="settings-tab-report" hidden>
+            <section class="ui-settings-section fea-report-settings"><p>Report options for the current project. Changes apply immediately and are saved with the project.</p><label class="ui-settings-row" for="report-title"><span>Title</span><input id="report-title" maxlength="160"></label><label for="report-notes">Notes</label><textarea id="report-notes" maxlength="10000" rows="4"></textarea><fieldset><legend>Images</legend><label><input type="checkbox" data-report-view="assignments"> Part, loads and supports</label><label><input type="checkbox" data-report-view="mesh"> Mesh</label><label><input type="checkbox" data-report-view="stress"> Stress</label><label><input type="checkbox" data-report-view="factorOfSafety"> Factor of safety</label><p id="report-fos-availability" class="fea-help"></p><label><input type="checkbox" data-report-view="deformation"> Auto deformation</label><label><input id="report-current-view" type="checkbox"> Also capture current view</label></fieldset><p class="fea-help">Setup, units, warnings and convergence are always included.</p><div class="fea-dialog-actions"><button id="report-restore-defaults" type="button">Restore defaults</button></div></section>
           </div>
           <div id="settings-panel-appearance" role="tabpanel" aria-labelledby="settings-tab-appearance" hidden>
             <section class="ui-settings-section fea-appearance-settings">
@@ -340,8 +367,7 @@
   <dialog id="recovery-dialog" class="fea-project-dialog" aria-labelledby="recovery-title"><h2 id="recovery-title">Local recovery</h2><ul id="recovery-list"></ul><button id="clear-recovery" type="button">Clear stored recovery</button><form method="dialog"><button>Close</button></form></dialog>
   <div id="project-notice" class="fea-project-notice" hidden><p id="project-status" role="status"></p><p id="recovery-status" role="status"></p><button id="cancel-project-open" type="button" hidden>Cancel open</button><button id="retry-recovery" type="button" hidden>Retry recovery</button><button id="dismiss-project-notice" type="button" aria-label="Dismiss notification">×</button></div>
   <input id="project-file-input" type="file" accept=".spjutsim-fea,.step,.stp,.iges,.igs,.brep" hidden>
-  <dialog id="report-options-dialog" class="fea-project-dialog" aria-labelledby="report-options-title"><form method="dialog"><h2 id="report-options-title">Report options</h2><label for="report-title">Title</label><input id="report-title" maxlength="160"><label for="report-notes">Notes</label><textarea id="report-notes" maxlength="10000" rows="4"></textarea><fieldset><legend>Images</legend><label><input type="checkbox" data-report-view="assignments"> Part, loads and supports</label><label><input type="checkbox" data-report-view="mesh"> Mesh</label><label><input type="checkbox" data-report-view="stress"> Stress</label><label><input type="checkbox" data-report-view="factorOfSafety"> Factor of safety</label><p id="report-fos-availability" class="fea-help"></p><label><input type="checkbox" data-report-view="deformation"> Auto deformation</label><label><input id="report-current-view" type="checkbox"> Also capture current view</label></fieldset><p class="fea-help">Setup, units, warnings and convergence are always included.</p><div class="fea-dialog-actions"><button id="report-restore-defaults" type="button">Restore defaults</button><button value="cancel">Cancel</button><button value="apply">Apply</button></div></form></dialog>
-  <dialog id="save-project-dialog" class="fea-project-dialog" aria-labelledby="save-project-title"><form method="dialog"><h2 id="save-project-title">Save project</h2><p>Includes CAD and the complete committed setup.</p><label><input id="project-include-cache" type="checkbox"> Include mesh and results (larger file)</label><div class="fea-dialog-actions"><button value="cancel">Cancel</button><button value="save">Save project</button></div></form></dialog>
+  <dialog id="save-project-dialog" class="fea-project-dialog" aria-labelledby="save-project-title"><form method="dialog"><h2 id="save-project-title">Save project</h2><p>Downloads CAD and the complete committed setup to a project file. Local recovery stays in this browser; it does not update downloaded files.</p><label><input id="project-include-cache" type="checkbox"> Include mesh and results (larger file)</label><div class="fea-dialog-actions"><button value="cancel">Cancel</button><button value="save">Save project</button></div></form></dialog>
   <dialog id="project-question-dialog" class="fea-project-dialog" aria-label="Project changes"><p></p><div class="fea-dialog-actions"></div></dialog>
   <script src="ui/color-schemes.js"></script>
   <script src="js/ui/fea-color-schemes.js"></script>
@@ -382,6 +408,7 @@
 <script src="js/ui/project-ui.js"></script>
 <script src="js/ui/contextual-workflow.js"></script>
 <script src="examples/cube.js"></script>
+<script src="examples/cantilever.js"></script>
 
   <script src="js/render/viewport-navigation.js"></script>
   <script src="js/render/analysis-glyphs.js"></script>
@@ -433,7 +460,8 @@
   <script src="js/ui/result-legend.js"></script>
 <script src="js/ui/legend-layout.js"></script>
 <script src="ui/action-icons.js"></script>
-<script src="js/ui/ui-controller.js"></script>
+<script src="js/ui/convergence-view.js"></script>
+  <script src="js/ui/ui-controller.js"></script>
 <script src="js/render/report-capture.js"></script>
 
 <script src="js/ui/report-options.js"></script>

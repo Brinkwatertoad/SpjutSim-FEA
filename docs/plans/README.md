@@ -13,6 +13,19 @@ owner acceptance. [Batch evidence](../reviews/30-34-verification.md).
 and additional physics do not gate v1. Static single-solid CAD analysis remains
 the current supported product; STL is archived.
 
+**Owner-directed usability sequence (2026-09-26):** first improve result
+interpretation, feedback after edits clear results, and a prepared cantilever
+example alongside the cube. The remaining convergence-chart clarity, focused code readability and repeatable
+browser verification/documentation pass is now implemented; see
+[convergence clarity verification](../reviews/convergence-clarity.md). Owner walkthrough
+remains pending. Next numbered development work is Plan 36. Comparison and persistent
+measurements remain in Plans 39–40. See [priority verification](../reviews/usability-priorities.md).
+
+The corrected 2 m cantilever and Examples menu remain implemented. The owner
+withdrew the rounding experiment after reporting that it was not useful; its UI,
+execution and worker APIs have been removed. [Historical record](../reviews/47-edge-rounding.md).
+The usability pass above is implemented; Plans 36–38 retain their order.
+
 ## Pre-v1 delivery
 
 | Plan | Status | Deliverable |

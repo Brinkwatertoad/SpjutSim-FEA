@@ -76,10 +76,28 @@
       peakFaceId: result.extrema.rawVonMisesMax.faceId || null });
   }
 
+  // Only compact summary data survives the handoff to the next mesh/solver.
+  function currentConvergenceBaseline(state) {
+    var result = state.results, study = state.convergenceStudy;
+    if (!result || result.analysisRevision !== state.analysisRevision || !state.geometry || !state.mesh) { return null; }
+    if (study && study.selectedResult === result) {
+      var selected = study.levels.find(function (level) { return level.level === study.selectedLevel; });
+      if (selected) { return Object.assign({}, selected, {level:1}); }
+    }
+    var resolved = root.SpjutsimFEA.resolveMeshSettings(state.meshSettings, state.geometry.boundingBoxM);
+    var check = state.solvePreflight;
+    var preflight = check && check.analysisRevision === state.analysisRevision && check.result;
+    var summary = convergenceLevelSummary(0, resolved.maxSizeM, {statistics:result.meshStatistics}, preflight || {
+      degreeOfFreedomCount:result.meshStatistics.nodeCount * 3, estimatedPeakBytes:result.solverStatistics.wasmMemoryBytes
+    }, result);
+    return Object.assign({}, summary, {memorySource:preflight ? 'estimated-peak' : 'wasm-allocated'});
+  }
+
   root.SpjutsimFEA = root.SpjutsimFEA || {};
   root.SpjutsimFEA.CONVERGENCE_SINGULARITY_WARNING = SINGULARITY_WARNING;
   root.SpjutsimFEA.createConvergenceSettings = createConvergenceSettings;
   root.SpjutsimFEA.convergenceRelativeChange = convergenceRelativeChange;
   root.SpjutsimFEA.classifyConvergence = classifyConvergence;
   root.SpjutsimFEA.convergenceLevelSummary = convergenceLevelSummary;
+  root.SpjutsimFEA.currentConvergenceBaseline = currentConvergenceBaseline;
 }(globalThis));
