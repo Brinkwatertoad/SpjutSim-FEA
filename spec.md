@@ -73,7 +73,7 @@ The product should favor **useful, defensible engineering feedback over solver f
 - Browser-local material and unit libraries; DOCX and text/PNG ZIP reports.
 - Portable save/open with optional mesh/results and lightweight local recovery.
 - Model volume/mass, easier viewport selection, discoverable advanced controls, consistent editing language, contextual errors, onboarding, and report options with complete defaults.
-- **Implemented:** local directions and planar sliding/symmetry supports. **Planned:** bearing loads, distributed moments, and offset forces.
+- Local directions and planar sliding/symmetry supports; validated cylindrical bearing loads, distributed moments, and offset forces.
 
 ### 2.2 Deferred until after v1.0
 
@@ -736,7 +736,7 @@ with O/S; New has no shortcut. No beforeunload warning is installed. Download st
 not verified disk persistence. Browser/origin storage limitations and allocation
 costs are documented with the file format.
 
-### 5.7 Local frames and planned engineering extensions
+### 5.7 Local frames and surface resultants
 
 Plans 35–37 extend support/load definitions through the same controller,
 assignment draft, history, project validation, worker protocol, and report paths.
@@ -752,8 +752,8 @@ assignment draft, history, project validation, worker protocol, and report paths
 - Distributed moments and offset forces declare target faces, resultant force,
   resultant moment, reference point, and the chosen load-distribution model.
 
-Local frames and planar supports are implemented; bearing/moment/offset schemas
-remain planned. A support or component force optionally carries:
+Local frames, planar supports, bearing loads, distributed moments and offset
+forces are implemented. A support or component force/moment optionally carries:
 
 ```js
 frame: { version: 1, ownership: 'global', originM: [0, 0, 0],
@@ -782,17 +782,57 @@ Reopen revalidates descriptors against imported source. Replacement requires
 mapping each CAD-attached assignment to one planar face or dropping it; the
 replacement basis is regenerated and previewed before the transfer is accepted.
 
-Worker protocol 5 prevents old workers from silently interpreting local components
+Worker protocol 6 prevents old workers from silently interpreting local components
 as global. Support projection adds `constraintFrame: {version: 1, axes}` with axes
 resolved in global coordinates; total forces are transformed to global before
 transfer. The worker independently validates the basis. The additive C ABI entry
 `fem_set_directional_constraints` replaces all constraints with explicit unit
 global directions, node index `dof / 3`, and SI prescribed values. Legacy global
-calls remain supported. Project producer `/local-frame-1` prevents older apps
+calls remain supported. Project producer `/local-frame-1/surface-resultants-1` prevents older apps
 from dropping frame meaning; legacy global-only projects still open, with old
 cached results discarded. Exact schemas are versioned and tested. Missing/incompatible references
 block use or enter explicit review. Preflight, constraint rank, equilibrium,
 history replay and optional cached-result fingerprints include the new inputs.
+
+New surface load definitions retain opaque CAD `faceIds` and SI values:
+
+```js
+{ type: 'bearing', forceN: [100, 0, 0], distribution: 'compressive-cosine' }
+{ type: 'moment', momentNm: [0, 0, 100], referencePointM: [0, 0, 1],
+  distribution: 'minimum-squared-traction' }
+{ type: 'offset-force', forceN: [0, 0, -1000], referencePointM: [4, .125, .25],
+  applicationPointM: [5, .125, .25], distribution: 'minimum-squared-traction' }
+```
+
+All vectors and points must be finite; each force/moment is nonzero. Optional
+rectangular frames apply to `forceN`/`momentNm`; reference and application points
+always use global meters. Changing an offset reference recomputes its moment
+from the unchanged application point and force, preserving the physical wrench.
+A pure couple is reference invariant. SI/USCS/custom display preferences include
+`momentNm` (`N·m`, `kN·m`, `lbf·in`, `lbf·ft`); unit changes preserve SI setup.
+
+`GeometryModel.cylindricalFaces[FaceId]` stores version 1 canonical `originM`
+(at one axial end), unit `axis`, positive `radiusM`/`lengthM`, orthogonal unit
+`radialStart` and `angularExtentRad`. CAD Cylinder classification, analytic
+samples and rectangular-band area must agree. Supported bearing selections
+cover exactly 2π, possibly as split coaxial faces with matching radius and axial
+extent. Descriptor/coverage tolerance is 1e-8 of the characteristic dimension
+(or radians for coverage); axis alignment tolerance is 1e-10. Tiny seam roundoff
+is clamped at 0/2π. Partial, conical, noncircular, overlapping, mixed-axis or
+mixed-extent selections fail clearly. Direction must be transverse within 1e-10
+of force magnitude. Geometry orientation rotates the resolved axis and center;
+canonical descriptors remain unchanged. Reopen/replacement revalidates targets.
+
+Worker protocol 6 carries resolved global force/moment/reference and, for
+bearing, the validated band. The additive API-2 C ABI entry
+`fem_add_surface_resultant` takes Tri3/Tri6 connectivity, kind 0 bearing or 1
+resultant, and fourteen SI scalars: F3, M3, reference3, axis3, radius, length.
+Existing ABI struct layouts stay unchanged. Workers require the new entry point
+and reject an older API-2 runtime without it. Project producer
+`/local-frame-1/surface-resultants-1` owns new caches; older frame/global projects
+open as setup only. New-load caches require matching per-load requested wrench
+and valid realized/global moment diagnostics. Incompatible caches are explicitly
+discarded; the validated setup remains available.
 
 Load cases, persistent measurements, and local sizing are post-v1 schema
 extensions. Their plans evolve persistence with explicit migration/rejection
@@ -1067,7 +1107,7 @@ Use uniform pressure ±magnitude/selected area, positive for Push and negative f
 Pull. Opposing local normals may cancel. In the solver worker, Tri3 uses triangle
 area and Tri6 uses the same three-point surface quadrature as native `tri6_area`.
 This normalization then calls the unchanged native pressure integration. The
-surface-load record (introduced in protocol 2, retained in protocol 5) adds optional normal magnitude/sense; normal loads
+surface-load record (introduced in protocol 2, retained in protocol 6) adds optional normal magnitude/sense; normal loads
 omit the preview-only equivalent nodal force array (`null`). No native API or
 WASM binary change is needed. Malformed magnitudes and degenerate areas fail
 with actionable errors.
@@ -1102,7 +1142,7 @@ Acceptable v1 strategies:
 
 Do not use a large penalty factor as the default constraint method.
 
-### 8.8 Local supports and planned additional loads
+### 8.8 Local supports and additional surface loads
 
 Local supports preserve the symmetric positive-definite system assumed by PCG
 for a valid constrained linear-elastic model. A local constraint is a linear
@@ -1128,18 +1168,56 @@ Only affected nodes own bases; transformation uses a stack 3×3 block, without
 another global stiffness matrix. Basis work is O(C log B), congruence O(nnz log B)
 with C constraints and B affected nodes; no penalty constants or axis rounding.
 
-Bearing loading distributes compression on the loaded region of supported
-cylindrical faces to produce the requested transverse resultant. The initial
-plan explicitly bounds supported cylinder geometry and load distribution;
-it is not a contact/friction/bolt-preload model. Verify integrated resultant,
-moment, direction, and Tet4/Tet10 boundary quadrature.
+Bearing integration uses solid-boundary orientation and
+`t = -n max(0, -n·Fhat)` on the loaded half-cylinder, uniform axially. Positive
+seven-point degree-five Dunavant quadrature uses the actual isoparametric
+Tri3/Tri6 positions, normals and shape functions. Normalize its force projection
+to the entered magnitude, then require the full vector error ≤0.5% |F| and the
+band-center moment ≤0.5% |F| max(radius, length). This discretization limit does
+not rotate/correct the traction to hide a bad mesh. Boundary sample radius must
+match within 5%, normal axial component within 0.05 and axial extent within
+1e-8 of band length. Integrated boundary area must match the declared full
+`2π radius length` band within 5%, independently of the wrench (omitting an
+unloaded sector can otherwise preserve it); poorly resolved targets require refinement. The editor
+names the axis, resultant and cosine idealization; inward arrows and a clipped
+surface highlight mark only the loaded half in Model/Mesh. Result contours stay
+unobscured. This model includes no friction, contact, clearance or preload.
 
-A moment/offset load uses a documented surface-traction distribution with the
-requested force and moment about its reference point. An offset force produces
-the moment `(applicationPoint - referencePoint) × force`. It does not silently
-rigidize the surface. Degenerate target regions fail actionably. Tests verify
-force and moment balance, reference-point invariance, and mesh convergence;
-the UI/report names the loading idealization.
+Moment/offset integration minimizes `∫ |t|² dA` subject to six force/moment
+constraints using that same boundary quadrature. With area A and centroid c,
+`t = F/A + lambda × (x-c)` and `C lambda = Mref - (c-reference) × F`, where
+`C = ∫ (|x-c|² I - (x-c)(x-c)ᵀ) dA`. Three streaming boundary passes use constant
+stack state and no stored quadrature cloud or auxiliary global force matrix.
+Pivot magnitudes must exceed 1e-10 of the largest geometric diagonal; inadequate
+rank/conditioning fails actionably. Disconnected finite-area patches are valid;
+no rigid coupling or added stiffness is introduced. With characteristic boundary
+length `L = sqrt(max(diag(C))/A)`, verify force error ≤1e-9 (|F|+S/L)+1e-12 N and
+moment error ≤1e-9 S+1e-12 N·m, with
+`S = |Mref| + |F|(L+|c-reference|)`. Tiny absolute floors accommodate roundoff.
+Offset definitions use `Mref = (application-reference) × F` after frame resolution.
+
+All solves recover applied/reaction moments about the mesh bounding-box center.
+Moment residual is `|Mapplied+Mreaction| / max(sum of absolute nodal applied and
+reaction moment components, mesh diagonal * existing force scale, DBL_MIN)`;
+zero numerator returns zero. The configured equilibrium tolerance (default
+1e-6) applies independently to force and moment; existing force criteria remain.
+Results include `equilibrium.momentReferenceM`, `totalAppliedMomentNm`,
+`totalReactionMomentNm`, `momentRelativeResidual` and one `surfaceLoadResultants`
+record per active new load (id/type, global reference, requested/realized force
+and moment). The optional additions preserve legacy result schema 2 fixtures;
+new-load cached results require them. Results/report name reference and loading
+idealization, including entered and realized resultants. API-2 additive
+`fem_get_moment_balance` and `fem_get_surface_resultants` expose these diagnostics.
+Preflight accounts for both retained bridge/Context surface-connectivity copies;
+new diagnostics reserve exactly six scalars per active new load, included in preflight. Global moment recovery
+adds two linear node passes and no mesh-size numerical buffer.
+
+Numerical evidence includes rotated/reversed Tri3/Tri6 bearing bands, split CAD
+seams, flexible/disconnected couples, reference/rigid-transform invariance,
+Tet4/Tet10 shaft torsion and a Tet10 offset cantilever. The hole benchmark has
+three refinements and matched CalculiX 2.21 displacement, energy and nonsingular
+stress using independently integrated 6×6 Duffy quadrature. See the Plan 36–38
+review evidence; owner acceptance remains separate from these numerical checks.
 
 New formulation work requires native and WASM analytical evidence, not only
 glyph orientation or a visually plausible contour.
@@ -2488,7 +2566,7 @@ When the generic UI foundation changes:
 
 Worker APIs should be versioned, coarse-grained, and represented as plain JavaScript objects plus transferable buffers.
 
-The current worker envelope protocol is version 5, as defined in
+The current worker envelope protocol is version 6, as defined in
 `web/js/workers/worker-protocol.js`. Mesher requests provide source bytes,
 format/name, geometry identity, orientation/settings, and expected face identity
 for the operation. Solver preparation transfers the validated mesh/material/
@@ -2531,8 +2609,9 @@ The von Mises display range is derived separately as zero to
 FoS retains uncapped boundary minimum/maximum and node locations separately
 from finite color-mapped values capped at 10. The FoS contour's range is the
 actual capped boundary range, with clipping explicitly indicated.
-Native solver values and the worker envelope protocol version remain unchanged;
-older unversioned postprocessing results must be regenerated.
+The earlier range-metadata extension did not change native solver values;
+older unversioned postprocessing results must be regenerated. Protocol 6 adds
+the surface-resultant contracts described in Sections 5.7 and 8.8.
 
 ## 20. Performance Targets
 
@@ -2755,7 +2834,7 @@ evidence.
 - [ ] Contextual advanced controls preserve active-setting visibility; View-menu removal preserves all commands; editing/status language is consistent.
 - [ ] Default reports remain complete, and optional customization preserves numerical context and capture restoration.
 - [x] Local directions and sliding/symmetry supports pass native/WASM constraint, rotation and reaction benchmarks (Plan 35; owner walkthrough pending).
-- [ ] Bearing loads and moment/offset forces pass integrated force/moment, convergence and resource checks.
+- [x] Bearing loads and moment/offset forces pass integrated force/moment, convergence and resource checks (Plans 36–37; owner walkthrough pending).
 - [ ] Integrated post-change regression and owner usability review M38 are accepted.
 - [ ] Task 20 binds all required evidence to the exact final candidate after the pre-v1 plans and accepted M38; release authorization is recorded.
 

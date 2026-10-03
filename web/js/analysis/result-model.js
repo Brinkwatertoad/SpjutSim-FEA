@@ -147,6 +147,17 @@
         !Number.isFinite(result.solverStatistics.finalRelativeResidual) || result.solverStatistics.finalRelativeResidual < 0) {
       return { valid: false, reason: 'invalid-result-diagnostics' };
     }
+    if(result.equilibrium.momentReferenceM!==undefined){
+      var eq=result.equilibrium;
+      if(!['momentReferenceM','totalAppliedMomentNm','totalReactionMomentNm'].every(function(k){return Array.isArray(eq[k])&&eq[k].length===3&&[0,1,2].every(function(i){return Number.isFinite(eq[k][i]);});})||!Number.isFinite(eq.momentRelativeResidual)||eq.momentRelativeResidual<0)return {valid:false,reason:'invalid-moment-diagnostics'};
+    }
+    if(result.surfaceLoadResultants!==undefined){
+      var ids=new Set();
+      if(!Array.isArray(result.surfaceLoadResultants)||result.surfaceLoadResultants.some(function(load){
+        if(!load||typeof load.id!=='string'||!load.id||ids.has(load.id)||!['bearing','moment','offset-force'].includes(load.type))return true;
+        ids.add(load.id);return !['referencePointM','requestedForceN','requestedMomentNm','realizedForceN','realizedMomentNm'].every(function(k){return Array.isArray(load[k])&&load[k].length===3&&[0,1,2].every(function(i){return Number.isFinite(load[k][i]);});});
+      }))return {valid:false,reason:'invalid-surface-resultants'};
+    }
     var rawFields = { rawVonMisesMax: 'vonMisesPa', rawMaxPrincipal: 'maxPrincipalPa', rawMinPrincipal: 'minPrincipalPa' };
     var peakNames = Object.keys(rawFields);
     for (index = 0; index < peakNames.length; index += 1) {

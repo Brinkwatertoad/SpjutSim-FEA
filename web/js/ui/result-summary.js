@@ -75,7 +75,15 @@
     return { values: entries, diagnostics: [
       ['Iterations', String(result.solverStatistics.iterations)],
       ['Solver residual', formatNumber(result.solverStatistics.finalRelativeResidual)],
+      ...((result.surfaceLoadResultants || []).map(function(load){
+        var authored=documentState.loads.find(function(item){return item.id===load.id;});
+        var force=load.realizedForceN.map(function(v){return api.formatResultMagnitude(v,api.preferredUnit('forceN'));}).join(', ');
+        var moment=load.realizedMomentNm.map(function(v){return api.formatResultMagnitude(v,api.preferredUnit('momentNm'));}).join(', ');
+        var reference=load.referencePointM.map(function(v){return api.formatResultMagnitude(v,api.preferredUnit('lengthM'));}).join(', ');
+        return ['Realized '+(authored?authored.name:load.type),'Force '+force+'; moment '+moment+' about global reference '+reference];
+      })),
       ['Force balance', formatNumber(result.equilibrium.relativeResidual)],
+      ...(result.equilibrium.momentReferenceM ? [['Moment reference (global)',result.equilibrium.momentReferenceM.map(function(v){return api.formatResultMagnitude(v,api.preferredUnit('lengthM'));}).join(', ')],['Applied moment',result.equilibrium.totalAppliedMomentNm.map(function(v){return api.formatResultMagnitude(v,api.preferredUnit('momentNm'));}).join(', ')],['Reaction moment',result.equilibrium.totalReactionMomentNm.map(function(v){return api.formatResultMagnitude(v,api.preferredUnit('momentNm'));}).join(', ')],['Moment balance',formatNumber(result.equilibrium.momentRelativeResidual)]] : []),
       ['Solve time', formatNumber(result.solverStatistics.solveDurationMs, 'ms')],
       ['Mesh', result.meshStatistics.nodeCount + ' nodes / ' + result.meshStatistics.elementCount + ' ' + result.elementType.toUpperCase() + ' elements'],
       ['WASM memory', formatBytes(result.solverStatistics.wasmMemoryBytes)],

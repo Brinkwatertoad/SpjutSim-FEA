@@ -366,7 +366,8 @@ python3 tests/validate_project_file.py path/to/project.spjutsim-fea
 ```
 
 Plans 30–34 are implemented with [verification and remaining owner checks](docs/reviews/30-34-verification.md).
-Practical supports/loads (35–37) and final usability review (38) remain planned;
+Practical supports/loads (35–37) are implemented; Plan 38 verification and its
+prepared owner walkthrough are documented in [the integrated review](docs/reviews/38-integrated-usability-and-pre-release-regression.md);
 advanced studies/physics remain post-v1. See [the plan index](docs/plans/README.md).
 
 ## Documentation and focused browser checks
@@ -403,3 +404,39 @@ owner walkthrough required by the applicable plan.
 
 `project-resume-tests.html` covers prepared-example equilibrium, automatic reopen,
 New/empty restoration, guide dismissal, mesh options placement and Open/Save shortcuts.
+
+## Bearing loads, moments and offset forces
+
+Add load now offers Bearing force, Moment and Offset force. Bearing loads require
+one complete circular cylindrical band (compatible split faces are supported)
+and a transverse resultant. Compression follows a cosine distribution on the
+loaded half, uniform axially; the preview highlights that half. Partial cylinders,
+cones, axial force and incompatible bands produce an actionable validation error.
+
+Moments and offset forces use minimum area-weighted squared surface traction,
+matching the requested force/moment while keeping the selected surface flexible.
+Vectors can use supported local frames; reference/application points always use
+global coordinates. An offset contributes `(application - reference) × force`.
+Results and reports include realized per-load resultants and global moment balance.
+These are simplified load-transfer models; contact/friction/preload and rigid
+connectors remain outside the implemented scope.
+
+The [walkthrough checklist](docs/reviews/38-owner-walkthrough-checklist.md) includes
+four portable prepared projects, expected numerical values, and ordinary/advanced,
+recovery, report, keyboard and failure checks. Owner acceptance is pending.
+
+```sh
+node tools/run-browser-tests.cjs bearing-load moment-load surface-load-ui integrated-review
+node tools/export-development-review.cjs
+python3 tools/generate-bearing-reference.py docs/reviews/fixtures/36-38/bearing-reference-input.json build/bearing-case.inp
+# Run ccx bearing-case in build, then compare the text output:
+python3 tools/compare-bearing-reference.py docs/reviews/fixtures/36-38/bearing-reference-input.json build/bearing-case.dat build/bearing-case.loads.json build/bearing-comparison.json
+```
+
+The exporter uses the same optional Playwright/Chromium environment variables as
+the browser runner; it is verification tooling only. CalculiX is an independent
+operator tool and is not shipped in the application. Split-band CAD regeneration
+uses Gmsh 4.12.1 with `tests/fixtures/bearing/split-cylinder.geo`.
+The resource harness accepts `timeLimitMs` (1,000–3,600,000) for an explicit
+benchmark budget; omission preserves the application's 600,000 ms default.
+Record any nondefault budget with its measurements.

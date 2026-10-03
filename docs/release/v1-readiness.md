@@ -1,7 +1,7 @@
 # v1.0 readiness evidence
 
-Status: **Unreleased — M21–M27 accepted; Plans 28–34 implemented/verified;
-CAD-only scope verified. Owner review of 30–34, implementation of 35–37, final M38 acceptance and Task 20
+Status: **Unreleased — M21–M27 accepted; Plans 28–37 implemented/verified;
+CAD-only scope verified. Grouped owner review of 28–38, final M38 acceptance and Task 20
 exact-candidate audit remain open.**
 
 The acceptance audit records the production Tet10 `file://` vertical slice,
@@ -32,3 +32,5 @@ No unchecked gate in `spec.md` section 26 should be interpreted as passing.
 Post-v1 Plans 39–46 are prepared continuation plans and are not v1 release gates.
 
 Plans 30–34 working-tree verification is recorded in [the batch review](../reviews/30-34-verification.md). This is not an exact release-candidate audit.
+
+Plans 36–37 and Plan 38 changed-path verification are recorded in [the integrated review](../reviews/38-integrated-usability-and-pre-release-regression.md). The [prepared walkthrough](../reviews/38-owner-walkthrough-checklist.md) supplies four projects and expected values; automated passes do not record owner acceptance.

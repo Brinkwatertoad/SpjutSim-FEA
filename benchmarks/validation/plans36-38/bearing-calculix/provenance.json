@@ -1,0 +1,13 @@
+{
+  "solver": "CalculiX 2.21",
+  "sourceInput": "docs/reviews/fixtures/36-38/bearing-reference-input.json",
+  "inputSha256": "02ee8702f419558988e55fe411b9444bb52e31096bd7cebd01666ad1d78a176d",
+  "files": {
+    "comparison.json": "ddd288d22922ec4a77672e91e370106f3d18be1954661ba225e7a77c80309555",
+    "case.dat": "6dc77cc4cc15ec2b261020f6f2249f03942f25899135f5ecccac17a04a0fc9c2",
+    "case.loads.json": "31d8407be741433c4938cf7b566e0cca1445e9f49e95c72f48c6baaf3cec8af4",
+    "case.inp": "b2b52c842e6bbc8773522afec3c3887ba3407e19816ae33dccba5df57e219bed",
+    "run.log": "527640a2cf108f75066f63aaee4e5aa873b40a06234343ec42dc85fd536065fe"
+  },
+  "source": "Independently integrated cosine bearing pressure; 6x6 Duffy Gauss-Legendre quadrature; matched Tet10 mesh/material/supports."
+}

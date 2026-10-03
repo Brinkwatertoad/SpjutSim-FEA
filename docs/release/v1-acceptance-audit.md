@@ -52,9 +52,9 @@ integrated Plan 30 to 38. The subsequent implementation of Plans 30–34 has [fr
 | Portable projects and lightweight recovery | Implemented; owner review pending | Plans 30–31, malformed/cancelled/overlapping open, safe face identity, optional caches and storage failures |
 | Contextual workflow, model information and selection | Implemented; owner review pending | Plans 32–33, simple/expanded keyboard paths, View command preservation, volume/mass, selection and cancellation |
 | Optional report customization with complete defaults | Implemented; owner review pending | Plan 34, DOCX/ZIP content, numerical context and scene restoration |
-| Local directions and sliding/symmetry supports | Planned | Plan 35 native/WASM rotation, constraint consistency and reactions |
-| Bearing loads and moments/offset forces | Planned | Plans 36–37 quadrature/resultants, analytical/reference convergence and memory |
-| Integrated usability and changed-path regression | Pending | Plan 38 complete applicable suites and owner M38 |
+| Local directions and sliding/symmetry supports | Implemented; owner walkthrough pending | [Plan 35 verification](../reviews/35-local-directions-and-supports.md) |
+| Bearing loads and moments/offset forces | Implemented; owner walkthrough pending | [Bearing validation](../reviews/36-bearing-loads.md), [moments/offsets](../reviews/37-moments-and-offset-forces.md) |
+| Integrated usability and changed-path regression | Automation verified; owner acceptance pending | [Plan 38 evidence](../reviews/38-integrated-usability-and-pre-release-regression.md), [walkthrough](../reviews/38-owner-walkthrough-checklist.md) |
 | Exact final candidate | Pending | Task 20 audit after the completed pre-v1 sequence and accepted M38 |
 
 The project must not be tagged or described as v1.0-ready while any Planned, Pending or
@@ -66,5 +66,5 @@ Task 18 owns browser/resource/PCG calibration, Task 19 owns distribution rights,
 and Task 20 reruns and binds the complete acceptance record to one candidate.
 
 The revised execution and mandatory manual review schedule is in
-`../plans/README.md`. Review Plans 30–34, implement Plans 35–37 and obtain final Plan 38 acceptance before Task 20.
+`../plans/README.md`. Complete the grouped owner walkthrough of the implemented pre-v1 workflow and obtain final Plan 38 acceptance before Task 20.
 Post-v1 Plans 39–46 are not release gates.

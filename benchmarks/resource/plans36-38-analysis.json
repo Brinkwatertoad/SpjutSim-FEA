@@ -1,0 +1,28 @@
+{
+  "recordCount": 36,
+  "maximumWasmToModeledRatio": 0.991363145383071,
+  "recommendedSafetyMultiplier": 1.5,
+  "margin": 0.25,
+  "cases": {
+    "axial-tet10-25k": {
+      "medianWallTimeMs": 3973.699999999255,
+      "worstWasmMemoryHighWaterBytes": 94175232,
+      "maximumIterations": 725
+    },
+    "cantilever-tet10-75k": {
+      "medianWallTimeMs": 63743,
+      "worstWasmMemoryHighWaterBytes": 274268160,
+      "maximumIterations": 4314
+    },
+    "mixed-scale-tet10-150k": {
+      "medianWallTimeMs": 528798.0999999996,
+      "worstWasmMemoryHighWaterBytes": 550240256,
+      "maximumIterations": 17188
+    },
+    "poor-quality-tet4": {
+      "medianWallTimeMs": 16436.43500000052,
+      "worstWasmMemoryHighWaterBytes": 70582272,
+      "maximumIterations": 6638
+    }
+  }
+}

@@ -53,9 +53,23 @@
       parameters.push(['Support: ' + support.name + (support.enabled === false ? ' (suppressed)' : ''), 'Faces: ' + support.faceIds.join(', ') + '; ' + Object.keys(support.componentsM).map(function (axis) { return axis + ' = ' + magnitude(support.componentsM[axis], unit('displacementM')); }).join(', ')+frameDescription(support)+(support.preset ? '; '+support.preset+'; tangential motion free; user loads are not scaled' : '')]);
     });
     state.loads.forEach(function (load) {
-      var value = load.type === 'pressure' ? magnitude(load.pressurePa, unit('pressurePa')) + ' (positive inward)' : load.direction === 'surface-normal'
+      var value = load.type==='moment' ? load.momentNm.map(function(v){return magnitude(v,unit('momentNm'));}).join(', ')+ ' moment' : load.type === 'pressure' ? magnitude(load.pressurePa, unit('pressurePa')) + ' (positive inward)' : load.direction === 'surface-normal'
         ? magnitude(load.magnitudeN, unit('forceN')) + ' normal, ' + load.sense : load.forceN.map(function (v) { return magnitude(v, unit('forceN')); }).join(', ') + (load.frame ? ' (local X, Y, Z)' : ' (global X, Y, Z)');
-      parameters.push(['Load: ' + load.name + (load.enabled === false ? ' (suppressed)' : ''), value + frameDescription(load) + (load.frame ? '; global resultant '+api.assignmentGlobalForce(load,state.geometry).map(function(v){return magnitude(v,unit('forceN'));}).join(', ') : '') + '; Faces: ' + load.faceIds.join(', ')]);
+      if(load.type==='bearing'){
+        var band=api.resolveBearingBand(state.geometry,load.faceIds);
+        value+='; compressive cosine pressure on loaded half, uniform axially; transverse force; no friction/contact/preload; cylinder axis ['+band.axis.join(', ')+']; band center '+band.centerM.map(function(v){return magnitude(v,unit('lengthM'));}).join(', ');
+      }
+      if(['moment','offset-force'].includes(load.type)){
+        value+='; minimum area-weighted squared traction, flexible surface load transfer; global reference '+load.referencePointM.map(function(v){return magnitude(v,unit('lengthM'));}).join(', ');
+        if(load.type==='offset-force')value+='; global application point '+load.applicationPointM.map(function(v){return magnitude(v,unit('lengthM'));}).join(', ')+'; moment = (application - reference) × force';
+      }
+      if(['bearing','moment','offset-force'].includes(load.type)){
+        var requested=api.resolveSurfaceWrench(load,state.geometry);
+        value+='; requested global force '+requested.forceN.map(function(v){return magnitude(v,unit('forceN'));}).join(', ')+'; requested global moment '+requested.momentNm.map(function(v){return magnitude(v,unit('momentNm'));}).join(', ');
+        var realized=(state.results.surfaceLoadResultants||[]).find(function(record){return record.id===load.id;});
+        if(realized)value+='; realized global force '+realized.realizedForceN.map(function(v){return magnitude(v,unit('forceN'));}).join(', ')+'; realized global moment '+realized.realizedMomentNm.map(function(v){return magnitude(v,unit('momentNm'));}).join(', ')+(load.type==='bearing'?' about band center':' about entered reference');
+      }
+      parameters.push(['Load: ' + load.name + (load.enabled === false ? ' (suppressed)' : ''), value + frameDescription(load) + (load.frame ? '; global resultant '+(load.type==='moment'?api.localToGlobal(api.resolveLocalFrame(load.frame,state.geometry),load.momentNm):api.assignmentGlobalForce(load,state.geometry)).map(function(v){return magnitude(v,unit(load.type==='moment'?'momentNm':'forceN'));}).join(', ') : '') + '; Faces: ' + load.faceIds.join(', ')]);
     });
     parameters.push(['Gravity', state.gravity.enabled ? state.gravity.accelerationMS2.map(function(v){return magnitude(v,unit('accelerationMS2'));}).join(', ') + ' (global X, Y, Z)' : 'Disabled']);
     parameters.push(['Mesh settings', Object.keys(state.meshSettings).map(function(k){return k+': '+(/SizeM$/.test(k) ? magnitude(state.meshSettings[k],unit('lengthM')) : state.meshSettings[k]);}).join('; ')], ['Solver settings', JSON.stringify(state.solveSettings)],

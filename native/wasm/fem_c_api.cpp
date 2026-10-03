@@ -17,6 +17,9 @@ EM_JS(void, report_iteration, (uint32_t iteration, double residual, double elaps
 namespace {
 FemMemoryEstimate memory_estimate{};
 FemResultInfo result_info{};
+std::array<double,10> moment_balance{};
+const double *surface_resultants=nullptr;
+uint32_t surface_resultant_count=0;
 FemErrorInfo error_info{};
 std::array<std::uint64_t, 3> phase_memory_bytes{};
 
@@ -102,7 +105,15 @@ double fem_wasm_phase_memory_value(uint32_t key) {
 
 int fem_wasm_read_results(FemContext *context) {
   initialize(result_info);
-  return fem_get_result_info(context, &result_info);
+  moment_balance={};
+  surface_resultants=nullptr;
+  surface_resultant_count=0;
+  const int status=fem_get_result_info(context, &result_info);
+  if(status==0){
+    if(fem_get_moment_balance(context,moment_balance.data())!=0)return -1;
+    surface_resultants=fem_get_surface_resultants(context,&surface_resultant_count);
+  }
+  return status;
 }
 
 double fem_wasm_result_value(uint32_t key) {
@@ -132,7 +143,8 @@ double fem_wasm_result_value(uint32_t key) {
   case 22: return result_info.raw_von_mises_sample;
   case 23: return result_info.raw_max_principal_sample;
   case 24: return result_info.raw_min_principal_sample;
-  default: return 0;
+  case 35: return surface_resultant_count;
+  default: return key>=25 && key<35 ? moment_balance[key-25] : 0;
   }
 }
 
@@ -151,6 +163,7 @@ const double *fem_wasm_result_pointer(uint32_t key) {
   case 10: return result_info.recovery_von_mises_pa;
   case 11: return result_info.recovery_max_principal_pa;
   case 12: return result_info.recovery_min_principal_pa;
+  case 13: return surface_resultants;
   default: return nullptr;
   }
 }

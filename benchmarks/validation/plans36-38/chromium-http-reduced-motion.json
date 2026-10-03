@@ -1,0 +1,139 @@
+{
+  "browser": "152.0.7977.75",
+  "mode": "http",
+  "headless": true,
+  "deviceScaleFactor": 2,
+  "reducedMotion": {
+    "outer": true,
+    "application": true
+  },
+  "solverRuntimeSha256": "ac3037522380eecb0ab0873768103f7ba5ee552fcaa9e9e901e2ae3f996db064",
+  "status": "Passed integrated open/units/mesh/solve/report/cache/recovery cycles",
+  "errors": [],
+  "evidence": {
+    "cycles": [
+      {
+        "cycle": 1,
+        "nodeCount": 4563,
+        "maxDisplacementM": 0.00018866732797006232,
+        "equilibrium": {
+          "totalReactionN": [
+            1.296203944178842e-08,
+            2.050927384811274e-06,
+            99.99999881509682
+          ],
+          "totalAppliedForceN": [
+            0,
+            0,
+            -99.99999999999844
+          ],
+          "relativeResidual": 5.997482920478788e-10,
+          "momentReferenceM": [
+            0.5340861886936208,
+            0.6612502877479315,
+            0.2
+          ],
+          "totalAppliedMomentNm": [
+            -17.582900782017248,
+            41.422718405359745,
+            0
+          ],
+          "totalReactionMomentNm": [
+            17.582900885912235,
+            -41.422719408126085,
+            -9.351744699737097e-07
+          ],
+          "momentRelativeResidual": 1.5931301875028354e-10
+        },
+        "rendererGeometries": 53,
+        "reportBytes": 918637,
+        "recoveryRecords": 1,
+        "recoverySources": 1
+      },
+      {
+        "cycle": 2,
+        "nodeCount": 4563,
+        "maxDisplacementM": 0.00018866732797006232,
+        "equilibrium": {
+          "totalReactionN": [
+            1.296203944178842e-08,
+            2.050927384811274e-06,
+            99.99999881509682
+          ],
+          "totalAppliedForceN": [
+            0,
+            0,
+            -99.99999999999844
+          ],
+          "relativeResidual": 5.997482920478788e-10,
+          "momentReferenceM": [
+            0.5340861886936208,
+            0.6612502877479315,
+            0.2
+          ],
+          "totalAppliedMomentNm": [
+            -17.582900782017248,
+            41.422718405359745,
+            0
+          ],
+          "totalReactionMomentNm": [
+            17.582900885912235,
+            -41.422719408126085,
+            -9.351744699737097e-07
+          ],
+          "momentRelativeResidual": 1.5931301875028354e-10
+        },
+        "rendererGeometries": 53,
+        "reportBytes": 918637,
+        "recoveryRecords": 1,
+        "recoverySources": 1
+      },
+      {
+        "cycle": 3,
+        "nodeCount": 4563,
+        "maxDisplacementM": 0.00018866732797006232,
+        "equilibrium": {
+          "totalReactionN": [
+            1.296203944178842e-08,
+            2.050927384811274e-06,
+            99.99999881509682
+          ],
+          "totalAppliedForceN": [
+            0,
+            0,
+            -99.99999999999844
+          ],
+          "relativeResidual": 5.997482920478788e-10,
+          "momentReferenceM": [
+            0.5340861886936208,
+            0.6612502877479315,
+            0.2
+          ],
+          "totalAppliedMomentNm": [
+            -17.582900782017248,
+            41.422718405359745,
+            0
+          ],
+          "totalReactionMomentNm": [
+            17.582900885912235,
+            -41.422719408126085,
+            -9.351744699737097e-07
+          ],
+          "momentRelativeResidual": 1.5931301875028354e-10
+        },
+        "rendererGeometries": 53,
+        "reportBytes": 918637,
+        "recoveryRecords": 1,
+        "recoverySources": 1
+      }
+    ],
+    "themes": [
+      "FEA Classic",
+      "Light Mode",
+      "Dark Mode",
+      "Vivid"
+    ],
+    "layout": "125%/200% equivalent available viewport sizes; physical browser zoom remains owner walkthrough"
+  },
+  "workingTree": "feature/bearing-moments-integrated-review based on bfc2b3e"
+}

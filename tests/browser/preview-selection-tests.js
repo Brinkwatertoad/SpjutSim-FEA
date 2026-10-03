@@ -298,6 +298,22 @@
         }
       }
       assert(maximumRadialDeviation < 0.002, 'cylinder preview exceeded the chord-deviation target');
+      return readFixture('cad-corpus/cylinder.step');
+    }).then(function(sourceBytes){
+      return client.importGeometry({geometryId:'bearing-preview',sourceName:'cylinder.step',sourceFormat:'step',sourceBytes:sourceBytes});
+    }).then(function(cylinder){
+      var wall=Object.keys(cylinder.cylindricalFaces)[0];
+      var state={geometry:cylinder,mesh:null,boundaryConditions:[],loads:[{id:'bearing',name:'Bearing',type:'bearing',faceIds:[wall],forceN:[100,0,0]}],gravity:{enabled:false}};
+      viewport.setGeometryPreview(cylinder);viewport.setPresentation({mode:'model',displayStyle:'shaded'});viewport.setAnalysisOverlay(state);
+      var highlight=viewport.analysisOverlay.getObjectByName('bearing-loaded-half');
+      assert(highlight && highlight.geometry.getAttribute('position')===viewport.previewMesh.geometry.getAttribute('position'), 'bearing highlight must share existing surface buffers');
+      assert(highlight.material.clippingPlanes.length===1 && viewport.renderer.localClippingEnabled, 'bearing highlight must clip the unloaded half');
+      viewport.setHiddenFaceIds([wall]);assert(!viewport.analysisOverlay.getObjectByName('bearing-loaded-half'),'hidden bearing face retained its highlight');
+      viewport.setHiddenFaceIds([]);assert(viewport.analysisOverlay.getObjectByName('bearing-loaded-half'),'revealed bearing face lost its highlight');
+      viewport.setPresentation({mode:'stress',displayStyle:'shaded'});assert(!viewport.analysisOverlay.getObjectByName('bearing-loaded-half'),'bearing highlight obscured result contours');
+      viewport.setPresentation({mode:'model',displayStyle:'shaded'});assert(viewport.analysisOverlay.getObjectByName('bearing-loaded-half'),'return to Model lost bearing highlight');
+      viewport.setAnalysisOverlay(null);
+
       return readFixture('generated-sphere-r0_5-m.step');
     }).then(function (sourceBytes) {
       return client.importGeometry({

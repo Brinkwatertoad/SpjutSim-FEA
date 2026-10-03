@@ -1,0 +1,107 @@
+{
+  "scope": "Linux x86_64, g++ -std=c++17 -O2 compiling the recorded driver and both native operators; ten measured integrations after one warmup; desktop Firefox matrix concurrently active. Illustrative native timings, not calibrated WASM timings. Full boundary operator into an existing preallocated RHS; no global stiffness assembly or solving.",
+  "solverRuntimeSha256": "ac3037522380eecb0ab0873768103f7ba5ee552fcaa9e9e901e2ae3f996db064",
+  "rows": [
+    {
+      "operator": "resultant",
+      "nodesPerFace": 3,
+      "faceCount": 128,
+      "medianAssemblyMs": 0.0898195,
+      "boundaryCapacityBytes": 1536,
+      "resultBytesPerLoad": 48
+    },
+    {
+      "operator": "resultant",
+      "nodesPerFace": 6,
+      "faceCount": 128,
+      "medianAssemblyMs": 0.109082,
+      "boundaryCapacityBytes": 3072,
+      "resultBytesPerLoad": 48
+    },
+    {
+      "operator": "resultant",
+      "nodesPerFace": 3,
+      "faceCount": 512,
+      "medianAssemblyMs": 0.360787,
+      "boundaryCapacityBytes": 6144,
+      "resultBytesPerLoad": 48
+    },
+    {
+      "operator": "resultant",
+      "nodesPerFace": 6,
+      "faceCount": 512,
+      "medianAssemblyMs": 0.440848,
+      "boundaryCapacityBytes": 12288,
+      "resultBytesPerLoad": 48
+    },
+    {
+      "operator": "resultant",
+      "nodesPerFace": 3,
+      "faceCount": 2048,
+      "medianAssemblyMs": 1.44984,
+      "boundaryCapacityBytes": 24576,
+      "resultBytesPerLoad": 48
+    },
+    {
+      "operator": "resultant",
+      "nodesPerFace": 6,
+      "faceCount": 2048,
+      "medianAssemblyMs": 1.76166,
+      "boundaryCapacityBytes": 49152,
+      "resultBytesPerLoad": 48
+    },
+    {
+      "operator": "bearing",
+      "nodesPerFace": 3,
+      "faceCount": 128,
+      "medianAssemblyMs": 0.077101,
+      "boundaryCapacityBytes": 1536,
+      "resultBytesPerLoad": 48
+    },
+    {
+      "operator": "bearing",
+      "nodesPerFace": 6,
+      "faceCount": 128,
+      "medianAssemblyMs": 0.09062,
+      "boundaryCapacityBytes": 3072,
+      "resultBytesPerLoad": 48
+    },
+    {
+      "operator": "bearing",
+      "nodesPerFace": 3,
+      "faceCount": 512,
+      "medianAssemblyMs": 0.308576,
+      "boundaryCapacityBytes": 6144,
+      "resultBytesPerLoad": 48
+    },
+    {
+      "operator": "bearing",
+      "nodesPerFace": 6,
+      "faceCount": 512,
+      "medianAssemblyMs": 0.365034,
+      "boundaryCapacityBytes": 12288,
+      "resultBytesPerLoad": 48
+    },
+    {
+      "operator": "bearing",
+      "nodesPerFace": 3,
+      "faceCount": 2048,
+      "medianAssemblyMs": 1.24027,
+      "boundaryCapacityBytes": 24576,
+      "resultBytesPerLoad": 48
+    },
+    {
+      "operator": "bearing",
+      "nodesPerFace": 6,
+      "faceCount": 2048,
+      "medianAssemblyMs": 1.45891,
+      "boundaryCapacityBytes": 49152,
+      "resultBytesPerLoad": 48
+    }
+  ],
+  "sourceSha256": {
+    "benchmarks/validation/plans36-38/boundary-benchmark.cpp": "d9268b402cd5e3bd656466b3490c1da7e2ab048a65b4fb505fb2b7f8b95376f7",
+    "native/fem/src/bearing_load.cpp": "6a3670bcd78e75f52955234100e2cf7c42a2f801fc506549c7a553ffcbfc3491",
+    "native/fem/src/surface_resultants.cpp": "2243b8e58c6a080fc191dfaa478cc9e937ace09c4f270ca12e3fbbe69db1d22e"
+  }
+}

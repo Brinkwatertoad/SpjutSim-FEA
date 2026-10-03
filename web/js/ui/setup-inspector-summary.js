@@ -58,13 +58,16 @@
 
   function summarizeLoadRow(item) {
     var summary;
-    if (item.type === 'pressure') {
+    if(item.type==='moment'){summary='Moment · ['+item.momentNm.map(function(v){return formatNumber(root.SpjutsimFEA.preferredFromSI('momentNm',v));}).join(', ')+'] '+root.SpjutsimFEA.preferredUnit('momentNm');}
+    else if (item.type === 'pressure') {
       summary = 'Pressure · ' + quantity(item.pressurePa,'pressurePa');
     } else if (item.direction === 'surface-normal') {
       summary='Force · '+quantity(item.magnitudeN,'forceN')+' · '+item.sense+' normal';
     } else {
       summary = 'Force · [' + item.forceN.map(function(v){return formatNumber(root.SpjutsimFEA.preferredFromSI('forceN',v));}).join(', ') + '] ' + root.SpjutsimFEA.preferredUnit('forceN');
     }
+    if(item.type==='bearing')summary+=' · Cosine bearing';
+    if(item.type==='offset-force')summary+=' · Offset ['+item.applicationPointM.map(function(v){return quantity(v,'lengthM');}).join(', ')+']';
     if (item.frame) { summary += ' · Local '+(item.frame.ownership==='cad'?'CAD':'frame'); }
     return row('load', item.id, item.name, summary, faceCountText(item.faceIds));
   }

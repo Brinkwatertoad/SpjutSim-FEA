@@ -72,7 +72,7 @@ struct PrescribedDof {
   std::array<double, 3> direction{};
 };
 
-enum class SurfaceLoadType { pressure, total_force };
+enum class SurfaceLoadType { pressure, total_force, bearing, resultant };
 
 struct SurfaceLoad {
   SurfaceLoadType type = SurfaceLoadType::pressure;
@@ -80,6 +80,8 @@ struct SurfaceLoad {
   std::uint32_t nodes_per_face = 3;
   double pressure_pa = 0.0;
   std::array<double, 3> total_force_n{0.0, 0.0, 0.0};
+  std::array<double, 3> moment_nm{}, reference_m{}, cylinder_axis{0,0,1};
+  double radius_m=0, band_length_m=0;
 };
 
 struct Loads {
@@ -142,10 +144,14 @@ struct Results {
   std::vector<double> recovery_min_principal_pa;
   std::vector<std::uint32_t> recovery_sample_element;
   std::vector<double> reaction_n;
+  // Force[3], moment[3] for bearing/resultant loads, in authored order.
+  std::vector<double> surface_resultants;
   std::array<double, 3> total_reaction_n{0.0, 0.0, 0.0};
   std::array<double, 3> total_applied_force_n{0.0, 0.0, 0.0};
   double strain_energy_j = 0.0;
   double force_balance_relative_residual = 0.0;
+  std::array<double,3> moment_reference_m{},total_applied_moment_nm{},total_reaction_moment_nm{};
+  double moment_balance_relative_residual=0;
   Extremum raw_von_mises_max;
   Extremum raw_max_principal;
   Extremum raw_min_principal;

@@ -1,0 +1,26 @@
+{
+  "referenceSolver": "CalculiX 2.21",
+  "referenceQuadrature": "6x6 Duffy Gauss-Legendre",
+  "nodeCount": 3868,
+  "elementCount": 2088,
+  "maxDisplacementM": 7.038447860282012e-07,
+  "referenceMaxDisplacementM": 7.034141857752631e-07,
+  "displacementRelativeError": 0.0006121574765562965,
+  "probeElement": 1087,
+  "probeLocationM": [
+    0.7435571776629268,
+    0.5094951459273893,
+    0.14990849634767964
+  ],
+  "probeVonMisesPa": 830.1231401094678,
+  "referenceProbeVonMisesPa": 830.5764158666551,
+  "stressRelativeError": 0.0005457363687774164,
+  "strainEnergyJ": 3.0466200652222413e-05,
+  "referenceStrainEnergyJ": 3.045124090579818e-05,
+  "energyRelativeError": 0.0004912688606193427,
+  "limits": {
+    "displacement": 0.03,
+    "stress": 0.05,
+    "energy": 0.03
+  }
+}

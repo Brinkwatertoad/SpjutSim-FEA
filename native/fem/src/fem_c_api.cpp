@@ -189,6 +189,59 @@ int fem_add_total_face_force(FemContext *c, const uint32_t *triangles,
     return status(c->implementation.set_loads(c->loads));
   });
 }
+int fem_add_surface_resultant(FemContext *c, const uint32_t *triangles,
+                              uint32_t count, uint32_t nodes_per_face,
+                              uint32_t kind, const double *parameters) {
+  if (!c || !triangles || !parameters || !count ||
+      (nodes_per_face != 3 && nodes_per_face != 6) || kind > 1)
+    return -1;
+  return guarded(c, [&]() {
+    if (static_cast<std::size_t>(count) >
+        std::numeric_limits<std::size_t>::max() / nodes_per_face)
+      return -1;
+    for (unsigned i = 0; i < 14; ++i) {
+      if (!std::isfinite(parameters[i])) {
+        c->bridge_error = {ErrorCode::invalid_argument,
+                           "Surface resultant parameters must be finite.", {}, true};
+        return -1;
+      }
+    }
+    SurfaceLoad load;
+    load.type = kind == 0 ? SurfaceLoadType::bearing : SurfaceLoadType::resultant;
+    load.nodes_per_face = nodes_per_face;
+    load.triangle_connectivity.assign(
+        triangles, triangles + static_cast<std::size_t>(count) * nodes_per_face);
+    for (int a = 0; a < 3; ++a) {
+      load.total_force_n[a] = parameters[a];
+      load.moment_nm[a] = parameters[a + 3];
+      load.reference_m[a] = parameters[a + 6];
+      load.cylinder_axis[a] = parameters[a + 9];
+    }
+    load.radius_m = parameters[12];
+    load.band_length_m = parameters[13];
+    c->loads.surface_loads.push_back(std::move(load));
+    return status(c->implementation.set_loads(c->loads));
+  });
+}
+const double *fem_get_surface_resultants(FemContext *c, uint32_t *count) {
+  if (!count) return nullptr;
+  *count = 0;
+  if (!c || !c->implementation.results().solver.converged) return nullptr;
+  const auto &values = c->implementation.results().surface_resultants;
+  *count = static_cast<uint32_t>(values.size() / 6);
+  return values.data();
+}
+int fem_get_moment_balance(FemContext *c, double *values) {
+  if (!c || !values || !c->implementation.results().solver.converged) return -1;
+  const auto &r = c->implementation.results();
+  for (int a = 0; a < 3; ++a) {
+    values[a] = r.moment_reference_m[a];
+    values[a + 3] = r.total_applied_moment_nm[a];
+    values[a + 6] = r.total_reaction_moment_nm[a];
+  }
+  values[9] = r.moment_balance_relative_residual;
+  return 0;
+}
 int fem_set_gravity(FemContext *c, int enabled, const double a[3]) {
   if (!c || !a)
     return -1;

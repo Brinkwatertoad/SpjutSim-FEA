@@ -19,7 +19,15 @@
     return { areaM2: twiceArea / 2, normal: [nx / twiceArea, ny / twiceArea, nz / twiceArea] };
   }
 
-  function selectedBoundary(mesh, faceIds) {
+  function selectedBoundary(mesh, faceIds, solverOnly) {
+    if(solverOnly){
+      var ranges=faceIds.map(function(id){var range=mesh.boundaryFaces.solverFaceRanges.find(function(r){return r.faceId===id;});if(!range)throw Error('Boundary mapping was lost for CAD face '+id+'.');return range;});
+      var count=ranges.reduce(function(sum,range){return sum+range.count;},0),selected=new Uint32Array(count),start=0;
+      ranges.forEach(function(range){selected.set(mesh.boundaryFaces.solverConnectivity.subarray(range.start,range.start+range.count),start);start+=range.count;});
+      // New resultant loads need only the true solver boundary, never display
+      // triangulation, normal/area copies or equivalent main-thread nodal forces.
+      return {surfaceElementType:mesh.boundaryFaces.solverElementType,surfaceConnectivity:selected};
+    }
     var connectivity = mesh.boundaryFaces.triangleConnectivity;
     var solverConnectivity = mesh.boundaryFaces.solverConnectivity;
     var solverRanges = mesh.boundaryFaces.solverFaceRanges;
@@ -127,8 +135,11 @@
         var validated = root.SpjutsimFEA.validateLoad(load, knownFaceIds, documentState.geometry);
         var surface;
         if (!validated.valid) { throw new Error(root.SpjutsimFEA.firstValidationMessage(validated)); }
-        surface = selectedBoundary(mesh, load.faceIds);
-        var force = load.type === 'total-force' && load.direction !== 'surface-normal' ? root.SpjutsimFEA.assignmentGlobalForce(load,documentState.geometry) : null;
+        surface = selectedBoundary(mesh, load.faceIds, ['bearing','moment','offset-force'].includes(load.type));
+        var force = ['total-force','bearing','offset-force'].includes(load.type) && load.direction !== 'surface-normal' ? root.SpjutsimFEA.assignmentGlobalForce(load,documentState.geometry) : null;
+        if(['bearing','moment','offset-force'].includes(load.type)){
+          return Object.assign({},validated.value,surface,root.SpjutsimFEA.resolveSurfaceWrench(validated.value,documentState.geometry));
+        }
         return Object.assign({}, validated.value, surface, {
           forceN: force || undefined,
           equivalentNodalForcesN: load.direction === 'surface-normal' && load.type === 'total-force' ? null : load.type === 'pressure'

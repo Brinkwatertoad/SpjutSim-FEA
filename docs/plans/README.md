@@ -1,11 +1,13 @@
 # Development plans
 
 **Status:** v1 is unreleased. The original static-analysis workflow and Plans
-21–35 are implemented. M21–M27 have recorded owner acceptance; Plans 28–34 have
+21–37 are implemented. M21–M27 have recorded owner acceptance; Plans 28–34 have
 implementation verification and remain part of final integrated review.
 The owner approved the planning scope and implementation through Plan 34 on
-2026-09-22. Plan 35 was implemented on 2026-09-23 at the owner’s request; Plans 36 onward remain planned. Automated verification does not imply
-owner acceptance. [Batch evidence](../reviews/30-34-verification.md).
+2026-09-22. Plan 35 was implemented on 2026-09-23; Plans 36–37 and the Plan 38
+regression/walkthrough packet were implemented at the owner’s request on
+2026-10-02–03. Grouped owner walkthroughs remain pending. Automated verification
+does not imply owner acceptance. [Batch evidence](../reviews/30-34-verification.md).
 
 **Pre-v1 order:** **30 → 31 → 32 → 33 → 34 → 35 → 36 → 37 → 38 → 20**.
 
@@ -18,13 +20,13 @@ interpretation, feedback after edits clear results, and a prepared cantilever
 example alongside the cube. The remaining convergence-chart clarity, focused code readability and repeatable
 browser verification/documentation pass is now implemented; see
 [convergence clarity verification](../reviews/convergence-clarity.md). Owner walkthrough
-remains pending. Next numbered development work is Plan 36. Comparison and persistent
-measurements remain in Plans 39–40. See [priority verification](../reviews/usability-priorities.md).
+remains pending. Next checkpoint is the [grouped Plan 38 owner walkthrough](../reviews/38-owner-walkthrough-checklist.md),
+followed by Task 20. Comparison and persistent measurements remain in Plans 39–40. See [priority verification](../reviews/usability-priorities.md).
 
 The corrected 2 m cantilever and Examples menu remain implemented. The owner
 withdrew the rounding experiment after reporting that it was not useful; its UI,
 execution and worker APIs have been removed. [Historical record](../reviews/47-edge-rounding.md).
-The usability pass above is implemented; Plans 36–38 retain their order.
+The usability pass and Plans 36–37 are implemented; Plan 38 automation and its grouped walkthrough packet are ready.
 
 ## Pre-v1 delivery
 
@@ -38,9 +40,9 @@ The usability pass above is implemented; Plans 36–38 retain their order.
 | [33 — Model information/selection](33-model-information-and-selection.md) | Implemented; [verification](../reviews/33-model-information-and-selection.md) | Volume/mass without solving, small/obscured-face access, hide/isolate |
 | [34 — Report options](34-report-options.md) | Implemented; [verification](../reviews/34-report-options.md) | Complete defaults plus optional notes and selected/current views |
 | [35 — Local directions/supports](35-local-directions-and-supports.md) | Implemented; [verification](../reviews/35-local-directions-and-supports.md), owner walkthrough pending | Local frames and physically correct planar sliding/symmetry constraints |
-| [36 — Bearing loads](36-bearing-loads.md) | Planned | Validated transverse loading on supported cylindrical bands |
-| [37 — Moments/offset forces](37-moments-and-offset-forces.md) | Planned | Declared surface distribution, force/moment balance and offset load reference |
-| [38 — Final usability](38-integrated-usability-and-pre-release-regression.md) | Planned | Integrated workflow, resource/compatibility regression, owner acceptance |
+| [36 — Bearing loads](36-bearing-loads.md) | Implemented; [verification](../reviews/36-bearing-loads.md), owner walkthrough pending | Validated transverse loading on supported cylindrical bands |
+| [37 — Moments/offset forces](37-moments-and-offset-forces.md) | Implemented; [verification](../reviews/37-moments-and-offset-forces.md), owner walkthrough pending | Declared surface distribution, force/moment balance and offset load reference |
+| [38 — Final usability](38-integrated-usability-and-pre-release-regression.md) | Regression verified; [walkthrough ready](../reviews/38-owner-walkthrough-checklist.md), owner acceptance pending | Integrated workflow, resource/compatibility regression, owner acceptance |
 | [20 — Exact candidate](20-v1-release-candidate.md) | Pending prerequisites | Bind complete evidence to the final artifact and obtain release authorization |
 
 The basic interface remains one workspace with contextual advanced/options

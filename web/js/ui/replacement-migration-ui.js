@@ -14,9 +14,12 @@
       }).join(', ');
       return 'Support · ' + value + ' · ' + item.oldFaceIds.length + (item.oldFaceIds.length === 1 ? ' current face' : ' current faces')+frameNote;
     }
+    if(item.original.type==='moment')return 'Moment · '+item.original.momentNm.map(function(v){return quantity(v,'momentNm');}).join(', ')+'; global reference '+item.original.referencePointM.map(function(v){return quantity(v,'lengthM');}).join(', ')+frameNote;
     value = item.original.type === 'pressure'
       ? quantity(item.original.pressurePa,'pressurePa') + ' surface-normal pressure'
       : item.original.direction === 'surface-normal' ? quantity(item.original.magnitudeN,'forceN') + ' ' + item.original.sense + ' along local normals' : '[' + item.original.forceN.map(function(v){return quantity(v,'forceN');}).join(', ') + (frame ? '] local total force' : '] global total force');
+    if(item.original.type==='bearing')value+=' · Cosine bearing: map a full compatible cylinder band';
+    if(item.original.type==='offset-force')value+=' · Offset and reference points stay global; review the lever arm';
     return 'Load · ' + value + ' · ' + item.oldFaceIds.length + (item.oldFaceIds.length === 1 ? ' current face' : ' current faces')+frameNote;
   }
 

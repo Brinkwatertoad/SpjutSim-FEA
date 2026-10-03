@@ -80,6 +80,7 @@
       if(faceIds.length!==1)throw migrationError('INVALID_REPLACEMENT_FRAME','Map a CAD-attached frame to exactly one planar face, or drop the assignment.');
       candidate.frame=root.SpjutsimFEA.planarFaceFrame(geometry,faceIds[0]);
     }
+    if(original.type==='bearing')root.SpjutsimFEA.resolveBearingBand(geometry,faceIds);
     return candidate;
   }
 

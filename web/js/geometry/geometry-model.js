@@ -197,6 +197,12 @@
     if (model.volumeM3 !== undefined && (!Number.isFinite(model.volumeM3) || model.volumeM3 <= 0)) {
       return validation(false, 'invalid-volume');
     }
+    if(model.cylindricalFaces !== undefined){
+      if(!model.cylindricalFaces || typeof model.cylindricalFaces!=='object' || Array.isArray(model.cylindricalFaces) || Object.keys(model.cylindricalFaces).some(function(id){
+        var c=model.cylindricalFaces[id],vector=function(v){return Array.isArray(v)&&v.length===3&&[0,1,2].every(function(i){return Number.isFinite(v[i]);});};
+        return !model.faceIds.includes(id)||!c||c.version!==1||!vector(c.originM)||!vector(c.axis)||!vector(c.radialStart)||Math.abs(Math.hypot.apply(null,c.axis)-1)>1e-10||Math.abs(Math.hypot.apply(null,c.radialStart)-1)>1e-10||Math.abs(c.axis.reduce(function(sum,x,i){return sum+x*c.radialStart[i];},0))>1e-10||!Number.isFinite(c.radiusM)||c.radiusM<=0||!Number.isFinite(c.lengthM)||c.lengthM<=0||!Number.isFinite(c.angularExtentRad)||c.angularExtentRad<=0||c.angularExtentRad>2*Math.PI+1e-8;
+      }))return validation(false,'invalid-cylinder-descriptor');
+    }
     if (model.planarFaces !== undefined) {
       if (!model.planarFaces || typeof model.planarFaces !== 'object' || Array.isArray(model.planarFaces) ||
           Object.keys(model.planarFaces).some(function(id) {
@@ -221,7 +227,36 @@
     return 'geometry-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
   }
 
+  function resolveBearingBand(geometry,faceIds){
+    var descriptors=geometry && geometry.cylindricalFaces;
+    if(!descriptors || !Array.isArray(faceIds)||!faceIds.length)throw Error('Select a full circular cylindrical band. Partial cylinders, cones and noncircular faces are unsupported.');
+    var first=descriptors[faceIds[0]];if(!first)throw Error('Select cylindrical CAD faces for bearing loading.');
+    var dot=function(a,b){return a.reduce(function(sum,x,i){return sum+x*b[i];},0);};
+    var axis=first.axis,x=first.radialStart,y=[axis[1]*x[2]-axis[2]*x[1],axis[2]*x[0]-axis[0]*x[2],axis[0]*x[1]-axis[1]*x[0]],intervals=[];
+    var tolerance=Math.max(first.radiusM,first.lengthM)*1e-8;
+    faceIds.forEach(function(id){
+      var c=descriptors[id];if(!c)throw Error('Every bearing target must be a supported circular cylindrical face.');
+      var aligned=dot(axis,c.axis),delta=c.originM.map(function(v,i){return v-first.originM[i];}),axial=dot(delta,axis);
+      var start=aligned>0?axial:axial-c.lengthM;
+      if(Math.abs(Math.abs(aligned)-1)>1e-10 || Math.abs(c.radiusM-first.radiusM)>tolerance || Math.abs(c.lengthM-first.lengthM)>tolerance || Math.abs(start)>tolerance || Math.hypot.apply(null,delta.map(function(v,i){return v-axial*axis[i];}))>tolerance)
+        throw Error('Bearing faces must be coaxial with the same radius and uniform axial extent.');
+      var angle=Math.atan2(dot(c.radialStart,y),dot(c.radialStart,x));if(aligned<0)angle-=c.angularExtentRad;
+      angle=((angle%(2*Math.PI))+2*Math.PI)%(2*Math.PI);
+      if(Math.abs(c.angularExtentRad-2*Math.PI)<1e-8){intervals.push([0,2*Math.PI]);return;}
+      if(Math.abs(angle-2*Math.PI)<1e-8)angle=0;
+      var end=angle+c.angularExtentRad;
+      if(Math.abs(end-2*Math.PI)<1e-8)end=2*Math.PI;
+      if(end>2*Math.PI){intervals.push([angle,2*Math.PI]);intervals.push([0,end-2*Math.PI]);}else intervals.push([angle,end]);
+    });
+    intervals.sort(function(a,b){return a[0]-b[0];});var covered=0;
+    intervals.forEach(function(interval){if(Math.abs(interval[0]-covered)>1e-8)throw Error('Select the full circular bearing band, without gaps or overlapping faces.');covered=interval[1];});
+    if(Math.abs(covered-2*Math.PI)>1e-8)throw Error('Select a full 360° bearing band. Partial cylindrical selections are unsupported.');
+    var rotation=geometry.orientation.rotation;
+    return {version:1,axis:root.SpjutsimFEA.transformVector3(rotation,axis),centerM:root.SpjutsimFEA.transformVector3(rotation,first.originM.map(function(v,i){return v+axis[i]*first.lengthM/2;})),radiusM:first.radiusM,lengthM:first.lengthM};
+  }
+
   root.SpjutsimFEA = root.SpjutsimFEA || {};
+  root.SpjutsimFEA.resolveBearingBand=resolveBearingBand;
   root.SpjutsimFEA.SUPPORTED_CAD_FORMATS = SUPPORTED_CAD_FORMATS;
   root.SpjutsimFEA.sourceFormatForFilename = sourceFormatForFilename;
   root.SpjutsimFEA.validateImportRequest = validateImportRequest;

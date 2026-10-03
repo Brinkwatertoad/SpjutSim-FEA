@@ -1,0 +1,9 @@
+{
+  "solverRuntimeSha256": "ac3037522380eecb0ab0873768103f7ba5ee552fcaa9e9e901e2ae3f996db064",
+  "packaging": "Identical before/after rebuild of WASM and all classic source-string wrappers",
+  "before": "ac3037522380eecb0ab0873768103f7ba5ee552fcaa9e9e901e2ae3f996db064  web/wasm/fem/fem.js\ne7a08e40fe132c6ba06b2fcc69bd4de3e2c575141c8c10921d0d992e67d6e294  web/generated/local-runtime/fem-runtime-source.js\n4e6c4e2cbc0a25c3930117f8b0d399444bdb5c2848dd5fe17408c3a8c890b212  web/generated/local-runtime/gmsh-runtime-source.js\n1b93c9d5be06722264354cfad26740cfa2a24516d4a2d4de783505c378e19524  web/generated/local-runtime/mesher-worker-source.js\n77ae140f2dbbde00a86d01b657918c97da552a57d9ea39dba34a27a92abfd7b4  web/generated/local-runtime/solver-worker-source.js\n",
+  "after": "ac3037522380eecb0ab0873768103f7ba5ee552fcaa9e9e901e2ae3f996db064  web/wasm/fem/fem.js\ne7a08e40fe132c6ba06b2fcc69bd4de3e2c575141c8c10921d0d992e67d6e294  web/generated/local-runtime/fem-runtime-source.js\n4e6c4e2cbc0a25c3930117f8b0d399444bdb5c2848dd5fe17408c3a8c890b212  web/generated/local-runtime/gmsh-runtime-source.js\n1b93c9d5be06722264354cfad26740cfa2a24516d4a2d4de783505c378e19524  web/generated/local-runtime/mesher-worker-source.js\n77ae140f2dbbde00a86d01b657918c97da552a57d9ea39dba34a27a92abfd7b4  web/generated/local-runtime/solver-worker-source.js\n",
+  "nativeTests": 12,
+  "pythonTests": 79,
+  "workingTree": "feature/bearing-moments-integrated-review based on bfc2b3e"
+}

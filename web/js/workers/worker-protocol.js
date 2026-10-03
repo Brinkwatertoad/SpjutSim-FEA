@@ -1,7 +1,7 @@
 (function (root) {
   'use strict';
   root.SpjutsimFEA = root.SpjutsimFEA || {};
-  root.SpjutsimFEA.WORKER_PROTOCOL_VERSION = 5;
+  root.SpjutsimFEA.WORKER_PROTOCOL_VERSION = 6;
   root.SpjutsimFEA.isWorkerMessage = function (message) {
     return Boolean(message && message.protocol === root.SpjutsimFEA.WORKER_PROTOCOL_VERSION && typeof message.type === 'string' && typeof message.requestId === 'string');
   };

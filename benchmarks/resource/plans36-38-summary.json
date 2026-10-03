@@ -1,0 +1,134 @@
+[
+  {
+    "browser": "Chromium",
+    "mode": "cross-origin-isolated-http",
+    "case": "axial-tet10-25k",
+    "medianWallTimeSeconds": 4.04799499999918,
+    "worstWasmBytes": 94175232,
+    "worstRatio": 0.6249954174858229,
+    "iterations": [
+      725
+    ]
+  },
+  {
+    "browser": "Chromium",
+    "mode": "cross-origin-isolated-http",
+    "case": "cantilever-tet10-75k",
+    "medianWallTimeSeconds": 64.33188499999977,
+    "worstWasmBytes": 274268160,
+    "worstRatio": 0.8839812625011814,
+    "iterations": [
+      4314
+    ]
+  },
+  {
+    "browser": "Chromium",
+    "mode": "cross-origin-isolated-http",
+    "case": "mixed-scale-tet10-150k",
+    "medianWallTimeSeconds": 528.7980999999996,
+    "worstWasmBytes": 550240256,
+    "worstRatio": 0.991363145383071,
+    "iterations": [
+      17188
+    ]
+  },
+  {
+    "browser": "Chromium",
+    "mode": "cross-origin-isolated-http",
+    "case": "poor-quality-tet4",
+    "medianWallTimeSeconds": 16.482800000000744,
+    "worstWasmBytes": 70582272,
+    "worstRatio": 0.5630368640548574,
+    "iterations": [
+      6638
+    ]
+  },
+  {
+    "browser": "Chromium",
+    "mode": "file://",
+    "case": "axial-tet10-25k",
+    "medianWallTimeSeconds": 4.029599999999627,
+    "worstWasmBytes": 94175232,
+    "worstRatio": 0.6249954174858229,
+    "iterations": [
+      725
+    ]
+  },
+  {
+    "browser": "Chromium",
+    "mode": "file://",
+    "case": "cantilever-tet10-75k",
+    "medianWallTimeSeconds": 63.743,
+    "worstWasmBytes": 274268160,
+    "worstRatio": 0.8839812625011814,
+    "iterations": [
+      4314
+    ]
+  },
+  {
+    "browser": "Chromium",
+    "mode": "file://",
+    "case": "mixed-scale-tet10-150k",
+    "medianWallTimeSeconds": 529.8224000000004,
+    "worstWasmBytes": 550240256,
+    "worstRatio": 0.991363145383071,
+    "iterations": [
+      17188
+    ]
+  },
+  {
+    "browser": "Chromium",
+    "mode": "file://",
+    "case": "poor-quality-tet4",
+    "medianWallTimeSeconds": 16.45839999999851,
+    "worstWasmBytes": 70582272,
+    "worstRatio": 0.5630368640548574,
+    "iterations": [
+      6638
+    ]
+  },
+  {
+    "browser": "Firefox",
+    "mode": "file://",
+    "case": "axial-tet10-25k",
+    "medianWallTimeSeconds": 3.784,
+    "worstWasmBytes": 94175232,
+    "worstRatio": 0.6249954174858229,
+    "iterations": [
+      725
+    ]
+  },
+  {
+    "browser": "Firefox",
+    "mode": "file://",
+    "case": "cantilever-tet10-75k",
+    "medianWallTimeSeconds": 58.386,
+    "worstWasmBytes": 274268160,
+    "worstRatio": 0.8839812625011814,
+    "iterations": [
+      4314
+    ]
+  },
+  {
+    "browser": "Firefox",
+    "mode": "file://",
+    "case": "mixed-scale-tet10-150k",
+    "medianWallTimeSeconds": 487.221,
+    "worstWasmBytes": 550240256,
+    "worstRatio": 0.991363145383071,
+    "iterations": [
+      17188
+    ]
+  },
+  {
+    "browser": "Firefox",
+    "mode": "file://",
+    "case": "poor-quality-tet4",
+    "medianWallTimeSeconds": 14.787,
+    "worstWasmBytes": 70582272,
+    "worstRatio": 0.5630368640548574,
+    "iterations": [
+      6638
+    ]
+  }
+]

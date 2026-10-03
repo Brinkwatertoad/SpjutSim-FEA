@@ -4,7 +4,7 @@
   function bindUnitSettings(controller,ui){
     var storage=null;try{storage=root.localStorage;}catch(e){/* Session preferences remain available. */}
     var prefs=new api.UnitPreferences(storage), selector=document.getElementById('settings-unit-system'), name=document.getElementById('unit-preset-name'), status=document.getElementById('units-error');
-    var labels={youngsModulusPa:"Young's modulus",strengthPa:'Material strengths',densityKgM3:'Density',pressurePa:'Pressure loads',forceN:'Forces',stressPa:'Result stress',displacementM:'Displacements and part size',lengthM:'Coordinates and mesh sizes',accelerationMS2:'Acceleration',volumeM3:'Volume',massKg:'Mass',energyJ:'Energy'};
+    var labels={youngsModulusPa:"Young's modulus",strengthPa:'Material strengths',densityKgM3:'Density',pressurePa:'Pressure loads',forceN:'Forces',momentNm:'Moments',stressPa:'Result stress',displacementM:'Displacements and part size',lengthM:'Coordinates and mesh sizes',accelerationMS2:'Acceleration',volumeM3:'Volume',massKg:'Mass',energyJ:'Energy'};
     var fields=document.getElementById('preferred-unit-fields');
     Object.keys(labels).forEach(function(quantity){
       var row=document.createElement('label');row.className='ui-settings-row';
@@ -39,7 +39,7 @@
           return {input:input,value:value,materialSnapshot:snapshot,snapshotText:snapshot && snapshot.si!=null ? String(api.siToDisplay(quantity,snapshot.si,units[quantity])) : ''};
         });
         action();api.setPreferredUnits(prefs.units);
-        ui.analysisAuthoring.loadUnits={pressurePa:prefs.units.pressurePa,forceN:prefs.units.forceN};
+        ui.analysisAuthoring.loadUnits={pressurePa:prefs.units.pressurePa,forceN:prefs.units.forceN,momentNm:prefs.units.momentNm};
         controller.replaceViewportPresentation(Object.assign({},controller.document.viewportPresentation,{stressUnit:prefs.units.stressPa,lengthUnit:prefs.units.displacementM}));
         if(ui.viewport)ui.viewport.refreshSelectedResultPoint();
         // Presentation render can refresh editors. Restore converted unsaved entries afterwards.

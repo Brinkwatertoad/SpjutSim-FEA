@@ -196,7 +196,18 @@
       text += quantity(draft.definition.magnitudeN,'forceN') + ' distributed by area, ' + draft.definition.sense + ' along each local normal. Opposing directions can cancel in the net force.';
     } else if (draft.definition.type === 'total-force' && draft.definition.forceN && draft.definition.forceN.every(Number.isFinite)) {
       text += quantity(Math.hypot.apply(Math,draft.definition.forceN),'forceN') + ' total across selection; ' + (draft.definition.frame ? 'local' : 'global') + ' [ ' + draft.definition.forceN.map(function(v){return quantity(v,'forceN');}).join(', ') + ' ]. Adding faces redistributes this total.';
-    } else if (draft.definition.type === 'pressure' && Number.isFinite(draft.definition.pressurePa)) {
+    } else if(draft.definition.type==='bearing'){
+      text+='Compressive cosine pressure on the loaded half-cylinder; force is transverse, uniform axially. No contact, friction or preload.';
+      try{
+        var band=api.resolveBearingBand(state.geometry,draft.faceIds);
+        text+=' Global cylinder axis ['+band.axis.map(function(v){return v.toPrecision(4);}).join(', ')+']; radius '+quantity(band.radiusM,'lengthM')+'; band length '+quantity(band.lengthM,'lengthM')+'.';
+        if(draft.definition.forceN)text+=' Entered resultant '+quantity(Math.hypot.apply(null,draft.definition.forceN),'forceN')+'.';
+      }catch(error){/* Validation already reports an unsupported or incomplete selection. */}
+    } else if(draft.definition.type==='moment'){
+      text+='Moment distributed as minimum area-weighted squared traction with zero net force; the surface remains flexible.';
+    } else if(draft.definition.type==='offset-force'){
+      text+='Offset force distributed as minimum area-weighted squared traction; moment is (application point − reference point) × force. Points use global coordinates.';
+    } else if (draft.definition.type === 'pressure'  && Number.isFinite(draft.definition.pressurePa)) {
       text += quantity(draft.definition.pressurePa,'pressurePa') + ' constant inward pressure on every selected face.';
     } else if (draft.kind === 'support') {
       text += 'Prescribed ' + (draft.definition.frame ? 'local' : 'global') + ' displacement: ' + Object.keys(draft.definition.componentsM || {}).map(function(axis){return axis.toUpperCase() + ' = ' + quantity(draft.definition.componentsM[axis],'displacementM');}).join(', ') + '.';
@@ -226,12 +237,30 @@
       });
     });
     loads.forEach(function (load) {
-      var forceDirection=load.type==='total-force' && load.direction!=='surface-normal' ? normalized(root.SpjutsimFEA.assignmentGlobalForce(load,documentState.geometry)) : null;
+      var forceDirection=['total-force','bearing','offset-force'].includes(load.type) && load.direction!=='surface-normal' ? normalized(root.SpjutsimFEA.assignmentGlobalForce(load,documentState.geometry)) : null;
+      if(load.type==='moment'){
+        var moment=load.frame?root.SpjutsimFEA.localToGlobal(root.SpjutsimFEA.resolveLocalFrame(load.frame,documentState.geometry),load.momentNm):load.momentNm;
+        var axis=normalized(moment);
+        descriptors.push({type:'moment',itemId:load.id,preview:load.preview===true,faceId:load.faceIds[0],positionM:load.referencePointM.slice(),direction:axis,momentDirection:axis});return;
+      }
+      if(load.type==='offset-force'){
+        descriptors.push({type:'offset-force',itemId:load.id,preview:load.preview===true,faceId:load.faceIds[0],positionM:load.applicationPointM.slice(),direction:forceDirection,referencePointM:load.referencePointM.slice()});return;
+      }
       load.faceIds.forEach(function (faceId) {
+        if(load.type==='bearing'){
+          var band=root.SpjutsimFEA.resolveBearingBand(documentState.geometry,load.faceIds),sample=cachedFaceSamples(documentState,faceId).samples[0];
+          var sign=sample.outwardNormal.reduce(function(sum,x,i){return sum+x*(sample.positionM[i]-band.centerM[i]);},0)<0?-1:1;
+          descriptors.push({type:'bearing-region',itemId:load.id,preview:load.preview===true,faceId:faceId,positionM:band.centerM,direction:forceDirection,clipNormal:forceDirection.map(function(v){return -sign*v;})});
+        }
         cachedFaceSamples(documentState, faceId).samples.forEach(function (sample) {
           var direction = load.type === 'pressure' || load.direction === 'surface-normal'
             ? sample.outwardNormal.map(function (value) { return value * (load.type === 'pressure' ? -Math.sign(load.pressurePa) : load.sense === 'pull' ? 1 : -1); })
             : forceDirection;
+          if(load.type==='bearing'){
+            var alignment=sample.outwardNormal.reduce(function(sum,x,i){return sum+x*forceDirection[i];},0);
+            if(alignment>=-1e-10)return;
+            direction=sample.outwardNormal.map(function(x){return -x;});
+          }
           descriptors.push({ type: load.type, itemId: load.id, preview:load.preview === true, faceId: faceId, positionM: sample.positionM, direction: direction });
         });
       });

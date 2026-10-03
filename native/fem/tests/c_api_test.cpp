@@ -43,6 +43,8 @@ int main() {
   const double force[] = {1000, 0, 0};
   require(fem_add_total_face_force(context, face, 2, 3, force) == 0,
           "C API surface force failed");
+  const double wrench[14]={0,0,0,10,0,0,1,.5,.5,0,0,0,0,0};
+  require(fem_add_surface_resultant(context,face,2,3,1,wrench)==0,"C API surface couple failed");
   FemMemoryEstimate estimate{SPJUTSIM_FEM_API_VERSION,
                              sizeof(FemMemoryEstimate)};
   require(fem_estimate_memory(context, 8, 3758096384ULL, 1.5, &estimate) == 0,
@@ -90,6 +92,11 @@ int main() {
   require(std::isfinite(result.solve_duration_ms) &&
               result.solve_duration_ms >= 0,
           "C API omitted solve duration");
+  uint32_t resultant_count=0;
+  const double *realized=fem_get_surface_resultants(context,&resultant_count);
+  require(realized&&resultant_count==1&&near(realized[3],10,1e-12),"C API omitted per-load realized wrench");
+  double moments[10]{};
+  require(fem_get_moment_balance(context,moments)==0&&moments[9]<1e-6,"C API omitted global moment equilibrium");
   FemResultInfo wrong{99, sizeof(FemResultInfo)};
   require(fem_get_result_info(context, &wrong) != 0,
           "C API accepted mismatched result ABI version");

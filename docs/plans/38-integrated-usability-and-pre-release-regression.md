@@ -1,8 +1,8 @@
 # Plan 38: Final integrated usability and pre-release regression
 
-> **For agentic workers:** Use superpowers:executing-plans in the current agent. Follow repository AGENTS.md; do not dispatch subagents. This document plans future implementation and does not authorize publication.
+> **For agentic workers:** Use superpowers:executing-plans in the current agent. Follow repository AGENTS.md; do not dispatch subagents. This document records implementation scope and does not authorize publication.
 
-**Status:** Planned — pre-v1
+**Status:** Regression and walkthrough packet prepared; owner acceptance pending (2026-10-03)
 
 **Goal:** Verify the complete agreed pre-v1 workflow and collect owner usability acceptance before the exact release-candidate audit.
 
@@ -33,22 +33,23 @@ The shared execution, evidence, performance, and review rules in [the plan index
 
 ### 1. Reconcile requirement and evidence coverage
 
-- [ ] Map Section 26 requirements to current feature evidence: projects/recovery; contextual controls/editing; model volume/selection; reports; local supports; bearing/moment loads; existing results/convergence and resource gates.
-- [ ] Confirm every pre-v1 feature has numerical/contract evidence and its actual owner review where required. Historical test counts do not establish unchanged validity after native/protocol edits.
-- [ ] Inspect the complete integrated diff for peak-memory overlap, resource leaks, boundary ownership, accessibility, silent fallbacks and unintended generated/vendor changes. Fix concrete defects in their owning feature and rerun affected checks.
+- [x] Map Section 26 requirements to current feature evidence: projects/recovery; contextual controls/editing; model volume/selection; reports; local supports; bearing/moment loads; existing results/convergence and resource gates.
+- [x] Reconcile numerical/contract evidence and owner-review status for every pre-v1 feature. The owner explicitly grouped outstanding walkthroughs after implementation; actual acceptance remains pending. Historical test counts do not establish unchanged validity after native/protocol edits.
+- [x] Inspect the complete integrated diff for peak-memory overlap, resource leaks, boundary ownership, accessibility, silent fallbacks and unintended generated/vendor changes. Fix concrete defects in their owning feature and rerun affected checks.
 
 ### 2. Run the combined compatibility and resource matrix
 
-- [ ] Run complete Python/native suites, current validation/CAD/resource audits, distribution checks and all applicable browser harnesses. Check reproducible worker/WASM packaging.
-- [ ] Run supported direct-local Chromium and optional HTTP workflows plus declared Firefox checks, recording versions and precise limitations.
-- [ ] Exercise save/open/recovery while switching units, editing local loads/supports, regenerating mesh, cancelling/retrying solves and exporting reports. Verify restoration never silently changes assignments or accepts stale caches.
-- [ ] Repeat viewport/pane resize at 125%/200% zoom and 2× DPI, all themes, keyboard-only controls, reduced motion, advanced panels collapsed/expanded, and all former View commands.
-- [ ] Measure repeated open/recovery/selection/solve/report cycles with a representative larger part. Verify source/result/worker disposal and no accumulated recovery/cache data beyond defined budgets.
+- [x] Run complete Python/native suites, current validation/CAD/resource audits, distribution checks and all applicable browser harnesses. Check reproducible worker/WASM packaging.
+- [x] Run supported direct-local Chromium and optional HTTP workflows plus declared Firefox checks, recording versions and precise limitations.
+- [x] Exercise save/open/recovery while switching units, editing local loads/supports, regenerating mesh, cancelling/retrying solves and exporting reports. Verify restoration never silently changes assignments or accepts stale caches.
+- [x] Automate equivalent 125%/200% available viewport sizes, 2× DPR, all themes, keyboard resize, reduced-motion workflow and existing advanced/View command harnesses.
+- [ ] Complete actual 125%/200% browser zoom and physical 2× display walkthrough; record usability alongside the grouped owner review.
+- [x] Measure repeated open/recovery/selection/solve/report cycles with a representative larger part. Verify source/result/worker disposal and no accumulated recovery/cache data beyond defined budgets.
 
 ### 3. Conduct final owner walkthrough and handoff
 
-- [ ] Prepare a concise runnable packet with expected values for an asymmetric bracket, a curved/holed part, and an analytical case. Include ordinary and advanced-setting projects.
-- [ ] Supply bounded synthetic invalid-draft, underconstraint, incompatible-cache, denied-storage, cap-blocked, >=8 GiB warning, failed import and cancel/retry states without unsafe allocations.
+- [x] Prepare a concise runnable packet with expected values for an asymmetric bracket, a curved/holed part, and an analytical case. Include ordinary and advanced-setting projects.
+- [x] Supply bounded synthetic invalid-draft, underconstraint, incompatible-cache, denied-storage, cap-blocked, >=8 GiB warning, failed import and cancel/retry states without unsafe allocations.
 - [ ] Have the owner complete import/open → model information/material → supports/loads → mesh/check/solve → inspect/convergence → save/reopen/recover → default/custom report without implementer narration.
 - [ ] Confirm options icons are discoverable, active advanced settings remain understandable, and a beginner completes an ordinary case without opening them.
 - [ ] Record confusing steps and defects by severity, correct blockers, and obtain final usability acceptance. Update the evidence index and hand off to Task 20; keep release status unreleased until its exact-candidate gates pass.

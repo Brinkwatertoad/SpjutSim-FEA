@@ -9,6 +9,7 @@
   }
 
   function transferInput(input) {
+    if(!input || !Array.isArray(input.loads) || input.loads.some(function(load){return !load || typeof load!=='object';}))throw clientFailure('INVALID_LOAD','A surface load is missing or invalid.',null,'preflight');
     var mesh = input.mesh;
     var copy = {
       protocol: input.protocol,
@@ -31,6 +32,7 @@
         });
       }),
       loads: input.loads.map(function (load) {
+        if(['bearing','moment','offset-force'].includes(load.type))return Object.assign({},load,{surfaceConnectivity:new Uint32Array(load.surfaceConnectivity)});
         return Object.assign({}, load, {
           surfaceConnectivity: new Uint32Array(load.surfaceConnectivity),
           triangleConnectivity: new Uint32Array(load.triangleConnectivity),
@@ -48,6 +50,7 @@
       buffers.push(condition.boundaryTriangleConnectivity.buffer, condition.nodeIndices.buffer);
     });
     copy.loads.forEach(function (load) {
+      if(['bearing','moment','offset-force'].includes(load.type)){buffers.push(load.surfaceConnectivity.buffer);return;}
       buffers.push(load.surfaceConnectivity.buffer, load.triangleConnectivity.buffer, load.triangleAreasM2.buffer, load.outwardNormals.buffer,
         load.nodeIndices.buffer, load.equivalentNodalForcesN.buffer);
     });

@@ -1,5 +1,5 @@
 'use strict';
-var WORKER_PROTOCOL_VERSION = 5;
+var WORKER_PROTOCOL_VERSION = 6;
 var WASM_HEAP_CAP_BYTES = 3758096384;
 // Calibrated by the 36-record supported-browser matrix in benchmarks/resource/.
 var MEMORY_SAFETY_MULTIPLIER = 1.5;
@@ -101,11 +101,33 @@ function validateInput(input) {
     });
   });
   input.loads.forEach(function (load) {
+    if(!load || !['pressure','total-force','bearing','moment','offset-force'].includes(load.type))throw diagnostic('INVALID_LOAD','preflight','Unsupported surface load type.');
     var loadFaceNodes = load.surfaceElementType === 'tri6' ? 6 : load.surfaceElementType === 'tri3' ? 3 : 0;
     if (!loadFaceNodes || !(load.surfaceConnectivity instanceof Uint32Array) || !load.surfaceConnectivity.length ||
         load.surfaceConnectivity.length % loadFaceNodes) {
       throw diagnostic('INVALID_LOAD', 'preflight', 'A surface load has invalid solver-face connectivity.');
     }
+    load.surfaceConnectivity.forEach(function(node){if(node>=nodeCount)throw diagnostic('MESH_INVALID_INDEX','preflight','A load references a missing mesh node.');});
+    var vector=function(v){return Array.isArray(v)&&v.length===3&&[0,1,2].every(function(i){return Number.isFinite(v[i]);});};
+    if(['bearing','moment','offset-force'].includes(load.type)){
+      if(!vector(load.forceN)||!vector(load.momentNm)||!vector(load.referencePointM))throw diagnostic('INVALID_LOAD','preflight','Surface resultants and reference point must be finite.');
+      if(load.type==='bearing'){
+        var b=load.bearingBand;
+        if(Math.hypot.apply(null,load.momentNm)!==0)throw diagnostic('INVALID_LOAD','preflight','Bearing loading does not support an independent moment.');
+        if(!b || b.version!==1 || !vector(b.centerM) || !vector(b.axis)||Math.abs(Math.hypot.apply(null,b.axis)-1)>1e-10||!Number.isFinite(b.radiusM)||b.radiusM<=0||!Number.isFinite(b.lengthM)||b.lengthM<=0 || load.distribution!=='compressive-cosine')throw diagnostic('INVALID_LOAD','preflight','Bearing loading requires a validated cylindrical band and cosine distribution.');
+      }else {
+        if(load.distribution!=='minimum-squared-traction')throw diagnostic('INVALID_LOAD','preflight','Unsupported surface resultant distribution.');
+        if(load.type==='moment' && (Math.hypot.apply(null,load.forceN)!==0 || !(Math.hypot.apply(null,load.momentNm)>0)))throw diagnostic('INVALID_LOAD','preflight','A pure moment requires zero force and a nonzero moment.');
+        if(load.type==='offset-force'){
+          if(!vector(load.applicationPointM))throw diagnostic('INVALID_LOAD','preflight','Enter a finite global application point.');
+          var arm=load.applicationPointM.map(function(v,i){return v-load.referencePointM[i];}),f=load.forceN;
+          var expected=[arm[1]*f[2]-arm[2]*f[1],arm[2]*f[0]-arm[0]*f[2],arm[0]*f[1]-arm[1]*f[0]];
+          var scale=Math.hypot.apply(null,expected);
+          if(!vector(expected)||load.momentNm.some(function(v,i){return Math.abs(v-expected[i])>1e-12+1e-10*scale;}))throw diagnostic('INVALID_LOAD','preflight','The offset moment does not match its application point and force.');
+        }
+      }
+      if(load.type!=='moment' && !(Math.hypot.apply(null,load.forceN)>0))throw diagnostic('INVALID_LOAD','preflight','Enter a nonzero resultant force.');
+    }else if(load.type==='pressure' ? !Number.isFinite(load.pressurePa) : load.direction==='surface-normal' ? !Number.isFinite(load.magnitudeN)||load.magnitudeN<=0||!['push','pull'].includes(load.sense) : !vector(load.forceN))throw diagnostic('INVALID_LOAD','preflight','Surface load values must be finite.');
   });
   return input;
 }
@@ -220,7 +242,11 @@ function loadAnalysis(Module, input) {
     input.loads.forEach(function (load) {
       var faceNodes = load.surfaceElementType === 'tri6' ? 6 : 3;
       withWasmArray(Module, load.surfaceConnectivity, function (triangles) {
-        if (load.type === 'pressure' || load.direction === 'surface-normal') {
+        if(['bearing','moment','offset-force'].includes(load.type)){
+          var band=load.bearingBand;
+          var parameters=new Float64Array(load.forceN.concat(load.momentNm,load.referencePointM,band?band.axis:[0,0,1],[band?band.radiusM:0,band?band.lengthM:0]));
+          withWasmArray(Module,parameters,function(pointer){checkNative(Module,context,Module._fem_add_surface_resultant(context,triangles,load.surfaceConnectivity.length/faceNodes,faceNodes,load.type==='bearing'?0:1,pointer),'preflight');});
+        }else if (load.type === 'pressure' || load.direction === 'surface-normal') {
           checkNative(Module, context, Module._fem_add_pressure(context, triangles,
             load.surfaceConnectivity.length / faceNodes, faceNodes, load.type === 'pressure' ? load.pressurePa : normalForcePressure(load,input.mesh.nodePositionsM)), 'preflight');
         } else {
@@ -458,7 +484,11 @@ function makeResult(Module, input, revision, preflight, memory) {
       maximumDisplacement > 0.05 * input.mesh.statistics.boundingBoxDiagonalM) {
     warnings.push('Displacement exceeds 5% of the model diagonal; geometric nonlinearity may matter.');
   }
+  var resultantLoads=input.loads.filter(function(load){return ['bearing','moment','offset-force'].includes(load.type);});
+  if(v(35)!==resultantLoads.length)throw diagnostic('INVALID_RESULT_RESULTANTS','postprocess','The solver did not return all surface-load resultants.');
+  var realized=copyResultArray(Module,p(13),v(35)*6);
   return {
+    surfaceLoadResultants:resultantLoads.map(function(load,index){return {id:load.id,type:load.type,referencePointM:load.referencePointM.slice(),requestedForceN:load.forceN.slice(),requestedMomentNm:load.momentNm.slice(),realizedForceN:Array.from(realized.subarray(index*6,index*6+3)),realizedMomentNm:Array.from(realized.subarray(index*6+3,index*6+6))};}),
     schemaVersion: 2, rangeMetadataVersion: 1, analysisRevision: revision, elementType: input.mesh.elementType,
     originalSurface: { nodePositionsM: new Float32Array(input.mesh.nodePositionsM),
       triangleConnectivity: new Uint32Array(input.mesh.boundaryFaces.triangleConnectivity),
@@ -480,7 +510,7 @@ function makeResult(Module, input, revision, preflight, memory) {
       rawMinPrincipal: { locationOwner: 'solver-sample', isInterior: true, valuePa: v(17), elementIndex: v(20), sampleIndex: v(24), locationM: recoverySampleLocation(input.mesh, v(20), v(24)) }
     },
     reactionsN: copyResultArray(Module, p(7), nodes * 3),
-    equilibrium: { totalReactionN: [v(9), v(10), v(11)], totalAppliedForceN: [v(12), v(13), v(14)], relativeResidual: v(8) },
+    equilibrium: { totalReactionN: [v(9), v(10), v(11)], totalAppliedForceN: [v(12), v(13), v(14)], relativeResidual: v(8), momentReferenceM:[v(25),v(26),v(27)],totalAppliedMomentNm:[v(28),v(29),v(30)],totalReactionMomentNm:[v(31),v(32),v(33)],momentRelativeResidual:v(34) },
     solverStatistics: { iterations: v(3), terminationReason: 'converged', finalRelativeResidual: v(5),
       solveDurationMs: v(6), strainEnergyJ: v(7), wasmMemoryBytes: Module.HEAPU8.buffer.byteLength,
       wasmMemoryHighWaterBytes: memory.postprocess, wasmMemoryByPhaseBytes: memory },
@@ -576,7 +606,7 @@ self.onmessage = function (event) {
     return;
   }
   femModulePromise.then(function (Module) {
-    if (Module._fem_wasm_api_version() !== 2) { throw diagnostic('FEM_API_VERSION_MISMATCH', 'worker-startup', 'The FEM WebAssembly API does not match the application.'); }
+    if (Module._fem_wasm_api_version() !== 2 || typeof Module._fem_add_surface_resultant!=='function') { throw diagnostic('FEM_API_VERSION_MISMATCH', 'worker-startup', 'The FEM WebAssembly API does not match the application.'); }
     if (message.type === 'diagnostics') {
       reply(message.requestId, 'diagnostics-result', { apiVersion: 2, runtimeMode: 'serial-local-embedded',
         wasmMemoryBytes: Module.HEAPU8.buffer.byteLength, wasmHeapCapBytes: WASM_HEAP_CAP_BYTES });

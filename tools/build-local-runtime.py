@@ -13,7 +13,7 @@ from typing import Optional
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED_PROTOCOL_VERSION = 5
+EXPECTED_PROTOCOL_VERSION = 6
 WORKERS = {
     'mesher': 'mesher-worker.js',
     'solver': 'solver-worker.js',
@@ -151,7 +151,7 @@ def render_fem_wrapper(source: str) -> str:
   'use strict';
   var runtime = root.SpjutsimLocalRuntimeWorkers = root.SpjutsimLocalRuntimeWorkers || {{}};
   runtime.fem = {payload};
-  runtime.femMetadata = {{"apiVersion": 1, "threaded": false, "networkRequired": false, "sha256": "{checksum}"}};
+  runtime.femMetadata = {{"apiVersion": 2, "threaded": false, "networkRequired": false, "sha256": "{checksum}"}};
 }}(globalThis));
 '''
 

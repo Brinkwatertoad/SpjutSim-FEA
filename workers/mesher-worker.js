@@ -1,5 +1,5 @@
 'use strict';
-var WORKER_PROTOCOL_VERSION = 5;
+var WORKER_PROTOCOL_VERSION = 6;
 var gmshPromise = null;
 var requestQueue = Promise.resolve();
 
@@ -325,11 +325,39 @@ function extractFeatureEdges(gmsh, surfaceTags, faceIds) {
   return { positionsM: new Float64Array(positions), indices: new Uint32Array(indices), ranges: ranges };
 }
 
+// Analytic CAD classification plus sampled/area checks; trimmed bands are rejected.
+function cylindricalDescriptor(gmsh,tag,scale) {
+  var bounds=gmsh.model.getParametrizationBounds(2,tag),u=bounds.min[0],v=bounds.min[1],du=bounds.max[0]-u,dv=bounds.max[1]-v;
+  if(!(du>0 && du<=2*Math.PI+1e-8 && dv>0))return null;
+  var p=gmsh.model.getValue(2,tag,[u,v,u+Math.min(du/2,Math.PI/2),v,u,v+dv]).coord;
+  var normals=gmsh.model.getNormal(tag,[u,v,u+Math.min(du/2,Math.PI/2),v]).normals;
+  var n0=normals.slice(0,3),n1=normals.slice(3,6),delta=n1.map(function(x,i){return x-n0[i];});
+  var denominator=delta.reduce(function(sum,x){return sum+x*x;},0);
+  var signedRadius=delta.reduce(function(sum,x,i){return sum+x*(p[i+3]-p[i]);},0)/denominator;
+  var radius=Math.abs(signedRadius),axis=p.slice(6,9).map(function(x,i){return x-p[i];}),length=Math.hypot.apply(null,axis);
+  if(!(radius>scale*1e-12 && length>scale*1e-12) || !Number.isFinite(radius+length))return null;
+  axis=axis.map(function(x){return x/length;});
+  var origin=p.slice(0,3).map(function(x,i){return x-signedRadius*n0[i];});
+  var radial=n0.map(function(x){return x*Math.sign(signedRadius);});
+  var expectedArea=radius*du*length,area=gmsh.model.occ.getMass(2,tag).mass;
+  if(Math.abs(area-expectedArea)>expectedArea*1e-8)return null;
+  // Check interior samples against the analytic circular band and uniform axial span.
+  var sampleParameters=[];for(var i=0;i<5;i++)for(var j=0;j<3;j++)sampleParameters.push(u+du*i/4,v+dv*j/2);
+  var samples=gmsh.model.getValue(2,tag,sampleParameters).coord;
+  for(var k=0;k<samples.length;k+=3){
+    var offset=samples.slice(k,k+3).map(function(x,i){return x-origin[i];}),axial=offset.reduce(function(sum,x,i){return sum+x*axis[i];},0);
+    var transverse=offset.map(function(x,i){return x-axial*axis[i];});
+    if(Math.abs(Math.hypot.apply(null,transverse)-radius)>scale*1e-8 || axial< -scale*1e-8 || axial>length+scale*1e-8)return null;
+  }
+  return {version:1,originM:origin,axis:axis,radiusM:radius,lengthM:length,radialStart:radial,angularExtentRad:du};
+}
+
 function extractPreview(gmsh, surfaceTags, geometryId, modelScaleM) {
   var positions = [];
   var indices = [];
   var faceIds = [];
   var planarFaces = {};
+  var cylindricalFaces = {};
   var faceRanges = [];
   var surfaceIndex;
   for (surfaceIndex = 0; surfaceIndex < surfaceTags.length; surfaceIndex += 1) {
@@ -387,12 +415,17 @@ function extractPreview(gmsh, surfaceTags, geometryId, modelScaleM) {
       }
       if(planar)planarFaces[faceId]={version:1,originM:origin,normal:normal};
     }
+    if(entityType.entityType==='Cylinder' || entityType==='Cylinder'){
+      var cylinder=cylindricalDescriptor(gmsh,surfaceTag,modelScaleM);
+      if(cylinder)cylindricalFaces[faceId]=cylinder;
+    }
     faceIds.push(faceId);
     faceRanges.push({ faceId: faceId, start: start, count: indices.length - start });
   }
   return {
     faceIds: faceIds,
     planarFaces: planarFaces,
+    cylindricalFaces: cylindricalFaces,
     preview: {
       positionsM: new Float64Array(positions),
       normals: smoothFaceNormals(positions, indices, faceRanges, modelScaleM),
@@ -448,6 +481,7 @@ function importGeometry(gmsh, message) {
       orientation: { rotation: [1, 0, 0, 0, 1, 0, 0, 0, 1], operations: [] },
       faceIds: preview.faceIds,
       planarFaces: preview.planarFaces,
+      cylindricalFaces: preview.cylindricalFaces,
       boundingBoxM: box,
       volumeM3: volume,
       preview: preview.preview

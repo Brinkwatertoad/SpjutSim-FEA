@@ -98,6 +98,14 @@ int fem_add_pressure(FemContext *context, const uint32_t *triangles,
 int fem_add_total_face_force(FemContext *context, const uint32_t *triangles,
                              uint32_t triangle_count, uint32_t nodes_per_face,
                              const double force_n[3]);
+/* kind 0: compressive cosine bearing; kind 1: minimum squared traction wrench.
+ * parameters: F[3], M[3], reference[3], cylinder axis[3], radius, band length. */
+int fem_add_surface_resultant(FemContext *context, const uint32_t *triangles,
+                             uint32_t count, uint32_t nodes_per_face, uint32_t kind,
+                             const double parameters[14]);
+/* Named reference and integrated equilibrium moments, additive ABI accessor. */
+int fem_get_moment_balance(FemContext *context, double values[10]);
+const double *fem_get_surface_resultants(FemContext *context, uint32_t *load_count);
 int fem_set_gravity(FemContext *context, int enabled,
                     const double acceleration_m_s2[3]);
 int fem_set_phase_callback(FemContext *context, FemPhaseCallback callback,

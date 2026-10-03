@@ -1,8 +1,8 @@
 # Plan 37: Distributed moments and offset forces
 
-> **For agentic workers:** Use superpowers:executing-plans in the current agent. Follow repository AGENTS.md; do not dispatch subagents. This document plans future implementation and does not authorize publication.
+> **For agentic workers:** Use superpowers:executing-plans in the current agent. Follow repository AGENTS.md; do not dispatch subagents. This document records implementation scope and does not authorize publication.
 
-**Status:** Planned — pre-v1
+**Status:** Implemented and verified; grouped owner walkthrough pending (2026-10-03)
 
 **Goal:** Apply a prescribed resultant moment or a force acting at an offset without requiring users to invent equivalent face-force pairs.
 
@@ -33,22 +33,22 @@ The shared execution, evidence, performance, and review rules in [the plan index
 
 ### 1. Specify the surface distribution
 
-- [ ] Define the first distribution by minimizing area-weighted squared traction subject to the six resultant constraints, using the solver's boundary quadrature. State this idealization in UI/help/report.
-- [ ] Derive the small geometric moment operator about an area centroid, use scale-aware rank/conditioning checks, and transform requested resultants to that point. Degenerate/inadequately resolved targets fail clearly.
-- [ ] Encode moment-only and offset-force definitions with explicit origin/direction units. Use `M = (applicationPoint - referencePoint) × F` for the offset contribution and convert local frames through Plan 35.
+- [x] Define the first distribution by minimizing area-weighted squared traction subject to the six resultant constraints, using the solver's boundary quadrature. State this idealization in UI/help/report.
+- [x] Derive the small geometric moment operator about an area centroid, use scale-aware rank/conditioning checks, and transform requested resultants to that point. Degenerate/inadequately resolved targets fail clearly.
+- [x] Encode moment-only and offset-force definitions with explicit origin/direction units. Use `M = (applicationPoint - referencePoint) × F` for the offset contribution and convert local frames through Plan 35.
 
 ### 2. Validate native loading and equilibrium
 
-- [ ] Add failing tests for zero net force under a pure couple, the requested torque, arbitrary rigid rotation/translation, reference-point changes, disconnected selected patches and degenerate selections.
-- [ ] Integrate the distribution with Tri3/Tri6 quadrature; verify force/moment consistency before accepting a load.
-- [ ] Extend equilibrium diagnostics with moments about a named reference point, using a documented characteristic-length/load scale and absolute treatment for zero denominators. Preserve existing force failure criteria.
-- [ ] Add cantilever tip-force-offset and shaft-torsion analytical benchmarks; compare torsional displacement and nonsingular shear using explicit mesh-convergence criteria.
+- [x] Add failing tests for zero net force under a pure couple, the requested torque, arbitrary rigid rotation/translation, reference-point changes, disconnected selected patches and degenerate selections.
+- [x] Integrate the distribution with Tri3/Tri6 quadrature; verify force/moment consistency before accepting a load.
+- [x] Extend equilibrium diagnostics with moments about a named reference point, using a documented characteristic-length/load scale and absolute treatment for zero denominators. Preserve existing force failure criteria.
+- [x] Add cantilever tip-force-offset and shaft-torsion analytical benchmarks; compare torsional displacement and nonsingular shear using explicit mesh-convergence criteria.
 
 ### 3. Integrate and verify the complete workflow
 
-- [ ] Show reference point/lever arm and moment direction in preview without misleading force glyphs. Persist references through save/recovery/history and repair them during geometry replacement.
-- [ ] Include entered and realized force/moment, origin and distribution assumptions in Results/report diagnostics.
-- [ ] Version/build native/worker changes, measure boundary-only assembly cost and retained memory, and exercise cancellation/invalid input paths.
+- [x] Show reference point/lever arm and moment direction in preview without misleading force glyphs. Persist references through save/recovery/history and repair them during geometry replacement.
+- [x] Include entered and realized force/moment, origin and distribution assumptions in Results/report diagnostics.
+- [x] Version/build native/worker changes, measure boundary-only assembly cost and retained memory, and exercise cancellation/invalid input paths.
 
 ## Verification and acceptance
 

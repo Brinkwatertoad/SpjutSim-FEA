@@ -1,0 +1,29 @@
+{
+  "scope": "Working-tree resource remeasurement, not exact release candidate. Original query commit labels retained in application.measurementLabel; actual base HEAD in application.gitCommit; runtime hashes are measurement-phase identities. Final changes add native complete-bearing area validation, exactly reserved per-new-load diagnostics, client validation, and fold bounding-box calculation into the existing force pass; legacy resource cases use no new resultant operator.",
+  "modes": [
+    {
+      "browser": "152.0.7977.75",
+      "mode": "file",
+      "dpr": 1,
+      "headless": true,
+      "workingTree": "feature/bearing-moments-integrated-review",
+      "solverRuntimeSha256": "bbd307cdb8ae401929ea8fbcda5662e8c7ea5a17b22f9d9f96d78310bc7b3cda"
+    },
+    {
+      "browser": "152.0.7977.75",
+      "mode": "http",
+      "dpr": 1,
+      "headless": true,
+      "workingTree": "feature/bearing-moments-integrated-review",
+      "solverRuntimeSha256": "bbd307cdb8ae401929ea8fbcda5662e8c7ea5a17b22f9d9f96d78310bc7b3cda"
+    },
+    {
+      "browser": "155.0.1",
+      "mode": "file://",
+      "headless": false,
+      "workingTree": "feature/bearing-moments-integrated-review based on bfc2b3e",
+      "solverRuntimeSha256": "c78f8c97919b99939acd0f5e28918f4b5ecac80146831c8384565f7de89f95fd"
+    }
+  ],
+  "finalFeatureRuntimeSha256": "ac3037522380eecb0ab0873768103f7ba5ee552fcaa9e9e901e2ae3f996db064"
+}

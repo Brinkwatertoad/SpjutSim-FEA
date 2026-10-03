@@ -1,0 +1,357 @@
+{
+  "scope": "Two headless patched Playwright Firefox 153 resource attempts; neither satisfies the full resource calibration gate. Production settings were unchanged.",
+  "defaultAttempt": {
+    "browser": "153.0",
+    "mode": "firefox",
+    "dpr": 1,
+    "headless": true,
+    "workingTree": "feature/bearing-moments-integrated-review",
+    "solverRuntimeSha256": "bbd307cdb8ae401929ea8fbcda5662e8c7ea5a17b22f9d9f96d78310bc7b3cda",
+    "checks": [
+      {
+        "name": "bearing-load",
+        "status": "Passed bearing load workflow",
+        "errors": [],
+        "evidence": {
+          "case": "bearing-hole",
+          "equilibrium": {
+            "totalReactionN": [
+              -99.99999998195108,
+              -0.0011227147486814887,
+              -2.282704048228723e-05
+            ],
+            "totalAppliedForceN": [
+              99.99999999999989,
+              0.0011227414257679036,
+              2.271133296803762e-05
+            ],
+            "relativeResidual": 4.0938453987087524e-10,
+            "momentReferenceM": [
+              0.5,
+              0.5,
+              0.15
+            ],
+            "totalAppliedMomentNm": [
+              3.2057517169252134e-05,
+              0.0008892508972602156,
+              9.711402882090978e-05
+            ],
+            "totalReactionMomentNm": [
+              -3.212215149073043e-05,
+              -0.0008893109630244214,
+              -9.711578214899319e-05
+            ],
+            "momentRelativeResidual": 2.0807469349717414e-10
+          },
+          "mesh": {
+            "nodeCount": 1580,
+            "elementCount": 766,
+            "boundaryTriangleCount": 2080,
+            "boundaryElementCount": 520,
+            "minCharacteristicSizeM": 0.08296489188364292,
+            "maxCharacteristicSizeM": 0.2851186466925803,
+            "boundingBoxDiagonalM": 1.445683547668756
+          }
+        }
+      },
+      {
+        "name": "moment-load",
+        "status": "Passed moment load workflow",
+        "errors": [],
+        "evidence": {
+          "cases": [
+            {
+              "elementType": "tet4",
+              "displacementM": 1.25383992117997e-06,
+              "referenceDisplacementM": 1.2732395447351628e-06,
+              "relativeError": 0.015236428710850292,
+              "equilibrium": {
+                "totalReactionN": [
+                  -1.7901180537904793e-10,
+                  5.477231411477046e-10,
+                  -7.360217990637352e-11
+                ],
+                "totalAppliedForceN": [
+                  5.96189764223709e-14,
+                  -1.0696027397116836e-12,
+                  0
+                ],
+                "relativeResidual": 8.428395932545446e-13,
+                "momentReferenceM": [
+                  7.456604372846343e-07,
+                  5.445811805365741e-05,
+                  0.5
+                ],
+                "totalAppliedMomentNm": [
+                  5.348013698558418e-13,
+                  2.980948821118545e-14,
+                  100.00000000000027
+                ],
+                "totalReactionMomentNm": [
+                  1.0456238826173081e-10,
+                  3.1803681910247406e-10,
+                  -99.9999999999649
+                ],
+                "momentRelativeResidual": 2.826804667621011e-13
+              }
+            },
+            {
+              "elementType": "tet10",
+              "displacementM": 1.2734779787995052e-06,
+              "referenceDisplacementM": 1.2732395447351628e-06,
+              "relativeError": 0.0001872656762258451,
+              "equilibrium": {
+                "totalReactionN": [
+                  -6.362592674946654e-10,
+                  1.5207233250436047e-09,
+                  -2.0431621238631292e-10
+                ],
+                "totalAppliedForceN": [
+                  -1.2284617767477357e-13,
+                  1.3322676295501878e-14,
+                  0
+                ],
+                "relativeResidual": 2.432876379284221e-12,
+                "momentReferenceM": [
+                  0,
+                  1.1976917984046764e-06,
+                  0.5
+                ],
+                "totalAppliedMomentNm": [
+                  -6.661338147750939e-15,
+                  -6.142308883738679e-14,
+                  99.99999999999994
+                ],
+                "totalReactionMomentNm": [
+                  6.698761545465004e-10,
+                  2.0829521441001475e-10,
+                  -99.99999999983464
+                ],
+                "momentRelativeResidual": 6.09411265357742e-13
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "local-support-workflow",
+        "status": "Passed local supports (Tet4/Tet10, rotated reactions, reopen, undo, curved rejection)",
+        "errors": [],
+        "evidence": null
+      },
+      {
+        "name": "project-cad",
+        "status": "Passed",
+        "errors": [],
+        "evidence": null
+      },
+      {
+        "name": "report-workflow",
+        "status": "Passed",
+        "errors": [],
+        "evidence": null
+      },
+      {
+        "name": "worker-runtime",
+        "status": "Passed",
+        "errors": [],
+        "evidence": null
+      },
+      {
+        "name": "resource-benchmark",
+        "status": "The solver reached its time limit before convergence. No results were accepted. Increase the time limit if the residual is decreasing; otherwise check supports and mesh quality.",
+        "errors": [
+          "The solver reached its time limit before convergence. No results were accepted. Increase the time limit if the residual is decreasing; otherwise check supports and mesh quality."
+        ],
+        "evidence": null
+      }
+    ]
+  },
+  "explicit30MinuteAttempt": {
+    "browser": "153.0",
+    "mode": "firefox",
+    "dpr": 1,
+    "headless": true,
+    "workingTree": "feature/bearing-moments-integrated-review",
+    "solverRuntimeSha256": "3032cc2fe42660964415e21228293a700d717ecef3f16ea689018003872fc740",
+    "checks": [
+      {
+        "name": "resource-benchmark",
+        "status": "The solver reached its time limit before convergence. No results were accepted. Increase the time limit if the residual is decreasing; otherwise check supports and mesh quality.",
+        "errors": [
+          "The solver reached its time limit before convergence. No results were accepted. Increase the time limit if the residual is decreasing; otherwise check supports and mesh quality."
+        ],
+        "evidence": [
+          {
+            "schemaVersion": 2,
+            "repetition": 1,
+            "recordedAt": "2026-10-03T03:41:10.971Z",
+            "application": {
+              "gitCommit": "working-tree-3032cc2fe426",
+              "solverRuntimeSha256": "3032cc2fe42660964415e21228293a700d717ecef3f16ea689018003872fc740"
+            },
+            "browser": {
+              "name": "Firefox",
+              "version": "153.0",
+              "launchMode": "file://",
+              "crossOriginIsolated": false
+            },
+            "system": {
+              "os": "Linux x86_64",
+              "architecture": "x86_64",
+              "logicalCores": 24,
+              "memoryBytes": 33323876352
+            },
+            "case": {
+              "id": "axial-tet10-25k",
+              "kind": "axial",
+              "elementType": "tet10",
+              "nodeCount": 24210,
+              "elementCount": 15773,
+              "degreeOfFreedomCount": 72630,
+              "exactNnz": 5776434
+            },
+            "preflight": {
+              "modelVersion": 1,
+              "allocations": {
+                "meshBytes": 1211960,
+                "graphBytes": 5968800,
+                "matrixValuesBytes": 46211472,
+                "matrixIndexBytes": 23105736,
+                "rowPointerBytes": 290524,
+                "assemblyWorkBytes": 8880,
+                "solverWorkBytes": 4648320,
+                "resultBytes": 10819560,
+                "runtimeOverheadBytes": 67299104
+              },
+              "modeledPeakBytes": 150681476,
+              "safetyMultiplier": 1.5,
+              "predictedPeakBytes": 226022214,
+              "wasmHeapCapBytes": 3758096384
+            },
+            "observed": {
+              "wasmMemoryByPhaseBytes": {
+                "initial": 16777216,
+                "inputLoaded": 32243712,
+                "graphPreflight": 32243712,
+                "assembly": 78446592,
+                "solve": 78446592,
+                "postprocess": 94175232
+              },
+              "wasmMemoryHighWaterBytes": 94175232,
+              "jsHeapPeakBytes": null,
+              "externalProcessPeakBytes": null,
+              "mesherSolverOverlap": false
+            },
+            "solve": {
+              "outcome": "passed",
+              "preconditioner": "jacobi",
+              "relativeTolerance": 1e-08,
+              "maximumIterations": 0,
+              "maximumDurationMs": 1800000,
+              "iterations": 725,
+              "finalRelativeResidual": 9.470235457159572e-09,
+              "phaseDurationMs": {
+                "input": 4049,
+                "preflight": 189,
+                "assembly": 0,
+                "solve": 21775,
+                "postprocess": 3160
+              },
+              "wallTimeMs": 24935
+            },
+            "cancellation": {
+              "meshLatencyMs": 1,
+              "solveLatencyMs": 0,
+              "editAfterCancelPassed": true
+            }
+          },
+          {
+            "schemaVersion": 2,
+            "repetition": 1,
+            "recordedAt": "2026-10-03T03:47:46.830Z",
+            "application": {
+              "gitCommit": "working-tree-3032cc2fe426",
+              "solverRuntimeSha256": "3032cc2fe42660964415e21228293a700d717ecef3f16ea689018003872fc740"
+            },
+            "browser": {
+              "name": "Firefox",
+              "version": "153.0",
+              "launchMode": "file://",
+              "crossOriginIsolated": false
+            },
+            "system": {
+              "os": "Linux x86_64",
+              "architecture": "x86_64",
+              "logicalCores": 24,
+              "memoryBytes": 33323876352
+            },
+            "case": {
+              "id": "cantilever-tet10-75k",
+              "kind": "cantilever",
+              "elementType": "tet10",
+              "nodeCount": 71325,
+              "elementCount": 45631,
+              "degreeOfFreedomCount": 213975,
+              "exactNnz": 16846785
+            },
+            "preflight": {
+              "modelVersion": 1,
+              "allocations": {
+                "meshBytes": 3537040,
+                "graphBytes": 17283060,
+                "matrixValuesBytes": 134774280,
+                "matrixIndexBytes": 67387140,
+                "rowPointerBytes": 855904,
+                "assemblyWorkBytes": 8880,
+                "solverWorkBytes": 13694400,
+                "resultBytes": 31372800,
+                "runtimeOverheadBytes": 67202112
+              },
+              "modeledPeakBytes": 310264676,
+              "safetyMultiplier": 1.5,
+              "predictedPeakBytes": 465397014,
+              "wasmHeapCapBytes": 3758096384
+            },
+            "observed": {
+              "wasmMemoryByPhaseBytes": {
+                "initial": 16777216,
+                "inputLoaded": 93716480,
+                "graphPreflight": 93716480,
+                "assembly": 228524032,
+                "solve": 228524032,
+                "postprocess": 274268160
+              },
+              "wasmMemoryHighWaterBytes": 274268160,
+              "jsHeapPeakBytes": null,
+              "externalProcessPeakBytes": null,
+              "mesherSolverOverlap": false
+            },
+            "solve": {
+              "outcome": "passed",
+              "preconditioner": "jacobi",
+              "relativeTolerance": 1e-08,
+              "maximumIterations": 0,
+              "maximumDurationMs": 1800000,
+              "iterations": 4314,
+              "finalRelativeResidual": 6.9763621692592615e-09,
+              "phaseDurationMs": {
+                "input": 8266,
+                "preflight": 474,
+                "assembly": 0,
+                "solve": 377930,
+                "postprocess": 9180
+              },
+              "wallTimeMs": 387110
+            },
+            "cancellation": {
+              "meshLatencyMs": 1,
+              "solveLatencyMs": 0,
+              "editAfterCancelPassed": true
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

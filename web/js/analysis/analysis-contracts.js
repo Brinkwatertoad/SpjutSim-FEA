@@ -1,28 +1,29 @@
 (function (root) {
   'use strict';
 
-  /** @typedef {'youngsModulusPa'|'densityKgM3'|'strengthPa'|'displacementM'|'pressurePa'|'forceN'} EngineeringQuantity */
+  /** @typedef {'youngsModulusPa'|'densityKgM3'|'strengthPa'|'displacementM'|'pressurePa'|'forceN'|'momentNm'} EngineeringQuantity */
   /** @typedef {{name?: string, youngsModulusPa: number, poissonsRatio: number, densityKgM3?: number, tensileYieldPa?: number, compressiveYieldPa?: number, ultimateTensilePa?: number, ultimateCompressivePa?: number}} IsotropicMaterial */
   /** @typedef {{id: string, name: string, type: 'support', faceIds: string[], componentsM: {x?: number, y?: number, z?: number}}} BoundaryCondition */
-  /** @typedef {{id: string, name: string, type: 'pressure'|'total-force', faceIds: string[], pressurePa?: number, direction?: 'surface-normal', magnitudeN?: number, sense?: 'push'|'pull', forceN?: number[]}} SurfaceLoad */
+  /** @typedef {{id: string, name: string, type: 'pressure'|'total-force'|'bearing'|'moment'|'offset-force', faceIds: string[], pressurePa?: number, direction?: 'surface-normal', magnitudeN?: number, sense?: 'push'|'pull', forceN?: number[], momentNm?: number[], referencePointM?: number[], applicationPointM?: number[], distribution?: string, frame?: Object}} SurfaceLoad */
   /** @typedef {{enabled: boolean, accelerationMS2: number[]}} GravityLoad */
 
   var poundForceN = 0.45359237 * 9.80665;
   var UNIT_SCALES = Object.freeze({Pa:1,kPa:1e3,MPa:1e6,GPa:1e9,psi:poundForceN/0.0254**2,ksi:poundForceN*1000/0.0254**2,
     m:1,mm:1e-3,'µm':1e-6,in:0.0254,ft:0.3048,N:1,kN:1e3,lbf:poundForceN,kip:poundForceN*1000,
-    'kg/m³':1,'lbm/in³':0.45359237/0.0254**3,'m/s²':1,'in/s²':0.0254,'ft/s²':0.3048,'m³':1,'cm³':1e-6,'mm³':1e-9,'in³':0.000016387064,kg:1,g:0.001,lbm:0.45359237,J:1,'in·lbf':poundForceN*0.0254});
+    'N·m':1,'kN·m':1000,'lbf·in':poundForceN*.0254,'lbf·ft':poundForceN*.3048,'kg/m³':1,'lbm/in³':0.45359237/0.0254**3,'m/s²':1,'in/s²':0.0254,'ft/s²':0.3048,'m³':1,'cm³':1e-6,'mm³':1e-9,'in³':0.000016387064,kg:1,g:0.001,lbm:0.45359237,J:1,'in·lbf':poundForceN*0.0254});
   var stressUnits = ['Pa','kPa','MPa','GPa','psi','ksi'], lengthUnits = ['m','mm','in'];
   var UNIT_CHOICES = Object.freeze({youngsModulusPa:stressUnits,strengthPa:stressUnits,stressPa:stressUnits,
-    pressurePa:['MPa','Pa','psi','ksi'], forceN:['N','kN','lbf','kip'],densityKgM3:['kg/m³','lbm/in³'],
+    pressurePa:['MPa','Pa','psi','ksi'], forceN:['N','kN','lbf','kip'],momentNm:['N·m','kN·m','lbf·in','lbf·ft'],densityKgM3:['kg/m³','lbm/in³'],
     displacementM:lengthUnits,lengthM:lengthUnits,accelerationMS2:['m/s²','in/s²','ft/s²'],volumeM3:['m³','cm³','mm³','in³'],massKg:['kg','g','lbm'],energyJ:['J','in·lbf']});
-  var SI_UNITS = Object.freeze({youngsModulusPa:'GPa',strengthPa:'MPa',stressPa:'MPa',pressurePa:'MPa',forceN:'N',
+  var SI_UNITS = Object.freeze({youngsModulusPa:'GPa',strengthPa:'MPa',stressPa:'MPa',pressurePa:'MPa',forceN:'N',momentNm:'N·m',
     densityKgM3:'kg/m³',displacementM:'mm',lengthM:'m',accelerationMS2:'m/s²',volumeM3:'cm³',massKg:'kg',energyJ:'J'});
-  var USCS_UNITS = Object.freeze({youngsModulusPa:'ksi',strengthPa:'ksi',stressPa:'psi',pressurePa:'psi',forceN:'lbf',
+  var USCS_UNITS = Object.freeze({youngsModulusPa:'ksi',strengthPa:'ksi',stressPa:'psi',pressurePa:'psi',forceN:'lbf',momentNm:'lbf·in',
     densityKgM3:'lbm/in³',displacementM:'in',lengthM:'in',accelerationMS2:'in/s²',volumeM3:'in³',massKg:'lbm',energyJ:'in·lbf'});
   var preferredUnits = SI_UNITS;
   var DISPLAY_UNITS = Object.freeze(Object.fromEntries(Object.keys(SI_UNITS).map(function(key){return [key,Object.freeze({symbol:SI_UNITS[key],siPerDisplayUnit:UNIT_SCALES[SI_UNITS[key]]})];})));
   var LOAD_INPUT_UNITS = Object.freeze(Object.fromEntries(['pressurePa','forceN'].map(function(key){return [key,Object.freeze(Object.fromEntries(UNIT_CHOICES[key].map(function(unit){return [unit,UNIT_SCALES[unit]];})))];})));
   function validatePreferredUnits(units) {
+    if(units && units.momentNm===undefined){units=Object.assign({momentNm:units.forceN==='lbf'||units.forceN==='kip'?'lbf·in':'N·m'},units);}
     if (units && units.volumeM3 === undefined && units.massKg === undefined) { units = Object.assign({volumeM3: units.lengthM === 'in' ? 'in³' : 'cm³', massKg: units.lengthM === 'in' ? 'lbm' : 'kg'}, units); }
     if (!units || Object.keys(units).length !== Object.keys(SI_UNITS).length) { throw Error('Invalid preferred units.'); }
     Object.keys(SI_UNITS).forEach(function(key){if(UNIT_CHOICES[key].indexOf(units[key])<0)throw Error('Unsupported unit for '+key+'.');});
@@ -194,7 +195,7 @@
   }
 
   function finiteVector(vector) {
-    return Array.isArray(vector) && vector.length === 3 && vector.every(Number.isFinite);
+    return Array.isArray(vector) && vector.length === 3 && [0,1,2].every(function(i){return Number.isFinite(vector[i]);});
   }
 
   function nonzeroVector(vector) {
@@ -205,13 +206,35 @@
     var base = validateNamedItem(item, 'load', knownFaceIds, geometry);
     var value = base.value;
     var errors = base.errors;
-    if (!item || (item.type !== 'pressure' && item.type !== 'total-force')) {
-      errors.push(issue('INVALID_LOAD_TYPE', 'Choose Pressure or Total force.', 'type'));
+    if (!item || !['pressure','total-force','bearing','moment','offset-force'].includes(item.type)) {
+      errors.push(issue('INVALID_LOAD_TYPE', 'Choose Pressure, Force, Bearing force, Moment or Offset force.', 'type'));
       return result(value, errors);
     }
     value.type = item.type;
-    if (item.frame && (item.type !== 'total-force' || item.direction === 'surface-normal')) {
+    if (item.frame && (item.type === 'pressure' || item.direction === 'surface-normal')) {
       errors.push(issue('INVALID_LOCAL_FRAME','A rectangular frame applies only to component forces.','frame'));
+    }
+    if(['bearing','moment','offset-force'].includes(item.type)){
+      var distribution=item.type==='bearing'?'compressive-cosine':'minimum-squared-traction';
+      if(item.distribution!==undefined && item.distribution!==distribution)errors.push(issue('INVALID_LOAD_DISTRIBUTION','Unsupported surface load distribution.','distribution'));
+      value.distribution=distribution;
+      if(item.type==='moment'){
+        if(!nonzeroVector(item.momentNm))errors.push(issue('INVALID_MOMENT','Enter a finite nonzero moment vector.','momentNm'));else value.momentNm=item.momentNm.slice();
+      }else{
+        if(!nonzeroVector(item.forceN))errors.push(issue('INVALID_FORCE_VECTOR','Enter a finite nonzero force vector.','forceN'));else value.forceN=item.forceN.slice();
+      }
+      if(item.type!=='bearing'){
+        if(!finiteVector(item.referencePointM))errors.push(issue('INVALID_REFERENCE_POINT','Enter a finite global reference point in length units.','referencePointM'));else value.referencePointM=item.referencePointM.slice();
+        if(item.type==='offset-force'){
+          if(!finiteVector(item.applicationPointM))errors.push(issue('INVALID_APPLICATION_POINT','Enter a finite global force application point.','applicationPointM'));else value.applicationPointM=item.applicationPointM.slice();
+        }
+      }else if(geometry && base.errors.length===0 && value.forceN){
+        try{
+          var band=root.SpjutsimFEA.resolveBearingBand(geometry,value.faceIds),force=root.SpjutsimFEA.assignmentGlobalForce(value,geometry);
+          if(Math.abs(force.reduce(function(sum,x,i){return sum+x*band.axis[i];},0))>Math.hypot.apply(null,force)*1e-10)throw Error('Bearing force must be transverse to the cylinder axis; axial bearing force is unsupported.');
+        }catch(error){errors.push(issue('INVALID_BEARING_SELECTION',error.message,'faceIds'));}
+      }
+      return result(value,errors);
     }
     if (item.type === 'pressure') {
       if (!Number.isFinite(item.pressurePa) || item.pressurePa === 0) {
@@ -230,6 +253,17 @@
       value.forceN = item.forceN.slice();
     }
     return result(value, errors);
+  }
+
+  function resolveSurfaceWrench(load,geometry){
+    var band=load.type==='bearing'?root.SpjutsimFEA.resolveBearingBand(geometry,load.faceIds):null;
+    var force=load.type==='moment'?[0,0,0]:root.SpjutsimFEA.assignmentGlobalForce(load,geometry).slice();
+    var moment=load.type==='moment'?(load.frame?root.SpjutsimFEA.localToGlobal(root.SpjutsimFEA.resolveLocalFrame(load.frame,geometry),load.momentNm):load.momentNm.slice()):[0,0,0];
+    if(load.type==='offset-force'){
+      var arm=load.applicationPointM.map(function(v,i){return v-load.referencePointM[i];});
+      moment=[arm[1]*force[2]-arm[2]*force[1],arm[2]*force[0]-arm[0]*force[2],arm[0]*force[1]-arm[1]*force[0]];
+    }
+    return {forceN:force,momentNm:moment,referencePointM:band?band.centerM:load.referencePointM.slice(),bearingBand:band};
   }
 
   function validateGravity(gravity, material) {
@@ -272,5 +306,6 @@
   root.SpjutsimFEA.validateBoundaryCondition = validateBoundaryCondition;
   root.SpjutsimFEA.validateLoad = validateLoad;
   root.SpjutsimFEA.validateGravity = validateGravity;
+  root.SpjutsimFEA.resolveSurfaceWrench=resolveSurfaceWrench;
   root.SpjutsimFEA.firstValidationMessage = firstValidationMessage;
 }(globalThis));

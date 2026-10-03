@@ -1,6 +1,7 @@
 #include "spjutsim/fem_context.hpp"
 
 #include "spjutsim/pcg.hpp"
+#include "spjutsim/bearing_load.hpp"
 #include "spjutsim/tet4.hpp"
 #include "spjutsim/tet10.hpp"
 
@@ -481,7 +482,7 @@ bool Context::preflight(double device_gib, std::uint64_t cap,
     return false;
   }
   for (const auto &load : loads_.surface_loads) {
-    if (load.triangle_connectivity.empty() ||
+    if ((load.type!=SurfaceLoadType::pressure && load.type!=SurfaceLoadType::total_force && load.type!=SurfaceLoadType::bearing && load.type!=SurfaceLoadType::resultant) || load.triangle_connectivity.empty() ||
         (load.nodes_per_face != 3 && load.nodes_per_face != 6) ||
         load.triangle_connectivity.size() % load.nodes_per_face) {
       diagnostic_ =
@@ -506,10 +507,23 @@ bool Context::preflight(double device_gib, std::uint64_t cap,
       return false;
     }
   }
+  for(const auto&load:loads_.surface_loads) {
+    SurfaceResultants resultants;
+    if(load.type==SurfaceLoadType::bearing && !integrate_bearing_load(mesh_,load,nullptr,resultants,diagnostic_))return false;
+    if(load.type==SurfaceLoadType::resultant && !integrate_resultant_load(mesh_,load,nullptr,resultants,diagnostic_))return false;
+  }
+  // WASM bridge and Context each retain input definitions until disposal.
+  // Quadrature uses stack state and does not allocate a second force/matrix buffer.
+  std::uint64_t load_input_bytes=2*loads_.nodal_forces_n.capacity()*sizeof(double)+2*loads_.surface_loads.capacity()*sizeof(SurfaceLoad);
+  for(const auto&load:loads_.surface_loads){
+    load_input_bytes+=2*load.triangle_connectivity.capacity()*sizeof(std::uint32_t);
+    if(load.type==SurfaceLoadType::bearing || load.type==SurfaceLoadType::resultant)
+      load_input_bytes+=6*sizeof(double);
+  }
   memory_estimate_ =
       estimate_memory(mesh_, graph_, device_gib, cap, multiplier,
           constraint_bases_.size() * (sizeof(ConstraintBases::value_type) + 4*sizeof(void*)) +
-          (constraints_.capacity()+elimination_constraints_.capacity())*sizeof(PrescribedDof));
+          (constraints_.capacity()+elimination_constraints_.capacity())*sizeof(PrescribedDof)+load_input_bytes);
   if (memory_estimate_.exceeds_wasm_cap) {
     diagnostic_ = make_error(
         ErrorCode::memory_limit_exceeded,
@@ -543,6 +557,11 @@ bool Context::solve(const SolveSettings &settings) {
     };
     const auto dofs = matrix.graph.degree_of_freedom_count;
     std::vector<double> external(dofs, 0.0);
+    std::vector<double> surface_resultants;
+    surface_resultants.reserve(6*std::count_if(
+        loads_.surface_loads.begin(),loads_.surface_loads.end(),[](const SurfaceLoad&load){
+          return load.type==SurfaceLoadType::bearing || load.type==SurfaceLoadType::resultant;
+        }));
     if (!loads_.nodal_forces_n.empty())
       external = loads_.nodal_forces_n;
     const auto d = isotropic_constitutive_matrix(material_);
@@ -594,6 +613,14 @@ bool Context::solve(const SolveSettings &settings) {
         }
     }
     for (const auto &load : loads_.surface_loads) {
+      if(load.type==SurfaceLoadType::bearing || load.type==SurfaceLoadType::resultant){
+        SurfaceResultants resultants;
+        bool ok=load.type==SurfaceLoadType::bearing ? integrate_bearing_load(mesh_,load,&external,resultants,local) : integrate_resultant_load(mesh_,load,&external,resultants,local);
+        if(!ok){restore_graph();diagnostic_=local;return false;}
+        surface_resultants.insert(surface_resultants.end(),resultants.force_n.begin(),resultants.force_n.end());
+        surface_resultants.insert(surface_resultants.end(),resultants.moment_nm.begin(),resultants.moment_nm.end());
+        continue;
+      }
       double total_area = 0;
       if (load.type == SurfaceLoadType::total_force)
         for (std::size_t t = 0; t < load.triangle_connectivity.size();
@@ -655,6 +682,7 @@ bool Context::solve(const SolveSettings &settings) {
     if (settings.on_phase)
       settings.on_phase(SolvePhase::solve);
     Results result;
+    result.surface_resultants=std::move(surface_resultants);
     result.solver = solver;
     restore_global_displacement(u, constraint_bases_);
     result.displacement_m = std::move(u);
@@ -758,7 +786,11 @@ bool Context::solve(const SolveSettings &settings) {
       }
     }
     double force_scale = 0;
+    Vector3 minimum{mesh_.node_positions_m[0], mesh_.node_positions_m[1], mesh_.node_positions_m[2]};
+    Vector3 maximum=minimum;
     for (std::uint32_t i = 0; i < dofs; ++i) {
+      minimum[i%3]=std::min(minimum[i%3],mesh_.node_positions_m[i]);
+      maximum[i%3]=std::max(maximum[i%3],mesh_.node_positions_m[i]);
       result.total_applied_force_n[i % 3] += external[i];
       force_scale += std::abs(external[i]);
       if (constrained[i]) {
@@ -767,6 +799,29 @@ bool Context::solve(const SolveSettings &settings) {
       result.total_reaction_n[i % 3] += result.reaction_n[i];
       force_scale += std::abs(result.reaction_n[i]);
     }
+    // Moments about the mesh bounding-box center reduce origin sensitivity.
+    for(int a=0;a<3;++a)
+      result.moment_reference_m[a]=minimum[a]+(maximum[a]-minimum[a])/2;
+    const auto span=subtract3(maximum,minimum);
+    double characteristic_length=std::sqrt(dot3(span,span)),moment_scale=0;
+    for(unsigned n=0;n<dofs;n+=3){
+      Vector3 position{mesh_.node_positions_m[n],mesh_.node_positions_m[n+1],mesh_.node_positions_m[n+2]};
+      Vector3 force{external[n],external[n+1],external[n+2]};
+      Vector3 reaction{result.reaction_n[n],result.reaction_n[n+1],result.reaction_n[n+2]};
+      auto arm=subtract3(position,result.moment_reference_m);
+      auto applied=cross3(arm,force),resisted=cross3(arm,reaction);
+      for(int a=0;a<3;++a){
+        result.total_applied_moment_nm[a]+=applied[a];
+        result.total_reaction_moment_nm[a]+=resisted[a];
+        moment_scale+=std::abs(applied[a])+std::abs(resisted[a]);
+      }
+    }
+    Vector3 moment_balance{};
+    for(int a=0;a<3;++a)
+      moment_balance[a]=result.total_applied_moment_nm[a]+result.total_reaction_moment_nm[a];
+    double moment_residual=std::sqrt(dot3(moment_balance,moment_balance));
+    result.moment_balance_relative_residual=moment_residual/
+        std::max({moment_scale,characteristic_length*force_scale,std::numeric_limits<double>::min()});
     double balance2 = 0;
     for (int a = 0; a < 3; ++a) {
       const double balance =
@@ -790,6 +845,9 @@ bool Context::solve(const SolveSettings &settings) {
           ErrorCode::equilibrium_check_failed,
           "The solved result failed the global force-balance check.");
       return false;
+    }
+    if(!std::isfinite(result.moment_balance_relative_residual)||result.moment_balance_relative_residual>settings.equilibrium_tolerance){
+      diagnostic_=make_error(ErrorCode::equilibrium_check_failed,"The solved result failed the global moment-balance check.");return false;
     }
     if (settings.on_phase)
       settings.on_phase(SolvePhase::postprocess);

@@ -57,6 +57,9 @@
 
   function disposeObjectResources(object) {
     object.traverse(function (child) {
+      if(child.geometry && child.geometry.userData.sharedSourceAttributes){
+        child.geometry.deleteAttribute('position');child.geometry.setIndex(null);
+      }
       if (child.geometry && typeof child.geometry.dispose === 'function') {
         child.geometry.dispose();
       }
@@ -135,6 +138,7 @@
 
     this.canvas = canvas;
     this.renderer = new root.THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+    this.renderer.localClippingEnabled = true;
     this.renderer.autoClear = false;
     this.renderer.setPixelRatio(Math.min(root.devicePixelRatio || 1, 2));
     if ('outputColorSpace' in this.renderer) {
@@ -807,6 +811,7 @@
   };
 
   ViewportController.prototype.clearGeometryPreview = function () {
+    this.analysisOverlayState = null;
     this.clearDraftHover();
     this.hiddenFaceIds = new Set();
     if (this.cancelPickThrough) { this.cancelPickThrough(); }
@@ -1163,14 +1168,24 @@
     descriptors = root.SpjutsimFEA.buildAnalysisGlyphDescriptors(this.analysisOverlayState);
     group = new root.THREE.Group();
     group.name = 'analysis-overlay';
+    var viewport=this;
     descriptors.forEach(function (descriptor) {
-      var key = JSON.stringify([descriptor,loadColor,supportColor,glyphLength]);
+      var bearingSurface=viewport.presentation.mode==='mesh'?viewport.meshSurface:viewport.previewMesh;
+      if(descriptor.type==='bearing-region' && (!['model','mesh'].includes(viewport.presentation.mode)||!bearingSurface||(viewport.hiddenFaceIds && viewport.hiddenFaceIds.has(descriptor.faceId))))return;
+      var key = JSON.stringify([descriptor,loadColor,supportColor,glyphLength,descriptor.type==='bearing-region'?bearingSurface.geometry.uuid:null]);
       var reused = reusable.get(key);
       if (reused) { group.add(reused); reusable.delete(key); return; }
       var direction = new root.THREE.Vector3().fromArray(descriptor.direction).normalize();
       var position = new root.THREE.Vector3().fromArray(descriptor.positionM);
       var object;
-      if (descriptor.type === 'support') {
+      if(descriptor.type==='bearing-region'){
+        var rangeIndex=bearingSurface.userData.faceIdsByRange.indexOf(descriptor.faceId),range=bearingSurface.geometry.groups[rangeIndex];
+        if(!range)return;
+        var highlight=new root.THREE.BufferGeometry();highlight.userData.sharedSourceAttributes=true;
+        highlight.setAttribute('position',bearingSurface.geometry.getAttribute('position'));highlight.setIndex(bearingSurface.geometry.index);highlight.setDrawRange(range.start,range.count);
+        var normal=new root.THREE.Vector3().fromArray(descriptor.clipNormal),plane=new root.THREE.Plane(normal,-normal.dot(position));
+        object=new root.THREE.Mesh(highlight,new root.THREE.MeshBasicMaterial({color:loadColor,transparent:true,opacity:.25,depthWrite:false,side:root.THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,clippingPlanes:[plane]}));object.name='bearing-loaded-half';
+      } else if (descriptor.type === 'support') {
         object = new root.THREE.Group();
         object.name = 'analysis-glyph-support';
         descriptor.components.forEach(function (axis) {
@@ -1179,8 +1194,21 @@
           if (descriptor.componentDirections) { axisDirection.fromArray(descriptor.componentDirections[['x','y','z'].indexOf(axis)]); }
           object.add(cylinderConeArrow(axisDirection, position, glyphLength * 0.52, supportColor, 'support-axis-' + axis));
         });
+      } else if(descriptor.type==='moment'){
+        object=new root.THREE.Group();object.name='analysis-glyph-moment';
+        var seed=Math.abs(direction.x)<.8?new root.THREE.Vector3(1,0,0):new root.THREE.Vector3(0,1,0);
+        var basisX=new root.THREE.Vector3().crossVectors(seed,direction).normalize(),basisY=new root.THREE.Vector3().crossVectors(direction,basisX),points=[];
+        for(var k=0;k<=24;k++){var angle=k*1.7*Math.PI/24;points.push(position.clone().addScaledVector(basisX,Math.cos(angle)*glyphLength*.5).addScaledVector(basisY,Math.sin(angle)*glyphLength*.5));}
+        var path=new root.THREE.CatmullRomCurve3(points),material=new root.THREE.MeshBasicMaterial({color:loadColor});
+        object.add(new root.THREE.Mesh(new root.THREE.TubeGeometry(path,24,glyphLength*.025,6,false),material));
+        var tangent=points[24].clone().sub(points[23]).normalize();
+        object.add(cylinderConeArrow(tangent,points[24],glyphLength*.22,loadColor,'moment-arrowhead'));
       } else {
         object = cylinderConeArrow(direction, position, glyphLength, loadColor, 'analysis-glyph-' + descriptor.type);
+        if(descriptor.referencePointM){
+          var arm=new root.THREE.BufferGeometry().setFromPoints([new root.THREE.Vector3().fromArray(descriptor.referencePointM),position]);
+          object.add(new root.THREE.Line(arm,new root.THREE.LineBasicMaterial({color:loadColor,transparent:true,opacity:.7})));
+        }
       }
       if (descriptor.preview) {
         object.traverse(function (child) { if (child.material) { child.material.transparent = true; child.material.opacity = 0.55; child.material.depthTest = false; } });
@@ -1253,6 +1281,7 @@
       if (this.resultDisplay.userData.partEdges) { this.resultDisplay.userData.partEdges.visible = this.presentation.displayStyle === 'shaded-edges' || this.presentation.displayStyle === 'lines'; }
     }
     if (this.applyFaceVisibility) { this.applyFaceVisibility(); }
+    if (this.analysisOverlayState) { this.rebuildAnalysisOverlay(); }
   };
 
   ViewportController.prototype.clearDraftHover = function () {

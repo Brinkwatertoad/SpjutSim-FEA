@@ -50,7 +50,7 @@
     this.lastSupportType = this.supportType ? this.supportType.value : 'fixed';
     this.lastLoadType = this.loadType ? this.loadType.value : 'total-force';
     try { storage = root.localStorage; } catch (error) { storage = null; }
-    this.loadUnits = { pressurePa: root.SpjutsimFEA.preferredUnit('pressurePa'), forceN: root.SpjutsimFEA.preferredUnit('forceN') };
+    this.loadUnits = { pressurePa: root.SpjutsimFEA.preferredUnit('pressurePa'), forceN: root.SpjutsimFEA.preferredUnit('forceN'),momentNm:root.SpjutsimFEA.preferredUnit('momentNm') };
     this.materialCatalog = root.SpjutsimFEA.MaterialCatalog ? new root.SpjutsimFEA.MaterialCatalog(storage) : null;
     this.renderedMaterial = undefined;
     this.materialFeedback = null;
@@ -385,14 +385,23 @@
   };
 
   AnalysisAuthoringUI.prototype.renderLoadType = function () {
-    var pressure = this.loadType.value === 'pressure';
+    var type=this.loadType.value,pressure = type === 'pressure',moment=type==='moment',advanced=['bearing','moment','offset-force'].includes(type);
     this.pressureFields.hidden = !pressure;
-    var normal=byId('load-force-mode') && byId('load-force-mode').value === 'normal';
-    this.forceFields.hidden = pressure || normal;
+    var normal=type==='total-force' && byId('load-force-mode') && byId('load-force-mode').value === 'normal';
+    this.forceFields.hidden = pressure || normal || moment;
     var info=byId(pressure?'load-pressure-info':normal?'load-normal-info':'load-components-info');
     if(info && byId('load-details'))info.append(byId('load-details'));
-    if(byId('force-mode-fields'))byId('force-mode-fields').hidden=pressure;
-    if(byId('normal-force-fields'))byId('normal-force-fields').hidden=pressure || !normal;
+    if(byId('force-mode-fields'))byId('force-mode-fields').hidden=type!=='total-force';
+    if(byId('normal-force-fields'))byId('normal-force-fields').hidden=!normal;
+    if(byId('moment-fields'))byId('moment-fields').hidden=!moment;
+    if(byId('reference-point-fields'))byId('reference-point-fields').hidden=!['moment','offset-force'].includes(type);
+    if(byId('application-point-fields'))byId('application-point-fields').hidden=type!=='offset-force';
+    if(byId('surface-load-frame')){
+      byId('surface-load-frame').append(byId('load-frame-editor'));byId('surface-load-frame').hidden=pressure||normal;
+    }
+    var help=byId('surface-load-help');
+    if(help){help.hidden=!advanced;help.textContent=type==='bearing'?'Compressive cosine pressure on the loaded half of a full cylindrical band, uniform along its axis. Transverse force only; no friction, contact or bolt preload.':type==='moment'?'Simplified load transfer: minimize area-weighted squared traction while matching the entered moment and zero force. The surface remains flexible.':'Simplified load transfer: minimize area-weighted squared traction while matching the force and its offset moment. Points use global coordinates; the surface remains flexible.';}
+
   };
 
   AnalysisAuthoringUI.prototype.readLoad = function () {
@@ -400,12 +409,16 @@
     var load = { type: this.loadType.value, faceIds: (this.controller.document.assignmentDraft ? this.controller.document.assignmentDraft.faceIds : this.controller.document.selectedFaceIds).slice() };
     if (load.type === 'pressure') {
       load.pressurePa = root.SpjutsimFEA.displayToSI('pressurePa', readNumber('load-pressure', 'pressure'), this.loadUnits.pressurePa);
-    } else if (byId('load-force-mode') && byId('load-force-mode').value==='normal') {
+    } else if(load.type==='moment'){
+      load.momentNm=['x','y','z'].map(function(axis){return root.SpjutsimFEA.displayToSI('momentNm',readNumber('load-m'+axis,axis.toUpperCase()+' moment'),root.SpjutsimFEA.preferredUnit('momentNm'));});
+    } else if (load.type==='total-force' && byId('load-force-mode') && byId('load-force-mode').value==='normal') {
       load.direction='surface-normal';load.magnitudeN=root.SpjutsimFEA.displayToSI('forceN',readNumber('load-magnitude','force magnitude'), this.loadUnits.forceN);load.sense=byId('load-sense').value;
     } else {
       load.forceN = ['fx', 'fy', 'fz'].map(function (axis) { return root.SpjutsimFEA.displayToSI('forceN', readNumber('load-' + axis, axis.toUpperCase() + ' force'), forceUnit); });
     }
-    if(this.loadFrameEditor && load.forceN){var frame=this.loadFrameEditor.read(this.controller.document.geometry,load.faceIds,false);if(frame)load.frame=frame;}
+    if(this.loadFrameEditor && (load.forceN||load.momentNm)){var frame=this.loadFrameEditor.read(this.controller.document.geometry,load.faceIds,false);if(frame)load.frame=frame;}
+    if(['moment','offset-force'].includes(load.type))load.referencePointM=['x','y','z'].map(function(axis){return root.SpjutsimFEA.preferredToSI('lengthM',readNumber('load-reference-'+axis,'reference point '+axis));});
+    if(load.type==='offset-force')load.applicationPointM=['x','y','z'].map(function(axis){return root.SpjutsimFEA.preferredToSI('lengthM',readNumber('load-application-'+axis,'application point '+axis));});
     if (byId('load-name')) { load.name = byId('load-name').value; }
     return load;
   };
@@ -426,6 +439,10 @@
     byId('load-pressure').value = String(root.SpjutsimFEA.siToDisplay('pressurePa', item.pressurePa === undefined ? 1e6 : item.pressurePa, this.loadUnits.pressurePa));
     var unit = this.loadUnits.forceN;
     ['x', 'y', 'z'].forEach(function (axis, index) { byId('load-f' + axis).value = root.SpjutsimFEA.siToDisplay('forceN', item.forceN ? item.forceN[index] : (index===1?1:0), unit); });
+    ['x','y','z'].forEach(function(axis,index){
+      if(byId('load-m'+axis))byId('load-m'+axis).value=root.SpjutsimFEA.preferredFromSI('momentNm',item.momentNm?item.momentNm[index]:index===2?1:0);
+      ['reference','application'].forEach(function(kind){var field=kind==='reference'?'referencePointM':'applicationPointM';if(byId('load-'+kind+'-'+axis))byId('load-'+kind+'-'+axis).value=root.SpjutsimFEA.preferredFromSI('lengthM',item[field]?item[field][index]:0);});
+    });
     this.renderLoadType();
   };
 
@@ -816,6 +833,7 @@
       var summary = root.SpjutsimFEA.describeAssignmentDraft ? root.SpjutsimFEA.describeAssignmentDraft(documentState) : '';
       status.textContent = draft.validation.valid || !draft.showErrors ? (draft.duplicate && !draft.itemId && !draft.faceIds.length ? 'Select new faces for this copy.' : '') : (draft.definition.inputError || draft.validation.message);
       var info=byId(draft.kind+'-details');if(info)info.textContent=(draft.kind==='gravity'?'':draft.faceIds.length+' faces. ')+summary;
+      if(draft.kind==='load' && draft.definition.type==='bearing' && byId('surface-load-help'))byId('surface-load-help').textContent=summary;
       status.classList.toggle('fea-error', !draft.validation.valid && draft.showErrors === true);
 
     }

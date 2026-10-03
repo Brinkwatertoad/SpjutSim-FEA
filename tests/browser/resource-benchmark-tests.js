@@ -6,6 +6,8 @@
   var query = new URLSearchParams(root.location.search);
   var smoke = query.get('profile') === 'smoke';
   var repetitions = smoke ? 1 : Math.max(1, Number(query.get('repetitions')) || 3);
+  var timeLimitMs=Number(query.get('timeLimitMs')||600000);
+  if(!Number.isFinite(timeLimitMs)||timeLimitMs<1000||timeLimitMs>3600000)throw Error('Benchmark timeLimitMs must be between 1000 and 3600000.');
   var checkpointKey = 'spjutsim-resource-v2:' + [location.protocol, query.get('commit'), query.get('browser'),
     query.get('browserVersion'), repetitions, smoke ? 'smoke' : 'full'].join(':');
   var cases = smoke ? [
@@ -48,6 +50,7 @@
     var meshMs = performance.now() - meshStart;
     controller = new api.AppController({ document: api.createAnalysisDocument() });
     controller.replaceGeometry(geometry, { sourceName: geometry.sourceName, sourceFormat: 'step', sourceBytes: source });
+    controller.document.solveSettings.maxDurationMs=timeLimitMs;
     controller.replaceMaterial({ name: 'Calibration', youngsModulusPa: 1e9, poissonsRatio: 0.25, densityKgM3: 1000 });
     controller.completeMeshGeneration(mesh);
     controller.replaceSelectedFaces([axisFace(mesh, 0, false)]);
@@ -57,7 +60,8 @@
     var solver = new api.SolverClient(), revision = controller.beginSolvePreflight(), preflightStart = performance.now();
     var preflight = await solver.preflight(api.prepareSolverInput(controller.document), revision, Number(navigator.deviceMemory) || 0);
     var preflightMs = performance.now() - preflightStart; controller.completeSolvePreflight(revision, preflight); controller.beginSolve();
-    var solveStart = performance.now(), result = await solver.solve(revision, controller.document.solveSettings, false), wall = performance.now() - solveStart; solver.dispose();
+    var solveStart=performance.now(),result,wall;
+    try{result=await solver.solve(revision,controller.document.solveSettings,false);wall=performance.now()-solveStart;}finally{solver.dispose();}
     var phase = result.solverStatistics.wasmMemoryByPhaseBytes;
     return { schemaVersion: 2, repetition: repetition, recordedAt: new Date().toISOString(),
       application: { gitCommit: query.get('commit'), solverRuntimeSha256: root.SpjutsimLocalRuntimeWorkers.femMetadata.sha256 },
@@ -72,7 +76,7 @@
       observed: { wasmMemoryByPhaseBytes: phase, wasmMemoryHighWaterBytes: result.solverStatistics.wasmMemoryHighWaterBytes,
         jsHeapPeakBytes: performance.memory ? performance.memory.usedJSHeapSize : null, externalProcessPeakBytes: null, mesherSolverOverlap: false },
       solve: { outcome: 'passed', preconditioner: 'jacobi', relativeTolerance: controller.document.solveSettings.relativeTolerance,
-        maximumIterations: controller.document.solveSettings.maxIterations, iterations: result.solverStatistics.iterations,
+        maximumIterations: controller.document.solveSettings.maxIterations, maximumDurationMs:timeLimitMs, iterations: result.solverStatistics.iterations,
         finalRelativeResidual: result.solverStatistics.finalRelativeResidual,
         phaseDurationMs: { input: meshMs, preflight: preflightMs, assembly: 0, solve: result.solverStatistics.solveDurationMs,
           postprocess: Math.max(0, wall - result.solverStatistics.solveDurationMs) }, wallTimeMs: wall }, cancellation: null };
@@ -111,7 +115,7 @@
     try { localStorage.setItem(checkpointKey, JSON.stringify(records)); } catch (error) { /* Export remains available in the page. */ }
   }
   async function all() { if (location.protocol !== 'file:') { assert(root.crossOriginIsolated === true, 'HTTP benchmark mode requires cross-origin isolation'); }
-    var records = restoreCheckpoint(), cancellation = records.length ? records[0].cancellation : await cancellationTrial();
+    var records = restoreCheckpoint();root.__spjutsimResourceRecords=records;var cancellation = records.length ? records[0].cancellation : await cancellationTrial();
     for (var r = 1; r <= repetitions; r += 1) { for (var i = 0; i < cases.length; i += 1) {
       if (records.some(function (row) { return row.repetition === r && row.case.id === cases[i].id; })) { continue; }
       status.textContent = 'Running ' + cases[i].id + ' repetition ' + r; var row = await run(cases[i], r); row.cancellation = cancellation;

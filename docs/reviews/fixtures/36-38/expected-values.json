@@ -1,0 +1,387 @@
+{
+  "browser": "152.0.7977.75",
+  "mode": "file://",
+  "headless": true,
+  "solverRuntimeSha256": "ac3037522380eecb0ab0873768103f7ba5ee552fcaa9e9e901e2ae3f996db064",
+  "cases": [
+    {
+      "name": "bearing-load",
+      "status": "Passed bearing load workflow",
+      "evidence": {
+        "case": "bearing-hole",
+        "levels": [
+          {
+            "probeLocationM": [
+              0.7533946971409071,
+              0.5148614097727267,
+              0.14989344416810246
+            ],
+            "probeVonMisesPa": 811.8432779376078,
+            "targetSizeM": 0.2,
+            "nodeCount": 1580,
+            "maxDisplacementM": 7.022126200727493e-7,
+            "strainEnergyJ": 0.00003026940431316522,
+            "rawPeakVonMisesPa": 1471.8432100916025,
+            "equilibrium": {
+              "totalReactionN": [
+                -99.99999998195108,
+                -0.0011227147486814887,
+                -0.00002282704048228723
+              ],
+              "totalAppliedForceN": [
+                99.99999999999989,
+                0.0011227414257679036,
+                0.00002271133296803762
+              ],
+              "relativeResidual": 4.0938453987087524e-10,
+              "momentReferenceM": [
+                0.5,
+                0.5,
+                0.15
+              ],
+              "totalAppliedMomentNm": [
+                0.000032057517169252134,
+                0.0008892508972602156,
+                0.00009711402882090978
+              ],
+              "totalReactionMomentNm": [
+                -0.00003212215149073043,
+                -0.0008893109630244214,
+                -0.00009711578214899319
+              ],
+              "momentRelativeResidual": 2.0807469349717414e-10
+            }
+          },
+          {
+            "probeLocationM": [
+              0.7431734172917185,
+              0.5078331338919195,
+              0.14079946630587348
+            ],
+            "probeVonMisesPa": 865.9960357768754,
+            "targetSizeM": 0.14,
+            "nodeCount": 1801,
+            "maxDisplacementM": 6.973255246945361e-7,
+            "strainEnergyJ": 0.000030191974679694772,
+            "rawPeakVonMisesPa": 1586.5675389044764,
+            "equilibrium": {
+              "totalReactionN": [
+                -100.00000003831761,
+                -0.00044008047807904405,
+                -0.0000063214824434359995
+              ],
+              "totalAppliedForceN": [
+                99.99999999999984,
+                0.0004400996929440071,
+                0.000006396380103239497
+              ],
+              "relativeResidual": 2.9448013440044655e-10,
+              "momentReferenceM": [
+                0.5,
+                0.5,
+                0.15
+              ],
+              "totalAppliedMomentNm": [
+                -0.000013238843785256561,
+                -0.00020442880508973293,
+                0.00003584752450667625
+              ],
+              "totalReactionMomentNm": [
+                0.000013199888050163117,
+                0.00020445937169489767,
+                -0.00003584816401580593
+              ],
+              "momentRelativeResidual": 1.168889015606574e-10
+            }
+          },
+          {
+            "probeLocationM": [
+              0.7435571776629268,
+              0.5094951459273893,
+              0.14990849634767964
+            ],
+            "probeVonMisesPa": 830.1231401094678,
+            "targetSizeM": 0.098,
+            "nodeCount": 3868,
+            "maxDisplacementM": 7.038447860282012e-7,
+            "strainEnergyJ": 0.000030466200652222413,
+            "rawPeakVonMisesPa": 1592.6829944076544,
+            "equilibrium": {
+              "totalReactionN": [
+                -100.00000003609952,
+                0.03261905175843213,
+                4.5152035460863105e-7
+              ],
+              "totalAppliedForceN": [
+                99.99999999999984,
+                -0.032618919532924284,
+                -3.775377766271576e-7
+              ],
+              "relativeResidual": 5.379822475053091e-10,
+              "momentReferenceM": [
+                0.5,
+                0.5,
+                0.15
+              ],
+              "totalAppliedMomentNm": [
+                -0.0008382177616907127,
+                0.00003658206588353502,
+                0.000035118366257799044
+              ],
+              "totalReactionMomentNm": [
+                0.0008382605014482857,
+                -0.0000365414785566075,
+                -0.00003515390060972873
+              ],
+              "momentRelativeResidual": 1.6443186586512631e-10
+            }
+          }
+        ],
+        "equilibrium": {
+          "totalReactionN": [
+            -100.00000003609952,
+            0.03261905175843213,
+            4.5152035460863105e-7
+          ],
+          "totalAppliedForceN": [
+            99.99999999999984,
+            -0.032618919532924284,
+            -3.775377766271576e-7
+          ],
+          "relativeResidual": 5.379822475053091e-10,
+          "momentReferenceM": [
+            0.5,
+            0.5,
+            0.15
+          ],
+          "totalAppliedMomentNm": [
+            -0.0008382177616907127,
+            0.00003658206588353502,
+            0.000035118366257799044
+          ],
+          "totalReactionMomentNm": [
+            0.0008382605014482857,
+            -0.0000365414785566075,
+            -0.00003515390060972873
+          ],
+          "momentRelativeResidual": 1.6443186586512631e-10
+        },
+        "mesh": {
+          "nodeCount": 3868,
+          "elementCount": 2088,
+          "boundaryTriangleCount": 4160,
+          "boundaryElementCount": 1040,
+          "minCharacteristicSizeM": 0.060577401569750756,
+          "maxCharacteristicSizeM": 0.18543826981947556,
+          "boundingBoxDiagonalM": 1.445683547668756
+        }
+      }
+    },
+    {
+      "name": "moment-load",
+      "status": "Passed moment load workflow",
+      "evidence": {
+        "cases": [
+          {
+            "targetSizeM": 0.05,
+            "nodeCount": 5867,
+            "probeLocationM": [
+              0.2504532220326229,
+              -0.0009124834850754559,
+              0.5163477097137232
+            ],
+            "probeVonMisesPa": 449.9746159016034,
+            "referenceProbeVonMisesPa": 441.8656470249524,
+            "stressRelativeError": 0.018351661712667777,
+            "elementType": "tet4",
+            "displacementM": 0.00000125383992117997,
+            "referenceDisplacementM": 0.0000012732395447351628,
+            "relativeError": 0.015236428710850292,
+            "equilibrium": {
+              "totalReactionN": [
+                -1.7901180537904793e-10,
+                5.477231411477046e-10,
+                -7.360217990637352e-11
+              ],
+              "totalAppliedForceN": [
+                5.96189764223709e-14,
+                -1.0696027397116836e-12,
+                0
+              ],
+              "relativeResidual": 8.428395932545446e-13,
+              "momentReferenceM": [
+                7.456604372846343e-7,
+                0.00005445811805365741,
+                0.5
+              ],
+              "totalAppliedMomentNm": [
+                5.348013698558418e-13,
+                2.980948821118545e-14,
+                100.00000000000027
+              ],
+              "totalReactionMomentNm": [
+                1.0456238826173081e-10,
+                3.1803681910247406e-10,
+                -99.9999999999649
+              ],
+              "momentRelativeResidual": 2.826804667621011e-13
+            }
+          },
+          {
+            "targetSizeM": 0.14,
+            "nodeCount": 2843,
+            "probeLocationM": [
+              0.24728033963686563,
+              0.04231599385007127,
+              0.47166634080141967
+            ],
+            "probeVonMisesPa": 442.6078787003437,
+            "referenceProbeVonMisesPa": 442.60664062383904,
+            "stressRelativeError": 0.0000027972388820796112,
+            "elementType": "tet10",
+            "displacementM": 0.0000012734496715725274,
+            "referenceDisplacementM": 0.0000012732395447351628,
+            "relativeError": 0.0001650332321467829,
+            "equilibrium": {
+              "totalReactionN": [
+                -2.6448655487953943e-9,
+                -9.795053657057906e-12,
+                -1.8313780019395265e-9
+              ],
+              "totalAppliedForceN": [
+                -3.098632461728812e-13,
+                9.416911694870578e-13,
+                0
+              ],
+              "relativeResidual": 4.7249046550847e-12,
+              "momentReferenceM": [
+                0,
+                -1.6777594424866038e-8,
+                0.5
+              ],
+              "totalAppliedMomentNm": [
+                -4.708455847435289e-13,
+                -1.549316230864406e-13,
+                99.99999999999996
+              ],
+              "totalReactionMomentNm": [
+                4.208809967209959e-10,
+                1.4962473482427185e-9,
+                -99.9999999998053
+              ],
+              "momentRelativeResidual": 1.3279580211855772e-12
+            }
+          },
+          {
+            "targetSizeM": 0.2,
+            "nodeCount": 1640,
+            "probeLocationM": [
+              0.2846859945999677,
+              -0.027759721368613356,
+              0.5109728102125998
+            ],
+            "probeVonMisesPa": 504.55397901850756,
+            "referenceProbeVonMisesPa": 504.6401016882067,
+            "stressRelativeError": 0.00017066156536316157,
+            "elementType": "tet10",
+            "displacementM": 0.0000012734779787995052,
+            "referenceDisplacementM": 0.0000012732395447351628,
+            "relativeError": 0.0001872656762258451,
+            "equilibrium": {
+              "totalReactionN": [
+                -6.362592674946654e-10,
+                1.5207233250436047e-9,
+                -2.0431621238631292e-10
+              ],
+              "totalAppliedForceN": [
+                -1.2284617767477357e-13,
+                1.3322676295501878e-14,
+                0
+              ],
+              "relativeResidual": 2.432876379284221e-12,
+              "momentReferenceM": [
+                0,
+                0.0000011976917984046764,
+                0.5
+              ],
+              "totalAppliedMomentNm": [
+                -6.661338147750939e-15,
+                -6.142308883738679e-14,
+                99.99999999999994
+              ],
+              "totalReactionMomentNm": [
+                6.698761545465004e-10,
+                2.0829521441001475e-10,
+                -99.99999999983464
+              ],
+              "momentRelativeResidual": 6.09411265357742e-13
+            }
+          },
+          {
+            "case": "offset-cantilever",
+            "elementType": "tet10",
+            "nodeCount": 772,
+            "displacementM": 0.011362522909477863,
+            "referenceDisplacementM": 0.011264,
+            "relativeError": 0.008746707162452294,
+            "equivalentMaximumDifferenceM": 2.0795865030009963e-14,
+            "equilibrium": {
+              "totalReactionN": [
+                -2.547926669649314e-8,
+                -6.87443559854728e-8,
+                1000.0000000344596
+              ],
+              "totalAppliedForceN": [
+                3.1254998589247407e-12,
+                -1.6410772018925861e-28,
+                -999.9999999999984
+              ],
+              "relativeResidual": 1.7626058888511254e-12,
+              "momentReferenceM": [
+                2,
+                0.125,
+                0.25
+              ],
+              "totalAppliedMomentNm": [
+                6.128431095930864e-14,
+                2999.999999999995,
+                -2.771116669464391e-13
+              ],
+              "totalReactionMomentNm": [
+                1.8121752987099171e-9,
+                -2999.9999999951274,
+                1.2108219493711658e-7
+              ],
+              "momentRelativeResidual": 6.52893385300885e-13
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "asymmetric-bracket",
+      "evidence": {
+        "volumeM3": 0.24226194671058462,
+        "massKg": 242.26194671058462,
+        "wrench": {
+          "forceN": [
+            0,
+            0,
+            -100
+          ],
+          "momentNm": [
+            -17.582900782017308,
+            41.42271840535982,
+            0
+          ],
+          "referencePointM": [
+            0.5340861886936208,
+            0.6612502877479315,
+            0.4
+          ],
+          "bearingBand": null
+        }
+      }
+    }
+  ]
+}

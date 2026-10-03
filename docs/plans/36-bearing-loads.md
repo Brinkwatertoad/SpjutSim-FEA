@@ -1,8 +1,8 @@
 # Plan 36: Bearing loads on cylindrical faces
 
-> **For agentic workers:** Use superpowers:executing-plans in the current agent. Follow repository AGENTS.md; do not dispatch subagents. This document plans future implementation and does not authorize publication.
+> **For agentic workers:** Use superpowers:executing-plans in the current agent. Follow repository AGENTS.md; do not dispatch subagents. This document records implementation scope and does not authorize publication.
 
-**Status:** Planned — pre-v1
+**Status:** Implemented and verified; grouped owner walkthrough pending (2026-10-03)
 
 **Goal:** Represent a transverse load transferred through a hole or cylindrical bearing surface using a documented compressive distribution.
 
@@ -33,22 +33,22 @@ The shared execution, evidence, performance, and review rules in [the plan index
 
 ### 1. Define and validate cylinder selection
 
-- [ ] Test descriptor extraction on single/split cylindrical CAD faces, reversed normals, coaxial bands and explicitly unsupported partial/conical targets.
-- [ ] Author resultant magnitude/direction in a global or supported local frame; validate transverse direction and nonzero area, and highlight the loaded half.
-- [ ] Show the selected axis, bearing idealization and entered resultant. Persist/cancel/undo/suppress without losing face/axis references.
+- [x] Test descriptor extraction on single/split cylindrical CAD faces, reversed normals, coaxial bands and explicitly unsupported partial/conical targets.
+- [x] Author resultant magnitude/direction in a global or supported local frame; validate transverse direction and nonzero area, and highlight the loaded half.
+- [x] Show the selected axis, bearing idealization and entered resultant. Persist/cancel/undo/suppress without losing face/axis references.
 
 ### 2. Integrate the compressive distribution
 
-- [ ] Derive the traction sign from solid boundary orientation, not an assumed outward radial direction. Determine the loaded half from the requested resultant.
-- [ ] Write native quadrature tests before implementation for analytical continuous resultant, net moment about the band center, zero unsupported axial force and direction reversals.
-- [ ] Integrate with solver Tri3/Tri6 faces and normalize using that same quadrature. Verify realized force/moment against the declared load, reporting unsupported or poorly resolved cases instead of silently changing direction/distribution.
-- [ ] Add coarse-mesh and split-face seam regressions; document the discretization convergence test and explicit tolerances.
+- [x] Derive the traction sign from solid boundary orientation, not an assumed outward radial direction. Determine the loaded half from the requested resultant.
+- [x] Write native quadrature tests before implementation for analytical continuous resultant, net moment about the band center, zero unsupported axial force and direction reversals.
+- [x] Integrate with solver Tri3/Tri6 faces and normalize using that same quadrature. Verify realized force/moment against the declared load, reporting unsupported or poorly resolved cases instead of silently changing direction/distribution.
+- [x] Add coarse-mesh and split-face seam regressions; document the discretization convergence test and explicit tolerances.
 
 ### 3. Validate an engineering example
 
-- [ ] Solve a supported lug/hole fixture against an independent reference using the identical bearing distribution and boundary conditions.
-- [ ] Track nonsingular stress/displacement and integrated reactions across refinement, keeping expected load-edge concentrations visible.
-- [ ] Rebuild/version runtime artifacts and extend project/report/glyph/preview validation. Bound descriptor and quadrature storage to the affected boundary.
+- [x] Solve a supported lug/hole fixture against an independent reference using the identical bearing distribution and boundary conditions.
+- [x] Track nonsingular stress/displacement and integrated reactions across refinement, keeping expected load-edge concentrations visible.
+- [x] Rebuild/version runtime artifacts and extend project/report/glyph/preview validation. Bound descriptor and quadrature storage to the affected boundary.
 
 ## Verification and acceptance
 
