@@ -361,7 +361,8 @@
       assert(!ui.deformationAnimationToggle.hidden && !ui.deformationAnimationToggle.disabled,
         'deformation animation controls were unavailable for solved deformation results');
       ui.startDeformationAnimation();
-      assert(ui.deformationAnimating && ui.deformationAnimationToggle.textContent === 'Stop' &&
+      assert(ui.deformationAnimating && ui.deformationAnimationToggle.dataset.actionIcon === 'stop' &&
+        ui.deformationAnimationToggle.querySelector('svg') && ui.deformationAnimationToggle.getAttribute('aria-label') === 'Stop deformed shape animation' &&
         ui.deformationAnimationToggle.getAttribute('aria-pressed') === 'true',
       'Play did not expose the active Stop state');
       scheduledFrame(100);
@@ -370,9 +371,13 @@
         'animation did not interpolate the selected scale in the viewport and readout');
       assert(controller.document.analysisRevision === revision && controller.document.viewportPresentation.deformationScale === 200,
         'animation mutated analysis state or the selected deformation scale');
+      controller.document.viewportPresentation.deformationScale=1e-12;
+      scheduledFrame(2500);
+      assert(ui.deformationScaleReadout.textContent==='x1e-12','Small animation scales do not use bounded scientific notation');
+      controller.document.viewportPresentation.deformationScale=200;
       ui.stopDeformationAnimation();
       assert(!ui.deformationAnimating && effectiveMultiplier === 1 && ui.deformationScale.value === '200' &&
-        ui.deformationAnimationToggle.textContent === 'Play' && ui.deformationScaleReadout.textContent === 'x200',
+        ui.deformationAnimationToggle.dataset.actionIcon === 'run' && ui.deformationAnimationToggle.getAttribute('aria-label') === 'Play deformed shape animation' && ui.deformationScaleReadout.textContent === 'x200',
       'Stop did not restore the selected deformation scale and Play state');
       ui.startDeformationAnimation();
       controller.document.viewportPresentation.mode = 'stress';

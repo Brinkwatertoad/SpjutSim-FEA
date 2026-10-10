@@ -34,13 +34,18 @@ value in this table. [Exact recorded values and provenance](fixtures/36-38/expec
 - [x] Use Examples → Cantilever first (owner completed 2026-10-03). Complete mesh → checks → solve without
   opening advanced options. The guidance and enabled buttons make the next step clear.
 - [ ] Open the bearing project. Model, Material, Support, Load and Mesh summaries
-  are visible and understandable together. Expand only the row you need.
+  are visible and understandable together. Row actions sit beside titles; quick
+  information uses the full width below. Expand only the row you need.
 - [ ] Open Model: confirm dimensions, volume and source format. Open Material:
   confirm E/ν, edit a property, and distinguish a custom material from a sourced
   catalog material. Density changes mass without silently enabling gravity.
 - [ ] Click an assignment row and identify its faces in the viewport. Add/edit a
-  face, then close the editor. Valid changes commit; a blank/invalid number keeps
-  the last valid definition and explains how to finish the edit.
+  face and confirm the live preview. Scroll a long
+  editor: its sole Done/Cancel bar stays pinned to the open header. Done applies
+  the whole edit and collapses it; Enter does the same in a value field. Cancel or
+  Escape discards it and preserves applied values/results. A blank/invalid number
+  keeps the editor open with actionable feedback. Display units/visibility remain
+  immediate. Switching rows with unapplied changes points back to Done/Cancel.
 - [ ] Generate a mesh and inspect Model/Mesh. Checks show element type, node/DOF
   counts, quality, constraint rank, memory estimate and any warnings before solving.
 - [ ] Solve. Results lead with displacement, unaveraged stress and yield FoS when
@@ -52,9 +57,9 @@ value in this table. [Exact recorded values and provenance](fixtures/36-38/expec
 - [ ] Use Check with a finer mesh. Distinguish stable displacement/energy from
   unresolved peak stress; read the convergence chart, thresholds, locations and
   selected-level explanation without needing help.
-- [ ] Change a load/material after solving. Results clear with persistent feedback
-  and a useful next action. Undo/Redo restores engineering inputs with the same
-  invalidation rules; a rename or display-unit change keeps valid results.
+- [ ] Change a load/material after solving, then choose Done. Results clear with
+  persistent feedback and a useful next action. Undo/Redo restores engineering
+  inputs with the same invalidation rules; a rename or display-unit change keeps valid results.
 
 ## Bearing force — Plan 36
 
@@ -147,11 +152,21 @@ value in this table. [Exact recorded values and provenance](fixtures/36-38/expec
   equivalent available sizes; this item records actual zoom/display usability.
 - [ ] Try FEA Classic, Light, Dark and Vivid. Faces, glyphs, selection, contours,
   menus, numbers and focus remain readable in every theme.
+- [ ] In Settings → Color scheme, edit a color, rename/duplicate/delete a scheme,
+  clear an advanced override, and try both reset commands. Export/import a custom
+  scheme and refresh: colors persist without changing analysis inputs/results.
+  Verify two columns and that the overflow button fits beside the scheme actions.
+  Open the Interface demo picker, select an option, and close it with Close or
+  Escape: Settings stays open and focus returns to the opener. Light Mode is
+  comfortable to read. After choosing an example, its dropdown closes.
+  Setup Mesh summaries/status omit Tet10; choosing Tet4 identifies that option.
 - [ ] Use keyboard only for menus, row/options controls, input fields, pane
   splitters and dialogs. Escape/focus restoration is consistent; collapsing a pane
   never traps focus in hidden controls.
 - [ ] Enable reduced motion. Animation/interaction remains usable and matches the
   documented preference. Repeat with advanced panels collapsed and expanded.
+  Start/stop deformation animation using the icons: Field/Shape controls and the
+  compact slider stay in place as scale passes through zero and tiny values.
 - [ ] Repeat one prepared solve/open/report in direct-local Chromium, HTTP Chromium
   and Firefox. Record browser/version/platform. Safari has no acceptance claim.
 

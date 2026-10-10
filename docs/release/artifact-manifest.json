@@ -286,7 +286,7 @@
       ],
       "build_recipe": {
         "path": "UI_FOUNDATION.md",
-        "sha256": "c9b13d0432828ee465c881f68a188653150a1cef03b2bcce0e3d229b2b517825"
+        "sha256": "169336ce9bf433ff6905745587e56c139c604d99c5c713c91d4f26d183b227a0"
       },
       "modifications": "Copied as first-party source on 2026-08-25; FEA-owned adaptations and owner-approved GPL grant apply to these copies only. Current content is pinned per artifact.",
       "notices": [
@@ -335,12 +335,12 @@
         },
         {
           "path": "tools/package-distribution.py",
-          "sha256": "5f3a6199e0117bc57a207c4fcb6f5bca0e3c844dd0f85e7e8fe7956af92eccb9"
+          "sha256": "bfc6387dbdbdb02835eb554c894e10e6534d30dcd32f1bf26f21a349ce8e6f18"
         }
       ],
       "build_recipe": {
         "path": "docs/release/SOURCE.md",
-        "sha256": "c90c3ab24c8e8594dd4197487cc34e92f5c0d0aec7860447ec327822e1f5be48"
+        "sha256": "9af873a0f5d72b52956c1f424bb0e0b5c10608f89c40655256dbb0f3ca8a0425"
       },
       "modifications": "First-party policy notices and source-accompanied packaging; exact upstream notices copied unchanged.",
       "notices": [

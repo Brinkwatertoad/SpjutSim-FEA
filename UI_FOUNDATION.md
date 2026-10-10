@@ -60,3 +60,16 @@ node ../SpjutSim-UI-Kit/scripts/build-icons.js --check --output "$PWD/web/ui/act
 
 The catalog is local at runtime. Application buttons own accessible names,
 callbacks and availability. No sibling checkout or icon build is needed to run FEA.
+
+## Color scheme editor integration
+
+On 2026-10-10, Settings → Color scheme activates the existing 0.7.1 copies of
+`color-scheme-editor.js`, `overflow-menu.js`, `custom-select.js`, and their token
+styles. No shared source update or runtime dependency is needed.
+`web/js/ui/fea-color-scheme-editor.js` adapts role labels, picker/rename controls,
+preview rendering and file I/O. The toolbar reuses shared Export/Duplicate/Delete icons;
+host styles keep actions together and color roles in two columns. Interface demo
+uses a native modal and the copied custom-select picker. `FEAColorSchemes` remains the sole owner of factory
+values, validated library mutations, persistence and CSS publication. Viewport
+materials continue to consume those published colors through their existing
+theme observer. Color edits never enter engineering history.

@@ -1598,6 +1598,10 @@ a smooth cosine round trip from full deformation through undeformed and back in
 2400 ms. Animation defaults off, pauses while the document is hidden, stops when
 Deformation view or current results become unavailable, and never mutates the
 analysis document or revision.
+Animation uses the shared Run/Stop icons in a fixed-size button and a compact
+scale slider. Reserve a fixed-width, tabular scale readout; tiny/large multipliers
+use the shared four-significant-digit scientific formatting so animation cannot
+resize or move the Field/Shape controls. Skip unchanged readout DOM updates.
 
 ### 11.5 Color maps and legends
 
@@ -1949,6 +1953,8 @@ Preserve the SpjutSim UI foundation. Keep Setup, Undo, Redo and Save on the left
 group Solve, Results and report format/Export/options on the right. Keep report
 controls together when the toolbar wraps. Setup/Results retain
 their labels and Truss action icons; toggles use accent and selection-text roles.
+During meshing or solving, Cancel sits immediately after Solve in the same
+nonwrapping action group and uses the scheme's Danger color.
 The Setup toggle replaces a duplicate pane title. Runtime activity and short
 outcomes appear at the right of the menubar; routine history prose stays hidden.
 
@@ -1983,15 +1989,23 @@ Setup is one fixed sequence: Model, Material, Supports, Loads, Mesh. Compact
 summaries show source/format/face count, material E/density, and assignment
 names/values/units/face counts. Model summaries omit orientation status;
 Poisson's ratio remains in the material editor. An ordinary setup fits together
-without page scrolling. Support/load names align left with defining values/components on the right. Empty groups offer Add support… / Add load… rows.
+without page scrolling. Titles align left with quiet Duplicate/Suppress/Remove
+actions at the upper right, separated by a gap; mesh options use the same position.
+Each row has one outer outline. Defining values/components and metadata use the
+full width below the title, and clicking the quick information opens the editor.
+Mesh summaries and editor status omit the default Tet10 formulation. Only the
+optional Tet4 choice is identified there; full formulation details remain in
+mesh options and checks. Constraint summaries omit Mesh/Preview labels.
+Empty groups offer Add support… / Add load… rows.
 
 A row opens its single editor in place. Move the existing form node between
 its stash and active row; do not clone forms or create competing editors.
-Material expands independently beneath Model. Escape or the row trigger closes an
-editor; committed edits remain. Incomplete text is discarded on closing. Restore
+Material expands independently beneath Model. Done applies and collapses the editor;
+Cancel/Escape discards its draft. A clean editor may close with its row trigger.
+Unapplied changes must be finished with Done or Cancel before switching rows. Restore
 focus to the logical row or Add action. Expanded editors may have bounded overflow.
 
-Selecting a material immediately stores a validated snapshot. The user library
+Selecting a material previews its snapshot; Done validates and applies it. The user library
 has unique case-insensitive names, immutable factory entries, and explicit user
 replacement/removal. The library closely follows SpjutSim Truss: searchable table,
 Add, Copy & Modify, Edit, Delete, and Use, with every optional property and source,
@@ -2007,9 +2021,17 @@ Truss footer ordering: Cancel, flexible space, Save, Save & Use.
 See `docs/material-library.md` for shared UI provenance and future exchange mapping.
 Cross-app import is not yet supported; FEA must not invent missing Poisson ratios.
 
-Setup editors have no Apply/Cancel actions. Choices commit immediately; numeric
-and text fields commit on change (blur) or Enter, not each keystroke. Invalid or
-incomplete input remains local with visible feedback. No edit automatically meshes
+Material, support, load and gravity editors use one compact Done/Cancel bar pinned
+to the open row header, with fixed button positions and no changing status label.
+Fields and face picks preview live in a controller-owned draft. Done commits the whole edit once
+and collapses the editor; Enter in a value field invokes Done, while Enter in a
+frame-angle field only rotates the draft frame. Cancel/Escape discards the draft.
+Invalid or incomplete input leaves the editor open with visible feedback and
+preserves the applied setup. No field-level or viewport confirmation controls are
+added. Model orientation and mesh generation remain explicit direct actions.
+Display units and visibility remain immediate and survive Cancel. Validation errors
+remain visible beside the pinned actions. Open drafts block CAD import as well as
+Save/Solve until Done or Cancel finishes the edit. No edit automatically meshes
 or solves. Right-aligned removal actions sit in compact rows for existing
 materials, supports, loads, gravity, and meshes, separate from row expansion.
 Removal is undoable without a confirmation dialog. Deleting a mesh preserves the
@@ -2024,8 +2046,8 @@ library record rather than recurring in the assignment panel.
 
 **Assignment actions:** Compact rows expose Duplicate, Include/Suppress, and Delete
 directly. Duplicate opens the copied settings with an empty face set and asks for
-new surfaces; the first valid face selection creates a fresh ID/name, subsequent
-picks edit that copy, and Escape before picking creates nothing. The original is
+new surfaces; face picks preview the copy, Done creates its fresh ID/name in one
+history step, and Cancel/Escape creates nothing. The original is
 unchanged. Include/Suppress uses an eye toggle with immediate icon and row state
 (including a visible Suppressed label) even when collapsed. It controls calculation participation;
 suppressed items remain visible and serializable, are excluded from rank checks
@@ -2037,7 +2059,7 @@ rules, including face-reference repair during geometry replacement.
 
 Settings is reached through File and Ctrl/Cmd+, using the existing hub. Its
 preferred size is 840 × 720 CSS pixels, capped to the viewport; active tab content
-scrolls internally. Controls, Units, Analysis, Report, and Appearance are tabs.
+scrolls internally. Controls, Units, Analysis, Report, and Color scheme are tabs.
 Report edits project metadata; the other tabs contain browser preferences.
 Engineering material/load/support/mesh inputs remain with their setup editors.
 
@@ -2071,6 +2093,18 @@ are `appBackground`, `surface`, `text`, `accent`, `danger`,
 
 Ship FEA Classic, Light Mode, Dark Mode, and Vivid. Persist the active scheme and
 versioned library overlay; corrupt/unavailable storage permits in-memory use.
+Light Mode uses subdued warm gray interface surfaces and a pale gray canvas.
+Settings → Color scheme adapts the copied UI Kit color editor: an editable scheme
+picker, Duplicate/Delete, Interface/Canvas/FEA colors, a local preview, and
+clearable Advanced Overrides. Color roles use two columns, collapsing to one on
+small screens. Toolbar actions stay grouped, including the overflow button.
+The local preview is titled Interface demo and includes a modal picker using
+the shared select helper; demo actions never affect engineering state.
+Reset This Scheme restores a factory or imported
+baseline; Reset Color Schemes restores all factory entries. Factory changes are
+stored as overlays, never mutations of the factory registry. Keep at least one
+scheme available. Reject invalid color values while retaining the last valid
+palette. Appearance preferences do not change engineering state or history.
 Portable version-3 scheme import/export uses `.spjutsim-color-scheme.json`.
 Missing FEA roles receive documented Classic fallbacks. Apply changes live to
 CSS and viewport materials; numerical contour colors remain unchanged.
@@ -2120,24 +2154,28 @@ gesture does not. Escape clears selection only after higher-priority controls
 have declined it. Clicking other UI controls does not clear faces.
 The Model editor has no separate face list or Clear selection control.
 
-`assignmentDraft` is the controller-owned support/load/gravity editing session:
+`assignmentDraft` is the controller-owned material/support/load/gravity editing session:
 kind, optional item ID, face IDs, SI definition, base revision, geometry identity,
-immediate-edit flag, dirty state, and validation feedback. The UI retains only
+dirty state and validation feedback (the immediate flag is retained for legacy
+controller callers, and is never set by setup forms). The UI retains only
 incomplete field text, not a competing engineering definition. Opening an editor
-alone never creates an assignment. Choosing settings or picking faces commits once
-the required definition and face set are valid. Each subsequent committed change
-keeps the same assignment identity and creates one meaningful Undo step.
+alone never creates an assignment. Choosing settings or picking faces only updates
+the draft. Done validates and commits the entire definition and face set as one
+meaningful Undo step, retaining existing assignment identity. Material drafts need
+no geometry or face set and preserve solved presentation during preview.
 
 Clicks toggle assigned faces; hover previews candidates; background clicks preserve
 the set. Commits validate values, face ownership, revision, and conflicting
 prescribed components. Native mesh checks remain authoritative for shared-node
 conflicts. No-op changes preserve revision, mesh, checks, results, and history.
-Invalid edits retain the previous committed assignment. Switching or closing an
-editor discards pending text and clears its selected faces, preventing them from
-seeding a different assignment. Deliberate picks made outside an editor can seed
-a new assignment. A clean open editor does not block Save, Solve,
-report export, or Undo; incomplete edits must be finished or closed before solving
-or saving. Undo closes the assignment session before restoring a committed state.
+Invalid edits retain the previous committed assignment. Switching dirty editors is
+blocked with guidance to choose Done or Cancel. Cancel restores the prior selection
+and available result mode without reversing live display preferences. Switching
+clean assignment editors clears selected faces, preventing accidental reuse.
+Deliberate picks made outside an editor can seed a new assignment. Open drafts
+block Save, Solve, report export and Undo until Done or Cancel finishes the edit.
+Unchanged Done preserves revision, mesh, checks, results and history. Recovery
+stores applied definitions, never transient draft values.
 
 Rectangular frames use incremental rotations about global X/Y/Z, angle buttons,
 ±90° shortcuts, Reset, and a labeled local/global axis preview. Axes remain a
@@ -2158,7 +2196,7 @@ started, including restored unit preferences. Changing units on an existing
 draft or saved load preserves its physical value. Explain constant pressure
 versus total force across all selected faces, including cancellation of opposing
 normal directions. Gravity uses the same transaction with no face selection,
-global components/presets, immediate edits, and compact-row removal. Gravity arrow visibility
+global components/presets, explicit Done/Cancel, and compact-row removal. Gravity arrow visibility
 is separate from calculation enablement; enabling it restores its arrow.
 
 ### 15.7 Loads/support glyphs
@@ -2238,6 +2276,8 @@ The top Examples menu offers the cantilever and axial cube even when a part is
 already open. Use the existing project recovery checkpoint/new-project path before
 loading the complete prepared setup; never combine old loads/supports with an
 example. Normal busy and pending-edit guards apply.
+Close the Examples dropdown when a load action is accepted, restoring focus to
+its menu button before project loading starts.
 
 A small guide in the viewport points to and highlights the actual next clickable
 control, not section headings. The opening panel appears alone; explicitly
@@ -2253,7 +2293,7 @@ Draw a separate, noninteractive highlight ring at document level around the full
 button so clipped controls cannot hide its top/bottom edges. Keep the selector's
 normal dividers and keyboard-focus styling. Hide the ring during model picking,
 when its target is hidden/scrolled out of view, and when the guide is dismissed.
-A valid material change immediately advances to Supports; an invalid edit stays on
+Done on a valid material advances to Supports; an invalid edit stays on
 Material. Support/load actions change targets, not stages; routine rerenders neither scroll
 Setup nor advance the guide. User-driven stage changes may reveal their target
 by scrolling Setup, but do not open editors or click controls automatically.
@@ -2321,9 +2361,9 @@ mesh/results, workers, and WASM. Undo uses ordinary validation/invalidation and
 never rewinds revision or ID/name allocators. Rename replay preserves results.
 
 New edits discard redo; no-ops/cancelled drafts add nothing. Import, replacement,
-and removal clear history after validation. Worker execution and legacy transactional
-drafts disable history; immediate editors can be closed by Undo, including when
-they contain invalid text. Generation/solve/convergence are not replayable commands. Mesh removal keeps at
+and removal clear history after validation. Worker execution and open setup
+drafts disable history; choose Done or Cancel before Undo/Redo.
+Generation/solve/convergence are not replayable commands. Mesh removal keeps at
 most one mesh by reference outside the compact definition log, without copying
 buffers or restoring results. Starting meshing, changing mesh settings/orientation,
 import/replacement, or history eviction releases it and removes its restoration
@@ -2708,9 +2748,13 @@ consistency; its staged-release mode also verifies actual corresponding-source
 archive contents. `tools/package-distribution.py` creates the local source-
 accompanied stage. These are narrow Python packaging steps, not frontend tooling.
 
-Wrangler serves only that stage and requires a successful audit with final owner
-review bound to the artifact-manifest hash. A missing/blocked decision, missing
-source package, or stale final review prevents publication through that path.
+Wrangler automatically rebuilds that stage with exact corresponding application
+and pinned upstream source, notices and build instructions before every upload.
+It requires a successful audit with publication approval bound to the artifact-
+manifest hash; approval and packaging failures preserve the previous candidate.
+This automatic source accompaniment remains required while retained licenses
+require it. A missing/blocked decision, missing source, or stale final review
+prevents publication through that path.
 The literal URL audit is supplemented by offline browser verification. Final
 owner review and Task 20's complete candidate acceptance remain separate gates.
 

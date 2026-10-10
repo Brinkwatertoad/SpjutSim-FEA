@@ -59,6 +59,18 @@
     app.beginAssignmentDraft('gravity','gravity');app.commitAssignmentDraft();
     assert(app.history.cursor===historyCount+1,'Unchanged gravity Save created history');
     app.undoEngineeringEdit();assert(!app.document.gravity.enabled,'Gravity Apply cannot be undone');
+    var materialApp=new api.AppController({document:api.createAnalysisDocument()});
+    materialApp.beginAssignmentDraft('material',null,{youngsModulusPa:70e9,poissonsRatio:0.33});
+    assert(materialApp.document.assignmentDraft.validation.valid,'Material must be editable before geometry import');
+    materialApp.cancelAssignmentDraft();assert(!materialApp.document.material && !materialApp.history.cursor,'Material cancel created state/history');
+    materialApp.beginAssignmentDraft('material',null,{youngsModulusPa:70e9,poissonsRatio:0.33});materialApp.commitAssignmentDraft();
+    assert(materialApp.document.material.youngsModulusPa===70e9 && materialApp.history.cursor===1,'Material Done did not commit once');
+    materialApp.document.results=retainedResult;revision=materialApp.document.analysisRevision;
+    materialApp.beginAssignmentDraft('material','material');materialApp.commitAssignmentDraft();
+    assert(materialApp.document.analysisRevision===revision && materialApp.document.results===retainedResult && materialApp.history.cursor===1,'Unchanged material Done invalidated state');
+    materialApp.beginAssignmentDraft('material','material');materialApp.updateAssignmentDraft({definition:{youngsModulusPa:-1,poissonsRatio:0.33}});
+    rejects(function(){materialApp.commitAssignmentDraft();});materialApp.cancelAssignmentDraft();
+    assert(materialApp.document.results===retainedResult && materialApp.document.material.youngsModulusPa===70e9,'Invalid material draft destroyed applied state');
     document.getElementById('test-status').textContent='Passed';
   }catch(error){document.getElementById('test-status').textContent='Failed: '+error.message;}
 }());

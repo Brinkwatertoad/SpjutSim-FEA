@@ -50,7 +50,7 @@
     var enabled=!api.engineeringBusy(this.document) && !(this.document.assignmentDraft && !this.document.assignmentDraft.immediate);
     var undo=this.history.entries[this.history.cursor-1], redo=this.history.entries[this.history.cursor];
     return {canUndo:Boolean(enabled && undo),canRedo:Boolean(enabled && redo),undoLabel:undo ? undo.label : '',redoLabel:redo ? redo.label : '',
-      message:this.document.assignmentDraft && !this.document.assignmentDraft.immediate ? 'Apply or Cancel the preview before Undo/Redo.' : api.engineeringBusy(this.document) ? 'Undo/Redo is unavailable during worker execution.' : ((this.document.results || api.solveReadiness(this.document).canSolve) ? this.historyNotice.split('. ')[0] + '.' : this.historyNotice)};
+      message:this.document.assignmentDraft && !this.document.assignmentDraft.immediate ? 'Choose Done or Cancel before Undo/Redo.' : api.engineeringBusy(this.document) ? 'Undo/Redo is unavailable during worker execution.' : ((this.document.results || api.solveReadiness(this.document).canSolve) ? this.historyNotice.split('. ')[0] + '.' : this.historyNotice)};
   };
   /** Restore a deleted item with its original identity/order; never rewind ID/name allocators. */
   prototype.restoreHistoryAssignment = function (kind,item,index) {

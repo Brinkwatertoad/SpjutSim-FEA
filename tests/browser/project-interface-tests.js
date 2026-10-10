@@ -30,7 +30,7 @@
       doc.querySelector('[data-setup-kind="material"] [data-setup-row-trigger]').click();
       var catalog=doc.getElementById('material-catalog-select');catalog.value='custom';catalog.dispatchEvent(new win.Event('change',{bubbles:true}));
       doc.getElementById('material-youngs').value='100';doc.getElementById('material-youngs').dispatchEvent(new win.Event('change',{bubbles:true}));
-      assert(app.document.material.youngsModulusPa===100e9,'Material did not commit on change');
+      doc.querySelector('[data-setup-done]').click();assert(app.document.material.youngsModulusPa===100e9,'Material Done did not commit');
       app.undoEngineeringEdit();assert(app.document.material.youngsModulusPa===200e9,'Material Undo failed');
       document.getElementById('test-status').textContent='Passed';
     }catch(e){document.getElementById('test-status').textContent='Failed: '+e.message;console.error(e);}

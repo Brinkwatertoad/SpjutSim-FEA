@@ -187,6 +187,7 @@
   function describeAssignmentDraft(state) {
     var draft = state.assignmentDraft;
     if (!draft) { return ''; }
+    if (draft.kind === 'material') { return ''; }
     if (draft.kind === 'gravity') { return 'Body acceleration applies throughout the model. Preview arrow shows direction.'; }
     var area = draft.faceIds.reduce(function (sum,id) { return sum + cachedFaceSamples(state,id).areaM2; },0);
     var api=root.SpjutsimFEA, length=api.preferredUnit('lengthM');
@@ -223,7 +224,7 @@
     if (draft && draft.immediate && !draft.dirty) { draft = null; }
     var supports = documentState.boundaryConditions.filter(function (item) { return item.enabled !== false && (!documentState.viewportPresentation || documentState.viewportPresentation.showSupports !== false) && (!draft || item.id !== draft.itemId); });
     var loads = documentState.loads.filter(function (item) { return item.enabled !== false && (!documentState.viewportPresentation || documentState.viewportPresentation.showLoads !== false) && (!draft || item.id !== draft.itemId); });
-    if (draft && draft.kind !== 'gravity' && draft.validation.valid) {
+    if (draft && ['support','load'].includes(draft.kind) && draft.validation.valid) {
       var preview = Object.assign({},draft.validation.value,{id:'assignment-preview',preview:true});
       (draft.kind === 'support' ? supports : loads).push(preview);
     }

@@ -23,6 +23,7 @@
       var beamMenu=doc.querySelector('[data-ui-menu-action="example-cantilever"]');
       assert(beamMenu && doc.querySelector('[data-ui-menu-action="example-cube"]'), 'Examples menu is missing its prepared models');
       beamMenu.closest('[data-ui-menu-group]').querySelector('[data-ui-menu-button]').click();beamMenu.click();
+      assert(beamMenu.closest('[data-ui-menu-group]').dataset.open === 'false', 'Examples menu stayed open when loading disabled the clicked item');
       await wait(function () { return app && app.document.projectMetadata && app.document.projectMetadata.name === 'Cantilever beam example'; });
       var state = app.document, box = state.geometry.boundingBoxM;
       [2, 0.1, 0.2].forEach(function (size, axis) {

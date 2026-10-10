@@ -16,10 +16,11 @@
   check(app.document.assignmentDraft.validation.valid,'sliding draft invalid');
   check(!doc.getElementById('support-planar-help').hidden,'missing free-direction/symmetry explanation');
 
+   doc.querySelector('[data-setup-done]').click();
    check(app.document.boundaryConditions.length===1&&app.document.boundaryConditions[0].preset==='sliding','sliding did not commit');
    doc.querySelector('[data-setup-kind="support"] [data-setup-duplicate]').click();
    check(app.document.assignmentDraft.faceIds.length===0 && app.document.boundaryConditions.length===1,'CAD support duplicate committed before a new face');
-   var otherFace=app.document.geometry.faceIds[1];app.toggleDraftFace(otherFace);
+   var otherFace=app.document.geometry.faceIds[1];app.toggleDraftFace(otherFace);doc.querySelector('[data-setup-done]').click();
    check(app.document.boundaryConditions.length===2 && app.document.boundaryConditions[1].frame.faceId===otherFace,'Copied CAD frame did not attach to its new face');
    check(app.document.boundaryConditions[0].frame.faceId===face,'Copy changed original CAD attachment');
    app.undoEngineeringEdit();check(app.document.boundaryConditions.length===1,'Undo did not remove the copied support');
@@ -31,10 +32,11 @@
    fill('settings-unit-system','si');
    check(app.document.assignmentDraft.validation.valid,'manual frame draft invalid');
    check(doc.getElementById('load-frame-preview').textContent.includes('[0, 10, 0]'),'global force preview missing');
+   doc.querySelector('[data-setup-done]').click();
    check(app.document.loads[0].frame.ownership==='global','manual frame not saved');
    check(Math.abs(app.document.loads[0].frame.originM[0]-.0254)<1e-12,'frame origin lost SI value');
    var force=api.assignmentGlobalForce(app.document.loads[0],app.document.geometry);check(force[1]===10,'manual global direction wrong');
-   click('load-frame-reset');check(api.assignmentGlobalForce(app.document.loads[0],app.document.geometry)[0]===10,'Frame reset did not commit');
+   doc.querySelector('[data-setup-kind="load"] [data-setup-row-trigger]').click();click('load-frame-reset');doc.querySelector('[data-setup-done]').click();check(api.assignmentGlobalForce(app.document.loads[0],app.document.geometry)[0]===10,'Frame reset did not commit');
    app.undoEngineeringEdit();check(api.assignmentGlobalForce(app.document.loads[0],app.document.geometry)[1]===10,'Undo frame rotation lost direction');
    app.rotateGeometryAroundGlobalAxis('x',30);check(api.assignmentGlobalForce(app.document.loads[0],app.document.geometry)[1]===10,'manual frame followed CAD');
    click('setup-add-load-button');fill('load-force-mode','components');fill('load-frame-kind','manual');fill('load-frame-origin-x','');

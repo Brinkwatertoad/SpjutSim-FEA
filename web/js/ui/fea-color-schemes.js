@@ -19,8 +19,8 @@
       canvasBackground: '#111318', canvasGeometry: '#f4f1ea', selection: '#38bdf8'
     }),
     scheme('light', 'Light Mode', {
-      appBackground: '#f6f4ef', surface: '#ffffff', text: '#1d1d1f', accent: '#0f62fe', danger: '#da1e28',
-      canvasBackground: '#ffffff', canvasGeometry: '#1d1d1f', selection: '#0f62fe'
+      appBackground: '#e8e7e3', surface: '#f0efeb', text: '#25272b', accent: '#0f62fe', danger: '#da1e28',
+      canvasBackground: '#e3e5e8', canvasGeometry: '#25272b', selection: '#0f62fe'
     }),
     scheme('dark', 'Dark Mode', {
       appBackground: '#111827', surface: '#1f2937', text: '#f4f1ea', accent: '#93c5fd', danger: '#da1e28',
@@ -39,6 +39,11 @@
     this.activeSchemeId = 'fea-classic';
     this.storageWarning = null;
     this.load();
+    if (this.library().empty) {
+      this.overlay = portable.normalizeLibraryOverlay(null);
+      this.activeSchemeId = 'fea-classic';
+      this.storageWarning = 'Saved color schemes were empty; FEA Classic is active in memory.';
+    }
     this.applyActive();
   }
 
@@ -154,58 +159,63 @@
     };
   };
 
-  FEAColorSchemes.prototype.renderControls = function () {
-    var select = document.getElementById('color-scheme-select');
-    var status = document.getElementById('color-scheme-status');
-    var library = this.library();
-    if (select) {
-      select.replaceChildren();
-      library.entries.forEach(function (entry) {
-        var option = document.createElement('option');
-        option.value = entry.id; option.textContent = entry.label + (entry.custom ? ' (imported)' : '');
-        select.append(option);
-      });
-      select.value = library.activeSchemeId;
-    }
-    if (status) { status.textContent = this.storageWarning || ('Active: ' + this.activeEntry().label); }
+  FEAColorSchemes.prototype.mutationInput = function () {
+    return {factorySchemes:FACTORY_COLOR_SCHEMES,overlay:this.overlay,schemeId:this.activeEntry().id,
+      activeSchemeId:this.activeSchemeId,defaultSchemeId:'fea-classic'};
   };
 
-  FEAColorSchemes.prototype.bindControls = function () {
-    var self = this;
-    var select = document.getElementById('color-scheme-select');
-    var importButton = document.getElementById('color-scheme-import-button');
-    var importInput = document.getElementById('color-scheme-import-input');
-    var exportButton = document.getElementById('color-scheme-export-button');
-    var status = document.getElementById('color-scheme-status');
-    if (!select) { return; }
-    this.renderControls();
-    select.addEventListener('change', function () {
-      try { self.select(select.value); self.renderControls(); }
-      catch (error) { self.renderControls(); status.textContent = error.message; }
-    });
-    if (importButton && importInput) {
-      importButton.addEventListener('click', function () { importInput.click(); });
-      importInput.addEventListener('change', function () {
-        var file = importInput.files && importInput.files[0];
-        importInput.value = '';
-        if (!file) { return; }
-        file.text().then(function (text) {
-          self.importDocument(text);
-          self.renderControls();
-          status.textContent = 'Imported and activated ' + self.activeEntry().label + '.';
-        }).catch(function (error) { status.textContent = 'Import failed: ' + error.message; });
-      });
-    }
-    if (exportButton) {
-      exportButton.addEventListener('click', function () {
-        var exported = self.exportActive();
-        var url = root.URL.createObjectURL(new Blob([exported.text], { type: 'application/json' }));
-        var anchor = document.createElement('a');
-        anchor.href = url; anchor.download = exported.filename; anchor.click();
-        root.setTimeout(function () { root.URL.revokeObjectURL(url); }, 0);
-        status.textContent = 'Exported ' + self.activeEntry().label + '.';
-      });
-    }
+  FEAColorSchemes.prototype.publishChange = function () {
+    this.persist();
+    return this.applyActive();
+  };
+
+  FEAColorSchemes.prototype.updateRole = function (section, role, value) {
+    var color = portable.normalizeColor(value), patch = {};
+    if (!color) { throw new Error('Use a six-digit hex color, such as #4387f5.'); }
+    if (section === 'authored' && portable.SHARED_AUTHORED_COLOR_ROLES.includes(role) ||
+        section === 'derivedOverrides' && ['secondaryText','panelSurface','border','canvasText','gridMajor','gridMinor','canvasFill','hover','placementPreview'].includes(role)) {
+      patch[section] = {};patch[section][role] = color;
+    } else if (section === 'extensions.fea' && REQUIRED_EXTENSIONS.fea.includes(role)) {
+      patch.extensions = {fea:{}};patch.extensions.fea[role] = color;
+    } else { throw new Error('The selected color role is unavailable.'); }
+    this.overlay = portable.updateScheme(Object.assign(this.mutationInput(),{patch:patch}));
+    return this.publishChange();
+  };
+
+  FEAColorSchemes.prototype.rename = function (label) {
+    label = String(label || '').trim();
+    if (!label) { throw new Error('Enter a color scheme name.'); }
+    this.overlay = portable.updateScheme(Object.assign(this.mutationInput(),{patch:{label:label}}));
+    return this.publishChange();
+  };
+
+  FEAColorSchemes.prototype.duplicate = function () {
+    var result = portable.duplicateScheme(this.mutationInput());
+    this.overlay = result.overlay;this.activeSchemeId = result.scheme.id;
+    this.publishChange();
+    return this.activeSchemeId;
+  };
+
+  FEAColorSchemes.prototype.remove = function () {
+    if (this.library().entries.length < 2) { throw new Error('Keep at least one color scheme.'); }
+    var result = portable.deleteScheme(this.mutationInput());
+    this.overlay = result.overlay;this.activeSchemeId = result.activeSchemeId;
+    return this.publishChange();
+  };
+
+  FEAColorSchemes.prototype.restore = function () {
+    this.overlay = portable.restoreScheme(this.mutationInput());
+    return this.publishChange();
+  };
+
+  FEAColorSchemes.prototype.reset = function () {
+    this.overlay = portable.resetSchemeLibrary();this.activeSchemeId = 'fea-classic';
+    return this.publishChange();
+  };
+
+  FEAColorSchemes.prototype.clearOverride = function (role) {
+    this.overlay = portable.clearSchemeOverride(Object.assign(this.mutationInput(),{section:'derivedOverrides',role:role}));
+    return this.publishChange();
   };
 
   root.SpjutsimFEA = root.SpjutsimFEA || {};

@@ -2,6 +2,23 @@
   'use strict';
 
   function byId(id) { return document.getElementById(id); }
+  // Adapt the previous labeled Apply/Cancel controls for the pinned header.
+  function createEditorAction(label, apply) {
+    var button = document.createElement('button');
+    var icon = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    icon.setAttribute('viewBox','0 0 24 24'); icon.setAttribute('fill','none');
+    icon.setAttribute('stroke','currentColor'); icon.setAttribute('stroke-width','2');
+    icon.setAttribute('stroke-linecap','round'); icon.setAttribute('stroke-linejoin','round');
+    icon.setAttribute('aria-hidden','true');
+    var path = document.createElementNS(icon.namespaceURI,'path');
+    path.setAttribute('d',apply ? 'M5 12l4 4L19 6' : 'M6 6l12 12M18 6L6 18');
+    icon.appendChild(path);
+    var text = document.createElement('span'); text.textContent = label;
+    button.type = 'button'; button.className = 'fea-icon-button' + (apply ? ' ui-button-primary' : '');
+    button.setAttribute('aria-label',label); button.append(icon,text);
+    return button;
+  }
+
   var materialInputs = {youngsModulusPa:'youngs',poissonsRatio:'poisson',densityKgM3:'density',tensileYieldPa:'tensile-yield',compressiveYieldPa:'compressive-yield',ultimateTensilePa:'ultimate-tensile',ultimateCompressivePa:'ultimate-compressive'};
 
   function AnalysisAuthoringUI(controller) {
@@ -94,12 +111,12 @@
       var info=byId(button.dataset.fieldInfo);
       info.hidden=!info.hidden;button.setAttribute('aria-expanded',String(!info.hidden));
     });
-    this.materialForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveMaterial(); });
+    this.materialForm.addEventListener('submit', function (event) { event.preventDefault(); self.finishInspectorEdit(); });
     if (this.materialCatalogSelect) {
       this.materialCatalogSelect.addEventListener('change', function () { self.selectMaterialCatalogEntry(); });
     }
     if (root.SpjutsimFEA.bindMaterialLibrary && byId('edit-material-library-button')) { root.SpjutsimFEA.bindMaterialLibrary(this); }
-    this.supportForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveSupport(); });
+    this.supportForm.addEventListener('submit', function (event) { event.preventDefault(); self.finishInspectorEdit(); });
     this.supportType.addEventListener('change', function () {
       if (!self.editingSupportId) { self.lastSupportType = self.supportType.value; }
       self.renderSupportType();
@@ -110,11 +127,12 @@
     [this.supportForm, this.loadForm, this.gravityForm].forEach(function (form) {
       ['input','change'].forEach(function (eventName) { form.addEventListener(eventName, function (event) { if(event.target.id==='gravity-visible' || event.target.hasAttribute('data-frame-control'))return; self.updateDraftFromForm(eventName === 'change',event.target); }); });
     });
-    [this.supportForm,this.loadForm,this.gravityForm].forEach(function(form){
-      form.addEventListener('keydown',function(event){if(event.key==='Enter' && event.target.tagName==='INPUT'){event.preventDefault();self.updateDraftFromForm(true,event.target);}});
+    [this.materialForm,this.supportForm,this.loadForm,this.gravityForm].forEach(function(form){
+      form.addEventListener('keydown',function(event){if(event.key==='Enter' && event.target.tagName==='INPUT'){event.preventDefault();self.finishInspectorEdit();}});
     });
-    this.materialForm.addEventListener('change',function(event){if(event.target.tagName==='INPUT')self.saveMaterial();});
-    this.materialForm.addEventListener('keydown',function(event){if(event.key==='Enter' && event.target.tagName==='INPUT'){event.preventDefault();self.saveMaterial();}});
+    ['input','change'].forEach(function(eventName){self.materialForm.addEventListener(eventName,function(event){
+      if(event.target.tagName==='INPUT')self.updateDraftFromForm(eventName==='change',event.target);
+    });});
     this.resetLoadForm(false);
     Array.from(this.loadForm.querySelectorAll('[data-load-unit]')).forEach(function (select) {
       select.addEventListener('change', function (event) {
@@ -123,7 +141,7 @@
       });
       select.addEventListener('input', function (event) { event.stopPropagation(); });
     });
-    this.loadForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveLoad(); });
+    this.loadForm.addEventListener('submit', function (event) { event.preventDefault(); self.finishInspectorEdit(); });
     this.loadType.addEventListener('change', function () {
       if (!self.editingLoadId) { self.lastLoadType = self.loadType.value; }
       self.renderLoadType();
@@ -135,7 +153,7 @@
       ['x','y','z'].forEach(function(a){byId('gravity-'+a).value=direction[1]===a ? (direction[0]==='-'?-1:1)*magnitude : 0;});
     });}); }
     if (byId('gravity-visible')) { byId('gravity-visible').addEventListener('change',function(){self.controller.replaceViewportPresentation(Object.assign({},self.controller.document.viewportPresentation,{showGravity:this.checked}));}); }
-    this.gravityForm.addEventListener('submit', function (event) { event.preventDefault(); self.saveGravity(); });
+    this.gravityForm.addEventListener('submit', function (event) { event.preventDefault(); self.finishInspectorEdit(); });
     if (this.rotateModelPositiveButton) { this.rotateModelPositiveButton.addEventListener('click', function () { self.rotateModel(1); }); }
     if (this.rotateModelNegativeButton) { this.rotateModelNegativeButton.addEventListener('click', function () { self.rotateModel(-1); }); }
     if (this.resetModelOrientationButton) { this.resetModelOrientationButton.addEventListener('click', function () { self.resetModelOrientation(); }); }
@@ -195,8 +213,7 @@
     else { this.writeMaterialFields(this.controller.document.material); }
     this.materialFeedback = null;
     this.renderMaterialCatalogSelection();
-    if(entry)this.saveMaterial();
-    else this.renderMaterial(this.controller.document);
+    this.updateDraftFromForm(true);
   };
 
   AnalysisAuthoringUI.prototype.renderMaterialCatalogSelection = function () {
@@ -238,22 +255,7 @@
     return material;
   };
 
-  AnalysisAuthoringUI.prototype.saveMaterial = function () {
-    var selectedId = this.materialCatalogSelect ? this.materialCatalogSelect.value : 'custom';
-    var entry = selectedId !== 'custom' && this.materialCatalog ? this.materialCatalog.get(selectedId) : null;
-    try {
-      var material = entry && entry.layer === 'factory' ? this.materialCatalog.materialSnapshot(selectedId) : this.readMaterial();
-      this.applyingMaterial = true;
-      var validation;
-      try { validation = this.controller.replaceMaterial(material); }
-      finally { this.applyingMaterial = false; }
-      this.materialFeedback = validation.warnings.length ? {warning:true,message:validation.warnings[0].message} : {message:'Material applied to this project.'};
-      this.render(this.controller.document);
-      this.materialForm.dispatchEvent(new CustomEvent('fea-material-applied',{bubbles:true}));
-    } catch (error) {
-      this.materialFeedback = {error:true,message:error.message};this.render(this.controller.document);
-    }
-  };
+  AnalysisAuthoringUI.prototype.saveMaterial = function () { this.finishInspectorEdit(); };
 
   AnalysisAuthoringUI.prototype.renderMaterial = function (documentState) {
     var material = documentState.material;
@@ -309,14 +311,13 @@
     return support;
   };
 
-  AnalysisAuthoringUI.prototype.saveSupport = function () { this.updateDraftFromForm(true); };
+  AnalysisAuthoringUI.prototype.saveSupport = function () { this.finishInspectorEdit(); };
 
   AnalysisAuthoringUI.prototype.beginSupportEdit = function (id) {
     var item = this.controller.document.boundaryConditions.find(function (entry) { return entry.id === id; });
     if (!item) { return; }
     this.editingSupportId = id;
     if (byId('support-name')) { byId('support-name').value = item.name; }
-    this.controller.selectBoundaryCondition(id);
     if(this.supportFrameEditor)this.supportFrameEditor.set(item.frame);
     this.supportType.value = item.preset || (['x', 'y', 'z'].every(function (axis) { return item.componentsM[axis] === 0; }) ? 'fixed' : 'custom');
     ['ux', 'uy', 'uz'].forEach(function (axis) {
@@ -364,7 +365,7 @@
     constrained = stability.modes.filter(function (mode) { return mode.status === 'constrained'; }).map(function (mode) { return mode.id; });
     free = stability.modes.filter(function (mode) { return mode.status === 'free'; }).map(function (mode) { return mode.id; });
     coupled = stability.modes.filter(function (mode) { return mode.status === 'coupled'; }).map(function (mode) { return mode.id; });
-    parts = [stability.status === 'fully-constrained' ? 'Fully constrained' : 'Underconstrained', stability.provisional ? 'Preview' : 'Mesh'];
+    parts = [stability.status === 'fully-constrained' ? 'Fully constrained' : 'Underconstrained'];
     if (constrained.length) { parts.push('Constrained: ' + constrained.join(', ')); }
     if (free.length) { parts.push('Free: ' + free.join(', ')); }
     if (coupled.length) { parts.push('Coupled: ' + coupled.join(', ') + ' (' + stability.coupledFreedomCount + ' mode' + (stability.coupledFreedomCount === 1 ? '' : 's') + ')'); }
@@ -423,14 +424,13 @@
     return load;
   };
 
-  AnalysisAuthoringUI.prototype.saveLoad = function () { this.updateDraftFromForm(true); };
+  AnalysisAuthoringUI.prototype.saveLoad = function () { this.finishInspectorEdit(); };
 
   AnalysisAuthoringUI.prototype.beginLoadEdit = function (id) {
     var item = this.controller.document.loads.find(function (entry) { return entry.id === id; });
     if (!item) { return; }
     this.editingLoadId = id;
     if (byId('load-name')) { byId('load-name').value = item.name; }
-    this.controller.selectLoad(id);
     this.loadType.value = item.type;
     if(byId('load-force-mode'))byId('load-force-mode').value=item.direction==='surface-normal' && item.type==='total-force' ? 'normal' : 'components';
     if(this.loadFrameEditor)this.loadFrameEditor.set(item.frame);
@@ -472,7 +472,7 @@
     return {enabled:true,accelerationMS2:['x','y','z'].map(function (axis) { return root.SpjutsimFEA.preferredToSI('accelerationMS2', readNumber('gravity-'+axis,'gravity '+axis.toUpperCase())); })};
   };
 
-  AnalysisAuthoringUI.prototype.saveGravity = function () { this.updateDraftFromForm(true); };
+  AnalysisAuthoringUI.prototype.saveGravity = function () { this.finishInspectorEdit(); };
 
   AnalysisAuthoringUI.prototype.renderGravity = function (documentState) {
     var draft = documentState.assignmentDraft;
@@ -545,7 +545,13 @@
 
   AnalysisAuthoringUI.prototype.openInspectorRow = function (kind, itemId, opener, duplicate) {
     var selectedItem;
+    if (this.controller.document.assignmentDraft && this.controller.document.assignmentDraft.dirty) {
+      this.announceSetup('Use Done or Cancel to finish the unapplied changes.');
+      var done=document.querySelector('[data-setup-done]');if(done)done.focus({preventScroll:true});
+      return;
+    }
     if (kind === 'model' && !this.controller.document.geometry) {
+      if(this.activeInspectorKind)this.closeInspectorRow({cancelEdit:true});
       var importButton = byId('import-step-button');
       if (importButton && !importButton.disabled) { importButton.click(); }
       return;
@@ -556,6 +562,7 @@
     }
     this.openingInspector=true;
     this.controller.cancelAssignmentDraft();
+    if (['support','load'].includes(this.activeInspectorKind)) { this.controller.clearSelectedFaces(); }
     if (this.activeInspectorKind === 'support') { this.resetSupportForm(false); }
     if (this.activeInspectorKind === 'load') { this.resetLoadForm(false); }
     this.returnEditorsToStash();
@@ -577,6 +584,10 @@
       byId(kind + '-name').value = name;
       this.editingSupportId = null; this.editingLoadId = null;
     }
+    if (kind === 'material') {
+      this.materialFeedback=null;
+      this.controller.beginAssignmentDraft('material',this.controller.document.material ? 'material' : null);
+    }
     if (kind === 'gravity') {
       this.gravityFeedback = null;
       try {
@@ -594,40 +605,60 @@
 
       } catch (error) { this.announceSetup(error.message); }
     }
+    var form=byId(kind+'-form');
+    if(form)form.querySelectorAll('[aria-invalid]').forEach(function(input){
+      input.removeAttribute('aria-invalid');
+      if(input.getAttribute('aria-describedby')===kind+'-status')input.removeAttribute('aria-describedby');
+    });
     this.openingInspector=false;
-    if(this.controller.document.assignmentDraft)this.controller.document.assignmentDraft.immediate=true;
     this.render(this.controller.document);
     this.controller.notify(selectedItem && !duplicate ? 'locate-assignment' : undefined);
     if (duplicate) { this.announceSetup('Choose new faces for ' + name + '. Escape closes an empty copy.'); }
   };
 
-  AnalysisAuthoringUI.prototype.updateDraftFromForm = function (commit, input) {
+  AnalysisAuthoringUI.prototype.updateDraftFromForm = function (showErrors, input) {
     var draft = this.controller.document.assignmentDraft;
     if (!draft) { return; }
     var definition;
-    try { definition = draft.kind === 'gravity' ? this.readGravity() : draft.kind === 'support' ? this.readSupport() : this.readLoad(); }
+    try { definition = draft.kind === 'material' ? this.readMaterial() : draft.kind === 'gravity' ? this.readGravity() : draft.kind === 'support' ? this.readSupport() : this.readLoad(); }
     catch (error) { definition = {type:draft.kind === 'support' ? 'support' : this.loadType.value, inputError:error.message}; }
     // The draft owns the engineering definition; DOM fields retain incomplete input text.
     if (definition.name === undefined && draft.definition.name !== undefined) { definition.name = draft.definition.name; }
-    this.updatingImmediateForm = true;
+    this.updatingDraftForm = true;
     try {
       this.controller.updateAssignmentDraft({definition:definition});
-      if(commit){
-        draft.showErrors = true;
-        var id=this.controller.applyImmediateAssignment();
-        if(id){
-          this.activeInspectorItemId=id;
-          if(draft.kind==='support')this.editingSupportId=id;
-          if(draft.kind==='load')this.editingLoadId=id;
-        }
-      }
-    } finally { this.updatingImmediateForm=false; }
+      if(showErrors) { draft.showErrors = true; }
+    } finally { this.updatingDraftForm=false; }
     if(input && ['INPUT','SELECT'].includes(input.tagName)){
       input.setAttribute('aria-invalid',String(!draft.validation.valid));
       if(!draft.validation.valid)input.setAttribute('aria-describedby',draft.kind+'-status');
       else if(input.getAttribute('aria-describedby')===draft.kind+'-status')input.removeAttribute('aria-describedby');
     }
     this.render(this.controller.document);
+  };
+
+  AnalysisAuthoringUI.prototype.finishInspectorEdit = function () {
+    var draft=this.controller.document.assignmentDraft;
+    if(!draft)return;
+    this.updateDraftFromForm(true);
+    if(!draft.validation.valid) { this.announceSetup(draft.definition.inputError || draft.validation.message); return; }
+    try {
+      this.updatingDraftForm=true;
+      try { this.activeInspectorItemId=this.controller.commitAssignmentDraft(); }
+      finally { this.updatingDraftForm=false; }
+      this.closeInspectorRow({restoreFocus:true,message:'Changes applied.'});
+      if(draft.kind==='material')this.materialForm.dispatchEvent(new CustomEvent('fea-material-applied',{bubbles:true}));
+    } catch(error) { draft.showErrors=true;this.announceSetup(error.message);this.render(this.controller.document); }
+  };
+
+  AnalysisAuthoringUI.prototype.renderEditActions = function (state) {
+    var draft=state.assignmentDraft, bar=document.querySelector('[data-setup-edit-actions]');
+    if(!bar || !draft)return;
+    bar.querySelector('[data-setup-done]').disabled=root.SpjutsimFEA.engineeringBusy(state);
+    bar.querySelector('[data-setup-cancel]').disabled=root.SpjutsimFEA.engineeringBusy(state);
+    var error=bar.parentElement.querySelector('[data-setup-edit-error]');
+    error.hidden=draft.validation.valid || !draft.showErrors;
+    error.textContent=error.hidden ? '' : (draft.definition.inputError || draft.validation.message);
   };
 
   AnalysisAuthoringUI.prototype.returnEditorsToStash = function () {
@@ -643,6 +674,9 @@
     var kind = this.activeInspectorKind;
     var itemId = this.activeInspectorItemId;
     var restoreFocus = options && options.restoreFocus;
+    if(kind==='material' && options && options.cancelEdit) {
+      this.renderedMaterial=undefined;
+    }
     if (options && options.cancelEdit) {
       this.controller.cancelAssignmentDraft();
       if (kind === 'support') { this.resetSupportForm(false); }
@@ -652,12 +686,13 @@
       }
     }
     this.returnEditorsToStash();
+    this.editingSupportId=null;this.editingLoadId=null;
     this.activeInspectorKind = null;
     this.activeInspectorItemId = null;
     this.activeInspectorFocusReturn = null;
     this.render(this.controller.document);
     if (options && options.message) { this.announceSetup(options.message); }
-    else if (options && options.cancelEdit) { this.announceSetup('Editor closed.'); }
+    else if (options && options.cancelEdit) { this.announceSetup('Changes cancelled.'); }
     if (restoreFocus) {
       var selector = '[data-setup-kind="' + kind + '"][data-item-id="' + itemId + '"] [data-setup-row-trigger]';
       var target = document.querySelector(selector);
@@ -732,14 +767,28 @@
       primary.textContent = definition.primaryText;
       summary.className = 'fea-setup-row-summary'; summary.textContent = definition.secondaryText; summary.title=definition.secondaryText;
       meta.className = 'fea-setup-row-meta'; meta.textContent = definition.metaText;
-      trigger.append(chevron, primary, summary, meta);
+      trigger.append(chevron, primary);
       trigger.addEventListener('click', function () { self.openInspectorRow(definition.kind, definition.itemId, trigger); });
       editorHost.id = editorId;
       editorHost.className = 'fea-setup-editor';
       editorHost.dataset.setupEditorHost = '';
       editorHost.hidden = !active;
-      var heading=document.createElement('div');heading.className='fea-setup-row-heading';heading.append(trigger);
-      item.append(heading, editorHost);
+      var rowActions=document.createElement('div');rowActions.className='fea-setup-row-actions';
+      var details=document.createElement('div');details.className='fea-setup-row-details';details.append(summary,meta);
+      var heading=document.createElement('div');heading.className='fea-setup-row-heading';heading.append(trigger,rowActions,details);
+      heading.addEventListener('click',function(event){if(!event.target.closest('button'))trigger.click();});
+      var header=document.createElement('div');header.append(heading);
+      if(active && ['material','support','load','gravity'].includes(definition.kind)) {
+        header.className='fea-setup-open-header';
+        var actions=document.createElement('div');actions.className='fea-editor-actions fea-setup-edit-actions';actions.dataset.setupEditActions='';
+        var done=createEditorAction('Done',true);done.dataset.setupDone='';done.title='Apply changes and close (Enter)';
+        done.addEventListener('click',function(){self.finishInspectorEdit();});
+        var cancel=createEditorAction('Cancel',false);cancel.dataset.setupCancel='';cancel.title='Discard changes and close (Escape)';
+        cancel.addEventListener('click',function(){self.closeInspectorRow({restoreFocus:true,cancelEdit:true});});
+        var editError=document.createElement('div');editError.className='fea-setup-edit-error fea-error';editError.dataset.setupEditError='';editError.hidden=true;
+        actions.append(done,cancel);header.append(actions,editError);
+      }
+      item.append(header, editorHost);
       var removable=definition.itemId!=='new' && (['support','load','gravity'].includes(definition.kind) || definition.kind==='material' && documentState.material || definition.kind==='mesh' && documentState.mesh);
       if(removable){
         var remove=document.createElement('button');remove.type='button';remove.className='fea-icon-button fea-row-delete';remove.dataset.setupDelete='';remove.dataset.actionIntent='danger';
@@ -756,7 +805,7 @@
           self.announceSetup(definition.primaryText+' removed. Undo to restore.');
           var focus=definition.kind==='support'?self.addSupportButton:['load','gravity'].includes(definition.kind)?self.addLoadButton:document.querySelector('[data-setup-kind="'+definition.kind+'"] [data-setup-row-trigger]');
           if(focus)focus.focus();
-        });heading.append(remove);
+        });rowActions.append(remove);
       }
       if (['support','load'].indexOf(definition.kind) >= 0 && definition.itemId !== 'new') {
         var assignment = (definition.kind === 'support' ? documentState.boundaryConditions : documentState.loads).find(function(entry){return entry.id === definition.itemId;});
@@ -776,8 +825,8 @@
           var updated=document.querySelector('[data-setup-kind="'+definition.kind+'"][data-item-id="'+definition.itemId+'"] [data-setup-include]');
           if(updated)updated.focus({preventScroll:true});
         });
-        heading.insertBefore(duplicateButton,heading.querySelector('[data-setup-delete]'));
-        heading.insertBefore(include,heading.querySelector('[data-setup-delete]'));
+        rowActions.insertBefore(duplicateButton,rowActions.querySelector('[data-setup-delete]'));
+        rowActions.insertBefore(include,rowActions.querySelector('[data-setup-delete]'));
       }
       if (definition.kind === 'mesh') {
         var meshOptions = document.createElement('button');
@@ -786,7 +835,7 @@
         meshOptions.appendChild(root.PortableUIIcons.createIcon('settings',{document:document,size:20}));
         meshOptions.disabled = !documentState.geometry || root.SpjutsimFEA.engineeringBusy(documentState) || root.SpjutsimFEA.hasPendingAssignment(documentState);
         meshOptions.addEventListener('click',function(){document.getElementById('mesh-options-dialog').showModal();});
-        heading.insertBefore(meshOptions,heading.querySelector('[data-setup-delete]'));
+        rowActions.insertBefore(meshOptions,rowActions.querySelector('[data-setup-delete]'));
       }
       list.append(item);
     });
@@ -795,9 +844,9 @@
   };
 
   AnalysisAuthoringUI.prototype.render = function (documentState) {
-    if (!this.materialForm || this.updatingImmediateForm || this.openingInspector) { return; }
+    if (!this.materialForm || this.updatingDraftForm || this.openingInspector) { return; }
     var activeDraft=documentState.assignmentDraft;
-    if(this.activeInspectorKind && ['support','load','gravity'].includes(this.activeInspectorKind) && !activeDraft){
+    if(this.activeInspectorKind && ['material','support','load','gravity'].includes(this.activeInspectorKind) && !activeDraft){
       this.activeInspectorKind=null;this.activeInspectorItemId=null;this.editingSupportId=null;this.editingLoadId=null;
     }
     if(activeDraft && activeDraft.immediate && activeDraft.baseAnalysisRevision!==documentState.analysisRevision){
@@ -810,7 +859,7 @@
     this.lastFrameDraft=frameDraft;this.lastFrameFaces=frameFaces;
     // Face picking changes a CAD frame's input, just as a form change does.
     // Store the selection first so the controller's notification cannot recurse.
-    if(selectionChanged && frameDraft.immediate) {
+    if(selectionChanged && frameEditor) {
       this.updateDraftFromForm(true);return;
     }
     this.renderMaterial(documentState);
@@ -819,9 +868,10 @@
     this.renderGravity(documentState);
     this.renderModelOrientation(documentState);
     this.renderSetupInspector(documentState);
+    this.renderEditActions(documentState);
     var busy=root.SpjutsimFEA.engineeringBusy(documentState), pending=root.SpjutsimFEA.hasPendingAssignment(documentState);
     [this.materialForm,this.gravityForm].forEach(function(form){Array.from(form.elements).forEach(function(control){if(control.id!=='gravity-visible')control.disabled=busy;});});
-    document.querySelectorAll('[data-setup-duplicate], [data-setup-include], [data-mesh-options]').forEach(function(button){button.disabled=busy || pending || !documentState.geometry;});
+    document.querySelectorAll('[data-setup-duplicate], [data-setup-include], [data-mesh-options], [data-setup-delete]').forEach(function(button){button.disabled=busy || pending || !documentState.geometry;});
     var draft = documentState.assignmentDraft;
     if (this.supportFrameEditor) {
       this.supportFrameEditor.preview(draft && draft.kind==='support' ? draft.definition : null,documentState.geometry);
@@ -829,12 +879,15 @@
     }
     if (this.loadFrameEditor) { this.loadFrameEditor.preview(draft && draft.kind==='load' ? draft.definition : null,documentState.geometry); }
     if (draft) {
-      var status = draft.kind === 'gravity' ? this.gravityStatus : draft.kind === 'support' ? this.supportStatus : this.loadStatus;
+      var status = draft.kind === 'material' ? this.materialStatus : draft.kind === 'gravity' ? this.gravityStatus : draft.kind === 'support' ? this.supportStatus : this.loadStatus;
       var summary = root.SpjutsimFEA.describeAssignmentDraft ? root.SpjutsimFEA.describeAssignmentDraft(documentState) : '';
       status.textContent = draft.validation.valid || !draft.showErrors ? (draft.duplicate && !draft.itemId && !draft.faceIds.length ? 'Select new faces for this copy.' : '') : (draft.definition.inputError || draft.validation.message);
       var info=byId(draft.kind+'-details');if(info)info.textContent=(draft.kind==='gravity'?'':draft.faceIds.length+' faces. ')+summary;
       if(draft.kind==='load' && draft.definition.type==='bearing' && byId('surface-load-help'))byId('surface-load-help').textContent=summary;
       status.classList.toggle('fea-error', !draft.validation.valid && draft.showErrors === true);
+      var warning=draft.validation.valid && draft.validation.warnings && draft.validation.warnings[0];
+      if(warning)status.textContent=warning.message;
+      status.classList.toggle('fea-warning', Boolean(warning));
 
     }
   };

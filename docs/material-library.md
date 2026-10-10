@@ -24,8 +24,9 @@ Material library opens a searchable table with Add, Copy & Modify, Edit, Delete,
 and Use. Edit exposes all properties (including blank optional strengths), family,
 standard, source, source URL, notes, and per-property source links. Factory records
 are immutable: Edit displays their full record; Copy & Modify creates a user record.
-Save modifies the reusable library; Use and Save & Use immediately assign an
-independent project material snapshot. Project Undo does not modify library records.
+Save modifies the reusable library; Use and Save & Use preview an independent
+project material snapshot; Done in the pinned setup header applies it. Project Undo
+does not modify library records.
 
 Printed-material variability notes and model limitations stay in catalog metadata,
 visible in the full editor. They are not repeated in the normal assignment panel.

@@ -37,7 +37,8 @@
     youngs.value='-1';youngs.dispatchEvent(new win.Event('change',{bubbles:true}));
     assert(doc.getElementById('setup-guide-title').textContent==='Apply a material','Invalid material advanced guide');
     youngs.value=originalYoungs;youngs.dispatchEvent(new win.Event('change',{bubbles:true}));
-    assert(doc.getElementById('setup-guide-title').textContent==='Add supports','Valid material did not advance guide');
+    doc.querySelector('[data-setup-done]').click();
+    assert(doc.getElementById('setup-guide-title').textContent==='Add supports','Material Done did not advance guide');
     doc.querySelector('[data-setup-kind="support"] [data-setup-row-trigger]').click();
     var target=doc.getElementById('support-name');
     assert(doc.querySelector('.fea-guide-target')===target,'Support guide must highlight editor');
@@ -55,6 +56,7 @@
     assert(doc.querySelector('.fea-guide-target').id==='viewport','Empty support must point to model');
     var count=app.document.boundaryConditions.length;
     app.toggleDraftFace(app.document.geometry.faceIds[0]);
+    doc.querySelector('[data-setup-done]').click();
     assert(app.document.boundaryConditions.length===count+1 && !next.disabled,'Face selection did not commit support or permit Next');
     app.undoEngineeringEdit();assert(app.document.boundaryConditions.length===count,'Undo support failed');
     next.click();assert(doc.getElementById('setup-guide-title').textContent==='Add loads','Guide skipped loads');

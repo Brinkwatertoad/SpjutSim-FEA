@@ -95,15 +95,31 @@ and NOTICE are first-party policy documents.
 ## Publish only after review
 
 The owner must review `distribution-policy.md` and `artifact-manifest.json`
-before the final review record is approved. Then restage the candidate so its
-source includes that review, and run:
+before the final review record is approved. Explicit owner publication
+authorization in the task conversation can renew that record for the requested
+revision. Wrangler restages the candidate so its source includes the review:
 
 ```sh
-python3 tools/audit-distribution.py --release-root build/distribution/web --require-approved
+python3 tools/audit-distribution.py --require-approved
 wrangler deploy
 ```
 
-Wrangler serves the staged directory and runs the same gate before publishing.
+Wrangler's build command now runs:
+
+```sh
+python3 tools/package-distribution.py --prepare-deployment --fetch-sources
+```
+
+Every deployment rebuilds the staged directory from current source, includes
+exact application and SHA-256-pinned upstream archives, and audits the package
+before upload. Existing cached upstream sources work offline; missing ones are
+downloaded and verified. Publication approval must match the artifact manifest.
+The previous deployment candidate remains intact if approval or packaging fails;
+only a successfully audited replacement takes its place. This automatic source
+accompaniment stays in the project publishing process while retained licenses
+require it. Do not bypass the build command when publishing.
+
+Wrangler serves this freshly staged directory.
 Direct `web/` deployment omits accompanied sources and is not this release path.
 For folder distribution, distribute the entire staged `web/` directory, including
 `sources/` and `licenses/`, and open its `index.html` locally. No source download

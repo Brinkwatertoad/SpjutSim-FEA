@@ -321,7 +321,7 @@ class FrameworkTests(unittest.TestCase):
                              'setup-inspector-load-list', 'setup-inspector-mesh-list', 'setup-inspector-form-stash', 'delete-mesh-button'):
             self.assertIn(inspector_id, index)
         for appearance_id in ('settings-tab-appearance', 'settings-panel-appearance', 'color-scheme-select',
-                              'color-scheme-import-input', 'color-scheme-export-button'):
+                              'color-scheme-import-input', 'color-scheme-editor'):
             self.assertIn(appearance_id, index)
         for legacy_section_id in ('material-tool', 'supports-tool', 'loads-tool'):
             self.assertNotIn(f'id="{legacy_section_id}"', index)

@@ -115,14 +115,39 @@ def stage(root, output, fetch_sources=False):
     return output
 
 
+def prepare_deployment(root, output, fetch_sources=False):
+    """Rebuild the deployment stage, preserving the previous one on failure."""
+    if not output.resolve().is_relative_to((root / 'build').resolve()):
+        raise ValueError('output must be inside the candidate build/ directory')
+    audit.audit(root, require_approved=True)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=output.parent, prefix='deployment-') as temp:
+        candidate = stage(root, Path(temp) / 'web', fetch_sources)
+        # Recheck approval after packaging; stage already audited exact source contents.
+        audit.audit(root, require_approved=True)
+        previous = Path(temp) / 'previous-web'
+        if output.exists():
+            output.rename(previous)
+        try:
+            candidate.rename(output)
+        except OSError:
+            if previous.exists():
+                previous.rename(output)
+            raise
+    return output
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=ROOT)
     parser.add_argument('--output', type=Path)
     parser.add_argument('--fetch-sources', action='store_true')
+    parser.add_argument('--prepare-deployment', action='store_true',
+                        help='require publication approval and rebuild the deployment stage automatically')
     args = parser.parse_args()
     try:
-        output = stage(args.root, args.output or args.root / 'build/distribution/web', args.fetch_sources)
+        prepare = prepare_deployment if args.prepare_deployment else stage
+        output = prepare(args.root, args.output or args.root / 'build/distribution/web', args.fetch_sources)
     except (OSError, ValueError, KeyError, TypeError, tarfile.TarError) as error:
         print(f'distribution packaging failed: {error}', file=sys.stderr)
         return 1

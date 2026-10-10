@@ -24,12 +24,13 @@
       var negative=geometry.faceIds.find(function(id){return api.analyzeGeometryFaceNormal(geometry,id).normal[0]<-0.99;});
       var positive=geometry.faceIds.find(function(id){return api.analyzeGeometryFaceNormal(geometry,id).normal[0]>0.99;});
       assert(doc.querySelector('[data-setup-kind="support"] strong').textContent==='Add support…' && doc.querySelector('[data-setup-kind="load"] strong').textContent==='Add load…','Empty assignment rows are missing');
-      app.replaceSelectedFaces([negative]);click('[data-setup-kind="support"][data-item-id="new"] [data-setup-row-trigger]');fill('support-name','Fixed end');
+      app.replaceSelectedFaces([negative]);click('[data-setup-kind="support"][data-item-id="new"] [data-setup-row-trigger]');fill('support-name','Fixed end');click('[data-setup-done]');
       click('#setup-add-load-button');app.toggleDraftFace(positive);fill('load-type','total-force');
       assert(doc.getElementById('load-force-mode').value==='normal' && doc.getElementById('load-magnitude').value==='1','Default normal force magnitude missing');
       fill('load-force-mode','components');fill('load-name','Axial force');
       fill('load-fx','1000');fill('load-fy','0');fill('load-fz','0');
-      assert(app.document.assignmentDraft.validation.valid && app.document.loads.length===1,'Immediate load did not commit');
+      assert(app.document.assignmentDraft.validation.valid && !app.document.loads.length,'Load draft committed early');click('[data-setup-done]');
+      assert(app.document.loads.length===1,'Done did not commit load');
       assert(!app.document.selectedFaceIds.length,'Apply left faces selected');
       app.replaceMeshSettings({preset:'coarse',elementType:'tet10'});click('[data-setup-kind="mesh"] [data-setup-row-trigger]');click('#generate-mesh-button');
       await waitFor(function(){return app.document.meshGeneration.status==='succeeded';});

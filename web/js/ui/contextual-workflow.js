@@ -56,9 +56,9 @@
     try{dismissed=root.localStorage.getItem(guideKey)==='true';}catch(error){}
     var steps=[
       {title:'Import a part',text:'Open Model to import a CAD solid. Dismiss this guide to use the opening panel or prepared cube example.',target:'[data-setup-kind="model"] [data-setup-row-trigger]'},
-      {title:'Apply a material',text:'Open Material to choose a material or enter its properties.',target:'[data-setup-kind="material"] [data-setup-row-trigger]'},
-      {title:'Add supports',text:'Choose Add to create a support. Add as many supports as your part needs, then choose Next.',target:'#setup-add-support-button'},
-      {title:'Add loads',text:'Choose Add to create a load. Add further loads if needed, then choose Next.',target:'#setup-add-load-button'},
+      {title:'Apply a material',text:'Open Material to choose a material or enter its properties, then choose Done.',target:'[data-setup-kind="material"] [data-setup-row-trigger]'},
+      {title:'Add supports',text:'Choose Add to create a support. Choose Done to apply each support. Add as many as your part needs, then choose Next.',target:'#setup-add-support-button'},
+      {title:'Add loads',text:'Choose Add to create a load. Choose Done to apply each load. Add further loads if needed, then choose Next.',target:'#setup-add-load-button'},
       {title:'Generate mesh',text:'Open Mesh, choose a density and Generate mesh. Start with the default density; complicated parts may need finer settings.',target:'[data-setup-kind="mesh"] [data-setup-row-trigger]'},
       {title:'Inspect the mesh',text:'Choose Mesh view, then rotate and zoom to inspect holes, small features and loaded areas. Refine the density and regenerate if needed. Visual inspection is a first check; convergence is needed to assess accuracy.',target:'[data-view-mode="mesh"]'},
       {title:'Solve',text:'Choose Solve to run checks and calculate results. Resolve any reported setup problems before continuing.',target:'#solve-button'},
@@ -111,7 +111,7 @@
       document.getElementById('setup-guide-title').textContent=needsFaces() ? 'Select '+(step===2?'support':'load')+' faces' : steps[step].title;
       var target=guideTarget(),text=steps[step].text;
       if(needsFaces()){text='Click faces on the model to select them. Click a selected face again to deselect it.';}
-      if(target && target.closest('form'))text='Choices apply immediately; valid numbers apply on Enter or when you leave the field. Escape closes the editor; Undo reverses applied edits. Engineering changes clear solved results. Save project downloads a file.';
+      if(target && target.closest('form'))text='Preview changes in the open editor, then choose Done (Enter) to apply or Cancel (Escape) to discard. Undo reverses applied edits. Engineering changes clear solved results. Save project downloads a file.';
       if(step===4 && target && target.id==='generate-mesh-button'){text='Choose a mesh density, then click Generate mesh. Complicated parts may need finer settings. When generation finishes, choose Next to inspect it.';}
       if(step===7 && app.document.projectMetadata && app.document.projectMetadata.name==='Cube example'){text+=' The cube should extend by 5 nm under 1 kPa axial stress.';}
       if(step===7 && app.document.projectMetadata && app.document.projectMetadata.name==='Cantilever beam example'){
@@ -152,6 +152,7 @@
     document.getElementById('empty-import').addEventListener('click',function(){document.getElementById('import-step-input').click();});
     function openExample(beam){
       if(app.projectOpening || api.engineeringBusy(app.document) || api.hasPendingAssignment(app.document)){return;}
+      if(ui.menuController){ui.menuController.closeAll({restoreFocus:true});}
       importCadFile(new File([beam?api.EXAMPLE_CANTILEVER_STEP:api.EXAMPLE_CUBE_STEP],beam?'cantilever-beam.step':'example-cube.step'),{example:beam?'cantilever':true});
     }
     document.getElementById('load-example').addEventListener('click',function(){openExample(false);});

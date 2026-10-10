@@ -14,7 +14,7 @@ class DeploymentTests(unittest.TestCase):
         self.assertTrue(config['workers_dev'])
         self.assertEqual(config['assets']['directory'], './build/distribution/web')
         self.assertEqual(config['build']['command'],
-                         'python3 tools/audit-distribution.py --release-root build/distribution/web --require-approved')
+                         'python3 tools/package-distribution.py --prepare-deployment --fetch-sources')
         self.assertEqual(config['routes'], [{
             'pattern': 'fea.spjutsim.com',
             'custom_domain': True,

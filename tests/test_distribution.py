@@ -216,6 +216,52 @@ class DistributionTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stderr)
         self.assertIn('source archive', result.stderr)
 
+    def approve_candidate(self):
+        self.policy['final_review'] = {
+            'status': 'approved', 'approver': 'Owner', 'date': '2026-10-10',
+            'reference': 'Explicit publication approval',
+            'artifact_manifest_sha256': self.record('docs/release/artifact-manifest.json')['sha256'],
+        }
+        self.save()
+
+    def prepare_deployment(self):
+        return subprocess.run(['python3', str(ROOT / 'tools/package-distribution.py'),
+                               '--root', str(self.root), '--prepare-deployment'],
+                              capture_output=True, text=True)
+
+    def test_deployment_rebuilds_existing_stage_and_exact_corresponding_source(self):
+        self.approve_candidate()
+        result = self.prepare_deployment()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        output = self.root / 'build/distribution/web'
+        (output / 'obsolete.txt').write_text('old candidate')
+        self.write('web/index.html', '<p>Updated application</p>\n')
+        self.write('new-source.c', 'int updated;\n')
+        result = self.prepare_deployment()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse((output / 'obsolete.txt').exists())
+        self.assertEqual((output / 'index.html').read_text(), '<p>Updated application</p>\n')
+        result = self.run_audit('--release-root', str(output), '--require-approved')
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_deployment_keeps_previous_stage_when_approval_or_source_packaging_fails(self):
+        output = self.root / 'build/distribution/web'
+        output.mkdir(parents=True)
+        sentinel = output / 'index.html'
+        sentinel.write_text('previous release')
+        result = self.prepare_deployment()
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn('final review', result.stderr)
+        self.assertEqual(sentinel.read_text(), 'previous release')
+        self.manifest['components']['runtime']['source']['archive'] = {
+            'url': 'https://example.invalid/pinned.tar.gz', 'sha256': '0' * 64}
+        self.save()
+        self.approve_candidate()
+        result = self.prepare_deployment()
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn('source archive', result.stderr)
+        self.assertEqual(sentinel.read_text(), 'previous release')
+
 
 class RepositoryDistributionTests(unittest.TestCase):
     def test_checked_in_candidate_matches_release_manifest(self):

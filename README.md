@@ -112,7 +112,7 @@ glyph-orientation checks. It should report `Passed` without a server.
 Open `tests/browser/local-frame-tests.html`, `tests/browser/local-support-ui-tests.html`, and
 `tests/browser/local-support-workflow-tests.html` with
 local-file access enabled or from the HTTP server. They verify frame validation,
-immediate frame edits/Undo, rotated Tet4/Tet10 analytical solves, nonzero prescribed
+draft frame edits/Done/Undo, rotated Tet4/Tet10 analytical solves, nonzero prescribed
 motion, intersecting-face conflicts, signed glyphs, project reopen, replacement,
 undo/suppression and curved-face rejection. Native CTest includes local constraint
 and full/half symmetry benchmarks. See [Plan 35 evidence](docs/reviews/35-local-directions-and-supports.md).
@@ -194,19 +194,21 @@ No npm, Node runtime, frontend framework, transpiler, or application bundler is 
 
 The checked-in `wrangler.jsonc` publishes an audited source-accompanied package to the
 `spjutsim-fea` Worker's `workers.dev` hostname and the `fea.spjutsim.com`
-Custom Domain. Prepare a fresh candidate before deployment:
+Custom Domain. After publication approval is recorded for the reviewed artifact
+manifest, deploy with:
 
 ```sh
 python3 tools/audit-distribution.py
-python3 tools/package-distribution.py --fetch-sources
-python3 tools/audit-distribution.py --release-root build/distribution/web --require-approved
 wrangler deploy
 ```
 
 The owner approved GPL-2.0-or-later for first-party FEA and copied UI source.
-Final release review remains pending. Wrangler runs
-the distribution audit and serves `build/distribution/web`, including local license
-notices and exact corresponding-source archives. Do not deploy bare `web/`.
+Wrangler automatically rebuilds `build/distribution/web` with local license
+notices and exact corresponding-source archives, fetches missing pinned upstream
+sources, and audits the complete package before uploading. Failed approval or
+packaging keeps the previous candidate. This source accompaniment remains part
+of every deployment while the project's licenses require it. General v1 owner
+acceptance remains separate from publication approval. Do not deploy bare `web/`.
 See [the release procedure](docs/release/SOURCE.md) for rebuilding, offline
 packaging, reviewing, and retaining source for each release.
 
@@ -236,8 +238,8 @@ Rectangular manual frames stay global; planar CAD frames follow model rotation.
 Planar sliding/symmetry presets restrain normal motion and leave tangential motion
 free. Symmetry requires appropriate geometry/loading; loads are not scaled automatically. Loads include
 pressure, total global/local force, area-distributed normal force and gravity. Valid
-changes commit immediately; incomplete text stays local. Escape closes the editor,
-and Undo reverses committed edits.
+changes preview live until Done applies the whole edit. Cancel or Escape discards
+the draft, and Undo reverses committed edits.
 Existing rows locate/edit their assignments. Model orientation supports axis rotation
 and selected-face alignment; replacing CAD uses explicit face-mapping review.
 
@@ -305,25 +307,47 @@ Model shows CAD volume and density-derived mass before meshing. Display offers
 pick-through, hide/isolate and Show all for Model/Mesh faces; assignment rows locate
 existing loads/supports. Visibility never removes faces from the analysis.
 The options icon directly on the Mesh row opens formulation settings, including
-Tet4; Tet10 remains the default. Nondefault settings remain in the row summary. The duplicate View menu is removed; signed views,
+Tet4; Tet10 remains the default and is omitted from Setup summaries/status.
+The optional Tet4 choice is shown there. The duplicate View menu is removed; signed views,
 Fit, Reset and Perspective remain at the viewport. Report controls sit together
 beside Solve/Results. Stress/Deformation interaction is retained.
+Deformation uses the shared Run/Stop icons, a compact slider, and a fixed-width
+scale readout so the controls stay in place throughout animation.
+While meshing or solving, danger-styled Cancel sits beside Solve in the same
+action group.
 
-Setup selectors commit immediately. Numeric fields commit on Enter or blur; invalid
-text leaves the previous valid assignment intact. Close an editor with its row or
-Escape, and use Undo to reverse committed changes. Existing compact rows expose
+Settings → Color scheme uses the shared UI Kit color editor. Edit interface,
+canvas and FEA colors, rename or duplicate schemes, and clear advanced overrides.
+Color fields use two columns, with a single column on small screens. The compact
+toolbar keeps its action buttons together. Interface demo includes a modal picker.
+The overflow menu offers Reset This Scheme and Reset Color Schemes; portable
+JSON import/export retains FEA roles. Light Mode uses soft gray surfaces and a
+pale gray viewport. Preferences persist locally and do not change analysis data.
+`tests/browser/appearance-workflow-tests.html` checks editing, resets, portable
+files, persistence, and the action/menu interactions.
+
+Material, support, load and gravity editors have one compact Done/Cancel bar pinned
+to the open row header. Fields and face picks preview live; Done (or Enter in a
+value field) applies the whole edit and collapses the row. Cancel/Escape discards
+it. Invalid input keeps the editor open and preserves the applied setup. Finish
+unapplied changes with Done or Cancel before switching rows, saving or solving.
+Model orientation and mesh generation remain direct actions; display units and
+visibility preferences remain immediate. Use Undo to reverse committed edits.
+Existing compact rows expose
 right-aligned removal, Duplicate onto new faces, and an immediate Include/Suppress
-eye toggle. Leaving or switching assignment editors clears their selected faces;
-deliberate picks outside an editor can seed a new assignment. Rectangular frames
+eye toggle. Switching clean assignment editors clears their selected faces; Cancel
+restores the selection from before opening the editor. Deliberate picks outside an
+editor can seed a new assignment. Rectangular frames
 use global-axis rotation controls and an axis preview; supplementary area/direction explanations share one info control
 beside each relevant field heading, with details directly below.
 
 The [material library](docs/material-library.md) reuses the Truss searchable table
 and full property editor, including optional properties, notes and sources. Save
-stores a reusable record; Use assigns a project snapshot. Save and Edit in library
-icons sit beside the material dropdown: Save updates a selected custom entry or
+stores a reusable record; Use previews a project snapshot until Done applies it.
+Save and Edit in library icons sit beside the material dropdown: Save updates a selected custom entry or
 creates a custom copy of a built-in, and Edit opens its full library editor.
-Cross-app import remains future work. Test these workflows with `tests/browser/immediate-setup-tests.html`
+Cross-app import remains future work. Test these workflows with
+`tests/browser/header-editing-tests.html`, `tests/browser/immediate-setup-tests.html`,
 and `tests/browser/material-library-tests.html` using the same local-file browser
 configuration as the CAD workflow tests.
 

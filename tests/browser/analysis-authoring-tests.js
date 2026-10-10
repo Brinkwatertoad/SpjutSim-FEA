@@ -417,10 +417,35 @@
       schemes.activePalette().extensions.fea.support === '#22c55e',
     'FEA Classic did not preserve the existing load/support semantic colors');
     schemes.select('light');
-    assert(rootElement.dataset.colorScheme === 'light' && rootElement.style.getPropertyValue('--ui-color-bg') === '#f6f4ef' &&
+    assert(rootElement.dataset.colorScheme === 'light' && rootElement.style.getPropertyValue('--ui-color-bg') === '#e8e7e3' &&
       rootElement.style.getPropertyValue('--ui-color-axis-z') !== '',
     'selected scheme did not apply shared and FEA extension roles to CSS');
     assert(storage.getItem('spjutsim-fea-color-scheme-active') === 'light', 'active color scheme was not persisted');
+    assert(schemes.activePalette().surface !== '#ffffff' && schemes.activePalette().canvasBackground !== '#ffffff',
+      'Light mode still uses glaring white surfaces');
+    var lightFactory = factories[1].authored.accent;
+    schemes.updateRole('authored','accent','#225588');
+    schemes.rename('My light scheme');
+    assert(factories[1].authored.accent === lightFactory && schemes.activeEntry().modified &&
+      schemes.activeEntry().label === 'My light scheme', 'Editing a factory scheme mutated its reset baseline');
+    var copyId = schemes.duplicate();
+    schemes.updateRole('extensions.fea','load','#aabbcc');
+    schemes.updateRole('derivedOverrides','border','#445566');
+    schemes.clearOverride('border');
+    assert(schemes.activePalette().border !== '#445566' && schemes.activePalette().extensions.fea.load === '#aabbcc',
+      'Clearing a derived override changed another color role');
+    var reloaded = new api.FEAColorSchemes(storage, document.createElement('div'));
+    assert(reloaded.activeEntry().id === copyId && reloaded.activeEntry().authored.accent === '#225588' &&
+      reloaded.activePalette().extensions.fea.load === '#aabbcc', 'Custom colors did not survive reload');
+    expectError(function(){schemes.updateRole('authored','accent','red');}, 'six-digit');
+    assert(schemes.activeEntry().authored.accent === '#225588', 'Invalid color replaced the previous valid value');
+    schemes.remove();schemes.select('light');schemes.restore();
+    assert(schemes.activeEntry().label === 'Light Mode' && schemes.activeEntry().authored.accent === lightFactory,
+      'Reset This Scheme failed to restore its factory values');
+    schemes.remove();
+    assert(!schemes.library().entries.some(function(entry){return entry.id === 'light';}), 'Deleted factory scheme remained visible');
+    schemes.reset();
+    assert(schemes.library().entries.length === 4 && schemes.activeEntry().id === 'fea-classic', 'Reset Color Schemes failed to restore the library');
     var imported = schemes.importDocument({
       format: 'spjutsim-color-schemes', version: 3,
       schemes: [{ id: 'portable-test', label: 'Portable test', authored: {
@@ -439,8 +464,16 @@
     var failingStorage = { getItem: function () { return null; }, setItem: function () { throw new Error('blocked'); } };
     var inMemory = new api.FEAColorSchemes(failingStorage, document.createElement('div'));
     inMemory.select('dark');
+    inMemory.updateRole('authored','accent','#abcdef');
     assert(inMemory.activeEntry().id === 'dark' && inMemory.storageWarning.indexOf('active') !== -1,
       'storage failure prevented an in-memory color scheme change');
+    while(inMemory.library().entries.length > 1){inMemory.remove();}
+    expectError(function(){inMemory.remove();}, 'at least one');
+    var emptyStorage = memoryStorage();
+    emptyStorage.setItem('spjutsim-fea-color-scheme-library-v1',JSON.stringify({hiddenFactoryIds:factories.map(function(entry){return entry.id;})}));
+    var recovered = new api.FEAColorSchemes(emptyStorage,document.createElement('div'));
+    assert(recovered.activeEntry().id === 'fea-classic' && recovered.library().entries.length === 4 && recovered.storageWarning.includes('empty'),
+      'An empty saved scheme library did not recover to usable factory colors');
   }
 
   function testSetupInspectorSummaries() {
@@ -473,7 +506,7 @@
     assert(rows[4].secondaryText === 'Pressure · 1.5 MPa', 'pressure row omitted display units');
     assert(rows[5].secondaryText === 'Force · [120, −30, 45] N', 'force row omitted vector or display units');
     assert(rows[6].secondaryText === '[0, 0, −9.80665] m/s²', 'gravity row omitted acceleration');
-    assert(rows[7].secondaryText === '42 Tet10 elements' && rows[7].metaText === '18 nodes · Normal',
+    assert(rows[7].secondaryText === '42 elements' && rows[7].metaText === '18 nodes · Normal',
       'mesh row omitted generated mesh statistics or density');
     assert(rows.every(function (row) { return row.ariaLabel.indexOf(row.primaryText) !== -1; }),
       'setup row accessible label omitted its primary text');
@@ -632,6 +665,7 @@
     controller.replaceGeometry(cubeGeometry('cube-ui'), { sourceName: 'cube.step', sourceFormat: 'step', sourceBytes: new Uint8Array([4]).buffer });
     authoring.start();
     controller.subscribe(function (documentState) { authoring.render(documentState); });
+    authoring.openInspectorRow('material','material');
     document.getElementById('material-name').value = 'Keyboard steel';
     document.getElementById('material-youngs').value = '200';
     document.getElementById('material-poisson').value = '0.3';
@@ -642,7 +676,7 @@
     authoring.openInspectorRow('support','new');
     document.getElementById('support-form').requestSubmit();
     assert(state.boundaryConditions.length === 1 && state.boundaryConditions[0].name === 'Support 1', 'keyboard form submission did not add an auto-named support');
-    assert(document.getElementById('constraint-stability-summary').textContent.indexOf('Fully constrained · Preview') === 0,
+    assert(document.getElementById('constraint-stability-summary').textContent.indexOf('Fully constrained · Constrained:') === 0,
       'compact setup inspector did not show provisional full constraint stability');
     authoring.openInspectorRow('load','new');
     controller.toggleDraftFace('face-x+');
@@ -654,12 +688,17 @@
       'compact setup rows were not rendered in model/material/support/load/mesh order');
     var compactSupportTrigger = document.querySelector('[data-setup-kind="support"] [data-setup-row-trigger]');
     var supportLabelBounds = compactSupportTrigger.querySelector('strong').getBoundingClientRect();
-    var supportSummaryBounds = compactSupportTrigger.querySelector('.fea-setup-row-summary').getBoundingClientRect();
-    assert(supportSummaryBounds.top < supportLabelBounds.bottom &&
-      Math.abs(supportSummaryBounds.right - (compactSupportTrigger.getBoundingClientRect().right - 6)) <= 1,
-      'support label and constrained-component summary were not kept on one line');
+    var supportHeading = compactSupportTrigger.closest('.fea-setup-row-heading');
+    var supportSummaryBounds = supportHeading.querySelector('.fea-setup-row-summary').getBoundingClientRect();
+    var supportDetailsBounds = supportHeading.querySelector('.fea-setup-row-details').getBoundingClientRect();
+    var supportActionsBounds = supportHeading.querySelector('.fea-setup-row-actions').getBoundingClientRect();
+    assert(supportSummaryBounds.top >= Math.max(supportLabelBounds.bottom, supportActionsBounds.bottom) &&
+      Math.abs(supportDetailsBounds.width - (supportHeading.getBoundingClientRect().width - 12)) <= 1,
+      'support summary must use the full row width below its title and actions');
+    assert(supportActionsBounds.left >= compactSupportTrigger.getBoundingClientRect().right + 7,
+      'support actions crowd the title');
     var modelTrigger = document.querySelector('[data-setup-kind="model"] [data-setup-row-trigger]');
-    modelTrigger.click();
+    modelTrigger.closest('.fea-setup-row-heading').querySelector('.fea-setup-row-summary').click();
     assert(document.getElementById('model-rotation-angle').value === '90', 'model rotation did not default to 90 degrees');
     document.getElementById('model-rotation-axis').value = 'z';
     document.getElementById('rotate-model-positive').click();
@@ -690,7 +729,7 @@
     assert(supportTrigger && supportTrigger.getAttribute('aria-expanded') === 'false', 'support setup row was missing or not collapsed');
     controller.replaceSelectedFaces(['face-z+']);
     supportTrigger.click();
-    assert(state.selectedFaceIds.join('|') === 'face-x-', 'support setup row did not highlight its faces');
+    assert(state.assignmentDraft.faceIds.join('|') === 'face-x-', 'support setup row did not expose its highlighted draft faces');
     supportTrigger = document.querySelector('[data-setup-kind="support"][data-item-id="support-1"] [data-setup-row-trigger]');
     assert(supportTrigger.querySelector('.fea-chevron').textContent === '▶', 'Setup row lacks the Truss disclosure icon');
     assert(supportTrigger.getAttribute('aria-expanded') === 'true', 'selected setup row did not expose expanded state');
@@ -702,7 +741,7 @@
     var escapeEvent = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
     assert(authoring.handleDocumentKeyDown(escapeEvent), 'inline editor did not consume Escape');
     assert(escapeEvent.defaultPrevented && !authoring.activeInspectorKind, 'Escape did not close and consume the inline editor');
-    assert(state.selectedFaceIds.length === 0, 'closing inline editor retained editor-owned faces');
+    assert(state.selectedFaceIds.join('|') === 'face-z+', 'Cancel did not restore the ordinary selection from before opening');
     supportTrigger = document.querySelector('[data-setup-kind="support"][data-item-id="support-1"] [data-setup-row-trigger]');
     supportTrigger.click();
     supportTrigger.focus();
@@ -742,7 +781,7 @@
     'custom two-axis support did not save the enabled global components');
     assert(document.querySelector('[data-setup-kind="support"][data-item-id="support-1"] .fea-setup-row-summary').textContent === 'Y 0 mm · Z 1.25 mm',
       'compact support row did not show its component values');
-    assert(document.getElementById('constraint-stability-summary').textContent.indexOf('Underconstrained · Preview') === 0 &&
+    assert(document.getElementById('constraint-stability-summary').textContent.indexOf('Underconstrained · Constrained:') === 0 &&
       document.getElementById('constraint-stability-summary').textContent.indexOf('Free: Tx') !== -1,
     'compact stability line did not identify the free global translation');
     document.getElementById('load-type').value = 'total-force';
@@ -762,7 +801,7 @@
     assert(state.assignmentDraft.definition.pressurePa === 2.25e6 && state.analysisRevision === draftRevision && state.loads[0].pressurePa !== 2.25e6, 'Live input committed or failed to update the authoritative draft');
     assert(document.activeElement === pressureInput, 'Live input lost focus during preview rendering');
     document.getElementById('setup-add-support-button').click();
-    assert(authoring.activeInspectorKind === 'support','Incomplete editor blocked navigation');
+    assert(authoring.activeInspectorKind === 'load' && state.assignmentDraft.definition.pressurePa === 2.25e6,'Switching discarded unapplied changes');
     authoring.closeInspectorRow({cancelEdit:true});
     document.querySelector('[data-setup-kind="load"][data-item-id="'+loadItemId+'"] [data-setup-delete]').click();
     assert(!state.loads.length,'Compact delete did not remove load');
@@ -778,7 +817,6 @@
       'ordinary model/material/support/load setup did not fit in the normal tools-pane viewport');
 
     var gravityTrigger = document.querySelector('[data-setup-kind="gravity"] [data-setup-row-trigger]');
-    gravityTrigger.click();
     document.querySelector('[data-setup-kind="gravity"] [data-setup-delete]').click();
     assert(!document.querySelector('[data-setup-kind="gravity"]'), 'disabled gravity remained in the compact setup list');
     assert(authoring.activeInspectorKind === null, 'disabling gravity left a missing inspector row active');

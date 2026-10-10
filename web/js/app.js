@@ -325,8 +325,8 @@
     if (overlayFrame === null) { overlayFrame = root.requestAnimationFrame(function () { overlayFrame = null; viewport.setAnalysisOverlay(app.document); }); }
     var indicator = document.getElementById('assignment-preview-indicator');
     indicator.hidden = !documentState.assignmentDraft;
-    viewport.assignmentDraftActive = Boolean(documentState.assignmentDraft && documentState.assignmentDraft.kind !== 'gravity');
-    if (indicator && documentState.assignmentDraft) { indicator.textContent = documentState.assignmentDraft.kind === 'gravity' ? 'Editing gravity' : 'Click faces to toggle assignment'; }
+    viewport.assignmentDraftActive = Boolean(documentState.assignmentDraft && ['support','load'].includes(documentState.assignmentDraft.kind));
+    if (indicator && documentState.assignmentDraft) { indicator.textContent = documentState.assignmentDraft.kind === 'material' ? 'Editing material' : documentState.assignmentDraft.kind === 'gravity' ? 'Editing gravity' : 'Click faces to toggle assignment'; }
   });
   ui.setImportHandler(importCadFile);
   ui.setMeshHandlers(generateMesh, function () { meshSolveGeneration++; if (activeMesh) { activeMesh.cancel(); activeMesh=null; app.failMeshGeneration({message:'Meshing cancelled.'}); } }, function () {

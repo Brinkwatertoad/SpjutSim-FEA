@@ -564,7 +564,7 @@
       message = (state.error && state.error.userMessage) || 'The CAD file could not be imported.';
     }
     if (this.geometryStatus) { this.geometryStatus.textContent = message; }
-    if (this.importButton) { this.importButton.disabled = this.controller.projectOpening || state.status === 'importing' || convergenceRunning; }
+    if (this.importButton) { this.importButton.disabled = this.controller.projectOpening || state.status === 'importing' || convergenceRunning || root.SpjutsimFEA.hasPendingAssignment(documentState); }
     this.renderMesh(documentState);
     this.renderViewportPresentation(documentState);
     this.renderSolve(documentState);
@@ -605,21 +605,21 @@
     var isGenerating = generation.status === 'generating';
     var convergenceRunning = Boolean(documentState.convergenceStudy && documentState.convergenceStudy.status === 'running');
     var message = 'Import geometry to generate a mesh.';
-    var elementLabel = settings.elementType === 'tet10' ? 'Tet10' : 'Tet4';
+    var elementLabel = settings.elementType === 'tet4' ? 'Tet4 ' : '';
     if (this.meshElementType) { this.meshElementType.value = settings.elementType; this.meshElementType.disabled = !hasGeometry || isGenerating || convergenceRunning; }
     if (this.meshPreset) { this.meshPreset.value = settings.preset; this.meshPreset.disabled = !hasGeometry || isGenerating || convergenceRunning; }
     if (this.meshCustomSizes) { this.meshCustomSizes.hidden = settings.preset !== 'custom'; }
     if (this.meshMinSize) { this.meshMinSize.value = settings.preset === 'custom' ? root.SpjutsimFEA.preferredFromSI('lengthM',settings.minSizeM) : ''; this.meshMinSize.disabled = !hasGeometry || isGenerating || convergenceRunning; }
     if (this.meshMaxSize) { this.meshMaxSize.value = settings.preset === 'custom' ? root.SpjutsimFEA.preferredFromSI('lengthM',settings.maxSizeM) : ''; this.meshMaxSize.disabled = !hasGeometry || isGenerating || convergenceRunning; }
     if (isGenerating) {
-      message = (generation.progress && generation.progress.userMessage) || 'Generating ' + elementLabel + ' mesh…';
+      message = (generation.progress && generation.progress.userMessage) || 'Generating ' + elementLabel + 'mesh…';
     } else if (generation.status === 'failed') {
       message = (generation.error && generation.error.userMessage) || 'The mesh could not be generated.';
     } else if (documentState.meshMetadata) {
-      message = documentState.meshMetadata.statistics.elementCount + ' ' + elementLabel + ' elements; ' + documentState.meshMetadata.statistics.nodeCount + ' nodes.';
+      message = documentState.meshMetadata.statistics.elementCount + ' ' + elementLabel + 'elements; ' + documentState.meshMetadata.statistics.nodeCount + ' nodes.';
       if (documentState.meshMetadata.quality.warning) { message += ' ' + documentState.meshMetadata.quality.warning; }
     } else if (hasGeometry) {
-      message = 'Ready to generate a ' + elementLabel + ' mesh.';
+      message = 'Ready to generate a ' + elementLabel + 'mesh.';
     }
     if (this.meshStatus) { this.meshStatus.textContent = message; }
     if (this.generateMeshButton) { this.generateMeshButton.disabled = this.controller.projectOpening || !hasGeometry || isGenerating || convergenceRunning; }
@@ -716,11 +716,12 @@
     }
     if (this.deformationScaleReadout) {
       this.deformationScaleReadout.hidden = !deformationVisible;
-      if (!this.deformationAnimating) { this.deformationScaleReadout.textContent = 'x' + Number(presentation.deformationScale || 0).toLocaleString(undefined, { maximumSignificantDigits: 4 }); }
+      if (!this.deformationAnimating) { writeDeformationScaleReadout(this.deformationScaleReadout,Number(presentation.deformationScale || 0)); }
     }
     if (this.deformationAnimationToggle) {
       this.deformationAnimationToggle.hidden = !deformationVisible;
       this.deformationAnimationToggle.disabled = !deformationVisible || !(presentation.deformationScale > 0);
+      this.updateDeformationAnimationToggle();
     }
     if (this.meshOverlay) { this.meshOverlay.checked = presentation.meshOverlay === true; this.meshOverlay.disabled = !meshAvailable || !resultsAvailable; }
     this.renderLegend(documentState);
@@ -728,9 +729,15 @@
 
   UIController.prototype.updateDeformationAnimationToggle = function () {
     if (!this.deformationAnimationToggle) { return; }
-    this.deformationAnimationToggle.textContent = this.deformationAnimating ? 'Stop' : 'Play';
+    var action = this.deformationAnimating ? 'stop' : 'run';
+    var label = (this.deformationAnimating ? 'Stop' : 'Play') + ' deformed shape animation';
+    if (this.deformationAnimationToggle.dataset.actionIcon !== action) {
+      root.PortableUIActionControls.applyActionIcon(this.deformationAnimationToggle,action,label,{
+        createIcon:function(id){return root.PortableUIIcons.createIcon(id,{document:document,size:20});}
+      });
+    }
     this.deformationAnimationToggle.setAttribute('aria-pressed', this.deformationAnimating ? 'true' : 'false');
-    this.deformationAnimationToggle.setAttribute('aria-label', (this.deformationAnimating ? 'Stop' : 'Play') + ' deformed shape animation');
+    this.deformationAnimationToggle.title = label;
   };
 
   UIController.prototype.stepDeformationAnimation = function (timestamp) {
@@ -745,8 +752,7 @@
       multiplier = root.SpjutsimFEA.deformationAnimationMultiplier(this.deformationAnimationElapsedMs);
       if (this.viewport) { this.viewport.setDeformationAnimationMultiplier(multiplier); }
       if (this.deformationScaleReadout) {
-        this.deformationScaleReadout.textContent = 'x' + (this.controller.document.viewportPresentation.deformationScale * multiplier)
-          .toLocaleString(undefined, { maximumSignificantDigits: 4 });
+        writeDeformationScaleReadout(this.deformationScaleReadout,this.controller.document.viewportPresentation.deformationScale * multiplier);
       }
     } else {
       this.deformationAnimationLastTimestamp = null;
@@ -773,8 +779,7 @@
     if (this.viewport) { this.viewport.setDeformationAnimationMultiplier(1); }
     this.updateDeformationAnimationToggle();
     if (this.deformationScaleReadout) {
-      this.deformationScaleReadout.textContent = 'x' + Number(this.controller.document.viewportPresentation.deformationScale || 0)
-        .toLocaleString(undefined, { maximumSignificantDigits: 4 });
+      writeDeformationScaleReadout(this.deformationScaleReadout,Number(this.controller.document.viewportPresentation.deformationScale || 0));
     }
   };
 
@@ -824,6 +829,10 @@
     if (value === Infinity) { return '∞' + (unit ? ' ' + unit : ''); }
     if (!Number.isFinite(value)) { return '—'; }
     return value.toLocaleString(undefined, { maximumSignificantDigits: 5 }) + (unit ? ' ' + unit : '');
+  }
+  function writeDeformationScaleReadout(output, scale) {
+    var text = 'x' + formatNumber(scale);
+    if (output.textContent !== text) { output.textContent = text; }
   }
   function formatBytes(bytes) { return formatNumber(bytes / 1073741824, 'GiB'); }
   function configureOutputTabs(tabs, panels) {
