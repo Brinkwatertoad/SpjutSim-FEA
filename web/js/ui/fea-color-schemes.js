@@ -32,6 +32,38 @@
     })
   ]);
 
+
+  function requireCanvasPalette(scheme) {
+    var authored = portable.normalizeAuthoredPalette(scheme && scheme.authored);
+    var missing = portable.SHARED_AUTHORED_COLOR_ROLES.filter(function(role){return !authored[role];});
+    if (missing.length) { throw new Error('Portable color palette is missing: ' + missing.join(', ') + '.'); }
+    return authored;
+  }
+
+  function completeColorScheme(entry) {
+    requireCanvasPalette(entry);
+    return portable.completeSchemeForHost({scheme:entry,fallbackScheme:FACTORY_COLOR_SCHEMES[0],requiredExtensions:REQUIRED_EXTENSIONS});
+  }
+
+  function resolveColorPalette(input) {
+    var authored = requireCanvasPalette(input);
+    var shared = portable.resolvePalette({authored:authored,extensions:input.extensions});
+    var channels = authored.selection.slice(1).match(/[0-9a-f]{2}/g).map(function(part){return parseInt(part,16);});
+    var brightness = channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+    var derived = {};
+    ['secondaryText','canvasText','panelSurface','border','gridMajor','gridMinor','canvasFill','hover','placementPreview'].forEach(function(role){derived[role] = shared[role];});
+    Object.assign(derived, {
+      controlSurface:portable.mixColors(authored.surface,authored.appBackground,0.08),
+      interactiveHoverSurface:portable.mixColors(authored.accent,authored.surface,0.88),
+      dangerSurface:portable.mixColors(authored.danger,authored.surface,0.88),
+      selectionSurface:portable.mixColors(authored.selection,authored.surface,0.84),
+      selectionText:brightness >= 142 ? '#111827' : '#f8fafc'
+    });
+    var source = input.derivedOverrides && typeof input.derivedOverrides === 'object' && !Array.isArray(input.derivedOverrides) ? input.derivedOverrides : {};
+    var overrides = Object.fromEntries(Object.entries(source).map(function(entry){return [entry[0],portable.normalizeColor(entry[1])];}).filter(function(entry){return entry[1];}));
+    return Object.freeze(Object.assign({},authored,derived,overrides,{extensions:shared.extensions}));
+  }
+
   function FEAColorSchemes(storage, rootElement) {
     this.storage = storage || null;
     this.rootElement = rootElement || document.documentElement;
@@ -77,10 +109,7 @@
   };
 
   FEAColorSchemes.prototype.activePalette = function () {
-    var entry = portable.completeSchemeForHost({
-      scheme: this.activeEntry(), fallbackScheme: FACTORY_COLOR_SCHEMES[0], requiredExtensions: REQUIRED_EXTENSIONS
-    });
-    return portable.resolvePalette(entry);
+    return resolveColorPalette(completeColorScheme(this.activeEntry()));
   };
 
   FEAColorSchemes.prototype.persist = function () {
@@ -140,8 +169,10 @@
   };
 
   FEAColorSchemes.prototype.importDocument = function (documentValue) {
+    var parsed = portable.parseSchemeDocument(documentValue);
+    parsed.schemes.forEach(requireCanvasPalette);
     var result = portable.importSchemeDocument({
-      document: documentValue, factorySchemes: FACTORY_COLOR_SCHEMES, overlay: this.overlay,
+      document: parsed, factorySchemes: FACTORY_COLOR_SCHEMES, overlay: this.overlay,
       fallbackScheme: FACTORY_COLOR_SCHEMES[0], requiredExtensions: REQUIRED_EXTENSIONS
     });
     this.overlay = result.overlay;
@@ -222,4 +253,6 @@
   root.SpjutsimFEA.PortableUIColorSchemes = portable;
   root.SpjutsimFEA.FACTORY_COLOR_SCHEMES = FACTORY_COLOR_SCHEMES;
   root.SpjutsimFEA.FEAColorSchemes = FEAColorSchemes;
+  root.SpjutsimFEA.resolveColorPalette = resolveColorPalette;
+  root.SpjutsimFEA.completeColorScheme = completeColorScheme;
 }(globalThis));
