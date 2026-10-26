@@ -184,6 +184,7 @@
           optionButton.setAttribute("aria-selected", option.selected ? "true" : "false");
           optionButton.disabled = option.disabled === true || entry.disabled === true;
           optionButton.textContent = optionLabel(option);
+          args.renderOption?.(optionButton, option);
           optionButton.addEventListener("click", () => {
             if (optionButton.disabled) return;
             const previous = String(select.value ?? "");
@@ -217,17 +218,25 @@
       list.hidden = false;
       button.setAttribute("aria-expanded", "true");
       position();
-      requestFrame(() => {
-        position();
+      const focusOption = () => {
         const enabled = optionButtons().filter((entry) => !entry.disabled);
         const selected = enabled.find((entry) => entry.dataset.customSelectSelected === "1");
         (options.last ? enabled.at(-1) : selected ?? enabled[0])?.focus();
+      };
+      if (args.focusTiming === "immediate") {
+        focusOption();
+        requestFrame(position);
+      } else requestFrame(() => {
+        if (!isOpen) return;
+        position();
+        focusOption();
       });
     };
 
     function sync() {
       const selected = select.selectedOptions?.[0] ?? select.options?.[select.selectedIndex];
       buttonLabel.textContent = optionLabel(selected) || String(select.value ?? "");
+      args.renderOption?.(buttonLabel, selected);
       button.disabled = select.disabled === true;
       button.dataset.customSelectValue = String(select.value ?? "");
       if (isOpen) {
@@ -280,9 +289,10 @@
       else if (list.contains(doc.activeElement)) doc.activeElement.click();
     });
     select.addEventListener("change", sync);
-    doc.addEventListener("pointerdown", (event) => {
+    const outside = (event) => {
       if (!group.contains(event.target)) close();
-    });
+    };
+    doc.addEventListener("pointerdown", outside);
     doc.defaultView?.addEventListener?.("scroll", position, true);
     doc.defaultView?.addEventListener?.("resize", position);
 
@@ -295,6 +305,10 @@
       sync,
       destroy() {
         close();
+        select.removeEventListener("change", sync);
+        doc.removeEventListener("pointerdown", outside);
+        doc.defaultView?.removeEventListener?.("scroll", position, true);
+        doc.defaultView?.removeEventListener?.("resize", position);
         group.remove();
         select.hidden = false;
         delete select.dataset.customSelectNative;
@@ -321,7 +335,9 @@
         ? options.resolveWidthPolicy(select)
         : options.widthPolicy,
       positionPopoverInViewport: options.positionPopoverInViewport,
-      requestAnimationFrameFn: options.requestAnimationFrameFn
+      requestAnimationFrameFn: options.requestAnimationFrameFn,
+      renderOption: options.renderOption,
+      focusTiming: options.focusTiming
     }));
   };
 

@@ -163,87 +163,6 @@
     return { state, effectiveMode };
   };
 
-  const createMenuController = (input) => {
-    const args = asObject(input);
-    const menuBar = args.menuBar;
-    if (!menuBar || typeof menuBar.querySelectorAll !== "function") {
-      throw new Error("Portable UI menu controller requires 'menuBar' element.");
-    }
-    const doc = args.document ?? (typeof document !== "undefined" ? document : null);
-    if (!doc || typeof doc.addEventListener !== "function") {
-      throw new Error("Portable UI menu controller requires 'document' event target.");
-    }
-    const dispatchAction = requireFunction(args.dispatchAction, "dispatchAction");
-    const positionMenu = typeof args.positionMenu === "function" ? args.positionMenu : (() => {});
-    const groups = Array.from(menuBar.querySelectorAll("[data-ui-menu-group]"));
-    let lastTrigger = null;
-
-    const setGroupOpen = (group, open) => {
-      group.dataset.open = open ? "true" : "false";
-      const button = group.querySelector?.("[data-ui-menu-button]");
-      button?.setAttribute?.("aria-expanded", open ? "true" : "false");
-      if (open) {
-        lastTrigger = button;
-        const list = group.querySelector?.(".ui-menu-list");
-        positionMenu(list, button);
-      }
-    };
-
-    const closeAll = (options = {}) => {
-      groups.forEach((group) => setGroupOpen(group, false));
-      if (options.restoreFocus === true) {
-        lastTrigger?.focus?.();
-      }
-    };
-
-    const openGroup = (group) => {
-      closeAll();
-      setGroupOpen(group, true);
-    };
-
-    groups.forEach((group) => {
-      const button = group.querySelector?.("[data-ui-menu-button]");
-      button?.addEventListener?.("click", (event) => {
-        event.stopPropagation?.();
-        const wasOpen = group.dataset.open === "true";
-        closeAll();
-        if (!wasOpen) openGroup(group);
-      });
-      button?.addEventListener?.("mouseenter", () => {
-        const hasOpenGroup = groups.some((entry) => entry.dataset.open === "true");
-        if (hasOpenGroup && group.dataset.open !== "true") openGroup(group);
-      });
-    });
-
-    menuBar.addEventListener?.("click", (event) => {
-      const actionElement = event.target?.closest?.("[data-ui-menu-action]");
-      if (!actionElement || actionElement.disabled) return;
-      dispatchAction(String(actionElement.dataset.uiMenuAction ?? ""));
-      closeAll();
-    });
-
-    const handleDocumentClick = (event) => {
-      if (!menuBar.contains?.(event.target)) closeAll();
-    };
-    const handleDocumentKeydown = (event) => {
-      if (String(event.key ?? "").toLowerCase() !== "escape") return;
-      if (!groups.some((group) => group.dataset.open === "true")) return;
-      closeAll({ restoreFocus: true });
-      event.preventDefault?.();
-    };
-    doc.addEventListener("click", handleDocumentClick);
-    doc.addEventListener("keydown", handleDocumentKeydown);
-
-    const setActionEnabled = (actionId, enabled) => {
-      menuBar.querySelectorAll(`[data-ui-menu-action="${String(actionId)}"]`).forEach((element) => {
-        element.disabled = enabled !== true;
-        element.setAttribute?.("aria-disabled", enabled === true ? "false" : "true");
-      });
-    };
-
-    return Object.freeze({ closeAll, openGroup, setActionEnabled });
-  };
-
   scope.PortableUIShellBehaviors = Object.freeze({
     DEFAULT_UI_STATE,
     RESULTS_MODES,
@@ -253,7 +172,6 @@
     resolveResponsiveState,
     shouldAutoCollapseTools,
     applyPaneState,
-    applyScrollbarMetrics,
-    createMenuController
+    applyScrollbarMetrics
   });
 }(typeof self !== "undefined" ? self : globalThis));

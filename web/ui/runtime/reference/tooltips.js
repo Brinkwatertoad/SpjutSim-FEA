@@ -22,20 +22,10 @@
     let activeCompact = null;
     let activeHelp = null;
 
-    const mountForTarget = (node, target) => {
-      const host = target?.closest?.("dialog[open]") || container;
-      if (node.parentElement !== host) host.appendChild(node);
-    };
-    const position = (node, x, y) => {
-      const rect = node.getBoundingClientRect?.() ?? {};
-      const width = rect.width || node.offsetWidth || 0;
-      const height = rect.height || node.offsetHeight || 0;
-      const inset = 4;
-      const left = Math.min(Math.max(inset, Number(x || 0) + 12), Math.max(inset, Number(viewport.innerWidth || 0) - width - inset));
-      const top = Math.min(Math.max(inset, Number(y || 0) + 12), Math.max(inset, Number(viewport.innerHeight || 0) - height - inset));
-      node.style.left = `${left}px`;
-      node.style.top = `${top}px`;
-    };
+    const surfaces = new Map([compact, expanded].map(element => [element,
+      scope.PortableUITransientSurfaces.createSurface({element, container, viewport})]));
+    const mountForTarget = (node, target) => surfaces.get(node).mount(target);
+    const position = (node, x, y) => surfaces.get(node).position(x, y);
     const hideCompact = (target) => {
       if (target && activeCompact !== target) return;
       activeCompact = null;

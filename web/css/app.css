@@ -409,3 +409,9 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
   .fea-color-scheme-actions > button:not(.fea-icon-button) { font-size:12px; padding-inline:6px; }
 }
 @media (pointer:coarse) { .fea-color-scheme-actions { --ui-action-control-height:44px; } }
+
+/* A02: desktop title/menu hierarchy, explicitly approved 2026-10-25. */
+@media (min-width: 641px) {
+  .fea-topbar > div:first-child > strong { font-size: 22px; font-weight: 700; line-height: 1.25; }
+  .fea-topbar .ui-menu-button { min-height: 30px; font-size: 13px; font-weight: 600; }
+}

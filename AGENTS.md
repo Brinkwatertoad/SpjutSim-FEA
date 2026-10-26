@@ -41,3 +41,9 @@ This file governs the repository unless a more specific `AGENTS.md` exists deepe
 - `web/assets/icons/fea.svg` is synchronized with the central SpjutSim website. After editing either copy, run `npm run sync:icons` from the sibling `SpjutSim` checkout.
 - Review the complete diff once for correctness, unnecessary work, peak-memory regressions, boundary violations, error handling, accessibility, and unintended vendor/generated changes.
 - Update `spec.md` when changing requirements, architecture, protocols, numerical methods, performance targets, or acceptance criteria. Update `README.md` when setup, build, run, or test instructions change.
+
+- Shared UI integration authorized 2026-10-25: selected local 0.8.0 runtime controllers are generated and pinned as described in `docs/spjutsim-ui-kit.md`. This exception applies only to that promoted subset; remaining references and published pins retain their prior boundary. Preserve tuned app styling and audit visible changes.
+
+## Shared UI changes from app work — 2026-10-26
+
+For a shared UI fix requested while working in this app, the owner authorizes scoped work in the sibling `SpjutSim-UI-Kit` and affected consumer adapters; this is an exception to repository-only editing rules for that task. Read [the change policy](../SpjutSim-UI-Kit/docs/shared-ui-change-policy.md). Prefer a compatible canonical fix and check affected apps before propagation. An intentional app-owned implementation is allowed when justified or requested: keep it outside generated assets and document its ownership/dependencies so updates preserve it. Do not hand-edit generated files. Other apps' intentional appearance changes still need explicit preview approval; preserve historical pins and unrelated work.

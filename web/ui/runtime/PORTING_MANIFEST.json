@@ -1,0 +1,332 @@
+{
+  "schemaVersion": 2,
+  "version": "0.8.0",
+  "phase": "mixed-runtime-candidate",
+  "entrypoint": "README.md",
+  "sourceRepositories": {
+    "math": {"url":"https://github.com/Brinkwatertoad/SpjutMath","baseline":"3d21f57587bfd05c1ae2296a0613bd34190c5148","role":"read-only shell and icon source"},
+    "kit": {
+      "url": "https://github.com/Brinkwatertoad/SpjutSim-UI-Kit",
+      "baseline": "v0.1.0"
+    },
+    "circuits": {
+      "url": "https://github.com/Brinkwatertoad/SpjutSim-Circuits",
+      "baseline": "c6c510ce35e305ca05f578a7f1f5f56f84acb91f"
+    },
+    "truss": {
+      "url": "https://github.com/Brinkwatertoad/2D-Truss-Solver",
+      "baseline": "e892155d2afdbe950838f4f34955688ac10e032f"
+    }
+  },
+  "artifacts": [
+    {"path":"reference/menu-controller.js","role":"Host-bound menu navigation, root lifecycle and submenu hover without command or state ownership","portability":"adapter-required","sources":[{"repository":"truss","path":"app.js"},{"repository":"kit","path":"reference/shell-behaviors.js"}]},
+    {"path":"reference/transient-surfaces.js","role":"Scoped dismissal, top-layer mounting and host-policy tooltip placement","portability":"adapter-required","sources":[{"repository":"truss","path":"app.js"},{"repository":"kit","path":"reference/tooltips.js"}]},
+    {"path":"reference/shell-presentation.css","role":"Opt-in shared Settings, menu, action and table boundaries; host tokens and responsive workspace layout remain local","portability":"adapter-required","sources":[{"repository":"truss","path":"styles.css"},{"repository":"kit","path":"reference/shell-presentation.css"}]},
+    {"path":"reference/project-title.js","role":"Inline project title keyboard and commit interaction; metadata and persistence remain host-owned","portability":"adapter-required","sources":[{"repository":"math","path":"src/app.js"},{"repository":"kit","path":"reference/project-title.js"}]},
+    {"path":"icons/","role":"Canonical common action SVGs with SpjutMath reference imports","portability":"stable","sources":[{"repository":"kit","path":"icons/"}]},
+    {"path":"reference/action-icons.js","role":"Generated dependency-free SVG factory","portability":"stable","sources":[{"repository":"kit","path":"reference/action-icons.js"}]},
+    {"path":"reference/icons.html","role":"16/20/24px icon review gallery","portability":"stable","sources":[{"repository":"kit","path":"reference/icons.html"}]},
+    {"path":"scripts/build-icons.js","role":"Deterministic SVG catalog generation and consumer freshness checks","portability":"stable","sources":[{"repository":"kit","path":"scripts/build-icons.js"}]},
+    {"path":"docs/action-icons.md","role":"Icon provenance, consumer routing, and compact button geometry","portability":"stable","sources":[{"repository":"kit","path":"docs/action-icons.md"}]},
+    {
+      "path": "docs/stable-pane-gutters.md",
+      "role": "Stable pane gutter integration and cross-platform acceptance contract",
+      "portability": "stable",
+      "sources": [
+        { "repository": "circuits", "path": "src/app/ui.js" },
+        { "repository": "circuits", "path": "src/styles/app.css" },
+        { "repository": "truss", "path": "styles.css" }
+      ]
+    },
+    {
+      "path": "README.md",
+      "role": "Receiving-agent entry point and integration order",
+      "portability": "stable",
+      "sources": [{ "repository": "kit", "path": "README.md" }]
+    },
+    {
+      "path": "PORTING_MANIFEST.json",
+      "role": "Machine-readable artifact and promotion inventory",
+      "portability": "stable",
+      "sources": [{ "repository": "kit", "path": "PORTING_MANIFEST.json" }]
+    },
+    {
+      "path": "reference/shell.html",
+      "role": "Semantic shell slots and accessibility relationships",
+      "portability": "adapter-required",
+      "sources": [
+        { "repository": "circuits", "path": "src/app/ui/workspace-layout.js" },
+        { "repository": "circuits", "path": "src/app/ui/menu-bar.js" },
+        { "repository": "truss", "path": "index.html" }
+      ]
+    },
+    {
+      "path": "reference/ui-tokens.css",
+      "role": "Semantic tokens and compact shell component styles",
+      "portability": "stable",
+      "sources": [
+        { "repository": "circuits", "path": "src/styles/app.css" },
+        { "repository": "truss", "path": "styles.css" }
+      ]
+    },
+    {
+      "path": "reference/color-schemes.js",
+      "role": "Compact palette derivation, factory-overlay libraries, and portable documents without factory data or application state",
+      "portability": "stable",
+      "sources": [
+        { "repository": "circuits", "path": "src/app/ui/color-scheme-library.js" },
+        { "repository": "truss", "path": "color-schemes-ui.js" }
+      ]
+    },
+    {
+      "path": "reference/color-scheme-editor.js",
+      "role": "Callback-driven compact color-scheme picker and role editor",
+      "portability": "stable",
+      "sources": [
+        { "repository": "circuits", "path": "src/app/ui/dialogs.js" },
+        { "repository": "truss", "path": "index.html" }
+      ]
+    },
+    {
+      "path": "reference/overflow-menu.js",
+      "role": "Vocabulary-neutral compact overflow action interaction",
+      "portability": "adapter-required",
+      "sources": [
+        { "repository": "circuits", "path": "src/app/ui/preset-library-mosfet-ui.js" },
+        { "repository": "circuits", "path": "src/app/ui/preset-library-semiconductor-ui.js" }
+      ]
+    },
+    {
+      "path": "reference/custom-select.js",
+      "role": "Progressively enhanced native single-choice dropdown interaction",
+      "portability": "stable",
+      "sources": [
+        { "repository": "circuits", "path": "src/app/ui/custom-select-ui.js" },
+        { "repository": "truss", "path": "custom-select-ui.js" }
+      ]
+    },
+    {
+      "path": "reference/settings-hub.js",
+      "role": "Accessible categorized Settings navigation and focus coordination",
+      "portability": "stable",
+      "sources": [
+        { "repository": "circuits", "path": "src/app/ui/dialogs.js" },
+        { "repository": "truss", "path": "app.js" }
+      ]
+    },
+    {
+      "path": "reference/settings-controls.js",
+      "role": "Settings header, native switch, help metadata, and history-shortcut coordination",
+      "portability": "stable",
+      "sources": [
+        { "repository": "circuits", "path": "src/app/ui/dialogs.js" },
+        { "repository": "truss", "path": "app.js" }
+      ]
+    },
+    {
+      "path": "reference/action-controls.js",
+      "role": "Vocabulary-neutral action-icon binding and restartable activation feedback",
+      "portability": "stable",
+      "sources": [
+        { "repository": "circuits", "path": "src/app/ui/tools-ui.js" },
+        { "repository": "truss", "path": "app.js" }
+      ]
+    },
+    {
+      "path": "reference/tooltips.js",
+      "role": "Compact, expanded, and composite tooltip coordination with host-authored metadata",
+      "portability": "stable",
+      "sources": [
+        { "repository": "circuits", "path": "src/app/ui/tools-ui.js" },
+        { "repository": "truss", "path": "app.js" }
+      ]
+    },
+    {
+      "path": "reference/shell-behaviors.js",
+      "role": "State normalization, stable scrollbar metrics, and menu and pane presentation mechanics",
+      "portability": "stable",
+      "sources": [
+        { "repository": "circuits", "path": "src/app/ui/menu-bar.js" },
+        { "repository": "circuits", "path": "src/app/ui.js" },
+        { "repository": "circuits", "path": "src/app/ui/workspace-results-pane.js" },
+        { "repository": "circuits", "path": "src/app/ui/domains/workspace-panels.js" }
+      ]
+    },
+    {
+      "path": "reference/input-gestures.js",
+      "role": "Platform-tolerant wheel/trackpad classification and animation-frame view coordination",
+      "portability": "stable",
+      "sources": [
+        { "repository": "circuits", "path": "src/schematic/editor/pointer-gestures.js" },
+        { "repository": "truss", "path": "app.js" }
+      ]
+    },
+    {
+      "path": "consumers/circuits/README.md",
+      "role": "Circuits adapter owners and upgrade boundary",
+      "portability": "app-owned",
+      "sources": [{ "repository": "circuits", "path": "AGENTS.md" }]
+    },
+    {
+      "path": "consumers/truss/integration-map.md",
+      "role": "Truss host adapters and staged merge sequence",
+      "portability": "adapter-required",
+      "sources": [
+        { "repository": "truss", "path": "index.html" },
+        { "repository": "truss", "path": "styles.css" },
+        { "repository": "truss", "path": "app.js" }
+      ]
+    },
+    {
+      "path": "consumers/truss/acceptance-checklist.md",
+      "role": "Truss integration proof and Phase 2 evidence",
+      "portability": "app-owned",
+      "sources": [{ "repository": "truss", "path": "tests/browser-tests.js" }]
+    },
+    {
+      "path": "consumers/truss/spjutsim-alignment-record.md",
+      "role": "Proven SpjutSim conventions and extraction boundaries",
+      "portability": "app-owned",
+      "sources": [{ "repository": "kit", "path": "consumers/truss/spjutsim-alignment-record.md" }]
+    }
+  ],
+  "stateContract": {
+    "defaults": {
+      "toolsVisible": true,
+      "resultsMode": "split",
+      "resultsSplitRatio": 0.65,
+      "activeResultsTab": "results",
+      "colorScheme": "dark",
+      "autocollapseTools": "small-screens"
+    },
+    "resultsModes": ["hidden", "split", "expanded"],
+    "autocollapseModes": ["always", "small-screens", "never"]
+  },
+  "phase2Candidates": [
+    {
+      "name": "custom single-choice select interaction",
+      "reference": "reference/custom-select.js",
+      "status": "stable-reference-merge",
+      "promotionCriterion": "Both consumers copy the same native-select ownership, keyboard, focus, dynamic-sync, width-policy, and adaptive viewport-placement contract without domain branches."
+    },
+    {
+      "name": "categorized Settings navigation",
+      "reference": "reference/settings-hub.js",
+      "status": "stable-reference-merge",
+      "promotionCriterion": "A second consumer copies the same tab/panel, roving-focus, opener-restore, and responsive-navigation contract without app-specific category logic."
+    },
+    {
+      "name": "Settings controls and history coordination",
+      "reference": "reference/settings-controls.js",
+      "status": "stable-reference-merge",
+      "promotionCriterion": "Both consumers retain native switch ownership and the same header, help-metadata, and callback-driven history coordination without moving app state or reset meaning into the kit."
+    },
+    {
+      "name": "portable color-scheme libraries and editor coordination",
+      "reference": "reference/color-schemes.js",
+      "status": "stable-reference-merge",
+      "promotionCriterion": "Both apps use the same five-role interface palette with an optional complete canvas group, overlay, strict version-3 document, and callback editor contracts while retaining factory values, application, persistence, history, file I/O, and domain redraws locally."
+    },
+    {
+      "name": "action controls and segmented presentation",
+      "reference": "reference/action-controls.js",
+      "status": "stable-reference-merge",
+      "promotionCriterion": "Both consumers use host-owned icon catalogs and action callbacks behind the same accessible icon binding, activation feedback, and gapless segmented presentation contract."
+    },
+    {
+      "name": "compact and expanded tooltip coordination",
+      "reference": "reference/tooltips.js",
+      "status": "stable-reference-merge",
+      "promotionCriterion": "Both consumers supply help text and preference state to the same pointer, focus, composite-region, viewport, and dialog-local mounting mechanics."
+    },
+    {
+      "name": "UI state normalization",
+      "reference": "reference/shell-behaviors.js",
+      "status": "candidate",
+      "promotionCriterion": "Both apps persist the same normalized state shape without host-specific branches in the normalizer."
+    },
+    {
+      "name": "menu presentation mechanics",
+      "reference": "reference/shell-behaviors.js",
+      "status": "candidate",
+      "promotionCriterion": "Menu behavior needs only host menu definitions, enabled predicates, and action callbacks."
+    },
+    {
+      "name": "results pane state application",
+      "reference": "reference/shell-behaviors.js",
+      "status": "candidate",
+      "promotionCriterion": "Both apps apply hidden, split, expanded, and responsive states through the same DOM contract."
+    },
+    {
+      "name": "typed preference adapter boundary",
+      "reference": "reference/shell-behaviors.js",
+      "status": "candidate",
+      "promotionCriterion": "Each preference has one explicit read and write owner without a local fallback store."
+    },
+    {
+      "name": "engineering library picker and dialog lifecycle",
+      "reference": "consumers/truss/spjutsim-alignment-record.md",
+      "status": "candidate",
+      "promotionCriterion": "A second consumer proves the same record-agnostic adapter without engineering or schema branches."
+    },
+    {
+      "name": "visual shell and pane interaction candidates",
+      "reference": "consumers/truss/spjutsim-alignment-record.md",
+      "status": "candidate",
+      "promotionCriterion": "Consumers agree on semantic surfaces and interaction contracts while retaining app-owned dimensions and persistence."
+    },
+    {
+      "name": "wheel and trackpad gesture classification and frame coordination",
+      "reference": "reference/input-gestures.js",
+      "status": "stable-reference-merge",
+      "promotionCriterion": "Consumers classify pan versus pinch without platform-only detection, preserve every raw delta in app-owned view state, and coalesce lightweight rendering plus publication to one animation frame."
+    }
+  ],
+  "runtime": {
+    "version": "0.8.0",
+    "status": "unpublished-candidate",
+    "distribution": "local-generated-assets",
+    "registry": "consumers/registry.json",
+    "lock": "ui-kit.lock.json",
+    "supportedComponents": [
+          "transient-surfaces",
+          "menu-controller",
+          "shell-presentation",
+          "icons",
+          "action-controls",
+          "project-title",
+          "custom-select",
+          "settings-controls",
+          "tooltips",
+          "settings-hub",
+          "menus",
+          "palette",
+          "palette-editor",
+          "shell",
+          "gestures",
+          "row-feedback",
+          "panes"
+    ],
+    "remainingReferences": "Other contracts remain reference/adapted until consumer evidence proves promotion."
+  },
+  "optional3d": {
+    "status": "planned",
+    "consumers": [
+      "fea",
+      "cad"
+    ],
+    "boundary": "Host callbacks and presentation only; scene, model and geometry remain app-owned."
+  },
+  "appOwned": [
+    "solver and results rendering",
+    "canvas drawing and hit testing",
+    "domain tools and engineering editors",
+    "unit conversion and document schema",
+    "menu action availability",
+    "settings category content",
+    "settings snapshots, reset contents, and undo stacks",
+    "current-view meaning and persistence precedence",
+    "help wording and metadata catalogs",
+    "persistence backends"
+  ]
+}

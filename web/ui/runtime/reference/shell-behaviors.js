@@ -1,0 +1,177 @@
+/** Dependency-free shell behavior reference for the phase-1 UI port. */
+(function initPortableUIShellBehaviors(scope) {
+  "use strict";
+
+  const RESULTS_MODES = Object.freeze(["hidden", "split", "expanded"]);
+  const AUTOCOLLAPSE_MODES = Object.freeze(["always", "small-screens", "never"]);
+  const DEFAULT_UI_STATE = Object.freeze({
+    toolsVisible: true,
+    resultsMode: "split",
+    resultsSplitRatio: 0.65,
+    activeResultsTab: "results",
+    colorScheme: "dark",
+    autocollapseTools: "small-screens"
+  });
+
+  const asObject = (value) => (value && typeof value === "object" ? value : {});
+  const asStringList = (value, fallback) => {
+    const normalized = Array.isArray(value)
+      ? value.map((entry) => String(entry ?? "").trim()).filter(Boolean)
+      : [];
+    return normalized.length ? Array.from(new Set(normalized)) : fallback.slice();
+  };
+  const requireFunction = (value, name) => {
+    if (typeof value !== "function") {
+      throw new Error(`Portable UI shell requires '${name}' function.`);
+    }
+    return value;
+  };
+  const requireElement = (value, name) => {
+    if (!value || !value.dataset || typeof value.setAttribute !== "function") {
+      throw new Error(`Portable UI shell requires '${name}' element.`);
+    }
+    return value;
+  };
+
+  const clampSplitRatio = (value, fallback = DEFAULT_UI_STATE.resultsSplitRatio) => {
+    const numeric = Number(value);
+    const normalizedFallback = Number.isFinite(Number(fallback)) ? Number(fallback) : DEFAULT_UI_STATE.resultsSplitRatio;
+    const resolved = Number.isFinite(numeric) ? numeric : normalizedFallback;
+    return Math.max(0.2, Math.min(0.8, resolved));
+  };
+
+  const normalizeUiState = (value, options = {}) => {
+    const source = asObject(value);
+    const args = asObject(options);
+    const resultsTabs = asStringList(args.resultsTabs, [DEFAULT_UI_STATE.activeResultsTab]);
+    const schemeKeys = asStringList(args.schemeKeys, ["light", "dark", "vivid"]);
+    const resultsMode = RESULTS_MODES.includes(String(source.resultsMode ?? "").trim())
+      ? String(source.resultsMode).trim()
+      : DEFAULT_UI_STATE.resultsMode;
+    const autocollapseTools = AUTOCOLLAPSE_MODES.includes(String(source.autocollapseTools ?? "").trim())
+      ? String(source.autocollapseTools).trim()
+      : DEFAULT_UI_STATE.autocollapseTools;
+    const activeResultsTab = resultsTabs.includes(String(source.activeResultsTab ?? "").trim())
+      ? String(source.activeResultsTab).trim()
+      : resultsTabs[0];
+    const colorScheme = schemeKeys.includes(String(source.colorScheme ?? "").trim().toLowerCase())
+      ? String(source.colorScheme).trim().toLowerCase()
+      : (schemeKeys.includes(DEFAULT_UI_STATE.colorScheme) ? DEFAULT_UI_STATE.colorScheme : schemeKeys[0]);
+    return {
+      toolsVisible: typeof source.toolsVisible === "boolean" ? source.toolsVisible : DEFAULT_UI_STATE.toolsVisible,
+      resultsMode,
+      resultsSplitRatio: clampSplitRatio(source.resultsSplitRatio),
+      activeResultsTab,
+      colorScheme,
+      autocollapseTools
+    };
+  };
+
+  const resolveResponsiveState = (width, options = {}) => {
+    const args = asObject(options);
+    const numericWidth = Number(width);
+    const resolvedWidth = Number.isFinite(numericWidth) && numericWidth > 0 ? numericWidth : 0;
+    const dockBelow = Number.isFinite(Number(args.dockBelow)) ? Number(args.dockBelow) : 700;
+    const stackBelow = Number.isFinite(Number(args.stackBelow)) ? Number(args.stackBelow) : 900;
+    return {
+      width: resolvedWidth,
+      dockedAllowed: resolvedWidth >= dockBelow,
+      stacked: resolvedWidth < stackBelow,
+      compact: resolvedWidth < 600
+    };
+  };
+
+  const shouldAutoCollapseTools = (mode, width, compactThreshold = 600) => {
+    const normalizedMode = AUTOCOLLAPSE_MODES.includes(String(mode ?? "").trim())
+      ? String(mode).trim()
+      : DEFAULT_UI_STATE.autocollapseTools;
+    if (normalizedMode === "always") return true;
+    if (normalizedMode === "never") return false;
+    const numericWidth = Number(width);
+    return Number.isFinite(numericWidth) && numericWidth > 0 && numericWidth < compactThreshold;
+  };
+
+  // Call after every host palette/style publication: the final scrollbar style
+  // determines how much native space CSS deducts from the shared content inset.
+  const applyScrollbarMetrics = (doc) => {
+    if (!doc?.body || !doc?.documentElement || typeof doc.createElement !== "function") {
+      throw new Error("Portable UI shell requires a document to measure scrollbars.");
+    }
+    if (!doc.documentElement.style || typeof doc.documentElement.style.setProperty !== "function") {
+      throw new Error("Portable UI shell requires 'documentElement.style.setProperty' function.");
+    }
+    const probe = doc.createElement("div");
+    Object.assign(probe.style, {
+      position: "absolute",
+      visibility: "hidden",
+      overflow: "scroll",
+      // Measure the same reserved lane as the panes, even with hidden headless scrollbars.
+      scrollbarGutter: "stable",
+      width: "100px",
+      height: "100px",
+      inset: "-9999px auto auto -9999px"
+    });
+    doc.body.appendChild(probe);
+    const width = Math.max(0, Number(probe.offsetWidth) - Number(probe.clientWidth));
+    probe.remove?.();
+    doc.documentElement.style.setProperty("--ui-scrollbar-width", `${width}px`);
+    return Object.freeze({ width });
+  };
+
+  const applyPaneState = (input) => {
+    const args = asObject(input);
+    const root = requireElement(args.root, "root");
+    const resultsLayout = requireElement(args.resultsLayout, "resultsLayout");
+    if (!resultsLayout.style || typeof resultsLayout.style.setProperty !== "function") {
+      throw new Error("Portable UI shell requires 'resultsLayout.style.setProperty' function.");
+    }
+    const requestResize = requireFunction(args.requestResize, "requestResize");
+    const tabs = Array.isArray(args.resultsTabs) ? args.resultsTabs : [];
+    const panels = Array.isArray(args.resultsPanels) ? args.resultsPanels : [];
+    const state = normalizeUiState(args.state, {
+      resultsTabs: tabs.map((entry) => entry?.dataset?.resultsTab).filter(Boolean),
+      schemeKeys: args.schemeKeys
+    });
+    const responsive = asObject(args.responsiveState);
+    const effectiveMode = responsive.dockedAllowed === false && state.resultsMode === "split"
+      ? "expanded"
+      : state.resultsMode;
+
+    root.dataset.toolsVisible = state.toolsVisible ? "true" : "false";
+    resultsLayout.dataset.resultsMode = effectiveMode;
+    resultsLayout.dataset.resultsStacked = responsive.stacked === true ? "true" : "false";
+    resultsLayout.style.setProperty("--ui-results-split-ratio", String(state.resultsSplitRatio));
+
+    if (args.resultsDivider && typeof args.resultsDivider.setAttribute === "function") {
+      args.resultsDivider.setAttribute("aria-orientation", responsive.stacked === true ? "horizontal" : "vertical");
+    }
+    if (args.toolsToggle && typeof args.toolsToggle.setAttribute === "function") {
+      args.toolsToggle.setAttribute("aria-pressed", state.toolsVisible ? "true" : "false");
+    }
+    if (args.resultsToggle && typeof args.resultsToggle.setAttribute === "function") {
+      args.resultsToggle.setAttribute("aria-pressed", effectiveMode === "hidden" ? "false" : "true");
+    }
+    tabs.forEach((tab) => {
+      const selected = tab?.dataset?.resultsTab === state.activeResultsTab;
+      tab?.setAttribute?.("aria-selected", selected ? "true" : "false");
+      tab?.setAttribute?.("tabindex", selected ? "0" : "-1");
+    });
+    panels.forEach((panel) => {
+      panel.hidden = panel?.dataset?.resultsPanel !== state.activeResultsTab;
+    });
+    requestResize({ state, effectiveMode, responsive });
+    return { state, effectiveMode };
+  };
+
+  scope.PortableUIShellBehaviors = Object.freeze({
+    DEFAULT_UI_STATE,
+    RESULTS_MODES,
+    AUTOCOLLAPSE_MODES,
+    clampSplitRatio,
+    normalizeUiState,
+    resolveResponsiveState,
+    shouldAutoCollapseTools,
+    applyPaneState,
+    applyScrollbarMetrics
+  });
+}(typeof self !== "undefined" ? self : globalThis));
