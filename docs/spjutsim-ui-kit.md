@@ -18,3 +18,9 @@ The reference pins and prepared merges below describe earlier integration eviden
 ## Menu and transient-surface checkpoint — 2026-10-25
 
 Matching menu and tooltip mechanics now execute from the canonical candidate, preserving app styling, command trees and state ownership. See [actual per-app ownership](../../SpjutSim-UI-Kit/docs/menu-transient-runtime.md) and the [open-menu visual comparisons](../../SpjutSim-UI-Kit/artifacts/visual-audit/menus/index.html). Native gates and remaining release blockers are recorded in the sibling kit integration progress; this is not a new published pin or deployment.
+
+## Palette adoption checkpoint — 2026-10-26
+
+The palette library and editor now execute from `web/ui/runtime/reference/`. Duplicate `web/ui/color-schemes.js` and `web/ui/color-scheme-editor.js` are removed. `web/js/ui/fea-color-schemes.js` owns the existing FEA control/hover/selection derivation, brightness contrast threshold, final override precedence and full-canvas validation through `resolveColorPalette` and `completeColorScheme`; the editor preview uses the same adapter as the real application. Factories, persistence, portable version-3 import/export, FEA extensions, CSS publication and 3D materials remain app-owned.
+
+The existing committed runtime artifact and generated files are unchanged. Appearance preservation is verified against factory themes, edited palettes and narrow layouts; see the batch evidence before applying. This is an ownership change, not a new theme or layout.

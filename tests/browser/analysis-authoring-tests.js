@@ -406,6 +406,23 @@
     'completed replacement transfer was not installed atomically');
   }
 
+  function testFEAPalettePresentation() {
+    var input = {authored:{appBackground:'#101010',surface:'#202020',text:'#eeeeee',accent:'#ff0000',danger:'#00ff00',canvasBackground:'#080808',canvasGeometry:'#dddddd',selection:'#7f7f7f'},extensions:{other:{opaque:42}}};
+    var original = JSON.stringify(input), palette = api.resolveColorPalette(input);
+    assert(palette.controlSurface === '#1f1f1f' && palette.interactiveHoverSurface === '#3b1c1c' && palette.dangerSurface === '#1c3b1c',
+      'Shared palette adoption changed the FEA control or hover surface');
+    assert(palette.selectionSurface === '#2f2f2f' && palette.selectionText === '#f8fafc',
+      'FEA selection presentation no longer follows its existing canvas/contrast policy');
+    assert(palette.extensions.other.opaque === 42 && JSON.stringify(input) === original && Object.isFrozen(palette),
+      'FEA palette adapter mutated the input, lost opaque extensions or returned mutable state');
+    input.derivedOverrides = {selectionText:'#123456',controlSurface:'#abcdef',dangerSurface:'#987654',hover:'invalid'};
+    palette = api.resolveColorPalette(input);
+    assert(palette.selectionText === '#123456' && palette.controlSurface === '#abcdef' && palette.dangerSurface === '#987654' && palette.hover !== 'invalid',
+      'FEA overrides lost their final precedence or accepted an invalid color');
+    var incomplete = Object.assign({},input,{authored:Object.assign({},input.authored)});delete incomplete.authored.canvasBackground;
+    expectError(function(){api.resolveColorPalette(incomplete);},'canvasBackground');
+  }
+
   function testFEAColorSchemes() {
     var storage = memoryStorage();
     var rootElement = document.createElement('div');
@@ -461,6 +478,11 @@
       api.PortableUIColorSchemes.parseSchemeDocument(exported.text).version === 3,
     'active scheme did not export as a portable version-3 document');
     expectError(function () { schemes.importDocument({ format: 'wrong', version: 3, schemes: [] }); }, 'Unsupported portable');
+    var priorOverlay = JSON.stringify(schemes.overlay), priorActive = schemes.activeSchemeId;
+    expectError(function(){schemes.importDocument({format:'spjutsim-color-schemes',version:3,schemes:[{id:'interface-only',authored:{appBackground:'#111111',surface:'#222222',text:'#eeeeee',accent:'#abcdef',danger:'#ff0000'}}]});},'canvasBackground');
+    assert(JSON.stringify(schemes.overlay) === priorOverlay && schemes.activeSchemeId === priorActive,
+      'Rejected incomplete canvas import changed saved scheme state');
+
     var failingStorage = { getItem: function () { return null; }, setItem: function () { throw new Error('blocked'); } };
     var inMemory = new api.FEAColorSchemes(failingStorage, document.createElement('div'));
     inMemory.select('dark');
@@ -834,6 +856,7 @@
     testDistributedSurfaceGlyphSampling();
     testDeformationAnimationCycle();
     testReplacementMigrationContract();
+    testFEAPalettePresentation();
     testFEAColorSchemes();
     testSetupInspectorSummaries();
     testSetupInspectorMarkup();

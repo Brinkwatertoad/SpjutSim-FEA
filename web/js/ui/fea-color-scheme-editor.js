@@ -5,8 +5,7 @@
     return Object.keys(definitions).map(function(key){return {key:key,label:definitions[key]};});
   }
   function complete(entry) {
-    return portable.completeSchemeForHost({scheme:entry,fallbackScheme:api.FACTORY_COLOR_SCHEMES[0],
-      requiredExtensions:{fea:['load','support','axisX','axisY','axisZ']}});
+    return api.completeColorScheme(entry);
   }
   function createDemo(host) {
     host.innerHTML = '<div class="fea-color-preview-interface"><strong>Interface demo</strong><button type="button" class="ui-button-primary">Accent</button><button type="button" data-action-intent="danger">Danger</button><button id="color-demo-modal-button" type="button">Open picker…</button></div>' +
@@ -20,7 +19,7 @@
     dialog.addEventListener('close',function(){picker.close();opener.focus();});
   }
   function renderPreview(host, entry) {
-    var palette = portable.resolvePalette(complete(entry));
+    var palette = api.resolveColorPalette(complete(entry));
     if (!host.firstElementChild) { createDemo(host); }
     var surface = host.firstElementChild, canvas = host.querySelector('svg');
     surface.style.background = palette.surface;surface.style.color = palette.text;
