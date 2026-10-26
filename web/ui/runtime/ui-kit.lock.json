@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "consumer": "fea",
+  "version": "0.8.0",
+  "source": {
+    "commit": "bddcde701d4f5504148527dc76e2833e00d944db",
+    "snapshotDigest": "5b16686a28d447b9d5edc7d46c48e045697c53f8df95a0145cb4b6d546e24e3e",
+    "mode": "committed"
+  },
+  "artifactDigest": "d64194e185d2371fd7394e33df88e482e10e6a1a122d75cc7a0a3399505b4085",
+  "components": [
+    "icons",
+    "action-controls",
+    "custom-select",
+    "transient-surfaces",
+    "tooltips",
+    "settings-controls",
+    "settings-hub",
+    "tokens",
+    "shell",
+    "palette",
+    "menus",
+    "palette-editor",
+    "menu-controller"
+  ],
+  "files": [
+    {
+      "path": "PORTING_MANIFEST.json",
+      "sha256": "58f10d0077b587593507467dcccdd44e383fb5ce7c08dfe39f7fd001f1aa605e"
+    },
+    {
+      "path": "reference/action-controls.js",
+      "sha256": "06c210b784eee8712765967a7059e2aa6fe214556eace9168dc96c95ad7db595"
+    },
+    {
+      "path": "reference/action-icons.js",
+      "sha256": "cf9b2405070d8c20d135c1a886b6e36337ece197e03cf27995cb4de136403813"
+    },
+    {
+      "path": "reference/color-scheme-editor.js",
+      "sha256": "207cf81712a0c0df758da2a96db204a0474a25801fcf2149de588dd098f7dc59"
+    },
+    {
+      "path": "reference/color-schemes.js",
+      "sha256": "2cf6b9ad4310d70dd1c806c2385f20df044f6868745109e518b268c99ab892e6"
+    },
+    {
+      "path": "reference/custom-select.js",
+      "sha256": "7359f2162985baa83280a42472cb1ba56cd981f4fd32de73bd913ec467acd3d0"
+    },
+    {
+      "path": "reference/menu-controller.js",
+      "sha256": "d95bd509864f41af474aa54670f3a50030112c3781d3e662c9e5bb401babeb05"
+    },
+    {
+      "path": "reference/overflow-menu.js",
+      "sha256": "be438c90f30e334063721f2dffbadf548002627d601b9e4e01462c380848818c"
+    },
+    {
+      "path": "reference/settings-controls.js",
+      "sha256": "14478f0acdfc8e33d3168ca2b99de8100745686e5ba8df1f0c07c0658a86c980"
+    },
+    {
+      "path": "reference/settings-hub.js",
+      "sha256": "a15ac871994a124023f5ba15646eeda37845e4505ad6615111287468ae72726f"
+    },
+    {
+      "path": "reference/shell-behaviors.js",
+      "sha256": "9ac5534ed799529d9448ed4328d464b3cf25527252bcf795f509fac8be9b0301"
+    },
+    {
+      "path": "reference/tooltips.js",
+      "sha256": "74f371e57328c566b99be566e12b6ac7509e5310364bf19bb214512067635a84"
+    },
+    {
+      "path": "reference/transient-surfaces.js",
+      "sha256": "1eee987dc4faa4657a1d293c49f65542b689e6862bcd6b86e0abcda21dae0ea0"
+    },
+    {
+      "path": "reference/ui-tokens.css",
+      "sha256": "06618b6f891cbfd03976b0d982ee9b9be1928b697c467aa32674db94fe57ca01"
+    },
+    {
+      "path": "scripts/runtime.cjs",
+      "sha256": "06a11201fcbad8f131e18cc5e2dde7d1ca608977634647783b777b645d937bb6"
+    }
+  ],
+  "digest": "ba1f53a6db11e5b899a92e9d8bae065fc8bd4cc061dd2c6d63968da0f7f03e7d"
+}

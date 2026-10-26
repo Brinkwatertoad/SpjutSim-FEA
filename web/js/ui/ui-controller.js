@@ -382,11 +382,18 @@
       });
     }
     if (this.resetViewButton) { this.resetViewButton.addEventListener('click', function () { if (self.viewport) { self.viewport.resetView(); } }); }
-    if (this.applicationMenu && root.PortableUIShellBehaviors) {
-      this.menuController = root.PortableUIShellBehaviors.createMenuController({
-        menuBar: this.applicationMenu,
-        document: document,
-        dispatchAction: function (action) {
+    if (this.applicationMenu && root.PortableUIMenus) {
+      var entries = Array.from(this.applicationMenu.querySelectorAll('[data-ui-menu-group]')).map(function (group) {
+        return {group:group, trigger:group.querySelector('[data-ui-menu-button]'), panel:group.querySelector('.ui-menu-list')};
+      });
+      this.menuController = root.PortableUIMenus.createMenuController({document:document, entries:entries,
+        setOpen:function(entry,open){entry.group.dataset.open=String(open);},
+        canHoverSwitch:function(){return true;}
+      });
+      this.applicationMenu.addEventListener('click', function(event) {
+        var item=event.target.closest('[data-ui-menu-action]');
+        if(!item || item.disabled)return;
+        var action=String(item.dataset.uiMenuAction || '');
           if (action === 'undo' || action === 'redo') { self.runHistoryAction(action); }
           if (action === 'import-step' && self.importButton) { self.importButton.click(); }
           if (action === 'fit-view' && self.viewport) { self.viewport.fitCurrentModel(); }
@@ -405,7 +412,7 @@
           if (action === 'settings') {
             self.openSettings(self.applicationMenu.querySelector('[data-ui-menu-action="settings"]').closest('[data-ui-menu-group]').querySelector('[data-ui-menu-button]'));
           }
-        }
+        self.menuController.closeAll();
       });
     }
     if (this.settingsTabControls && this.settingsPanelControls && root.PortableUISettingsHub) {

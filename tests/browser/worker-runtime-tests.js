@@ -483,8 +483,8 @@
     assert(event.defaultPrevented, 'Escape did not consume the selection-clear shortcut');
     controller.replaceSelectedFaces(['opaque-face']);
     var menuGroup = document.querySelector('[data-ui-menu-group]');
-    menuGroup.dataset.open = 'true';
-    menuGroup.querySelector('[data-ui-menu-button]').setAttribute('aria-expanded', 'true');
+    menuGroup.querySelector('[data-ui-menu-button]').click();
+    assert(menuGroup.dataset.open === 'true', 'File menu did not open through its bound trigger');
     event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
     document.dispatchEvent(event);
     assert(controller.document.selectedFaceIds.length === 1, 'Escape cleared selection instead of dismissing the open menu first');
