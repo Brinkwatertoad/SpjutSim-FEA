@@ -27,6 +27,12 @@ The existing committed runtime artifact and generated files are unchanged. Appea
 
 ## Shared panes — 2026-10-26
 
-Pane pointer/keyboard handling, snapshot rollback, focus/drawer helpers and divider/gutter CSS now execute from the generated UI Kit runtime. B18/B20 intentionally use 8px desktop strips, 20px coarse-pointer strips and slim closed desktop edges. Semantic colors, pane contents, storage keys, document/history ownership and editing transactions remain local.
+Pane pointer/keyboard handling, snapshot rollback, focus/drawer helpers and divider/gutter CSS now execute from the generated UI Kit runtime. B18/B20 intentionally use 8px strips for both fine and coarse pointers and slim closed desktop edges. Semantic colors, pane contents, storage keys, document/history ownership and editing transactions remain local.
 
 The sibling UI Kit docs/panes.md records host profiles and adapter policies. Use its canonical source and mechanical pinned updater for shared fixes; place an explicit app-local exception outside generated assets. Historical published reference pins remain historical evidence; the runtime lock records the actual source. The implementation before/after gallery covers desktop, tablet, phone and coarse-pointer geometry.
+
+## Remaining pane rollout review — 2026-10-27
+
+Reconciled against remote main 685680439bb6a1958aa5d1abe07a4517e3efe385. The prepared pane lifecycle is retained. This review also corrects the outdated 20px touch-strip description and lets the action row reserve its actual height when controls wrap, preventing the viewport from covering the pane toggle. Roomy layouts retain their direct actions. The current runtime uses 8px dividers. Application contents, existing dimensions, rendering, transactions and document state retain their app owners. Shared pane lifecycle does not introduce a shared 3D camera or viewport policy.
+
+Fresh before/after evidence and native-check results are recorded in the originating Truss checkout at tests/.artifacts/remaining-pane-rollout/index.html. Publication, merge and deployment are not included in this review batch. CAD platform-specific gates retain their separate browser/native availability requirements.

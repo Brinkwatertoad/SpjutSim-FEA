@@ -63,12 +63,17 @@
     try {
       var win = frame.contentWindow, doc = win.document;
       var shell = doc.querySelector('.fea-workspace');
+      var readyDeadline = Date.now() + 10000;
+      while (doc.getElementById('app-status').textContent !== 'Local runtime ready' && Date.now() < readyDeadline) { await settle(); }
+      assert(doc.getElementById('app-status').textContent === 'Local runtime ready', 'Workspace runtime did not initialize');
       for (var size of [[500, 400], [1440, 500], [1440, 900], [1000, 700], [850, 600]]) {
         frame.style.width = size[0] + 'px'; frame.style.height = size[1] + 'px';
         await settle();
+        var resizeDeadline = Date.now() + 2000;
+        while (Math.abs(doc.getElementById('viewport').width - doc.getElementById('viewport').getBoundingClientRect().width * Math.min(win.devicePixelRatio, 2)) > 2 && Date.now() < resizeDeadline) { await settle(); }
         var canvas = doc.getElementById('viewport').getBoundingClientRect();
         var bounds = shell.getBoundingClientRect();
-        assert(Math.abs(doc.getElementById('viewport').width - canvas.width * Math.min(win.devicePixelRatio, 2)) <= 2, 'Canvas drawing buffer did not follow device pixel ratio');
+        assert(Math.abs(doc.getElementById('viewport').width - canvas.width * Math.min(win.devicePixelRatio, 2)) <= 2, 'Canvas drawing buffer did not follow device pixel ratio at ' + size.join('x') + ': buffer=' + doc.getElementById('viewport').width + ', css=' + canvas.width + ', dpr=' + win.devicePixelRatio);
         assert(canvas.bottom <= bounds.bottom + 1 && canvas.right <= bounds.right + 1,
           'Initialized canvas exceeds workspace at ' + size.join('x') + ': bottom=' + canvas.bottom + '/' + bounds.bottom);
         assert(doc.documentElement.scrollHeight <= size[1] + 1 && doc.documentElement.scrollWidth <= size[0] + 1, 'Page overflow at ' + size.join('x'));
@@ -80,6 +85,19 @@
       assert(bar.querySelector('#save-project-button').disabled, 'Save project should wait for a CAD source');
       assert(doc.querySelector('.fea-report-actions').getBoundingClientRect().right > 1400, 'Report group is not at right edge');
       assert(doc.getElementById('solve-button').closest('.fea-solve-actions').nextElementSibling.id === 'toggle-results-pane', 'Solve group is not adjacent to Results');
+      var solveText = doc.getElementById('solve-button').textContent;
+      doc.getElementById('solve-button').textContent = 'Mesh and solve';
+      for (var narrowWidth of [390, 820, 844]) {
+        frame.style.width = narrowWidth + 'px'; await settle();
+        var resultsButton = doc.getElementById('toggle-results-pane');
+        var buttonBounds = resultsButton.getBoundingClientRect();
+        assert(buttonBounds.bottom <= shell.getBoundingClientRect().top,
+          'Wrapped Results button overlaps the viewport at ' + narrowWidth + 'px');
+        assert(resultsButton.contains(doc.elementFromPoint(buttonBounds.left + buttonBounds.width / 2, buttonBounds.top + buttonBounds.height / 2)),
+          'Wrapped Results button is not pointer-accessible at ' + narrowWidth + 'px');
+      }
+      doc.getElementById('solve-button').textContent = solveText;
+      frame.style.width = '1440px'; await settle();
       var title = doc.querySelector('.fea-topbar strong').getBoundingClientRect();
       var menu = doc.getElementById('application-menu').getBoundingClientRect();
       var statusStyle = win.getComputedStyle(doc.getElementById('app-status'));

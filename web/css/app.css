@@ -48,7 +48,7 @@ button { font: inherit; }
 .fea-material-details { margin-top: 8px; color: var(--ui-color-text-muted, #aeb4bf); font-size: 11px; }
 .fea-material-details p { font-size: 11px; }
 .fea-material-details a { color: var(--ui-color-accent, #4387f5); }
-.fea-app { display: grid; grid-template-rows: 42px 40px auto minmax(0, 1fr); }
+.fea-app { display: grid; grid-template-rows: 42px minmax(40px, max-content) auto minmax(0, 1fr); }
 .fea-edit-feedback-region { min-width: 0; background: var(--surface, #202329); }
 #analysis-edit-feedback { margin: 0; padding: 6px 12px; border-bottom: 1px solid var(--border, #3a3e46); font-size: 12px; }
 .fea-result-metric { padding: 9px 0; border-bottom: 1px solid var(--border, #3a3e46); }
