@@ -24,3 +24,9 @@ Matching menu and tooltip mechanics now execute from the canonical candidate, pr
 The palette library and editor now execute from `web/ui/runtime/reference/`. Duplicate `web/ui/color-schemes.js` and `web/ui/color-scheme-editor.js` are removed. `web/js/ui/fea-color-schemes.js` owns the existing FEA control/hover/selection derivation, brightness contrast threshold, final override precedence and full-canvas validation through `resolveColorPalette` and `completeColorScheme`; the editor preview uses the same adapter as the real application. Factories, persistence, portable version-3 import/export, FEA extensions, CSS publication and 3D materials remain app-owned.
 
 The existing committed runtime artifact and generated files are unchanged. Appearance preservation is verified against factory themes, edited palettes and narrow layouts; see the batch evidence before applying. This is an ownership change, not a new theme or layout.
+
+## Shared panes — 2026-10-26
+
+Pane pointer/keyboard handling, snapshot rollback, focus/drawer helpers and divider/gutter CSS now execute from the generated UI Kit runtime. B18/B20 intentionally use 8px desktop strips, 20px coarse-pointer strips and slim closed desktop edges. Semantic colors, pane contents, storage keys, document/history ownership and editing transactions remain local.
+
+The sibling UI Kit docs/panes.md records host profiles and adapter policies. Use its canonical source and mechanical pinned updater for shared fixes; place an explicit app-local exception outside generated assets. Historical published reference pins remain historical evidence; the runtime lock records the actual source. The implementation before/after gallery covers desktop, tablet, phone and coarse-pointer geometry.

@@ -1,0 +1,29 @@
+/* Opt-in pane hardware. Hosts provide semantic colors and layout tracks. */
+:root { --ui-pane-divider-size: 8px; }
+.ui-pane-divider[role="separator"] {
+ position: relative; min-width: 0; min-height: 0; border: 0; border-radius: 0;
+ background: var(--ui-pane-background, var(--app-background, var(--panel)));
+ color: var(--ui-pane-muted, var(--muted, var(--secondary-text)));
+ touch-action: none; cursor: col-resize; box-shadow: none;
+}
+.ui-pane-divider[role="separator"]::after {
+ content: ""; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+ width: 4px; height: 42px; border-radius: 0; opacity: .72;
+ background: radial-gradient(circle at 50% 6px,currentColor 0 1.8px,transparent 2px),radial-gradient(circle at 50% 21px,currentColor 0 1.8px,transparent 2px),radial-gradient(circle at 50% 36px,currentColor 0 1.8px,transparent 2px);
+}
+.ui-pane-divider[role="separator"]:is(:hover,:focus-visible,[data-ui-pane-dragging="true"]) {
+ background: color-mix(in srgb,var(--ui-pane-accent,var(--accent)) 12%,var(--ui-pane-background,var(--app-background,var(--panel))));
+ color: var(--ui-pane-accent,var(--accent)); outline: none;
+}
+.ui-pane-divider[role="separator"]:focus-visible { outline: 2px solid var(--ui-pane-accent,var(--accent)); outline-offset: -2px; }
+.ui-pane-divider[role="separator"][data-ui-pane-axis="y"] { cursor: row-resize; }
+.ui-pane-divider[role="separator"][data-ui-pane-axis="y"]::after {
+ width: 42px; height: 4px;
+ background: radial-gradient(circle at 6px 50%,currentColor 0 1.8px,transparent 2px),radial-gradient(circle at 21px 50%,currentColor 0 1.8px,transparent 2px),radial-gradient(circle at 36px 50%,currentColor 0 1.8px,transparent 2px);
+}
+.ui-pane-scroll { scrollbar-gutter: stable; --ui-scrollbar-content-inset: 17px; --ui-scrollbar-content-margin: 2px; padding-right: max(var(--ui-scrollbar-content-margin),calc(var(--ui-scrollbar-content-inset) - var(--ui-scrollbar-width,0px))); }
+@media(pointer:coarse) { :root { --ui-pane-divider-size: 20px; } }
+
+/* Temporary side panes share geometry/dismissal, while hosts supply readable widths. */
+.ui-pane-drawer[data-ui-pane-drawer="true"] { position:absolute;inset-block:0;inset-inline-start:0;inset-inline-end:auto;grid-area:auto;z-index:45;width:min(var(--ui-pane-drawer-width,340px),calc(100% - var(--ui-pane-drawer-clearance,40px)));height:100%;max-height:100%;overflow-y:auto;box-shadow:var(--shadow-popover,0 6px 14px rgb(0 0 0 / .13)); }
+.ui-pane-drawer[data-ui-pane-drawer="true"][data-ui-pane-side="right"] { inset-inline-start:auto;inset-inline-end:0; }

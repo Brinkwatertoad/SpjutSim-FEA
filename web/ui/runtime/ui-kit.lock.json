@@ -3,11 +3,11 @@
   "consumer": "fea",
   "version": "0.8.0",
   "source": {
-    "commit": "bddcde701d4f5504148527dc76e2833e00d944db",
-    "snapshotDigest": "5b16686a28d447b9d5edc7d46c48e045697c53f8df95a0145cb4b6d546e24e3e",
+    "commit": "326528370854bbb84c750df0ceb44ed38384965d",
+    "snapshotDigest": "3565c5b7d5d479240d4a696207bc8a304887c34f61fc6a9947cfea3f0ee04381",
     "mode": "committed"
   },
-  "artifactDigest": "d64194e185d2371fd7394e33df88e482e10e6a1a122d75cc7a0a3399505b4085",
+  "artifactDigest": "47a0c4889f6bef8338be4c78cccea5c3a707a925fe2362c3bc58c373ab54c231",
   "components": [
     "icons",
     "action-controls",
@@ -21,12 +21,13 @@
     "palette",
     "menus",
     "palette-editor",
-    "menu-controller"
+    "menu-controller",
+    "panes"
   ],
   "files": [
     {
       "path": "PORTING_MANIFEST.json",
-      "sha256": "58f10d0077b587593507467dcccdd44e383fb5ce7c08dfe39f7fd001f1aa605e"
+      "sha256": "a4ffa8abb6fe4277bd99dc3952796543199865009b6b42e712cea181eebafc30"
     },
     {
       "path": "reference/action-controls.js",
@@ -57,6 +58,14 @@
       "sha256": "be438c90f30e334063721f2dffbadf548002627d601b9e4e01462c380848818c"
     },
     {
+      "path": "reference/panes.css",
+      "sha256": "0c400a566d7c43650b12952f95af0522719dfebb160867e38026fd7fa18fdcf6"
+    },
+    {
+      "path": "reference/panes.js",
+      "sha256": "43483183a769399acd4b918f5351f73837321968051c8e5d37f7c0f8b8e4cc98"
+    },
+    {
       "path": "reference/settings-controls.js",
       "sha256": "14478f0acdfc8e33d3168ca2b99de8100745686e5ba8df1f0c07c0658a86c980"
     },
@@ -85,5 +94,5 @@
       "sha256": "06a11201fcbad8f131e18cc5e2dde7d1ca608977634647783b777b645d937bb6"
     }
   ],
-  "digest": "ba1f53a6db11e5b899a92e9d8bae065fc8bd4cc061dd2c6d63968da0f7f03e7d"
+  "digest": "8bc5ef699b25271debea40fea8a0701b9bd9e175fefb290583615ce145bad988"
 }

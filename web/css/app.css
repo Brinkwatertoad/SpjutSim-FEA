@@ -415,3 +415,7 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
   .fea-topbar > div:first-child > strong { font-size: 22px; font-weight: 700; line-height: 1.25; }
   .fea-topbar .ui-menu-button { min-height: 30px; font-size: 13px; font-weight: 600; }
 }
+
+:root { --ui-pane-background:var(--app-background,var(--surface)); --ui-pane-accent:var(--accent); --ui-pane-muted:var(--secondary-text); }
+.fea-workspace[data-compact="true"]:not([data-drawer="true"]) .fea-splitter { display:block; }
+.fea-splitter.ui-pane-divider { width:var(--ui-pane-divider-size); }

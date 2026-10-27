@@ -1,9 +1,9 @@
 (function (root) {
   'use strict';
   var STORAGE_KEY = 'spjutsim-fea.workspace';
-  var MIN_VIEWPORT = 320, SPLITTER = 6;
+  var MIN_VIEWPORT = 320, SPLITTER = 8;
   function width(value, fallback, minimum) {
-    return typeof value === 'number' && Number.isFinite(value) ? Math.max(minimum, Math.min(520, value)) : fallback;
+    return typeof value === 'number' && Number.isFinite(value) ? Math.max(minimum, value) : fallback;
   }
   function normalizePreferences(value) {
     var source = value && typeof value === 'object' ? value : {};
@@ -16,7 +16,6 @@
     this.document = element.ownerDocument;
     this.storage = null;
     this.listeners = [];
-    this.drag = null;
     this.activePane = 'setup';
     try { this.storage = options && Object.prototype.hasOwnProperty.call(options, 'storage') ? options.storage : root.localStorage; } catch (error) { /* Session-only preferences. */ }
     var record;
@@ -31,32 +30,18 @@
       self.toggles[name] = self.document.getElementById('toggle-' + name + '-pane');
       self.splitters[name] = self.document.getElementById(name + '-splitter');
       self.listen(self.toggles[name], 'click', function () { self.setPaneOpen(name, self.panes[name].hidden); });
-      self.listen(self.splitters[name], 'keydown', function (event) {
-        var direction = name === 'setup' ? 1 : -1;
-        var value = self.preferences[name + 'Width'];
-        if (event.key === 'ArrowLeft') { value -= 16 * direction; }
-        else if (event.key === 'ArrowRight') { value += 16 * direction; }
-        else if (event.key === 'Home') { value = name === 'setup' ? 220 : 260; }
-        else if (event.key === 'End') { value = 520; }
-        else { return; }
-        event.preventDefault(); self.setPaneWidth(name, value);
-      });
-      self.listen(self.splitters[name], 'pointerdown', function (event) {
-        if (event.button !== 0) { return; }
-        self.drag = {name:name, pointerId:event.pointerId, x:event.clientX, width:self.panes[name].getBoundingClientRect().width};
-        self.splitters[name].setPointerCapture(event.pointerId); event.preventDefault();
-      });
-      self.listen(self.splitters[name], 'pointermove', function (event) {
-        if (!self.drag || self.drag.pointerId !== event.pointerId) { return; }
-        self.setPaneWidth(name, self.drag.width + (event.clientX - self.drag.x) * (name === 'setup' ? 1 : -1));
-      });
-      ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (type) {
-        self.listen(self.splitters[name], type, function (event) {
-          if (!self.drag || self.drag.pointerId !== event.pointerId) { return; }
-          self.drag = null;
-          if (self.splitters[name].hasPointerCapture(event.pointerId)) { self.splitters[name].releasePointerCapture(event.pointerId); }
-        });
-      });
+      var minimum = name === 'setup' ? 220 : 260;
+      self.bindings = self.bindings || [];
+      var binding = root.PortableUIPanes.bindResizeHandle({handle:self.splitters[name],direction:name==='setup'?1:-1,
+        getSize:function(){return self.panes[name].hidden?self.preferences[name+'Width']:(self.panes[name].getBoundingClientRect().width||self.preferences[name+'Width']);},getBounds:function(){var other=name==='setup'?'results':'setup';return {min:minimum,max:Math.max(minimum,element.clientWidth-MIN_VIEWPORT-2*SPLITTER-(self.panes[other]&&!self.panes[other].hidden?self.panes[other].getBoundingClientRect().width:0))};},
+        getDefaultSize:function(){return name==='setup'?280:340;},getSnapshot:function(){return {preferences:Object.assign({},self.preferences),activePane:self.activePane};},
+        getOpen:function(){return !self.panes[name].hidden;},setOpen:function(open){self.setPaneOpen(name,open);},
+        onResize:function(value){var other=name==='setup'?'results':'setup',maximum=Math.max(minimum,element.clientWidth-MIN_VIEWPORT-2*SPLITTER-(self.panes[other]&&!self.panes[other].hidden?self.panes[other].getBoundingClientRect().width:0));self.preferences[name+'Width']=Math.max(minimum,Math.min(maximum,value));self.preferences[name+'Open']=true;self.activePane=name;self.render();},
+        onCancel:function(size,event,snapshot){self.preferences=snapshot.preferences;self.activePane=snapshot.activePane;self.render();},onCommit:function(){self.save();}
+      });self.bindings.push(binding);
+      self.bindings.push(root.PortableUIPanes.bindScrollPane(self.panes[name]));
+      var focus=root.PortableUIPanes.bindPaneFocus({pane:self.panes[name],toggle:self.toggles[name]});self.bindings.push(focus);
+      var drawer=root.PortableUIPanes.bindDrawer({pane:self.panes[name],toggle:self.toggles[name],side:name==='results'?'right':'left',isActive:function(){return element.clientWidth<1000&&!self.panes[name].hidden;},contains:function(target){return self.panes[name].contains(target)||self.toggles[name].contains(target)||Boolean(target.closest('dialog,[role="dialog"],.custom-select-list'));},close:function(){self.setPaneOpen(name,false);}});self.bindings.push(drawer);
     });
     this.observer = new root.ResizeObserver(function () { self.render(); });
     this.observer.observe(element);
@@ -84,8 +69,10 @@
   };
   WorkspaceLayout.prototype.render = function () {
     var total = this.element.clientWidth;
-    var compact = total < 1000;
-    var drawer = total < 680;
+    SPLITTER = parseFloat(root.getComputedStyle(this.document.documentElement).getPropertyValue("--ui-pane-divider-size")) || 8;
+    var arrangement=root.PortableUIPanes.resolveLayout({width:total,wideAt:1000,compactAt:680});
+    var compact = arrangement!=='docked';
+    var drawer = compact;
     if (drawer && !this.wasDrawer) { this.activePane = null; }
     this.wasDrawer = drawer;
     this.element.dataset.drawer = String(drawer);
@@ -93,7 +80,7 @@
     var p = this.preferences;
     var setupOpen = p.setupOpen && (!compact || this.activePane === 'setup');
     var resultsOpen = p.resultsOpen && (!compact || this.activePane === 'results');
-    var available = Math.max(0, total - MIN_VIEWPORT - (setupOpen ? SPLITTER : 0) - (resultsOpen ? SPLITTER : 0));
+    var available = Math.max(0, total - MIN_VIEWPORT - 2*SPLITTER);
     var setupWidth = setupOpen ? p.setupWidth : 0, resultsWidth = resultsOpen ? p.resultsWidth : 0;
     if (!drawer && setupWidth + resultsWidth > available) {
       var excess = setupWidth + resultsWidth - available;
@@ -101,24 +88,20 @@
       resultsWidth -= Math.min(excess, Math.max(0, resultsWidth - 260));
     }
     this.element.style.gridTemplateColumns = drawer ? 'minmax(0, 1fr)' :
-      setupWidth + 'px ' + (setupOpen ? SPLITTER : 0) + 'px minmax(0, 1fr) ' + (resultsOpen ? SPLITTER : 0) + 'px ' + resultsWidth + 'px';
+      setupWidth + 'px ' + SPLITTER + 'px minmax(0, 1fr) ' + SPLITTER + 'px ' + resultsWidth + 'px';
     var self = this;
     ['setup', 'results'].forEach(function (name) {
       var open = name === 'setup' ? setupOpen : resultsOpen;
       var pane = self.panes[name], toggle = self.toggles[name], splitter = self.splitters[name];
       if (!open && (pane.contains(self.document.activeElement) || splitter === self.document.activeElement)) { toggle.focus(); }
-      pane.hidden = !open; splitter.hidden = compact || !open;
+      pane.hidden = !open; splitter.hidden = drawer;
       toggle.setAttribute('aria-expanded', String(open));
-      splitter.setAttribute('aria-valuenow', String(Math.round(name === 'setup' ? setupWidth : resultsWidth)));
-      splitter.setAttribute('aria-valuemax', String(Math.min(520, Math.max(name === 'setup' ? 220 : 260, available - (name === 'setup' ? resultsWidth : setupWidth)))));
+
     });
+    (this.bindings || []).forEach(function(binding){if(binding.sync)binding.sync();});
   };
   WorkspaceLayout.prototype.dispose = function () {
-    if (this.drag) {
-      var splitter = this.splitters[this.drag.name];
-      if (splitter.hasPointerCapture(this.drag.pointerId)) { splitter.releasePointerCapture(this.drag.pointerId); }
-      this.drag = null;
-    }
+    (this.bindings || []).forEach(function(binding){binding.destroy();});
     this.observer.disconnect();
     this.listeners.forEach(function (entry) { entry[0].removeEventListener(entry[1], entry[2]); });
     this.listeners = [];
