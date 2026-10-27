@@ -3,11 +3,11 @@
   "consumer": "fea",
   "version": "0.8.0",
   "source": {
-    "commit": "326528370854bbb84c750df0ceb44ed38384965d",
-    "snapshotDigest": "3565c5b7d5d479240d4a696207bc8a304887c34f61fc6a9947cfea3f0ee04381",
+    "commit": "a042882797585cd2224b37ceb765cfff50a0cf68",
+    "snapshotDigest": "970731877ba8830d74943153a5199508108b1ba94b70a7afa3b9f26c6bf4d117",
     "mode": "committed"
   },
-  "artifactDigest": "47a0c4889f6bef8338be4c78cccea5c3a707a925fe2362c3bc58c373ab54c231",
+  "artifactDigest": "49ab974ba4b3da586d47a1c0d7f0b2b9abc44fef41aa84463b292262cb8bfd57",
   "components": [
     "icons",
     "action-controls",
@@ -59,11 +59,11 @@
     },
     {
       "path": "reference/panes.css",
-      "sha256": "0c400a566d7c43650b12952f95af0522719dfebb160867e38026fd7fa18fdcf6"
+      "sha256": "16d69812000f4522481e25f260fa77b09a0d3d7dd3572fe9a5aaef199efbf242"
     },
     {
       "path": "reference/panes.js",
-      "sha256": "43483183a769399acd4b918f5351f73837321968051c8e5d37f7c0f8b8e4cc98"
+      "sha256": "a9ee7b6fcbe9c559a8289beb03369a64c2c2d544a20a2fa091c56902e520e8e3"
     },
     {
       "path": "reference/settings-controls.js",
@@ -94,5 +94,5 @@
       "sha256": "06a11201fcbad8f131e18cc5e2dde7d1ca608977634647783b777b645d937bb6"
     }
   ],
-  "digest": "8bc5ef699b25271debea40fea8a0701b9bd9e175fefb290583615ce145bad988"
+  "digest": "d6672ef1bdefff628b886b8e5aa40cdbf969ab4fe98df0cbf114cad4170c2db8"
 }

@@ -22,7 +22,12 @@
  background: radial-gradient(circle at 6px 50%,currentColor 0 1.8px,transparent 2px),radial-gradient(circle at 21px 50%,currentColor 0 1.8px,transparent 2px),radial-gradient(circle at 36px 50%,currentColor 0 1.8px,transparent 2px);
 }
 .ui-pane-scroll { scrollbar-gutter: stable; --ui-scrollbar-content-inset: 17px; --ui-scrollbar-content-margin: 2px; padding-right: max(var(--ui-scrollbar-content-margin),calc(var(--ui-scrollbar-content-inset) - var(--ui-scrollbar-width,0px))); }
-@media(pointer:coarse) { :root { --ui-pane-divider-size: 20px; } }
+/* Closed outer handles use existing host gutters, never a canvas overlay. */
+.ui-pane-divider[role="separator"][data-ui-pane-gutter] {
+ position:absolute; grid-area:auto; z-index:5; width:var(--ui-pane-gutter-size); height:auto;
+ min-width:0; min-height:0; margin:0; inset:0 auto 0 calc(-1 * var(--ui-pane-gutter-size));
+}
+.ui-pane-divider[role="separator"][data-ui-pane-gutter="right"] { inset:0 calc(-1 * var(--ui-pane-gutter-size)) 0 auto; }
 
 /* Temporary side panes share geometry/dismissal, while hosts supply readable widths. */
 .ui-pane-drawer[data-ui-pane-drawer="true"] { position:absolute;inset-block:0;inset-inline-start:0;inset-inline-end:auto;grid-area:auto;z-index:45;width:min(var(--ui-pane-drawer-width,340px),calc(100% - var(--ui-pane-drawer-clearance,40px)));height:100%;max-height:100%;overflow-y:auto;box-shadow:var(--shadow-popover,0 6px 14px rgb(0 0 0 / .13)); }
