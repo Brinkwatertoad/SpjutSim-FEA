@@ -112,6 +112,30 @@
         if ((toggle.getAttribute('aria-expanded') === 'true') !== open) { toggle.click(); }
       }};
       assert(doc.getElementById('results-pane').hidden, 'Empty Results should start collapsed');
+      // Intermediate widths can reserve a single inspector beside the canvas.
+      // An overlay here hides the centered View/Display actions despite ample room.
+      for (var inspectorSize of [[820, 900], [844, 490]]) {
+        frame.style.width = inspectorSize[0] + 'px'; frame.style.height = inspectorSize[1] + 'px'; await settle();
+        for (var inspector of ['setup', 'results']) {
+          layout.setPaneOpen(inspector, true); await settle();
+          var paneBounds = doc.getElementById(inspector + '-pane').getBoundingClientRect();
+          var viewBounds = doc.getElementById('viewport').getBoundingClientRect();
+          assert(viewBounds.width >= 320, 'Inspector squeezed the minimum viewport at ' + inspectorSize.join('x'));
+          assert(paneBounds.right <= viewBounds.left + 1 || paneBounds.left >= viewBounds.right - 1,
+            'Inspector covered the view controls at ' + inspectorSize.join('x') + ' (' + inspector + ')');
+          doc.querySelectorAll('#view-segments button, #display-popover summary').forEach(function (control) {
+            var box = control.getBoundingClientRect();
+            assert(box.left >= viewBounds.left && box.right <= viewBounds.right &&
+              control.contains(doc.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)),
+              'View action is not pointer-accessible beside ' + inspector + ' at ' + inspectorSize.join('x'));
+          });
+          // A docked inspector must remain open when the canvas receives a pointer.
+          doc.getElementById('viewport').dispatchEvent(new win.PointerEvent('pointerdown', {bubbles:true}));
+          assert(!doc.getElementById(inspector + '-pane').hidden, 'Canvas dismissed a docked inspector');
+        }
+      }
+      frame.style.width = '1440px'; frame.style.height = '900px'; await settle();
+      layout.setPaneOpen('results', false);
       var setupToggle = doc.getElementById('toggle-setup-pane');
       var resultsToggle = doc.getElementById('toggle-results-pane');
       var input = doc.getElementById('setup-add-support-button');

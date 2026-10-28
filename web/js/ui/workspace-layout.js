@@ -41,7 +41,7 @@
       });self.bindings.push(binding);
       self.bindings.push(root.PortableUIPanes.bindScrollPane(self.panes[name]));
       var focus=root.PortableUIPanes.bindPaneFocus({pane:self.panes[name],toggle:self.toggles[name]});self.bindings.push(focus);
-      var drawer=root.PortableUIPanes.bindDrawer({pane:self.panes[name],toggle:self.toggles[name],side:name==='results'?'right':'left',isActive:function(){return element.clientWidth<1000&&!self.panes[name].hidden;},contains:function(target){return self.panes[name].contains(target)||self.toggles[name].contains(target)||Boolean(target.closest('dialog,[role="dialog"],.custom-select-list'));},close:function(){self.setPaneOpen(name,false);}});self.bindings.push(drawer);
+      var drawer=root.PortableUIPanes.bindDrawer({pane:self.panes[name],toggle:self.toggles[name],side:name==='results'?'right':'left',isActive:function(){return element.dataset.drawer==='true'&&!self.panes[name].hidden;},contains:function(target){return self.panes[name].contains(target)||self.toggles[name].contains(target)||Boolean(target.closest('dialog,[role="dialog"],.custom-select-list'));},close:function(){self.setPaneOpen(name,false);}});self.bindings.push(drawer);
     });
     this.observer = new root.ResizeObserver(function () { self.render(); });
     this.observer.observe(element);
@@ -72,7 +72,9 @@
     SPLITTER = parseFloat(root.getComputedStyle(this.document.documentElement).getPropertyValue("--ui-pane-divider-size")) || 8;
     var arrangement=root.PortableUIPanes.resolveLayout({width:total,wideAt:1000,compactAt:680});
     var compact = arrangement!=='docked';
-    var drawer = compact;
+    // Keep one inspector alongside the viewport at intermediate widths.
+    // Only phone widths need a temporary overlay.
+    var drawer = arrangement === 'compact';
     if (drawer && !this.wasDrawer) { this.activePane = null; }
     this.wasDrawer = drawer;
     this.element.dataset.drawer = String(drawer);
