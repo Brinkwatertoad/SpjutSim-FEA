@@ -149,6 +149,29 @@
       assert(doc.getElementById('setup-pane').getBoundingClientRect().width > before, 'Keyboard splitter did not resize pane');
       splitter.dispatchEvent(new win.KeyboardEvent('keydown', {key:'End',bubbles:true,cancelable:true}));
       assert(doc.getElementById('viewport').getBoundingClientRect().width >= 320, 'Splitter consumed minimum viewport space');
+      for (var side of ['setup', 'results']) {
+        layout.setPaneOpen(side, true);
+        var dragPane = doc.getElementById(side + '-pane'), dragHandle = doc.getElementById(side + '-splitter');
+        var initialWidth = dragPane.getBoundingClientRect().width, minimumWidth = side === 'setup' ? 220 : 260, direction = side === 'setup' ? 1 : -1;
+        var point = function (type, raw) { dragHandle.dispatchEvent(new win.PointerEvent(type, {pointerId:7,button:0,clientX:700+direction*(raw-initialWidth),bubbles:true})); };
+        point('pointerdown', initialWidth); point('pointermove', minimumWidth / 2 + 1);
+        assert(!dragPane.hidden && Math.abs(dragPane.getBoundingClientRect().width - minimumWidth) < 1, 'Pane missed the minimum plateau: ' + side);
+        point('pointermove', minimumWidth / 2 - 1);
+        assert(dragPane.hidden, 'Drag did not close ' + side);
+        doc.dispatchEvent(new win.KeyboardEvent('keydown', {key:'Escape',bubbles:true,cancelable:true}));
+        point('pointerup', initialWidth);
+        assert(!dragPane.hidden && Math.abs(dragPane.getBoundingClientRect().width - initialWidth) < 1, 'Escape did not restore ' + side);
+        point('pointerdown', initialWidth); point('pointermove', minimumWidth / 2 - 1); point('pointerup', minimumWidth / 2 - 1);
+        assert(dragPane.hidden, 'Released drag reopened ' + side);
+        point('pointerdown', 0); point('pointermove', minimumWidth / 2 + 2);
+        assert(!dragPane.hidden, 'Closed strip did not drag open ' + side);
+        doc.dispatchEvent(new win.KeyboardEvent('keydown', {key:'Escape',bubbles:true,cancelable:true}));
+        point('pointerup', 0);
+        assert(dragPane.hidden, 'Cancelled reopen lost closed state: ' + side);
+        layout.setPaneOpen(side, true);
+        assert(Math.abs(dragPane.getBoundingClientRect().width - initialWidth) < 1, 'Closing overwrote remembered width: ' + side);
+        layout.setPaneOpen(side, false);
+      }
       layout.setPaneOpen('results', true);
       layout.setPaneOpen('results', false); win.dispatchEvent(new win.Event('resize')); await settle();
       assert(doc.getElementById('results-pane').hidden, 'Routine redraw reopened Results');
