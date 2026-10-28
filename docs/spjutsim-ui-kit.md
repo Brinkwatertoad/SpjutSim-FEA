@@ -24,3 +24,19 @@ Matching menu and tooltip mechanics now execute from the canonical candidate, pr
 The palette library and editor now execute from `web/ui/runtime/reference/`. Duplicate `web/ui/color-schemes.js` and `web/ui/color-scheme-editor.js` are removed. `web/js/ui/fea-color-schemes.js` owns the existing FEA control/hover/selection derivation, brightness contrast threshold, final override precedence and full-canvas validation through `resolveColorPalette` and `completeColorScheme`; the editor preview uses the same adapter as the real application. Factories, persistence, portable version-3 import/export, FEA extensions, CSS publication and 3D materials remain app-owned.
 
 The existing committed runtime artifact and generated files are unchanged. Appearance preservation is verified against factory themes, edited palettes and narrow layouts; see the batch evidence before applying. This is an ownership change, not a new theme or layout.
+
+## Shared panes — 2026-10-26
+
+Pane pointer/keyboard handling, snapshot rollback, focus/drawer helpers and divider/gutter CSS now execute from the generated UI Kit runtime. B18/B20 intentionally use 8px strips for both fine and coarse pointers and slim closed desktop edges. Semantic colors, pane contents, storage keys, document/history ownership and editing transactions remain local.
+
+The sibling UI Kit docs/panes.md records host profiles and adapter policies. Use its canonical source and mechanical pinned updater for shared fixes; place an explicit app-local exception outside generated assets. Historical published reference pins remain historical evidence; the runtime lock records the actual source. The implementation before/after gallery covers desktop, tablet, phone and coarse-pointer geometry.
+
+## Remaining pane rollout review — 2026-10-27
+
+Reconciled against remote main 685680439bb6a1958aa5d1abe07a4517e3efe385. The prepared pane lifecycle is retained. This review also corrects the outdated 20px touch-strip description and lets the action row reserve its actual height when controls wrap, preventing the viewport from covering the pane toggle. Roomy layouts retain their direct actions. The current runtime uses 8px dividers. Application contents, existing dimensions, rendering, transactions and document state retain their app owners. Shared pane lifecycle does not introduce a shared 3D camera or viewport policy.
+
+Fresh before/after evidence and native-check results are recorded in the originating Truss checkout at tests/.artifacts/remaining-pane-rollout/index.html. Publication, merge and deployment are not included in this review batch. CAD platform-specific gates retain their separate browser/native availability requirements.
+
+## Inspector overlap revision — 2026-10-28
+
+Owner feedback requires the tablet and short-landscape inspector to preserve access to the centered viewport actions. At widths 680–999px FEA now reserves a side column for one active inspector, retaining at least a 320px viewport; only widths below 680px use temporary overlay drawers. Docked inspectors do not close when the canvas is clicked. Desktop layout, pane preferences, camera/rendering and the pinned generated Kit artifact are unchanged. The native workspace regression checks both inspectors at 820×900 and 844×490, including View/Display pointer access. The revised gallery is tests/.artifacts/remaining-pane-rollout/fea-revision/index.html in the originating Truss checkout. The owner explicitly approved these revised views and publication/merge on 2026-10-28 after all 56 browser harnesses passed. Deployment and release tags remain separate.

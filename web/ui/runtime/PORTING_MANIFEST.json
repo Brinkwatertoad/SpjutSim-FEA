@@ -19,6 +19,7 @@
     }
   },
   "artifacts": [
+    {"path":"reference/panes.css","role":"Opt-in shared divider grip, semantic feedback and touch hit geometry","portability":"adapter-required","sources":[{"repository":"kit","path":"reference/panes.css"}]},
     {"path":"reference/menu-controller.js","role":"Host-bound menu navigation, root lifecycle and submenu hover without command or state ownership","portability":"adapter-required","sources":[{"repository":"truss","path":"app.js"},{"repository":"kit","path":"reference/shell-behaviors.js"}]},
     {"path":"reference/transient-surfaces.js","role":"Scoped dismissal, top-layer mounting and host-policy tooltip placement","portability":"adapter-required","sources":[{"repository":"truss","path":"app.js"},{"repository":"kit","path":"reference/tooltips.js"}]},
     {"path":"reference/shell-presentation.css","role":"Opt-in shared Settings, menu, action and table boundaries; host tokens and responsive workspace layout remain local","portability":"adapter-required","sources":[{"repository":"truss","path":"styles.css"},{"repository":"kit","path":"reference/shell-presentation.css"}]},
