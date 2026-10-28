@@ -40,3 +40,7 @@ Fresh before/after evidence and native-check results are recorded in the origina
 ## Inspector overlap revision — 2026-10-28
 
 Owner feedback requires the tablet and short-landscape inspector to preserve access to the centered viewport actions. At widths 680–999px FEA now reserves a side column for one active inspector, retaining at least a 320px viewport; only widths below 680px use temporary overlay drawers. Docked inspectors do not close when the canvas is clicked. Desktop layout, pane preferences, camera/rendering and the pinned generated Kit artifact are unchanged. The native workspace regression checks both inspectors at 820×900 and 844×490, including View/Display pointer access. The revised gallery is tests/.artifacts/remaining-pane-rollout/fea-revision/index.html in the originating Truss checkout. The owner explicitly approved these revised views and publication/merge on 2026-10-28 after all 56 browser harnesses passed. Deployment and release tags remain separate.
+
+## Consistent drag-close — 2026-10-28
+
+Side-pane resize callbacks now use the pinned canonical PortableUIPanes.snapSize contract: hold the host minimum, close below half-minimum, preserve the gesture-start preferred width, and restore width/visibility on Escape or pointer cancellation. A captured drag may reopen before release. Native keyboard limits, existing width preferences/caps, responsive layout, pane contents and domain transactions remain app-owned. This fixes an omitted adapter binding without changing generated Kit files or their pin.
