@@ -240,22 +240,6 @@
           "sha256": "06c210b784eee8712765967a7059e2aa6fe214556eace9168dc96c95ad7db595"
         },
         {
-          "path": "web/ui/color-scheme-editor.js",
-          "sha256": "db24a58fb001fb432dd0033083f343240c3c1bc949907fd292e0968a008fb859"
-        },
-        {
-          "path": "web/ui/color-schemes.js",
-          "sha256": "a801be70088b55f19cc06a6bc1ebb939ba2f7994272fbd403443b1f93e52f0d9"
-        },
-        {
-          "path": "web/ui/custom-select.js",
-          "sha256": "09b90187e0ae71b50a949ed0a84e77ba793ff3aaffd90fb93b70a087ef29025c"
-        },
-        {
-          "path": "web/ui/overflow-menu.js",
-          "sha256": "be438c90f30e334063721f2dffbadf548002627d601b9e4e01462c380848818c"
-        },
-        {
           "path": "web/ui/reference/shell.html",
           "sha256": "2c7f4e784ca1b784fae2b7cfadbcaf729755bedfd6cf780ce105f2dd20512aed"
         },
@@ -264,24 +248,12 @@
           "sha256": "53890549744511997079dd57ff58af2f705328d942050dc650d6dac25ceff513"
         },
         {
-          "path": "web/ui/settings-hub.js",
-          "sha256": "a15ac871994a124023f5ba15646eeda37845e4505ad6615111287468ae72726f"
-        },
-        {
           "path": "web/ui/shell-behaviors.js",
-          "sha256": "b25b9fa43ce0719a3043220bf707cad9cc94244da194cca7068e7fba89a898d5"
-        },
-        {
-          "path": "web/ui/tooltips.js",
-          "sha256": "ca13bd5883ad2da94896f41d214a918b5a38074dd62840972773eb98813fe7cc"
+          "sha256": "9ac5534ed799529d9448ed4328d464b3cf25527252bcf795f509fac8be9b0301"
         },
         {
           "path": "web/ui/ui-tokens.css",
           "sha256": "3a64642412d333807ad2368826613ce3e9dde2e5d6b7fc454b013698866f4065"
-        },
-        {
-          "path": "web/ui/action-icons.js",
-          "sha256": "cf9b2405070d8c20d135c1a886b6e36337ece197e03cf27995cb4de136403813"
         }
       ],
       "build_recipe": {
@@ -676,96 +648,119 @@
           "upstream_path": "LICENSE"
         }
       ]
+    },
+    "ui-kit-runtime": {
+      "project": "SpjutSim UI Kit selected runtime",
+      "version": "0.8.0 local runtime candidate",
+      "license": "GPL-2.0-or-later",
+      "source": {
+        "url": "https://github.com/Brinkwatertoad/SpjutSim-UI-Kit",
+        "revision": "a042882797585cd2224b37ceb765cfff50a0cf68"
+      },
+      "source_files": [
+        {
+          "path": "web/ui/runtime/PORTING_MANIFEST.json",
+          "sha256": "a4ffa8abb6fe4277bd99dc3952796543199865009b6b42e712cea181eebafc30"
+        },
+        {
+          "path": "web/ui/runtime/reference/action-controls.js",
+          "sha256": "06c210b784eee8712765967a7059e2aa6fe214556eace9168dc96c95ad7db595"
+        },
+        {
+          "path": "web/ui/runtime/reference/action-icons.js",
+          "sha256": "cf9b2405070d8c20d135c1a886b6e36337ece197e03cf27995cb4de136403813"
+        },
+        {
+          "path": "web/ui/runtime/reference/color-scheme-editor.js",
+          "sha256": "207cf81712a0c0df758da2a96db204a0474a25801fcf2149de588dd098f7dc59"
+        },
+        {
+          "path": "web/ui/runtime/reference/color-schemes.js",
+          "sha256": "2cf6b9ad4310d70dd1c806c2385f20df044f6868745109e518b268c99ab892e6"
+        },
+        {
+          "path": "web/ui/runtime/reference/custom-select.js",
+          "sha256": "7359f2162985baa83280a42472cb1ba56cd981f4fd32de73bd913ec467acd3d0"
+        },
+        {
+          "path": "web/ui/runtime/reference/menu-controller.js",
+          "sha256": "d95bd509864f41af474aa54670f3a50030112c3781d3e662c9e5bb401babeb05"
+        },
+        {
+          "path": "web/ui/runtime/reference/overflow-menu.js",
+          "sha256": "be438c90f30e334063721f2dffbadf548002627d601b9e4e01462c380848818c"
+        },
+        {
+          "path": "web/ui/runtime/reference/panes.css",
+          "sha256": "16d69812000f4522481e25f260fa77b09a0d3d7dd3572fe9a5aaef199efbf242"
+        },
+        {
+          "path": "web/ui/runtime/reference/panes.js",
+          "sha256": "a9ee7b6fcbe9c559a8289beb03369a64c2c2d544a20a2fa091c56902e520e8e3"
+        },
+        {
+          "path": "web/ui/runtime/reference/settings-controls.js",
+          "sha256": "14478f0acdfc8e33d3168ca2b99de8100745686e5ba8df1f0c07c0658a86c980"
+        },
+        {
+          "path": "web/ui/runtime/reference/settings-hub.js",
+          "sha256": "a15ac871994a124023f5ba15646eeda37845e4505ad6615111287468ae72726f"
+        },
+        {
+          "path": "web/ui/runtime/reference/shell-behaviors.js",
+          "sha256": "9ac5534ed799529d9448ed4328d464b3cf25527252bcf795f509fac8be9b0301"
+        },
+        {
+          "path": "web/ui/runtime/reference/tooltips.js",
+          "sha256": "74f371e57328c566b99be566e12b6ac7509e5310364bf19bb214512067635a84"
+        },
+        {
+          "path": "web/ui/runtime/reference/transient-surfaces.js",
+          "sha256": "1eee987dc4faa4657a1d293c49f65542b689e6862bcd6b86e0abcda21dae0ea0"
+        },
+        {
+          "path": "web/ui/runtime/reference/ui-tokens.css",
+          "sha256": "06618b6f891cbfd03976b0d982ee9b9be1928b697c467aa32674db94fe57ca01"
+        },
+        {
+          "path": "web/ui/runtime/scripts/runtime.cjs",
+          "sha256": "06a11201fcbad8f131e18cc5e2dde7d1ca608977634647783b777b645d937bb6"
+        },
+        {
+          "path": "web/ui/runtime/ui-kit.lock.json",
+          "sha256": "5aebeabebeda0f70774b6ceec368ece6292d45d09b67d9ff460ae8558d9ddd94"
+        }
+      ],
+      "build_recipe": {
+        "path": "docs/spjutsim-ui-kit.md",
+        "sha256": "a404f5292c352ad226234ba30afed8243b3e77548ac8c19db6f3f05ab97ec789"
+      },
+      "modifications": "Selected first-party generated controllers with committed source and per-file hashes in ui-kit.lock.json. The owner-approved GPL grant applies to these FEA copies only; canonical repository terms and historical reference pins are unchanged.",
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "e84e31c84bce427c4ba98ba5c98650563c0c6b91f19eabc3bcd86f473cd3d5d1"
+        },
+        {
+          "path": "NOTICE",
+          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+        },
+        {
+          "path": "web/licenses/PROJECT-LICENSE.txt",
+          "sha256": "e84e31c84bce427c4ba98ba5c98650563c0c6b91f19eabc3bcd86f473cd3d5d1"
+        },
+        {
+          "path": "web/licenses/PROJECT-NOTICE.txt",
+          "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4"
+        },
+        {
+          "path": "web/licenses/GPL-2.0.txt",
+          "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6"
+        }
+      ]
     }
   },
   "artifacts": [
-    {
-      "path": "web/vendor/three/README.md",
-      "sha256": "b60275b9b38972fcd504884d0a25f8cc63156833c5ba2517cd155f9da3f73bde",
-      "components": [
-        "three"
-      ]
-    },
-    {
-      "path": "web/vendor/three/three.min.js",
-      "sha256": "8a5f7249903b54d30f79f708699d2fed2d6a1d0741a4cd41377d1f01bb5a2271",
-      "components": [
-        "three"
-      ]
-    },
-    {
-      "path": "web/wasm/fem/README.md",
-      "sha256": "855f1fdcd4ec2a6281eb94672d3b844a9f23fedf2e91f0bc7f330e9b51f146ad",
-      "components": [
-        "fem",
-        "emscripten"
-      ]
-    },
-    {
-      "path": "web/wasm/fem/fem.js",
-      "sha256": "ac3037522380eecb0ab0873768103f7ba5ee552fcaa9e9e901e2ae3f996db064",
-      "components": [
-        "fem",
-        "emscripten"
-      ]
-    },
-    {
-      "path": "web/wasm/gmsh/README.md",
-      "sha256": "2829b611f812ded24ceb850a2170311d41eb2b8a890337abb5fda45abbdb1d93",
-      "components": [
-        "gmsh-js",
-        "gmsh",
-        "occt",
-        "emscripten"
-      ]
-    },
-    {
-      "path": "web/wasm/gmsh/licenses/GMSH-JS-LICENSE.txt",
-      "sha256": "356b9f15d801a21ea41e853996c9a822ff5e8564bced4173c09fa2ba092b1c31",
-      "components": [
-        "gmsh-js",
-        "gmsh",
-        "occt",
-        "emscripten"
-      ]
-    },
-    {
-      "path": "web/wasm/gmsh/licenses/GMSH-LICENSE.txt",
-      "sha256": "5fe4aec1ca85feb4100f32aeee9e69279278628211099c37353328d5e4d62673",
-      "components": [
-        "gmsh-js",
-        "gmsh",
-        "occt",
-        "emscripten"
-      ]
-    },
-    {
-      "path": "web/wasm/gmsh/licenses/OCCT-LGPL-2.1.txt",
-      "sha256": "e237fa56668030e928551ddd60f05df5fe957f75eab874bbd017e085ed722e7c",
-      "components": [
-        "gmsh-js",
-        "gmsh",
-        "occt",
-        "emscripten"
-      ]
-    },
-    {
-      "path": "web/wasm/gmsh/licenses/OCCT-LGPL-EXCEPTION.txt",
-      "sha256": "04580a884ea6cea294402649ff7b5cbb167d47462d1340a4ed33e550db10a81b",
-      "components": [
-        "gmsh-js",
-        "gmsh",
-        "occt",
-        "emscripten"
-      ]
-    },
-    {
-      "path": "web/generated/local-runtime/README.md",
-      "sha256": "291db23f4065bb4e328e1db272c0d51b8c9d72abe15806740d23cccb593fb906",
-      "components": [
-        "distribution"
-      ]
-    },
     {
       "path": "web/generated/local-runtime/fem-runtime-source.js",
       "sha256": "e7a08e40fe132c6ba06b2fcc69bd4de3e2c575141c8c10921d0d992e67d6e294",
@@ -872,108 +867,17 @@
       ]
     },
     {
+      "path": "web/generated/local-runtime/README.md",
+      "sha256": "291db23f4065bb4e328e1db272c0d51b8c9d72abe15806740d23cccb593fb906",
+      "components": [
+        "distribution"
+      ]
+    },
+    {
       "path": "web/generated/local-runtime/solver-worker-source.js",
       "sha256": "77ae140f2dbbde00a86d01b657918c97da552a57d9ea39dba34a27a92abfd7b4",
       "components": [
         "workers"
-      ]
-    },
-    {
-      "path": "web/ui/action-controls.js",
-      "sha256": "06c210b784eee8712765967a7059e2aa6fe214556eace9168dc96c95ad7db595",
-      "components": [
-        "ui-foundation"
-      ]
-    },
-    {
-      "path": "web/ui/color-scheme-editor.js",
-      "sha256": "db24a58fb001fb432dd0033083f343240c3c1bc949907fd292e0968a008fb859",
-      "components": [
-        "ui-foundation"
-      ]
-    },
-    {
-      "path": "web/ui/color-schemes.js",
-      "sha256": "a801be70088b55f19cc06a6bc1ebb939ba2f7994272fbd403443b1f93e52f0d9",
-      "components": [
-        "ui-foundation"
-      ]
-    },
-    {
-      "path": "web/ui/custom-select.js",
-      "sha256": "09b90187e0ae71b50a949ed0a84e77ba793ff3aaffd90fb93b70a087ef29025c",
-      "components": [
-        "ui-foundation"
-      ]
-    },
-    {
-      "path": "web/ui/overflow-menu.js",
-      "sha256": "be438c90f30e334063721f2dffbadf548002627d601b9e4e01462c380848818c",
-      "components": [
-        "ui-foundation"
-      ]
-    },
-    {
-      "path": "web/ui/reference/shell.html",
-      "sha256": "2c7f4e784ca1b784fae2b7cfadbcaf729755bedfd6cf780ce105f2dd20512aed",
-      "components": [
-        "ui-foundation"
-      ]
-    },
-    {
-      "path": "web/ui/settings-controls.js",
-      "sha256": "53890549744511997079dd57ff58af2f705328d942050dc650d6dac25ceff513",
-      "components": [
-        "ui-foundation"
-      ]
-    },
-    {
-      "path": "web/ui/settings-hub.js",
-      "sha256": "a15ac871994a124023f5ba15646eeda37845e4505ad6615111287468ae72726f",
-      "components": [
-        "ui-foundation"
-      ]
-    },
-    {
-      "path": "web/ui/shell-behaviors.js",
-      "sha256": "b25b9fa43ce0719a3043220bf707cad9cc94244da194cca7068e7fba89a898d5",
-      "components": [
-        "ui-foundation"
-      ]
-    },
-    {
-      "path": "web/ui/tooltips.js",
-      "sha256": "ca13bd5883ad2da94896f41d214a918b5a38074dd62840972773eb98813fe7cc",
-      "components": [
-        "ui-foundation"
-      ]
-    },
-    {
-      "path": "web/ui/ui-tokens.css",
-      "sha256": "3a64642412d333807ad2368826613ce3e9dde2e5d6b7fc454b013698866f4065",
-      "components": [
-        "ui-foundation"
-      ]
-    },
-    {
-      "path": "web/licenses/GPL-2.0.txt",
-      "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6",
-      "components": [
-        "distribution"
-      ]
-    },
-    {
-      "path": "web/licenses/PROJECT-LICENSE.txt",
-      "sha256": "e84e31c84bce427c4ba98ba5c98650563c0c6b91f19eabc3bcd86f473cd3d5d1",
-      "components": [
-        "distribution"
-      ]
-    },
-    {
-      "path": "web/licenses/PROJECT-NOTICE.txt",
-      "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4",
-      "components": [
-        "distribution"
       ]
     },
     {
@@ -1033,26 +937,6 @@
       ]
     },
     {
-      "path": "web/licenses/gmsh/CREDITS.txt",
-      "sha256": "67c044f728252341a5d556c969b66f94691e2ca9b2862b0f4c01f60a987ca480",
-      "components": [
-        "gmsh-js",
-        "gmsh",
-        "occt",
-        "emscripten"
-      ]
-    },
-    {
-      "path": "web/licenses/gmsh/LICENSE.txt",
-      "sha256": "5fe4aec1ca85feb4100f32aeee9e69279278628211099c37353328d5e4d62673",
-      "components": [
-        "gmsh-js",
-        "gmsh",
-        "occt",
-        "emscripten"
-      ]
-    },
-    {
       "path": "web/licenses/gmsh/contrib/ANN/Copyright.txt",
       "sha256": "3b142f4adfdf3f2aac806978c7d52dcdec968c5f32bb22d15f338e395fd1e425",
       "components": [
@@ -1075,26 +959,6 @@
     {
       "path": "web/licenses/gmsh/contrib/BoundaryLayers/LICENSE.txt",
       "sha256": "cc810ce9535c8036f7f62e8a7c9a8fdcbfd01f4c20ec31d3e4c9b7c874e1aaa9",
-      "components": [
-        "gmsh-js",
-        "gmsh",
-        "occt",
-        "emscripten"
-      ]
-    },
-    {
-      "path": "web/licenses/gmsh/contrib/MathEx/license.txt",
-      "sha256": "c91a96ded8bb1e1b28ab937a46e109cf72058128e5e8b77f0893a74d28b39c0e",
-      "components": [
-        "gmsh-js",
-        "gmsh",
-        "occt",
-        "emscripten"
-      ]
-    },
-    {
-      "path": "web/licenses/gmsh/contrib/Netgen/LICENSE",
-      "sha256": "1e06f929649a191c35904b8abcf730143080161167fa14a170d4fcfd5f9884d5",
       "components": [
         "gmsh-js",
         "gmsh",
@@ -1203,6 +1067,16 @@
       ]
     },
     {
+      "path": "web/licenses/gmsh/contrib/MathEx/license.txt",
+      "sha256": "c91a96ded8bb1e1b28ab937a46e109cf72058128e5e8b77f0893a74d28b39c0e",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
       "path": "web/licenses/gmsh/contrib/metis/LICENSE.txt",
       "sha256": "64ab947d7b289ad76e935adff51b31e4ac160df7dfad24480dbaa452e39bbe79",
       "components": [
@@ -1215,6 +1089,16 @@
     {
       "path": "web/licenses/gmsh/contrib/mpeg_encode/COPYRIGHT.txt",
       "sha256": "e6c3d8cbeb4f00807aee68782a7052c5a399a9e61fa9de88cdad97c353399136",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/contrib/Netgen/LICENSE",
+      "sha256": "1e06f929649a191c35904b8abcf730143080161167fa14a170d4fcfd5f9884d5",
       "components": [
         "gmsh-js",
         "gmsh",
@@ -1263,8 +1147,49 @@
       ]
     },
     {
+      "path": "web/licenses/gmsh/CREDITS.txt",
+      "sha256": "67c044f728252341a5d556c969b66f94691e2ca9b2862b0f4c01f60a987ca480",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/gmsh/LICENSE.txt",
+      "sha256": "5fe4aec1ca85feb4100f32aeee9e69279278628211099c37353328d5e4d62673",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/licenses/GPL-2.0.txt",
+      "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6",
+      "components": [
+        "distribution"
+      ]
+    },
+    {
       "path": "web/licenses/index.html",
       "sha256": "8a44370630f63fb03d9b634e891488745f1620a35098e2c0bfa81a2677a33f50",
+      "components": [
+        "distribution"
+      ]
+    },
+    {
+      "path": "web/licenses/PROJECT-LICENSE.txt",
+      "sha256": "e84e31c84bce427c4ba98ba5c98650563c0c6b91f19eabc3bcd86f473cd3d5d1",
+      "components": [
+        "distribution"
+      ]
+    },
+    {
+      "path": "web/licenses/PROJECT-NOTICE.txt",
+      "sha256": "e00c79b86314b578c9285899e8f7add75ad74d6978012071d66e7dedb5e871e4",
       "components": [
         "distribution"
       ]
@@ -1277,10 +1202,244 @@
       ]
     },
     {
-      "path": "web/ui/action-icons.js",
-      "sha256": "cf9b2405070d8c20d135c1a886b6e36337ece197e03cf27995cb4de136403813",
+      "path": "web/ui/action-controls.js",
+      "sha256": "06c210b784eee8712765967a7059e2aa6fe214556eace9168dc96c95ad7db595",
       "components": [
         "ui-foundation"
+      ]
+    },
+    {
+      "path": "web/ui/reference/shell.html",
+      "sha256": "2c7f4e784ca1b784fae2b7cfadbcaf729755bedfd6cf780ce105f2dd20512aed",
+      "components": [
+        "ui-foundation"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/PORTING_MANIFEST.json",
+      "sha256": "a4ffa8abb6fe4277bd99dc3952796543199865009b6b42e712cea181eebafc30",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/reference/action-controls.js",
+      "sha256": "06c210b784eee8712765967a7059e2aa6fe214556eace9168dc96c95ad7db595",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/reference/action-icons.js",
+      "sha256": "cf9b2405070d8c20d135c1a886b6e36337ece197e03cf27995cb4de136403813",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/reference/color-scheme-editor.js",
+      "sha256": "207cf81712a0c0df758da2a96db204a0474a25801fcf2149de588dd098f7dc59",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/reference/color-schemes.js",
+      "sha256": "2cf6b9ad4310d70dd1c806c2385f20df044f6868745109e518b268c99ab892e6",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/reference/custom-select.js",
+      "sha256": "7359f2162985baa83280a42472cb1ba56cd981f4fd32de73bd913ec467acd3d0",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/reference/menu-controller.js",
+      "sha256": "d95bd509864f41af474aa54670f3a50030112c3781d3e662c9e5bb401babeb05",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/reference/overflow-menu.js",
+      "sha256": "be438c90f30e334063721f2dffbadf548002627d601b9e4e01462c380848818c",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/reference/panes.css",
+      "sha256": "16d69812000f4522481e25f260fa77b09a0d3d7dd3572fe9a5aaef199efbf242",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/reference/panes.js",
+      "sha256": "a9ee7b6fcbe9c559a8289beb03369a64c2c2d544a20a2fa091c56902e520e8e3",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/reference/settings-controls.js",
+      "sha256": "14478f0acdfc8e33d3168ca2b99de8100745686e5ba8df1f0c07c0658a86c980",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/reference/settings-hub.js",
+      "sha256": "a15ac871994a124023f5ba15646eeda37845e4505ad6615111287468ae72726f",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/reference/shell-behaviors.js",
+      "sha256": "9ac5534ed799529d9448ed4328d464b3cf25527252bcf795f509fac8be9b0301",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/reference/tooltips.js",
+      "sha256": "74f371e57328c566b99be566e12b6ac7509e5310364bf19bb214512067635a84",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/reference/transient-surfaces.js",
+      "sha256": "1eee987dc4faa4657a1d293c49f65542b689e6862bcd6b86e0abcda21dae0ea0",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/reference/ui-tokens.css",
+      "sha256": "06618b6f891cbfd03976b0d982ee9b9be1928b697c467aa32674db94fe57ca01",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/scripts/runtime.cjs",
+      "sha256": "06a11201fcbad8f131e18cc5e2dde7d1ca608977634647783b777b645d937bb6",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/ui-kit.lock.json",
+      "sha256": "5aebeabebeda0f70774b6ceec368ece6292d45d09b67d9ff460ae8558d9ddd94",
+      "components": [
+        "ui-kit-runtime"
+      ]
+    },
+    {
+      "path": "web/ui/settings-controls.js",
+      "sha256": "53890549744511997079dd57ff58af2f705328d942050dc650d6dac25ceff513",
+      "components": [
+        "ui-foundation"
+      ]
+    },
+    {
+      "path": "web/ui/shell-behaviors.js",
+      "sha256": "9ac5534ed799529d9448ed4328d464b3cf25527252bcf795f509fac8be9b0301",
+      "components": [
+        "ui-foundation"
+      ]
+    },
+    {
+      "path": "web/ui/ui-tokens.css",
+      "sha256": "3a64642412d333807ad2368826613ce3e9dde2e5d6b7fc454b013698866f4065",
+      "components": [
+        "ui-foundation"
+      ]
+    },
+    {
+      "path": "web/vendor/three/README.md",
+      "sha256": "b60275b9b38972fcd504884d0a25f8cc63156833c5ba2517cd155f9da3f73bde",
+      "components": [
+        "three"
+      ]
+    },
+    {
+      "path": "web/vendor/three/three.min.js",
+      "sha256": "8a5f7249903b54d30f79f708699d2fed2d6a1d0741a4cd41377d1f01bb5a2271",
+      "components": [
+        "three"
+      ]
+    },
+    {
+      "path": "web/wasm/fem/fem.js",
+      "sha256": "ac3037522380eecb0ab0873768103f7ba5ee552fcaa9e9e901e2ae3f996db064",
+      "components": [
+        "fem",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/wasm/fem/README.md",
+      "sha256": "855f1fdcd4ec2a6281eb94672d3b844a9f23fedf2e91f0bc7f330e9b51f146ad",
+      "components": [
+        "fem",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/wasm/gmsh/licenses/GMSH-JS-LICENSE.txt",
+      "sha256": "356b9f15d801a21ea41e853996c9a822ff5e8564bced4173c09fa2ba092b1c31",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/wasm/gmsh/licenses/GMSH-LICENSE.txt",
+      "sha256": "5fe4aec1ca85feb4100f32aeee9e69279278628211099c37353328d5e4d62673",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/wasm/gmsh/licenses/OCCT-LGPL-2.1.txt",
+      "sha256": "e237fa56668030e928551ddd60f05df5fe957f75eab874bbd017e085ed722e7c",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/wasm/gmsh/licenses/OCCT-LGPL-EXCEPTION.txt",
+      "sha256": "04580a884ea6cea294402649ff7b5cbb167d47462d1340a4ed33e550db10a81b",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
+      ]
+    },
+    {
+      "path": "web/wasm/gmsh/README.md",
+      "sha256": "2829b611f812ded24ceb850a2170311d41eb2b8a890337abb5fda45abbdb1d93",
+      "components": [
+        "gmsh-js",
+        "gmsh",
+        "occt",
+        "emscripten"
       ]
     }
   ]
