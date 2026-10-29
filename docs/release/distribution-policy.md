@@ -17,6 +17,8 @@ licenses and exceptions. See [LICENSE](../../LICENSE),
 [the artifact manifest](artifact-manifest.json), and
 [the release procedure](SOURCE.md).
 
+On October 28, 2026, the owner requested deployment of the approved shared UI revisions. The artifact inventory now records the selected generated 0.8.0 runtime separately from retained 0.7.1 references, removes retired local copies, and includes exact application/upstream sources. Dependencies, licenses and numerical artifacts are unchanged.
+
 The distribution audit reads this approval record:
 
 ```json
@@ -33,9 +35,9 @@ The distribution audit reads this approval record:
   "final_review": {
     "status": "approved",
     "approver": "Brinkwatertoad",
-    "date": "2026-10-10",
-    "reference": "Owner explicitly requested color-scheme fixes, commit and sync, and publication to spjutsim.com with automatic corresponding-source updates in this session, 2026-10-10",
-    "artifact_manifest_sha256": "146808ec3c9313b3342b459d1fa48bfc528b40cb230296bc5d62a7e377c1dfe0"
+    "date": "2026-10-28",
+    "reference": "Owner requested deployment of the approved shared UI revisions in this conversation; Statics excluded. Existing GPL/source policy, upstream pins and kernel artifacts unchanged.",
+    "artifact_manifest_sha256": "a7dda309f61bc454a603108e9501d92804594cc4d79c35e664d9add807a1c6e6"
   }
 }
 ```
