@@ -21,7 +21,7 @@
   root.addEventListener('pointerover',over);root.addEventListener('pointerleave',leave);
   return Object.freeze({destroy(){leave();root.removeEventListener('pointerover',over);root.removeEventListener('pointerleave',leave);}});
  }
- function createMenuController({entries,document:doc=scope.document,getItems=defaultItems,positionMenu=()=>{},setOpen,beforeOpen=()=>{},focusOnClick=false,canHoverSwitch=()=>false,closeChildren=()=>{},contains,escape=true}){
+ function createMenuController({entries,document:doc=scope.document,getItems=defaultItems,positionMenu=()=>{},setOpen,beforeOpen=()=>{},focusOnClick=false,canHoverSwitch=()=>true,closeChildren=()=>{},contains,escape=true}){
   if(!Array.isArray(entries)||entries.some(e=>!e.trigger?.addEventListener||!e.panel))throw Error('Menu controller requires trigger/panel entries.');
   let current=null,destroyed=false;const cleanups=[];
   const on=(node,type,fn)=>{node.addEventListener(type,fn);cleanups.push(()=>node.removeEventListener(type,fn));};
@@ -31,8 +31,8 @@
   const dismissForEscape=()=>{if(!current)return false;closeAll({restoreFocus:true});return true;};
   for(const entry of entries){on(entry.trigger,'click',()=>{if(current===entry)closeAll();else openMenu(entry.trigger,typeof focusOnClick==='function'?focusOnClick(entry.trigger):focusOnClick);});
    on(entry.trigger,'keydown',event=>{if(event.defaultPrevented||event.isComposing)return;if(['ArrowDown','ArrowUp'].includes(event.key)){event.preventDefault();openMenu(entry.trigger,true,event.key==='ArrowUp');}else if(event.key==='Escape'&&escape&&current){event.preventDefault();event.stopPropagation();dismissForEscape();}});
-   on(entry.trigger,'mouseenter',()=>{if(current&&current!==entry&&canHoverSwitch(entry.trigger,current.trigger))openMenu(entry.trigger);});
-   on(entry.panel,'keydown',event=>{if(current?.panel===entry.panel)handleMenuKey(event,{menu:entry.panel,getItems,close:restoreFocus=>closeAll({restoreFocus}),escape});});
+   on(entry.trigger,'pointerenter',event=>{if(event.pointerType==='touch')return;if(current&&current!==entry&&canHoverSwitch(entry.trigger,current.trigger))openMenu(entry.trigger);});
+   on(entry.panel,'keydown',event=>{if(current?.panel===entry.panel && event.target.closest?.('[role="menu"]')===entry.panel)handleMenuKey(event,{menu:entry.panel,getItems,close:restoreFocus=>closeAll({restoreFocus}),escape});});
   }
   const dismissal=scope.PortableUITransientSurfaces.bindDismissal({document:doc,isOpen:()=>!!current,contains:contains||((target)=>entries.some(e=>e.trigger.contains(target)||e.panel.contains(target))),close:restoreFocus=>closeAll({restoreFocus}),escape});
   return Object.freeze({openMenu,closeAll,isOpen:()=>!!current,getOpenTrigger:()=>current?.trigger||null,dismissForEscape,destroy(){if(destroyed)return;closeAll();destroyed=true;dismissal.destroy();for(const cleanup of cleanups)cleanup();}});

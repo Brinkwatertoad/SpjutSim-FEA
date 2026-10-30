@@ -44,3 +44,10 @@ Owner feedback requires the tablet and short-landscape inspector to preserve acc
 ## Consistent drag-close — 2026-10-28
 
 Side-pane resize callbacks now use the pinned canonical PortableUIPanes.snapSize contract: hold the host minimum, close below half-minimum, preserve the gesture-start preferred width, and restore width/visibility on Escape or pointer cancellation. A captured drag may reopen before release. Native keyboard limits, existing width preferences/caps, responsive layout, pane contents and domain transactions remain app-owned. This fixes an omitted adapter binding without changing generated Kit files or their pin.
+
+
+## Committed shared menus and tooltip runtime — 2026-10-30
+
+The owner approved the concrete regular/compact menu previews and authorized scoped commits and PR preparation. This candidate pins canonical source 2c24a741678c6f4c0e41f6363c33739e22d9dc1b, artifact 5a8d58c4ae44efcd48a356fdd17e599885a7782f8314e291df72497aa744e382, built in committed mode. Menus use regular 400 text, 4px/8px item padding, 4px panel inset and 44px coarse targets; FEA binds 16px menu text. Explicit icon hooks use a 6px label gap with app-owned artwork and right-aligned shortcuts. Host palettes, preferences, commands and domain state remain local. Compatible canonical tooltip corrections preserve detached-target cleanup and in-place text updates already published in Circuits PRs #261/#262. Historical reference pins remain unchanged.
+
+The PR uses the current remote default-branch baseline and excludes unrelated feature work. Local review evidence: ../../SpjutSim-UI-Kit/artifacts/verification/menu-integration-2026-10-30/. No merge, version tag or deployment is performed in this phase.

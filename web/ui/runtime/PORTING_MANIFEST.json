@@ -19,9 +19,12 @@
     }
   },
   "artifacts": [
+    {"path":"reference/adaptive-controls.js","role":"Opt-in live control grouping, measured collapse and overflow panel lifecycle","portability":"adapter-required","sources":[{"repository":"kit","path":"reference/adaptive-controls.js"}]},
+    {"path":"reference/adaptive-controls.css","role":"Opt-in inline, grouped and touch panel presentation","portability":"adapter-required","sources":[{"repository":"kit","path":"reference/adaptive-controls.css"}]},
     {"path":"reference/panes.css","role":"Opt-in shared divider grip, semantic feedback and touch hit geometry","portability":"adapter-required","sources":[{"repository":"kit","path":"reference/panes.css"}]},
     {"path":"reference/menu-controller.js","role":"Host-bound menu navigation, root lifecycle and submenu hover without command or state ownership","portability":"adapter-required","sources":[{"repository":"truss","path":"app.js"},{"repository":"kit","path":"reference/shell-behaviors.js"}]},
     {"path":"reference/transient-surfaces.js","role":"Scoped dismissal, top-layer mounting and host-policy tooltip placement","portability":"adapter-required","sources":[{"repository":"truss","path":"app.js"},{"repository":"kit","path":"reference/tooltips.js"}]},
+    {"path":"reference/menu-presentation.css","role":"Generated opt-in menu typography, interaction and icon spacing derived from the canonical shell stylesheet","portability":"adapter-required","sources":[{"repository":"kit","path":"reference/shell-presentation.css"},{"repository":"kit","path":"scripts/menu-presentation.cjs"}]},
     {"path":"reference/shell-presentation.css","role":"Opt-in shared Settings, menu, action and table boundaries; host tokens and responsive workspace layout remain local","portability":"adapter-required","sources":[{"repository":"truss","path":"styles.css"},{"repository":"kit","path":"reference/shell-presentation.css"}]},
     {"path":"reference/project-title.js","role":"Inline project title keyboard and commit interaction; metadata and persistence remain host-owned","portability":"adapter-required","sources":[{"repository":"math","path":"src/app.js"},{"repository":"kit","path":"reference/project-title.js"}]},
     {"path":"icons/","role":"Canonical common action SVGs with SpjutMath reference imports","portability":"stable","sources":[{"repository":"kit","path":"icons/"}]},
@@ -293,6 +296,7 @@
           "transient-surfaces",
           "menu-controller",
           "shell-presentation",
+          "menu-presentation",
           "icons",
           "action-controls",
           "project-title",

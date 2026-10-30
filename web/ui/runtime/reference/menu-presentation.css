@@ -1,0 +1,117 @@
+/* Generated from shell-presentation.css by scripts/menu-presentation.cjs. Do not edit. */
+[data-ui-menu-presentation] [data-ui-menu-button] {
+  font-family: inherit;
+  font-weight: 400;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  font-size: var(--ui-menu-font-size, 13px);
+}
+
+[data-ui-menu-presentation] button[data-ui-menu-button] {
+  padding: 4px 8px;
+}
+
+[data-ui-menu-presentation] [data-ui-menu-button]:hover:enabled,
+[data-ui-menu-presentation] [data-ui-menu-button][aria-expanded="true"] {
+  border-color: var(--border);
+  background: var(--surface);
+  box-shadow: none;
+  transform: none;
+}
+
+[data-ui-menu-presentation] [role="menu"] {
+  min-width: 210px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow-popover);
+}
+
+[data-ui-menu-presentation] [role="menu"] button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--ui-menu-font-size, 13px);
+  font-weight: 400;
+  text-align: left;
+  box-shadow: none;
+}
+
+[data-ui-menu-presentation] [data-ui-menu-label] {
+  min-width: 0;
+}
+
+[data-ui-menu-presentation] :is(kbd,[data-ui-menu-shortcut]) {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+[data-ui-menu-presentation] [role="menu"] button:hover:enabled,
+[data-ui-menu-presentation] [role="menu"] button:focus-visible:enabled {
+  border-color: var(--border);
+  background: var(--app-background);
+}
+
+[data-ui-menu-presentation] [role="separator"] {
+  height: 1px;
+  margin: 5px 4px;
+  background: var(--border);
+}
+
+button[role="menuitem"]:has(> [data-ui-menu-icon]) {
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+button[role="menuitem"] > [data-ui-menu-icon] {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+button[role="menuitem"]:has(> [data-ui-menu-icon]) > kbd,
+button[role="menuitem"]:has(> [data-ui-menu-icon]) > [data-ui-menu-shortcut] {
+  margin-inline-start: auto;
+}
+
+[data-ui-menu-presentation] [role="menu"] button:active:enabled,
+[data-ui-menu-presentation] button[data-ui-menu-button]:active:enabled {
+  color: var(--text);
+  background: var(--surface-hover);
+  transform: none;
+}
+
+[data-ui-menu-presentation] [role="menu"] button:disabled {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  opacity: .55;
+  cursor: default;
+}
+
+@media (pointer: coarse) {
+[data-ui-menu-presentation] [data-ui-menu-button],
+[data-ui-menu-presentation] button[data-ui-menu-button],
+[data-ui-menu-presentation] [role="menu"] button {
+  min-width: 44px;
+  min-height: 44px;
+}
+}
+
+[data-ui-menu-presentation] [data-ui-menu-button]:hover:enabled,
+[data-ui-menu-presentation] [data-ui-menu-button][aria-expanded="true"],
+[data-ui-menu-presentation] [role="menu"] button:hover:enabled,
+[data-ui-menu-presentation] [role="menu"] button:focus-visible:enabled {
+  background: var(--surface-hover);
+}

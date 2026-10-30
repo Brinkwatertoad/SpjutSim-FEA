@@ -419,3 +419,8 @@ button:focus-visible, select:focus-visible, .fea-splitter:focus-visible { outlin
 :root { --ui-pane-background:var(--app-background,var(--surface)); --ui-pane-accent:var(--accent); --ui-pane-muted:var(--secondary-text); }
 .fea-workspace[data-compact="true"]:not([data-drawer="true"]) .fea-splitter { display:block; }
 .fea-splitter.ui-pane-divider { width:var(--ui-pane-divider-size); }
+
+/* Host palette bindings for canonical menu presentation only. */
+[data-ui-menu-presentation]{--text:var(--ui-color-text);--muted:var(--ui-color-text-muted);--border:var(--ui-color-border);--panel:var(--ui-color-panel);--surface:var(--ui-color-surface);--app-background:var(--ui-color-bg);--surface-hover:var(--ui-color-button-hover);--shadow-popover:var(--ui-shadow-popover)}
+
+[data-ui-menu-presentation]{--ui-menu-font-size:16px}
