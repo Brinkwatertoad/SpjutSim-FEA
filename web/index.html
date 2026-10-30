@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/material-library.css">
 <link rel="stylesheet" href="ui/runtime/reference/panes.css">
 <script src="ui/runtime/reference/panes.js"></script>
+<link rel="stylesheet" href="ui/runtime/reference/menu-presentation.css">
 </head>
 <body>
   <div class="fea-app" id="app-shell">
@@ -22,16 +23,16 @@
     </dialog>
     <header class="fea-topbar">
       <div><strong>SpjutSim FEA</strong></div>
-      <nav class="ui-menu-bar" id="application-menu" aria-label="Application menus">
+      <nav class="ui-menu-bar" data-ui-menu-presentation id="application-menu" aria-label="Application menus">
         <div class="ui-menu-group" data-ui-menu-group data-open="false">
           <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">File</button>
-          <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-project-new data-ui-menu-action="new-project">New</button><button type="button" role="menuitem" data-project-open data-ui-menu-action="open-project"><span>Open…</span><span data-project-shortcut="o" class="ui-menu-shortcut"></span></button><button type="button" role="menuitem" data-project-save data-ui-menu-action="save-project"><span>Save project…</span><span data-project-shortcut="s" class="ui-menu-shortcut"></span></button><button type="button" role="menuitem" data-recovery-manage data-ui-menu-action="manage-recovery">Local recovery</button><button type="button" role="menuitem" data-ui-menu-action="import-step">Import CAD…</button>
-            <button type="button" role="menuitem" data-ui-menu-action="settings"><span>Settings…</span><span class="ui-menu-shortcut" aria-hidden="true"></span></button>
+          <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-project-new data-ui-menu-action="new-project">New</button><button type="button" role="menuitem" data-project-open data-ui-menu-action="open-project"><span>Open…</span><span data-project-shortcut="o" class="ui-menu-shortcut" data-ui-menu-shortcut></span></button><button type="button" role="menuitem" data-project-save data-ui-menu-action="save-project"><span>Save project…</span><span data-project-shortcut="s" class="ui-menu-shortcut" data-ui-menu-shortcut></span></button><button type="button" role="menuitem" data-recovery-manage data-ui-menu-action="manage-recovery">Local recovery</button><button type="button" role="menuitem" data-ui-menu-action="import-step">Import CAD…</button>
+            <button type="button" role="menuitem" data-ui-menu-action="settings"><span>Settings…</span><span class="ui-menu-shortcut" data-ui-menu-shortcut aria-hidden="true"></span></button>
           </div>
         </div>
         <div class="ui-menu-group" data-ui-menu-group data-open="false">
           <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">Edit</button>
-          <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="undo" data-history-action="undo" disabled><span data-history-label>Undo</span><span class="ui-menu-shortcut" aria-hidden="true">Ctrl+Z</span></button><button type="button" role="menuitem" data-ui-menu-action="redo" data-history-action="redo" disabled><span data-history-label>Redo</span><span class="ui-menu-shortcut" aria-hidden="true">Ctrl+Y</span></button></div>
+          <div class="ui-menu-list" role="menu"><button type="button" role="menuitem" data-ui-menu-action="undo" data-history-action="undo" disabled><span data-history-label>Undo</span><span class="ui-menu-shortcut" data-ui-menu-shortcut aria-hidden="true">Ctrl+Z</span></button><button type="button" role="menuitem" data-ui-menu-action="redo" data-history-action="redo" disabled><span data-history-label>Redo</span><span class="ui-menu-shortcut" data-ui-menu-shortcut aria-hidden="true">Ctrl+Y</span></button></div>
         </div>
         <div class="ui-menu-group" data-ui-menu-group data-open="false">
           <button type="button" class="ui-menu-button" data-ui-menu-button aria-haspopup="menu" aria-expanded="false">Examples</button>

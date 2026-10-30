@@ -3,11 +3,11 @@
   "consumer": "fea",
   "version": "0.8.0",
   "source": {
-    "commit": "a042882797585cd2224b37ceb765cfff50a0cf68",
-    "snapshotDigest": "970731877ba8830d74943153a5199508108b1ba94b70a7afa3b9f26c6bf4d117",
+    "commit": "5e9dd62a968440bb7f60b06a981a45857ec93dd8",
+    "snapshotDigest": "5597203503966d00fc36d441601b77686dca1e19511a01d4b1ef09c7e0f467c5",
     "mode": "committed"
   },
-  "artifactDigest": "49ab974ba4b3da586d47a1c0d7f0b2b9abc44fef41aa84463b292262cb8bfd57",
+  "artifactDigest": "f89c33d10e5c19e79fc0665b179a998c10fa8e07667251fb976dbd4204d2d1fd",
   "components": [
     "icons",
     "action-controls",
@@ -22,12 +22,13 @@
     "menus",
     "palette-editor",
     "menu-controller",
-    "panes"
+    "panes",
+    "menu-presentation"
   ],
   "files": [
     {
       "path": "PORTING_MANIFEST.json",
-      "sha256": "a4ffa8abb6fe4277bd99dc3952796543199865009b6b42e712cea181eebafc30"
+      "sha256": "bd4d5520e7a8726bdbdf462e1eab1f394aaa9b9998c875b9a4930b683081cda5"
     },
     {
       "path": "reference/action-controls.js",
@@ -51,7 +52,11 @@
     },
     {
       "path": "reference/menu-controller.js",
-      "sha256": "d95bd509864f41af474aa54670f3a50030112c3781d3e662c9e5bb401babeb05"
+      "sha256": "a3e1e4b35c506c14c529d21bacc101d26b47ac8d015c0b3d7fd209f25bc8f072"
+    },
+    {
+      "path": "reference/menu-presentation.css",
+      "sha256": "a06c0b5167e7941f7c26159580eb38fa921ce390edb215badd8f212fc6350424"
     },
     {
       "path": "reference/overflow-menu.js",
@@ -79,7 +84,7 @@
     },
     {
       "path": "reference/tooltips.js",
-      "sha256": "74f371e57328c566b99be566e12b6ac7509e5310364bf19bb214512067635a84"
+      "sha256": "7fee3fecd5bebdf1cc6bff1e1e556d0612e36b0fa47e39bd2f16a5b742202a47"
     },
     {
       "path": "reference/transient-surfaces.js",
@@ -91,8 +96,8 @@
     },
     {
       "path": "scripts/runtime.cjs",
-      "sha256": "06a11201fcbad8f131e18cc5e2dde7d1ca608977634647783b777b645d937bb6"
+      "sha256": "9e8acb39b2204766b8ad89f3cd34732bde4fbc9845b5baf3c01833f7ba0c7fdc"
     }
   ],
-  "digest": "d6672ef1bdefff628b886b8e5aa40cdbf969ab4fe98df0cbf114cad4170c2db8"
+  "digest": "f26608721e62e378bb20c2df8553759b589d1a7525cce0f71160b32f6cf9c489"
 }
