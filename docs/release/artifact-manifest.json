@@ -655,12 +655,12 @@
       "license": "GPL-2.0-or-later",
       "source": {
         "url": "https://github.com/Brinkwatertoad/SpjutSim-UI-Kit",
-        "revision": "a042882797585cd2224b37ceb765cfff50a0cf68"
+        "revision": "5e9dd62a968440bb7f60b06a981a45857ec93dd8"
       },
       "source_files": [
         {
           "path": "web/ui/runtime/PORTING_MANIFEST.json",
-          "sha256": "a4ffa8abb6fe4277bd99dc3952796543199865009b6b42e712cea181eebafc30"
+          "sha256": "bd4d5520e7a8726bdbdf462e1eab1f394aaa9b9998c875b9a4930b683081cda5"
         },
         {
           "path": "web/ui/runtime/reference/action-controls.js",
@@ -684,7 +684,7 @@
         },
         {
           "path": "web/ui/runtime/reference/menu-controller.js",
-          "sha256": "d95bd509864f41af474aa54670f3a50030112c3781d3e662c9e5bb401babeb05"
+          "sha256": "a3e1e4b35c506c14c529d21bacc101d26b47ac8d015c0b3d7fd209f25bc8f072"
         },
         {
           "path": "web/ui/runtime/reference/overflow-menu.js",
@@ -712,7 +712,7 @@
         },
         {
           "path": "web/ui/runtime/reference/tooltips.js",
-          "sha256": "74f371e57328c566b99be566e12b6ac7509e5310364bf19bb214512067635a84"
+          "sha256": "7fee3fecd5bebdf1cc6bff1e1e556d0612e36b0fa47e39bd2f16a5b742202a47"
         },
         {
           "path": "web/ui/runtime/reference/transient-surfaces.js",
@@ -724,16 +724,20 @@
         },
         {
           "path": "web/ui/runtime/scripts/runtime.cjs",
-          "sha256": "06a11201fcbad8f131e18cc5e2dde7d1ca608977634647783b777b645d937bb6"
+          "sha256": "9e8acb39b2204766b8ad89f3cd34732bde4fbc9845b5baf3c01833f7ba0c7fdc"
         },
         {
           "path": "web/ui/runtime/ui-kit.lock.json",
-          "sha256": "5aebeabebeda0f70774b6ceec368ece6292d45d09b67d9ff460ae8558d9ddd94"
+          "sha256": "3cee43f566b6ec1ce40160c6ef94992cc3aa8a8e71f645980090118944dfb346"
+        },
+        {
+          "path": "web/ui/runtime/reference/menu-presentation.css",
+          "sha256": "a06c0b5167e7941f7c26159580eb38fa921ce390edb215badd8f212fc6350424"
         }
       ],
       "build_recipe": {
         "path": "docs/spjutsim-ui-kit.md",
-        "sha256": "a404f5292c352ad226234ba30afed8243b3e77548ac8c19db6f3f05ab97ec789"
+        "sha256": "42297ff42e15760a84638d44787c3b2d6d42e24364e9855af9f7fe3fd61712f7"
       },
       "modifications": "Selected first-party generated controllers with committed source and per-file hashes in ui-kit.lock.json. The owner-approved GPL grant applies to these FEA copies only; canonical repository terms and historical reference pins are unchanged.",
       "notices": [
@@ -1217,7 +1221,7 @@
     },
     {
       "path": "web/ui/runtime/PORTING_MANIFEST.json",
-      "sha256": "a4ffa8abb6fe4277bd99dc3952796543199865009b6b42e712cea181eebafc30",
+      "sha256": "bd4d5520e7a8726bdbdf462e1eab1f394aaa9b9998c875b9a4930b683081cda5",
       "components": [
         "ui-kit-runtime"
       ]
@@ -1259,7 +1263,7 @@
     },
     {
       "path": "web/ui/runtime/reference/menu-controller.js",
-      "sha256": "d95bd509864f41af474aa54670f3a50030112c3781d3e662c9e5bb401babeb05",
+      "sha256": "a3e1e4b35c506c14c529d21bacc101d26b47ac8d015c0b3d7fd209f25bc8f072",
       "components": [
         "ui-kit-runtime"
       ]
@@ -1308,7 +1312,7 @@
     },
     {
       "path": "web/ui/runtime/reference/tooltips.js",
-      "sha256": "74f371e57328c566b99be566e12b6ac7509e5310364bf19bb214512067635a84",
+      "sha256": "7fee3fecd5bebdf1cc6bff1e1e556d0612e36b0fa47e39bd2f16a5b742202a47",
       "components": [
         "ui-kit-runtime"
       ]
@@ -1329,14 +1333,14 @@
     },
     {
       "path": "web/ui/runtime/scripts/runtime.cjs",
-      "sha256": "06a11201fcbad8f131e18cc5e2dde7d1ca608977634647783b777b645d937bb6",
+      "sha256": "9e8acb39b2204766b8ad89f3cd34732bde4fbc9845b5baf3c01833f7ba0c7fdc",
       "components": [
         "ui-kit-runtime"
       ]
     },
     {
       "path": "web/ui/runtime/ui-kit.lock.json",
-      "sha256": "5aebeabebeda0f70774b6ceec368ece6292d45d09b67d9ff460ae8558d9ddd94",
+      "sha256": "3cee43f566b6ec1ce40160c6ef94992cc3aa8a8e71f645980090118944dfb346",
       "components": [
         "ui-kit-runtime"
       ]
@@ -1440,6 +1444,13 @@
         "gmsh",
         "occt",
         "emscripten"
+      ]
+    },
+    {
+      "path": "web/ui/runtime/reference/menu-presentation.css",
+      "sha256": "a06c0b5167e7941f7c26159580eb38fa921ce390edb215badd8f212fc6350424",
+      "components": [
+        "ui-kit-runtime"
       ]
     }
   ]
