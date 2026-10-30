@@ -35,9 +35,11 @@ The distribution audit reads this approval record:
   "final_review": {
     "status": "approved",
     "approver": "Brinkwatertoad",
-    "date": "2026-10-28",
-    "reference": "Owner requested deployment of the approved shared UI revisions in this conversation; Statics excluded. Existing GPL/source policy, upstream pins and kernel artifacts unchanged.",
-    "artifact_manifest_sha256": "a7dda309f61bc454a603108e9501d92804594cc4d79c35e664d9add807a1c6e6"
+    "date": "2026-10-30",
+    "reference": "Owner requested deployment after approving and merging the shared menu typography, icon spacing, menu switching and tooltip fixes. Existing GPL/source policy, upstream pins and kernel artifacts unchanged.",
+    "artifact_manifest_sha256": "b26b36065bcc4fda3f9a55748d62e27ead2e7d8741513adbbf451073538067da"
   }
 }
 ```
+
+On October 30, 2026, the owner approved deployment of the merged shared menu and tooltip revisions. The inventory includes menu-presentation.css and the exact generated runtime source pin; licenses, upstream archives and numerical kernels remain unchanged.
