@@ -21,6 +21,11 @@
   root.addEventListener('pointerover',over);root.addEventListener('pointerleave',leave);
   return Object.freeze({destroy(){leave();root.removeEventListener('pointerover',over);root.removeEventListener('pointerleave',leave);}});
  }
+ // Explicit opt-in for flat menus. Hosts with nested popups retain their own containment policy.
+ function constrainMenuHeight(menu,{viewport=menu.ownerDocument.defaultView,inset=8}={}){
+  const available=Math.max(0,viewport.innerHeight-menu.getBoundingClientRect().top-inset);
+  menu.style.maxHeight=available+'px';menu.style.overflowY='auto';return available;
+ }
  function createMenuController({entries,document:doc=scope.document,getItems=defaultItems,positionMenu=()=>{},setOpen,beforeOpen=()=>{},focusOnClick=false,canHoverSwitch=()=>true,closeChildren=()=>{},contains,escape=true}){
   if(!Array.isArray(entries)||entries.some(e=>!e.trigger?.addEventListener||!e.panel))throw Error('Menu controller requires trigger/panel entries.');
   let current=null,destroyed=false;const cleanups=[];
@@ -37,5 +42,5 @@
   const dismissal=scope.PortableUITransientSurfaces.bindDismissal({document:doc,isOpen:()=>!!current,contains:contains||((target)=>entries.some(e=>e.trigger.contains(target)||e.panel.contains(target))),close:restoreFocus=>closeAll({restoreFocus}),escape});
   return Object.freeze({openMenu,closeAll,isOpen:()=>!!current,getOpenTrigger:()=>current?.trigger||null,dismissForEscape,destroy(){if(destroyed)return;closeAll();destroyed=true;dismissal.destroy();for(const cleanup of cleanups)cleanup();}});
  }
- scope.PortableUIMenus=Object.freeze({createMenuController,handleMenuKey,bindSubmenuHover,defaultItems});
+ scope.PortableUIMenus=Object.freeze({createMenuController,constrainMenuHeight,handleMenuKey,bindSubmenuHover,defaultItems});
 }(typeof self!=='undefined'?self:globalThis));

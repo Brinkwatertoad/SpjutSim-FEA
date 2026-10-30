@@ -3,11 +3,11 @@
   "consumer": "fea",
   "version": "0.8.0",
   "source": {
-    "commit": "2c24a741678c6f4c0e41f6363c33739e22d9dc1b",
-    "snapshotDigest": "44b857b69f993cc3f49cf984fbbe01e6ff7e51e0a4d7d8d8a106a9d1b297603f",
+    "commit": "5e9dd62a968440bb7f60b06a981a45857ec93dd8",
+    "snapshotDigest": "5597203503966d00fc36d441601b77686dca1e19511a01d4b1ef09c7e0f467c5",
     "mode": "committed"
   },
-  "artifactDigest": "5a8d58c4ae44efcd48a356fdd17e599885a7782f8314e291df72497aa744e382",
+  "artifactDigest": "f89c33d10e5c19e79fc0665b179a998c10fa8e07667251fb976dbd4204d2d1fd",
   "components": [
     "icons",
     "action-controls",
@@ -52,7 +52,7 @@
     },
     {
       "path": "reference/menu-controller.js",
-      "sha256": "fc2b44cb906f6a9452edfd5d639b60e0e888005575d7bfafb7bd0ae3eca691f4"
+      "sha256": "a3e1e4b35c506c14c529d21bacc101d26b47ac8d015c0b3d7fd209f25bc8f072"
     },
     {
       "path": "reference/menu-presentation.css",
@@ -84,7 +84,7 @@
     },
     {
       "path": "reference/tooltips.js",
-      "sha256": "c20ad55493209f01a8ed57978f3878b416bb235dee8f62597ba934eeba9c3ddd"
+      "sha256": "7fee3fecd5bebdf1cc6bff1e1e556d0612e36b0fa47e39bd2f16a5b742202a47"
     },
     {
       "path": "reference/transient-surfaces.js",
@@ -99,5 +99,5 @@
       "sha256": "9e8acb39b2204766b8ad89f3cd34732bde4fbc9845b5baf3c01833f7ba0c7fdc"
     }
   ],
-  "digest": "41c780ec89ff72373639169e3793daccef866e1b6f0747d6ddab6833b8fe4015"
+  "digest": "f26608721e62e378bb20c2df8553759b589d1a7525cce0f71160b32f6cf9c489"
 }
